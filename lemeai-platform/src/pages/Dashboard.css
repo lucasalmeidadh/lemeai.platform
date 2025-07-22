@@ -1,0 +1,188 @@
+.dashboard-layout {
+  display: flex;
+  background-color: #f8f9fa; /* Um cinza bem claro para o fundo */
+}
+
+.main-content {
+  flex-grow: 1; 
+  padding: 40px;
+  min-height: 100vh;
+}
+
+.main-content h1 {
+  font-size: 32px;
+  color: #343a40;
+  margin-bottom: 10px;
+}
+
+.welcome-text {
+  font-size: 18px;
+  color: #6c757d;
+  margin-bottom: 40px;
+}
+
+/* --- ESTILOS PARA A GRADE DE KPIs (A CHAVE DA SOLUÇÃO) --- */
+.kpi-grid {
+  display: grid;
+  /* Cria colunas responsivas: no mínimo 200px de largura, 
+     mas se ajustam para preencher o espaço (1fr) */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px; /* Espaço entre os cartões */
+  margin-bottom: 40px;
+}
+
+/* --- ESTILOS PARA A SEÇÃO DE ATIVIDADES --- */
+.activity-section {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px 30px; /* Mais padding lateral */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.activity-section h2 {
+  font-size: 20px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #343a40;
+}
+
+.activity-list {
+  list-style: none; /* Remove as "bolinhas" da lista */
+  padding: 0;
+  margin: 0;
+}
+
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.activity-item:last-child {
+  border-bottom: none; /* Remove a borda do último item */
+}
+
+.activity-text {
+  margin: 0;
+  color: #495057;
+}
+
+.activity-time {
+  font-size: 14px;
+  color: #6c757d;
+  flex-shrink: 0; /* Impede que o texto de tempo encolha */
+  margin-left: 20px;
+  white-space: nowrap; /* Impede que o texto quebre linha */
+}
+
+.filters-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.filter-input {
+  flex-grow: 1;
+  min-width: 250px;
+  padding: 10px 15px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+}
+
+.select-filters {
+  display: flex;
+  gap: 15px;
+}
+
+.filter-select {
+  padding: 10px 15px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  background-color: #ffffff;
+}
+
+/* --- Estilos para a Tabela --- */
+.table-container {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow-x: auto; /* Garante que a tabela seja rolável em telas pequenas */
+}
+
+.deals-table {
+  width: 100%;
+  border-collapse: collapse; /* Une as bordas das células */
+}
+
+.deals-table th, .deals-table td {
+  padding: 15px 20px;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.deals-table th {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  background-color: #f8f9fa;
+}
+
+.deals-table tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.details-button {
+  background-color: #005f73;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.details-button:hover {
+  background-color: #004c5a;
+}
+
+/* --- Estilos para os Badges de Status --- */
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-concluído {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+.status-em-negociação, .status-aguardando-aprovação {
+  background-color: #fff3cd;
+  color: #664d03;
+}
+.status-perdido {
+  background-color: #f8d7da;
+  color: #842029;
+}
+.status-novo {
+  background-color: #cff4fc;
+  color: #055160;
+}
