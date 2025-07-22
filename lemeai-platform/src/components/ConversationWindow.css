@@ -1,0 +1,7 @@
+.conversation-window { flex-grow: 1; display: flex; flex-direction: column; }
+.conversation-header { padding: 20px; border-bottom: 1px solid #dee2e6; background-color: #fff; }
+.conversation-header h3 { margin: 0; }
+.messages-list { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.message-bubble { max-width: 60%; padding: 10px 15px; border-radius: 18px; line-height: 1.4; }
+.message-bubble.me { background-color: #005f73; color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+.message-bubble.other { background-color: #fff; border: 1px solid #e9ecef; border-bottom-left-radius: 4px; align-self: flex-start; }

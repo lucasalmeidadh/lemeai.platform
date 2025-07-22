@@ -1,14 +1,15 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom'; // 1. Importar o useLocation
 import './Sidebar.css';
-// Vamos usar alguns ícones para o menu
 import { FaTachometerAlt, FaComments, FaSignOutAlt } from 'react-icons/fa';
 
-// Este componente receberá a função de logout como uma "prop"
 interface SidebarProps {
   onLogout: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
+  const location = useLocation(); // 2. Obter a localização atual
+
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
@@ -16,14 +17,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
       </div>
       <nav className="sidebar-nav">
         <ul>
-          <li className="active"> {/* Link Ativo */}
+          {/* 3. A classe 'active' é agora condicional */}
+          <li className={location.pathname === '/dashboard' ? 'active' : ''}>
             <a href="/dashboard">
               <FaTachometerAlt className="nav-icon" />
               <span>Painel</span>
             </a>
           </li>
-          <li> {/* Link Inativo (exemplo) */}
-            <a href="#">
+          <li className={location.pathname === '/chat' ? 'active' : ''}>
+            <a href="/chat"> {/* O link agora funciona */}
               <FaComments className="nav-icon" />
               <span>Chat</span>
             </a>

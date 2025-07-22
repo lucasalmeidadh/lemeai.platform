@@ -1,0 +1,13 @@
+/* Em src/pages/ChatPage.css */
+.chat-layout {
+  display: flex;
+  height: 100vh; /* Ocupa a altura inteira da tela */
+}
+
+.conversation-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8f9fa;
+}

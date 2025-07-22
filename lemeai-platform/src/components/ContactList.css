@@ -1,0 +1,11 @@
+.contact-list { width: 320px; border-right: 1px solid #dee2e6; background-color: #fff; display: flex; flex-direction: column; }
+.contact-list-header { padding: 20px; border-bottom: 1px solid #dee2e6; }
+.contact-list-header h2 { margin: 0; font-size: 20px; }
+.contact-list ul { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
+.contact-list li { display: flex; justify-content: space-between; padding: 15px 20px; cursor: pointer; transition: background-color 0.2s; }
+.contact-list li:hover { background-color: #f8f9fa; }
+.contact-list li.active { background-color: #e0f7ff; }
+.contact-info { display: flex; flex-direction: column; }
+.contact-name { font-weight: 600; }
+.contact-last-message { font-size: 14px; color: #6c757d; }
+.contact-time { font-size: 12px; color: #6c757d; flex-shrink: 0; }

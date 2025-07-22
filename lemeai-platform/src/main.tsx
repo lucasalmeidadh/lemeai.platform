@@ -5,11 +5,13 @@ import {
   RouterProvider,
 } from "react-router-dom";
 
-// Importando nossas páginas
+// Importando todas as nossas páginas
 import Login from './pages/Login.tsx';
-import Dashboard from './pages/Dashboard.tsx'; // <-- IMPORTAR O DASHBOARD
+import Dashboard from './pages/Dashboard.tsx';
+import Chatpage from './pages/ChatPage.tsx'; // <-- 1. IMPORTAR A NOVA PÁGINA DE CHAT
 import './index.css'
 
+// Criando as rotas
 const router = createBrowserRouter([
   {
     path: "/",
@@ -20,8 +22,12 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: "/dashboard", // <-- ADICIONAR NOVA ROTA
+    path: "/dashboard",
     element: <Dashboard />,
+  },
+  {
+    path: "/chat", // <-- 2. ADICIONAR A ROTA PARA O CHAT
+    element: <Chatpage />,
   }
 ]);
 
