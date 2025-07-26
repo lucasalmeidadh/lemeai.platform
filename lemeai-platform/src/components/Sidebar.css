@@ -1,3 +1,5 @@
+/* ARQUIVO: src/components/Sidebar.css */
+
 .sidebar {
   width: 260px;
   background-color: #ffffff;
@@ -5,24 +7,33 @@
   display: flex;
   flex-direction: column;
   border-right: 1px solid #e9ecef;
-  flex-shrink: 0; /* Impede o menu de encolher */
+  flex-shrink: 0;
+  transition: width 0.2s ease-in-out;
+  position: relative; /* Essencial para posicionar o botão de expandir */
 }
 
 .sidebar-header {
   padding: 20px;
-  text-align: center;
   border-bottom: 1px solid #e9ecef;
+  flex-shrink: 0;
+  /* Novas propriedades para alinhar o título e o botão */
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Isso empurra o título para a esquerda e o botão para a direita */
 }
 
 .sidebar-header h3 {
   margin: 0;
-  color: #005f73; /* Usando a cor diretamente para garantir */
+  color: #005f73;
   font-size: 24px;
+  white-space: nowrap; /* Impede que o texto quebre */
 }
 
 .sidebar-nav {
-  flex-grow: 1; 
+  flex-grow: 1;
   padding-top: 20px;
+  overflow-x: hidden; /* Esconde conteúdo que vazar na horizontal */
+  overflow-y: auto;
 }
 
 .sidebar-nav ul {
@@ -39,6 +50,7 @@
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease;
+  white-space: nowrap; /* Impede que o texto quebre */
 }
 
 .sidebar-nav li a:hover {
@@ -61,6 +73,7 @@
 .sidebar-footer {
   padding: 20px;
   border-top: 1px solid #e9ecef;
+  flex-shrink: 0;
 }
 
 .logout-button-sidebar {
@@ -75,7 +88,75 @@
   color: #495057;
   font-family: inherit;
   border-radius: 6px;
+  white-space: nowrap;
 }
+
 .logout-button-sidebar:hover {
   background-color: #f8f9fa;
+}
+
+.toggle-button {
+  background: transparent; /* Fundo transparente */
+  color: #6c757d; /* Cor cinza sutil */
+  border: none;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.toggle-button:hover {
+  background-color: #f1f3f5; /* Fundo leve no hover */
+  color: #005f73;
+}
+
+
+/* --- ESTILOS PARA O MENU RECOLHIDO --- */
+.sidebar.collapsed .sidebar-header {
+  /* Quando recolhido, centraliza o que sobrar (o 'M' e o botão) */
+  justify-content: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.sidebar.collapsed .sidebar-header h3 {
+  /* Esconde a letra 'M' e deixa só o botão para expandir */
+  display: none;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar.collapsed .sidebar-nav span,
+.sidebar.collapsed .sidebar-footer span {
+  /* Some com o texto de forma suave e impede que ele ocupe espaço */
+  opacity: 0;
+  width: 0;
+  display: inline-block;
+  transition: opacity 0.1s ease;
+}
+
+.sidebar.collapsed .sidebar-nav li a {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sidebar.collapsed .sidebar-nav li.active a {
+  border-right: none; /* Remove a borda direita no modo recolhido */
+}
+
+.sidebar.collapsed .logout-button-sidebar {
+  justify-content: center;
+}
+
+.sidebar.collapsed .nav-icon {
+  margin-right: 0;
+  font-size: 22px;
 }

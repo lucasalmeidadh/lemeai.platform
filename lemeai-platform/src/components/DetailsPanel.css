@@ -1,0 +1,96 @@
+/* ARQUIVO: src/components/DetailsPanel.css */
+/* Adicione ou modifique estas classes no final do arquivo */
+
+.details-panel {
+  /* Os estilos do painel em si estão corretos */
+  width: 320px;
+  min-width: 300px;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #f0f2f5; /* Borda mais suave */
+  flex-shrink: 0; /* Impede que o header encolha */
+}
+
+.details-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #54656f;
+  padding: 5px; /* Adiciona uma pequena área de clique */
+}
+
+.details-content {
+  padding: 25px;
+  text-align: center;
+  overflow-y: auto; /* Permite rolagem se o conteúdo for grande */
+  flex-grow: 1;
+}
+
+.contact-summary .details-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--petroleum-blue);
+  color: white;
+  font-size: 32px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 15px;
+}
+
+.status-select, .observations-textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  font-family: inherit;
+  box-sizing: border-box; /* Garante que o padding não aumente a largura */
+}
+
+.observations-textarea {
+  resize: vertical; /* Permite que o usuário redimensione na vertical */
+}
+
+.save-button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--petroleum-blue);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.save-button:hover {
+  background-color: #004c5a;
+}

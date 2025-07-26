@@ -1,3 +1,35 @@
-.message-input-container { display: flex; padding: 15px 20px; background-color: #fff; border-top: 1px solid #dee2e6; }
-.message-input-container input { flex-grow: 1; border: 1px solid #ced4da; border-radius: 20px; padding: 10px 20px; font-size: 15px; outline: none; }
-.message-input-container button { background-color: #005f73; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 16px; cursor: pointer; margin-left: 10px; display: flex; justify-content: center; align-items: center; }
+/* ARQUIVO: src/components/MessageInput.css */
+.message-input-container { 
+  display: flex; 
+  align-items: center;
+  gap: 10px;
+  padding: 15px 25px; 
+  background-color: #f8f9fa; /* Fundo mais suave */
+  border-top: 1px solid #f0f2f5;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+.message-input-container input { 
+  flex-grow: 1; 
+  border: none; /* Remove a borda do input */
+  border-radius: 20px; 
+  background-color: #ffffff; /* Fundo branco */
+  padding: 12px 20px; 
+  font-size: 15px; 
+  outline: none; 
+}
+.message-input-container button { 
+  background-color: var(--petroleum-blue); 
+  color: white; 
+  border: none; 
+  border-radius: 50%; 
+  width: 45px; 
+  height: 45px; 
+  font-size: 16px; 
+  cursor: pointer; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  flex-shrink: 0;
+}

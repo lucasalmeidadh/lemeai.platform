@@ -1,0 +1,49 @@
+/* ARQUIVO: src/components/ConversationHeader.css */
+
+.conversation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* Aumentando o padding para um visual mais limpo */
+  padding: 15px 25px; 
+  /* Fundo branco para combinar com o novo design */
+  background-color: #ffffff;
+  border-bottom: 1px solid #f0f2f5; /* Borda mais suave */
+  /* Adicionando border-radius para o canto superior */
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+/* Este é o container que alinha o avatar e o nome */
+.contact-info {
+  display: flex;
+  align-items: center; /* Alinha itens verticalmente ao centro */
+  gap: 15px; /* Espaço entre o avatar e o nome */
+  cursor: pointer;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--petroleum-blue);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  /* Margin não é mais necessária pois usamos 'gap' */
+}
+
+.contact-name {
+  font-weight: 600; /* Deixando a fonte mais forte */
+  font-size: 17px;
+}
+
+.details-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #54656f;
+}

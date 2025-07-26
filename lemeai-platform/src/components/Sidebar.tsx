@@ -1,39 +1,49 @@
+// ARQUIVO: src/components/Sidebar.tsx
+
 import React from 'react';
-import { useLocation } from 'react-router-dom'; // 1. Importar o useLocation
+import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import { FaTachometerAlt, FaComments, FaSignOutAlt } from 'react-icons/fa';
+import { FaTachometerAlt, FaComments, FaSignOutAlt, FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 
 interface SidebarProps {
   onLogout: () => void;
+  isCollapsed: boolean;
+  onToggle: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
-  const location = useLocation(); // 2. Obter a localização atual
+const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle }) => {
+  const location = useLocation();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+      {/* O botão foi movido para DENTRO do header */}
       <div className="sidebar-header">
-        <h3>Meu CRM</h3>
+        <h3>{isCollapsed ? 'M' : 'Meu CRM'}</h3>
+        {/* O botão agora está aqui */}
+        <button onClick={onToggle} className="toggle-button">
+          {isCollapsed ? <FaAngleRight /> : <FaAngleLeft />}
+        </button>
       </div>
+
       <nav className="sidebar-nav">
+        {/* ... O resto do seu componente continua igual ... */}
         <ul>
-          {/* 3. A classe 'active' é agora condicional */}
           <li className={location.pathname === '/dashboard' ? 'active' : ''}>
-            <a href="/dashboard">
+            <Link to="/dashboard" title="Painel">
               <FaTachometerAlt className="nav-icon" />
               <span>Painel</span>
-            </a>
+            </Link>
           </li>
           <li className={location.pathname === '/chat' ? 'active' : ''}>
-            <a href="/chat"> {/* O link agora funciona */}
+            <Link to="/chat" title="Chat">
               <FaComments className="nav-icon" />
               <span>Chat</span>
-            </a>
+            </Link>
           </li>
         </ul>
       </nav>
       <div className="sidebar-footer">
-        <button onClick={onLogout} className="logout-button-sidebar">
+        <button onClick={onLogout} className="logout-button-sidebar" title="Sair">
           <FaSignOutAlt className="nav-icon" />
           <span>Sair</span>
         </button>

@@ -1,13 +1,4 @@
-.dashboard-layout {
-  display: flex;
-  background-color: #f8f9fa; /* Um cinza bem claro para o fundo */
-}
-
-.main-content {
-  flex-grow: 1; 
-  padding: 40px;
-  min-height: 100vh;
-}
+/* ARQUIVO: src/pages/Dashboard.css */
 
 .main-content h1 {
   font-size: 32px;
@@ -21,61 +12,11 @@
   margin-bottom: 40px;
 }
 
-/* --- ESTILOS PARA A GRADE DE KPIs (A CHAVE DA SOLUÇÃO) --- */
 .kpi-grid {
   display: grid;
-  /* Cria colunas responsivas: no mínimo 200px de largura, 
-     mas se ajustam para preencher o espaço (1fr) */
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px; /* Espaço entre os cartões */
+  gap: 20px;
   margin-bottom: 40px;
-}
-
-/* --- ESTILOS PARA A SEÇÃO DE ATIVIDADES --- */
-.activity-section {
-  background-color: #ffffff;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 20px 30px; /* Mais padding lateral */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.activity-section h2 {
-  font-size: 20px;
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #343a40;
-}
-
-.activity-list {
-  list-style: none; /* Remove as "bolinhas" da lista */
-  padding: 0;
-  margin: 0;
-}
-
-.activity-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.activity-item:last-child {
-  border-bottom: none; /* Remove a borda do último item */
-}
-
-.activity-text {
-  margin: 0;
-  color: #495057;
-}
-
-.activity-time {
-  font-size: 14px;
-  color: #6c757d;
-  flex-shrink: 0; /* Impede que o texto de tempo encolha */
-  margin-left: 20px;
-  white-space: nowrap; /* Impede que o texto quebre linha */
 }
 
 .filters-container {
@@ -113,18 +54,17 @@
   background-color: #ffffff;
 }
 
-/* --- Estilos para a Tabela --- */
 .table-container {
   background-color: #ffffff;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow-x: auto; /* Garante que a tabela seja rolável em telas pequenas */
+  overflow-x: auto;
 }
 
 .deals-table {
   width: 100%;
-  border-collapse: collapse; /* Une as bordas das células */
+  border-collapse: collapse;
 }
 
 .deals-table th, .deals-table td {
@@ -160,7 +100,7 @@
   background-color: #004c5a;
 }
 
-/* --- Estilos para os Badges de Status --- */
+/* Estilos para os Badges de Status */
 .status-badge {
   padding: 5px 10px;
   border-radius: 12px;

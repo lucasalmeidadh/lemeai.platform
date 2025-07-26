@@ -1,3 +1,5 @@
+// ARQUIVO: src/main.tsx
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import {
@@ -5,10 +7,11 @@ import {
   RouterProvider,
 } from "react-router-dom";
 
-// Importando todas as nossas páginas
+// Importando as páginas
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
-import Chatpage from './pages/ChatPage.tsx'; // <-- 1. IMPORTAR A NOVA PÁGINA DE CHAT
+// CORREÇÃO: Importar como ChatPage (com 'P' maiúsculo)
+import ChatPage from './pages/ChatPage.tsx';
 import './index.css'
 
 // Criando as rotas
@@ -26,8 +29,9 @@ const router = createBrowserRouter([
     element: <Dashboard />,
   },
   {
-    path: "/chat", // <-- 2. ADICIONAR A ROTA PARA O CHAT
-    element: <Chatpage />,
+    path: "/chat",
+    // CORREÇÃO: Usar o componente com 'P' maiúsculo
+    element: <ChatPage />,
   }
 ]);
 

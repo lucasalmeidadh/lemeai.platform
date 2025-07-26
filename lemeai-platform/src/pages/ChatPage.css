@@ -1,13 +1,52 @@
-/* Em src/pages/ChatPage.css */
+/* ARQUIVO: src/pages/ChatPage.css */
+
 .chat-layout {
   display: flex;
-  height: 100vh; /* Ocupa a altura inteira da tela */
+  height: 100%; 
+  width: 100%;
+  padding: 20px;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
-.conversation-area {
-  flex-grow: 1;
+/* O componente da lista de contatos não deve encolher */
+.contact-list {
+  width: 320px;
+  min-width: 300px;
+  flex-shrink: 0; /* Impede que encolha */
+  /* --- Estilos visuais --- */
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-color: #f8f9fa;
+}
+
+/* A área da conversa deve crescer e encolher conforme necessário */
+.conversation-area {
+  flex-grow: 1; /* Permite crescer */
+  flex-shrink: 1; /* Permite encolher */
+  min-width: 300px; /* Largura mínima para não sumir */
+  /* --- Estilos visuais --- */
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* O painel de detalhes também não deve encolher */
+.details-panel {
+  width: 320px;
+  min-width: 300px;
+  flex-shrink: 0; /* Impede que encolha */
+  /* --- Estilos visuais --- */
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
