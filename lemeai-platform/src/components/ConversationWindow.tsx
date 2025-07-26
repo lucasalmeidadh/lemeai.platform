@@ -2,17 +2,15 @@
 
 import './ConversationWindow.css';
 
-// Dados de exemplo (podem ser substituídos por props no futuro)
+// Mensagens atualizadas para a conversa com o Lucas
 const messages = [
-    { id: 1, text: 'Olá, preciso de um orçamento para as peças XYZ.', sender: 'other' },
-    { id: 2, text: 'Olá, Artur! Claro, um momento enquanto verifico.', sender: 'me' },
-    { id: 3, text: 'Ok, combinado!', sender: 'other' },
+    { id: 1, text: 'Olá, como você está hoje?', sender: 'other' },
+    { id: 2, text: 'Olá, Lucas! Estou bem e você?', sender: 'me' },
+    { id: 3, text: 'Estou ótimo', sender: 'other' },
 ];
 
 const ConversationWindow = () => {
   return (
-    // Remova o <div className="conversation-window"> ao redor de tudo
-    // A div principal agora é a lista de mensagens
     <div className="messages-list">
       {messages.map(msg => (
         <div key={msg.id} className={`message-bubble ${msg.sender}`}>

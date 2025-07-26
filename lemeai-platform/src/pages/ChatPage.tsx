@@ -31,7 +31,7 @@ const ChatPage = () => {
     setSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  const currentContact = "Artur Noronha";
+  const currentContact = "Lucas Almeida";
 
   return (
     <div className={`dashboard-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
