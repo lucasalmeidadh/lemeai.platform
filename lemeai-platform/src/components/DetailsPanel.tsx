@@ -1,10 +1,9 @@
 // ARQUIVO: src/components/DetailsPanel.tsx
 
 import React, { useState } from 'react';
-// Corrigido: Importando seu próprio CSS
-import './DetailsPanel.css'; 
-// Corrigido: Removidos ícones que não estavam sendo usados
-import { FaTimes, FaSave } from 'react-icons/fa'; 
+import './DetailsPanel.css';
+// Adicionando novos ícones para a repaginada
+import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote } from 'react-icons/fa';
 
 interface DetailsPanelProps {
   contactName: string;
@@ -24,17 +23,26 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contactName, onClose }) => 
       </header>
 
       <div className="details-content">
+        {/* Seção de Resumo do Contato */}
         <div className="contact-summary">
           <div className="details-avatar">
             {contactName.charAt(0).toUpperCase()}
           </div>
-          <h4>{contactName}</h4>
-          <p>noronhaartur@gmail.com</p>
+          <h4 className="summary-name">{contactName}</h4>
+          {/* Trocamos o e-mail pelo telefone com um ícone */}
+          <div className="summary-phone">
+            <FaPhoneAlt className="phone-icon" />
+            <span>(11) 98765-4321</span>
+          </div>
         </div>
         
-        <div className="deal-status-section">
+        {/* Seção do Formulário, agora com um fundo para destaque */}
+        <div className="form-section">
           <div className="form-group">
-            <label htmlFor="deal-status">Status da Negociação</label>
+            <label htmlFor="deal-status">
+              <FaTag className="label-icon" />
+              Status da Negociação
+            </label>
             <select 
               id="deal-status" 
               className="status-select"
@@ -49,7 +57,10 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contactName, onClose }) => 
           </div>
 
           <div className="form-group">
-            <label htmlFor="observations">Observações</label>
+            <label htmlFor="observations">
+              <FaRegStickyNote className="label-icon" />
+              Observações
+            </label>
             <textarea 
               id="observations" 
               className="observations-textarea" 
@@ -57,12 +68,15 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contactName, onClose }) => 
               placeholder="Adicione uma anotação sobre o cliente..."
             ></textarea>
           </div>
-
-          <button className="save-button">
-            <FaSave />
-            <span>Salvar Alterações</span>
-          </button>
         </div>
+      </div>
+
+      {/* Footer do Painel com o Botão Salvar */}
+      <div className="details-footer">
+        <button className="save-button">
+          <FaSave />
+          <span>Salvar Alterações</span>
+        </button>
       </div>
     </aside>
   );
