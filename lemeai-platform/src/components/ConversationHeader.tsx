@@ -1,27 +1,44 @@
-import React from 'react';
-import './ConversationHeader.css';
-import { FaEllipsisV } from 'react-icons/fa'; // Ícone de três pontos
+// ARQUIVO: src/components/ConversationHeader.tsx
 
-// A interface define que o componente receberá uma função `onToggleDetails`
+import React, { useState } from 'react';
+import './ConversationHeader.css';
+import { FaEllipsisV } from 'react-icons/fa';
+
 interface ConversationHeaderProps {
   contactName: string;
   onToggleDetails: () => void;
 }
 
 const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails }) => {
+  // Estado para controlar a visibilidade do menu
+  const [isMenuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="conversation-header">
       <div className="contact-info">
-        {/* Adiciona um avatar simples */}
         <div className="avatar">
           {contactName.charAt(0).toUpperCase()}
         </div>
         <span className="contact-name">{contactName}</span>
       </div>
-      {/* O botão com o ícone acionará a função para abrir o painel */}
-      <button onClick={onToggleDetails} className="details-button">
-        <FaEllipsisV />
-      </button>
+      
+      {/* Área do Menu */}
+      <div className="header-menu-area">
+        <button className="icon-button" onClick={() => setMenuOpen(!isMenuOpen)}>
+          <FaEllipsisV />
+        </button>
+
+        {/* O menu dropdown que aparece condicionalmente */}
+        {isMenuOpen && (
+          <div className="options-menu">
+            <ul>
+              <li onClick={onToggleDetails}>Ver Perfil do Contato</li>
+              <li>Limpar Histórico</li>
+              <li>Bloquear Contato</li>
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

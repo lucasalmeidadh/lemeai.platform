@@ -4,23 +4,30 @@ import React, { useState } from 'react';
 import './ContactList.css';
 import { FaSearch } from 'react-icons/fa';
 
-// Dados atualizados para mostrar apenas o Lucas Almeida
-const contacts = [
-  { id: 1, name: 'Lucas Almeida', lastMessage: 'Olá, como você está hoje?', time: '5m', active: true },
+// Dados atualizados para incluir iniciais e status de não lida
+const contactsData = [
+  { id: 1, name: 'Lucas Almeida', lastMessage: 'Olá, como você está hoje?', time: '5m', active: true, unread: 1, initials: 'LA' },
+  { id: 2, name: 'Annette Black', lastMessage: 'Sent a Voice Message.', time: '1h', active: false, unread: 0, initials: 'AB' },
+  { id: 3, name: 'Jane Cooper', lastMessage: 'Hi, will this item be buy to...', time: '3h', active: false, unread: 2, initials: 'JC' },
 ];
 
 const ContactList = () => {
   const [isSellerOnline, setSellerOnline] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all' ou 'unread'
 
   const toggleSellerStatus = () => {
     setSellerOnline(!isSellerOnline);
   };
+  
+  // Filtra os contatos com base na aba ativa
+  const filteredContacts = activeFilter === 'unread' 
+    ? contactsData.filter(c => c.unread > 0)
+    : contactsData;
 
   return (
     <div className="contact-list">
       <div className="contact-list-header">
         <div className="header-top-row">
-          {/* Texto atualizado para "Novas Mensagens" */}
           <h2>Inbox <span className="new-badge">2 Novas Mensagens</span></h2>
           <div className="seller-status" onClick={toggleSellerStatus} title={isSellerOnline ? 'Status: Online' : 'Status: Offline'}>
             <div className="seller-avatar">
@@ -30,16 +37,37 @@ const ContactList = () => {
           </div>
         </div>
         <div className="search-container">
-          {/* O ícone de busca e o input agora são "Buscar conversas" */}
           <FaSearch className="search-icon" />
           <input type="text" placeholder="Buscar conversas" />
         </div>
       </div>
 
+      {/* NOVO: Abas de Filtro */}
+      <div className="filter-tabs">
+        <button 
+          className={`filter-button ${activeFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setActiveFilter('all')}
+        >
+          Todas
+        </button>
+        <button 
+          className={`filter-button ${activeFilter === 'unread' ? 'active' : ''}`}
+          onClick={() => setActiveFilter('unread')}
+        >
+          Não Lidas
+        </button>
+      </div>
+
       <ul className="contacts-ul">
-        {contacts.map(contact => (
+        {filteredContacts.map(contact => (
           <li key={contact.id} className={contact.active ? 'active' : ''}>
-            <div className='contact-avatar-placeholder'></div>
+            {/* O avatar agora usa as iniciais e tem o indicador de não lida */}
+            <div className="contact-avatar">
+              {contact.initials}
+              {contact.unread > 0 && (
+                <span className="unread-indicator">{contact.unread}</span>
+              )}
+            </div>
             <div className="contact-details">
               <span className="contact-name">{contact.name}</span>
               <span className="contact-last-message">{contact.lastMessage}</span>

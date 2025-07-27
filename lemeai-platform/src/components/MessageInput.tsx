@@ -1,12 +1,24 @@
-import { FaPaperPlane } from 'react-icons/fa';
+// ARQUIVO: src/components/MessageInput.tsx
+
+// Adicionamos o ícone de clipe de papel
+import { FaPaperPlane, FaPaperclip } from 'react-icons/fa';
 import './MessageInput.css';
 
 const MessageInput = () => {
   return (
     <div className="message-input-container">
-      <input type="text" placeholder="Digite sua mensagem..." />
-      <button><FaPaperPlane /></button>
+      {/* NOVO: Botão de Anexo */}
+      <button className="icon-button attachment-button">
+        <FaPaperclip />
+      </button>
+      <div className="input-wrapper">
+        <input type="text" placeholder="Digite sua mensagem..." />
+      </div>
+      <button className="icon-button send-button">
+        <FaPaperPlane />
+      </button>
     </div>
   );
 };
+
 export default MessageInput;

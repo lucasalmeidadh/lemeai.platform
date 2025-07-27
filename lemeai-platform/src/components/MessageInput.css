@@ -1,35 +1,58 @@
 /* ARQUIVO: src/components/MessageInput.css */
-.message-input-container { 
-  display: flex; 
+.message-input-container {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 15px 25px; 
-  background-color: #eff3f7; /* Fundo mais suave */
+  gap: 15px;
+  padding: 15px 25px;
+  background-color: #f8f9fa;
   border-top: 1px solid #f0f2f5;
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
 }
 
-.message-input-container input { 
-  flex-grow: 1; 
-  border: none; /* Remove a borda do input */
-  border-radius: 20px; 
-  background-color: #ffffff; /* Fundo branco */
-  padding: 12px 20px; 
-  font-size: 15px; 
-  outline: none; 
+/* Novo: um container para o input */
+.input-wrapper {
+  flex-grow: 1;
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  padding: 0 20px;
 }
-.message-input-container button { 
-  background-color: var(--petroleum-blue); 
-  color: white; 
-  border: none; 
-  border-radius: 50%; 
-  width: 45px; 
-  height: 45px; 
-  font-size: 16px; 
-  cursor: pointer; 
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
-  flex-shrink: 0;
+
+.input-wrapper input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 15px;
+  outline: none;
+}
+
+/* Estilo genérico para os botões de ícone */
+.icon-button {
+  background: transparent;
+  border: none;
+  color: #6c757d;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.icon-button:hover {
+  background-color: #e9ecef;
+}
+
+/* Estilo específico para o botão de enviar */
+.send-button {
+  background-color: #005f73;
+  color: white;
+}
+
+.send-button:hover {
+  background-color: #004c5a;
 }
