@@ -12,10 +12,7 @@ import './ChatPage.css';
 
 const ChatPage = () => {
   const navigate = useNavigate();
-
-  // Estado para o painel de detalhes
-  const [isDetailsPanelOpen, setDetailsPanelOpen] = useState(true);
-  // Estado para o menu lateral
+  const [isDetailsPanelOpen, setDetailsPanelOpen] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleLogout = () => {
@@ -31,7 +28,11 @@ const ChatPage = () => {
     setSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  const currentContact = "Lucas Almeida";
+  const currentContact = {
+    name: "Lucas Almeida",
+    phone: "(11) 98765-4321",
+    initials: "L",
+  };
 
   return (
     <div className={`dashboard-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -43,19 +44,17 @@ const ChatPage = () => {
       <main className="main-content" style={{ padding: 0 }}>
         <div className="chat-layout">
           <ContactList />
-
           <div className="conversation-area">
             <ConversationHeader
-              contactName={currentContact}
+              contactName={currentContact.name}
               onToggleDetails={toggleDetailsPanel}
             />
             <ConversationWindow />
             <MessageInput />
           </div>
-
           {isDetailsPanelOpen && (
             <DetailsPanel
-              contactName={currentContact}
+              contact={currentContact}
               onClose={toggleDetailsPanel}
             />
           )}
@@ -63,6 +62,6 @@ const ChatPage = () => {
       </main>
     </div>
   );
-}; // <- Certifique-se de que esta chave '}' de fechamento do componente está aqui
+};
 
 export default ChatPage;

@@ -16,17 +16,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle }) =>
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      {/* O botão foi movido para DENTRO do header */}
       <div className="sidebar-header">
         <h3>{isCollapsed ? 'M' : 'Meu CRM'}</h3>
-        {/* O botão agora está aqui */}
         <button onClick={onToggle} className="toggle-button">
           {isCollapsed ? <FaAngleRight /> : <FaAngleLeft />}
         </button>
       </div>
-
       <nav className="sidebar-nav">
-        {/* ... O resto do seu componente continua igual ... */}
         <ul>
           <li className={location.pathname === '/dashboard' ? 'active' : ''}>
             <Link to="/dashboard" title="Painel">

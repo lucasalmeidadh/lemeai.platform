@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import './ContactList.css';
 import { FaSearch } from 'react-icons/fa';
 
-// Dados atualizados para incluir iniciais e status de não lida
+// Dados restaurados com todos os contatos
 const contactsData = [
   { id: 1, name: 'Lucas Almeida', lastMessage: 'Olá, como você está hoje?', time: '5m', active: true, unread: 1, initials: 'LA' },
   { id: 2, name: 'Annette Black', lastMessage: 'Sent a Voice Message.', time: '1h', active: false, unread: 0, initials: 'AB' },
@@ -13,13 +13,12 @@ const contactsData = [
 
 const ContactList = () => {
   const [isSellerOnline, setSellerOnline] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all' ou 'unread'
+  const [activeFilter, setActiveFilter] = useState('all');
 
   const toggleSellerStatus = () => {
     setSellerOnline(!isSellerOnline);
   };
   
-  // Filtra os contatos com base na aba ativa
   const filteredContacts = activeFilter === 'unread' 
     ? contactsData.filter(c => c.unread > 0)
     : contactsData;
@@ -42,7 +41,6 @@ const ContactList = () => {
         </div>
       </div>
 
-      {/* NOVO: Abas de Filtro */}
       <div className="filter-tabs">
         <button 
           className={`filter-button ${activeFilter === 'all' ? 'active' : ''}`}
@@ -61,7 +59,6 @@ const ContactList = () => {
       <ul className="contacts-ul">
         {filteredContacts.map(contact => (
           <li key={contact.id} className={contact.active ? 'active' : ''}>
-            {/* O avatar agora usa as iniciais e tem o indicador de não lida */}
             <div className="contact-avatar">
               {contact.initials}
               {contact.unread > 0 && (
