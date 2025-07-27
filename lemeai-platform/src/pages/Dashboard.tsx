@@ -1,13 +1,12 @@
-import { useState } from 'react'; // Vamos precisar do useState para os filtros
+// ARQUIVO: src/pages/Dashboard.tsx
+
+import React, { useState } from 'react'; // Adicionado React para o JSX
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import KPICard from '../components/KPICard';
 import './Dashboard.css';
 import { FaUserPlus, FaHandshake, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 
-// --- 1. DADOS FALSOS (MOCK DATA) ATUALIZADOS ---
-
-// Novos KPIs
 const kpiData = [
   { title: 'Novos leads', value: '12', icon: <FaUserPlus /> },
   { title: 'Vendas em andamento', value: '7', icon: <FaHandshake /> },
@@ -15,30 +14,29 @@ const kpiData = [
   { title: 'Vendas concluídas', value: '18', icon: <FaCheckCircle /> },
 ];
 
-// Nova lista de negociações para a tabela
 const dealsData = [
-  { id: 1, cliente: 'Auto Peças Veloz', numero: 'NEG-001', tipoSolicitacao: 'Peças', status: 'Em negociação' },
-  { id: 2, cliente: 'Oficina Central', numero: 'NEG-002', tipoSolicitacao: 'Oficina', status: 'Concluído' },
-  { id: 3, cliente: 'Garagem do Zé', numero: 'NEG-003', tipoSolicitacao: 'Peças', status: 'Aguardando aprovação' },
-  { id: 4, cliente: 'Reparos Rápidos S.A.', numero: 'NEG-004', tipoSolicitacao: 'Oficina', status: 'Perdido' },
-  { id: 5, cliente: 'Importadora de Peças Feras', numero: 'NEG-005', tipoSolicitacao: 'Peças', status: 'Novo' },
-  { id: 6, cliente: 'Mecânica Confiança', numero: 'NEG-006', tipoSolicitacao: 'Oficina', status: 'Em negociação' },
+    { id: 1, cliente: 'Lucas Almeida', numero: '41998207192', tipoSolicitacao: 'Peças', status: 'Em negociação' },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
-
-  // --- 2. ESTADOS PARA OS FILTROS ---
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [typeFilter, setTypeFilter] = useState('Todos');
+  
+  // 1. ADICIONAMOS O ESTADO PARA CONTROLAR O MENU (IGUAL NA ChatPage)
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     navigate('/login');
   };
+
+  // 2. ADICIONAMOS A FUNÇÃO PARA ALTERNAR O ESTADO DO MENU
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!isSidebarCollapsed);
+  };
   
-  // --- 3. LÓGICA DE FILTRAGEM ---
   const filteredDeals = dealsData.filter(deal => {
     const searchMatch = deal.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         deal.numero.toLowerCase().includes(searchTerm.toLowerCase());
@@ -49,8 +47,14 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="dashboard-layout">
-      <Sidebar onLogout={handleLogout} />
+    // 3. ADICIONAMOS A CLASSE CONDICIONAL AO LAYOUT
+    <div className={`dashboard-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      {/* 4. PASSAMOS AS PROPS NECESSÁRIAS PARA O SIDEBAR */}
+      <Sidebar 
+        onLogout={handleLogout}
+        isCollapsed={isSidebarCollapsed}
+        onToggle={toggleSidebar}
+      />
       <main className="main-content">
         <h1>Painel Principal</h1>
         
@@ -60,7 +64,6 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* --- 4. SECÇÃO DE FILTROS --- */}
         <div className="filters-container">
           <input 
             type="text" 
@@ -78,14 +81,12 @@ const Dashboard = () => {
               <option value="Todos">Status da Negociação</option>
               <option value="Novo">Novo</option>
               <option value="Em negociação">Em negociação</option>
-              <option value="Aguardando aprovação">Aguardando aprovação</option>
               <option value="Concluído">Concluído</option>
               <option value="Perdido">Perdido</option>
             </select>
           </div>
         </div>
 
-        {/* --- 5. NOVA TABELA DE NEGOCIAÇÕES --- */}
         <div className="table-container">
           <table className="deals-table">
             <thead>
