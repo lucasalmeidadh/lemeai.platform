@@ -2,14 +2,10 @@
 
 import React, { useState } from 'react';
 import './DetailsPanel.css';
-// Ícone FaHistory foi removido da importação para limpar o aviso
+// CORREÇÃO: Removemos FaHistory que não estava sendo usado
 import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote } from 'react-icons/fa';
-
-interface Contact {
-  name: string;
-  phone: string;
-  initials: string;
-}
+// CORREÇÃO: Adicionamos 'type' na importação da interface 'Contact'
+import type { Contact } from '../data/mockData';
 
 interface DetailsPanelProps {
   contact: Contact;
