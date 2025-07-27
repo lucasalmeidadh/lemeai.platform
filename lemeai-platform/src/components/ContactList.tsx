@@ -29,7 +29,7 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
     <div className="contact-list">
       <div className="contact-list-header">
         <div className="header-top-row">
-          <h2>Inbox <span className="new-badge">2 Novas Mensagens</span></h2>
+          <h2>Chat <span className="new-badge">2 Novas Mensagens</span></h2>
           <div className="seller-status" onClick={toggleSellerStatus} title={isSellerOnline ? 'Status: Online' : 'Status: Offline'}>
             <div className="seller-avatar">
               <span>V</span>

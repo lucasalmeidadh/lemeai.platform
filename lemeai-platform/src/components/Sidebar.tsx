@@ -17,7 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle }) =>
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <h3>{isCollapsed ? 'M' : 'Meu CRM'}</h3>
+        <h3>{isCollapsed ? 'M' : 'LEME CRM'}</h3>
         <button onClick={onToggle} className="toggle-button">
           {isCollapsed ? <FaAngleRight /> : <FaAngleLeft />}
         </button>
