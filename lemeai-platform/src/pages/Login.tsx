@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Login.css';
-import { FaUser, FaLock } from 'react-icons/fa';
+import { FaUser, FaLock, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -8,13 +8,13 @@ const Login = () => {
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -32,11 +32,11 @@ const Login = () => {
       }
 
       const data = await response.json();
-      
+
       localStorage.setItem('authToken', data.token);
 
       console.log('Login bem-sucedido! Token guardado:', data.token);
-      
+
       navigate('/dashboard');
 
     } catch (err) {
@@ -49,64 +49,61 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
-      {/* Lado Esquerdo: Informação e Branding */}
-      <div className="info-side">
-        <div className="info-content">
-          <div className="company-logo">
-            <h3>LEME.AI</h3>
-          </div>
-          <h1>A sua plataforma de vendas</h1>
-          <p>Conecte-se com seus clientes de forma fácil e eficiente.</p>
-        </div>
+    <div className="login-container-creative">
+      <div className="login-background">
+        <div className="shape shape1"></div>
+        <div className="shape shape2"></div>
+        <div className="shape shape3"></div>
       </div>
 
-      {/* Lado Direito: Formulário de Login */}
-      <div className="form-side">
-        <div className="login-box">
-          <h2>Login</h2>
-          <form onSubmit={handleSubmit}>
-            
-            {error && <p className="error-message">{error}</p>}
-            
-            <div className="input-with-icon">
-              <FaUser className="icon" />
-              <input
-                type="email"
-                id="email"
-                placeholder="Usuário"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="input-with-icon">
-              <FaLock className="icon" />
-              <input
-                type="password"
-                id="password"
-                placeholder="Senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+      <div className="login-form-wrapper">
+        <div className="login-header">
+          <h2 className="logo-creative">LEME.AI</h2>
+          <h3>Seja Bem-vindo</h3>
+          <p>Insira suas credenciais para acessar a plataforma.</p>
+        </div>
 
-            <div className="options">
-              <label>
-                <input type="checkbox" /> Lembrar-me
-              </label>
-              <a href="#">Esqueci a senha</a>
-            </div>
-            
-            <button type="submit" disabled={isLoading}>
-              {isLoading ? 'Entrando...' : 'ENTRAR'}
-            </button>
-          </form>
-          <div className="signup-link">
-            <p>Novo por aqui? <a href="#">Crie uma conta</a></p>
+        <form onSubmit={handleSubmit} className="login-form-creative">
+
+          {error && <p className="error-message-creative">{error}</p>}
+
+          <div className="input-group-creative">
+            <FaUser className="icon-creative" />
+            <input
+              type="email"
+              placeholder="Seu e-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
+
+          <div className="input-group-creative">
+            <FaLock className="icon-creative" />
+            <input
+              type="password"
+              placeholder="Sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="options-creative">
+            <label>
+              <input type="checkbox" /> Manter conectado
+            </label>
+            <a href="#">Esqueci a senha</a>
+          </div>
+
+          <button type="submit" className="button-creative" disabled={isLoading}>
+            {isLoading ? 'Verificando...' : 'Acessar Plataforma'}
+            {!isLoading && <FaArrowRight className="button-icon" />}
+          </button>
+        </form>
+
+        <div className="signup-link-creative">
+          <p>Ainda não tem uma conta? <a href="#">Crie agora</a></p>
         </div>
       </div>
     </div>

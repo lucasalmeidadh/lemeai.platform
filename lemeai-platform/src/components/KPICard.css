@@ -1,26 +1,28 @@
+/* ARQUIVO: src/components/KPICard.css */
+
 .kpi-card {
   background-color: #ffffff;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 20px;
+  border: 1px solid #e9ecef; /* Borda mais suave */
+  border-radius: 16px; /* Bordas mais arredondadas */
+  padding: 25px;
   display: flex;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra um pouco mais sutil */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .kpi-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px); /* Efeito de elevação mais discreto */
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .kpi-icon-wrapper {
-  font-size: 28px;
+  font-size: 24px; /* Ícone um pouco menor */
   color: var(--petroleum-blue, #005f73);
-  background-color: #e0f7ff;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
+  background-color: #eef8fa; /* Cor de fundo mais clara e integrada */
+  border-radius: 12px; /* Menos arredondado para um look mais moderno */
+  width: 50px;
+  height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -42,4 +44,5 @@
   font-size: 28px;
   color: #343a40;
   font-weight: 700;
+  line-height: 1.2;
 }
