@@ -45,13 +45,14 @@ const ChatPage = () => {
   
   const [activeConversationMessages, setActiveConversationMessages] = useState<MessagesByDate>({});
 
-  const fetchConversations = useCallback(async () => {
+  const fetchConversations = useCallback(async (isInitialLoad = false) => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       navigate('/login');
       return;
     }
-    // Não seta o isLoading aqui para a atualização da lista ser mais sutil
+    if (isInitialLoad) setIsLoading(true);
+
     try {
       const response = await fetch('https://lemeia-api.onrender.com/api/Chat/ConversasPorVendedor', {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -76,7 +77,7 @@ const ChatPage = () => {
               messagesByDate: {} 
           }));
           setContacts(formattedContacts);
-          if (formattedContacts.length > 0 && selectedContactId === null) {
+          if (isInitialLoad && formattedContacts.length > 0) {
               setSelectedContactId(formattedContacts[0].id);
           }
       } else {
@@ -85,63 +86,59 @@ const ChatPage = () => {
     } catch (err) {
       setError("Ocorreu um erro de rede. Tente novamente.");
     } finally {
-      setIsLoading(false); // Seta o loading principal como false apenas na primeira carga
+      if (isInitialLoad) setIsLoading(false);
     }
-  }, [navigate, selectedContactId]);
+  }, [navigate]);
 
-  useEffect(() => {
-    fetchConversations();
-  }, []); // Executa apenas na montagem inicial
+  const fetchMessages = useCallback(async (contactId: number) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) { navigate('/login'); return; }
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-        if (selectedContactId === null) return;
+    try {
+        const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${contactId}/Mensagens`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+        });
 
-        const token = localStorage.getItem('authToken');
-        if (!token) {
+        if (response.status === 401) {
+            localStorage.removeItem('authToken');
             navigate('/login');
             return;
         }
+        if (!response.ok) throw new Error('Falha ao buscar mensagens.');
 
-        try {
-            const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/Mensagens`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-
-            if (response.status === 401) {
-                localStorage.removeItem('authToken');
-                navigate('/login');
-                return;
-            }
-            if (!response.ok) throw new Error('Falha ao buscar mensagens.');
-
-            const result = await response.json();
-            if (result.sucesso && Array.isArray(result.dados.mensagens)) {
-                const messagesByDate = result.dados.mensagens.reduce((acc: MessagesByDate, msg: ApiMessage) => {
-                    const date = new Date(msg.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    const formattedMessage: Message = {
-                        id: msg.idMensagem,
-                        text: msg.mensagem,
-                        sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
-                        time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                    };
-                    if (!acc[date]) acc[date] = [];
-                    acc[date].push(formattedMessage);
-                    return acc;
-                }, {});
-                setActiveConversationMessages(messagesByDate);
-            } else {
-               setActiveConversationMessages({});
-            }
-        } catch (err) {
-            console.error("Erro ao buscar mensagens:", err);
-            setActiveConversationMessages({});
+        const result = await response.json();
+        if (result.sucesso && Array.isArray(result.dados.mensagens)) {
+            const messagesByDate = result.dados.mensagens.reduce((acc: MessagesByDate, msg: ApiMessage) => {
+                const date = new Date(msg.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const formattedMessage: Message = {
+                    id: msg.idMensagem,
+                    text: msg.mensagem,
+                    sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
+                    time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                };
+                if (!acc[date]) acc[date] = [];
+                acc[date].push(formattedMessage);
+                return acc;
+            }, {});
+            setActiveConversationMessages(messagesByDate);
+        } else {
+           setActiveConversationMessages({});
         }
-    };
+    } catch (err) {
+        console.error("Erro ao buscar mensagens:", err);
+        setActiveConversationMessages({});
+    }
+  }, [navigate]);
 
-    fetchMessages();
-  }, [selectedContactId, navigate]);
+  useEffect(() => {
+    fetchConversations(true);
+  }, [fetchConversations]);
 
+  useEffect(() => {
+    if (selectedContactId !== null) {
+        fetchMessages(selectedContactId);
+    }
+  }, [selectedContactId, fetchMessages]);
 
   const selectedContact = contacts.find(c => c.id === selectedContactId);
 
@@ -156,30 +153,7 @@ const ChatPage = () => {
     if (!text.trim() || selectedContactId === null) return;
 
     const token = localStorage.getItem('authToken');
-    if (!token) {
-        navigate('/login');
-        return;
-    }
-
-    // --- Atualização Otimista da UI ---
-    const tempMessageId = Date.now();
-    const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const newMessage: Message = {
-      id: tempMessageId,
-      text,
-      sender: 'me',
-      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setActiveConversationMessages(prev => {
-        const newMessages = { ...prev };
-        if (!newMessages[today]) {
-            newMessages[today] = [];
-        }
-        newMessages[today].push(newMessage);
-        return { ...newMessages };
-    });
-    // --- Fim da Atualização Otimista ---
+    if (!token) { navigate('/login'); return; }
 
     try {
         const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
@@ -188,6 +162,7 @@ const ChatPage = () => {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
+            // Voltamos a enviar a string pura, como estava funcionando antes
             body: JSON.stringify(text), 
         });
 
@@ -196,28 +171,20 @@ const ChatPage = () => {
             throw new Error('Falha ao enviar mensagem.');
         }
 
-        // Atualiza a lista de contatos para refletir a última mensagem enviada
-        await fetchConversations();
+        // SUCESSO! Agora buscamos a lista de mensagens ATUALIZADA do servidor.
+        // Isso irá popular a tela com a mensagem recém-enviada, evitando duplicatas.
+        await fetchMessages(selectedContactId);
+
+        // Também atualizamos a lista de conversas para o painel da esquerda
+        await fetchConversations(false);
 
     } catch (err) {
         console.error("Erro ao enviar mensagem:", err);
         alert("Não foi possível enviar a mensagem. Tente novamente.");
-        
-        // Reverte a UI se a API falhar
-        setActiveConversationMessages(prev => {
-            const newMessages = { ...prev };
-            if (newMessages[today]) {
-                newMessages[today] = newMessages[today].filter(msg => msg.id !== tempMessageId);
-            }
-            return { ...newMessages };
-        });
     }
   };
 
-  const handleLogout = () => { 
-    localStorage.removeItem('authToken');
-    navigate('/login'); 
-  };
+  const handleLogout = () => { localStorage.removeItem('authToken'); navigate('/login'); };
   const toggleDetailsPanel = () => { setDetailsPanelOpen(!isDetailsPanelOpen); };
   const toggleSidebar = () => { setSidebarCollapsed(!isSidebarCollapsed); };
   
@@ -229,29 +196,15 @@ const ChatPage = () => {
       <Sidebar onLogout={handleLogout} isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
       <main className="main-content" style={{ padding: 0 }}>
         <div className="chat-layout">
-          <ContactList
-            contacts={contacts}
-            activeContactId={selectedContactId || 0}
-            onSelectContact={handleSelectContact}
-          />
+          <ContactList contacts={contacts} activeContactId={selectedContactId || 0} onSelectContact={handleSelectContact} />
           {selectedContact ? (
             <>
               <div className="conversation-area">
-                <ConversationHeader
-                  contactName={selectedContact.name}
-                  onToggleDetails={toggleDetailsPanel}
-                />
-                <ConversationWindow
-                  messagesByDate={activeConversationMessages}
-                />
+                <ConversationHeader contactName={selectedContact.name} onToggleDetails={toggleDetailsPanel} />
+                <ConversationWindow messagesByDate={activeConversationMessages} />
                 <MessageInput onSendMessage={handleSendMessage} />
               </div>
-              {isDetailsPanelOpen && (
-                <DetailsPanel
-                  contact={selectedContact}
-                  onClose={toggleDetailsPanel}
-                />
-              )}
+              {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} />}
             </>
           ) : (
             <div className="conversation-area" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
