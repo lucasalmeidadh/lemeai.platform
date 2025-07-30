@@ -1,6 +1,6 @@
 // ARQUIVO: src/pages/ChatPage.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ContactList from '../components/ContactList';
@@ -66,16 +66,10 @@ const ChatPage = () => {
       const result = await response.json();
       
       if (result.sucesso && Array.isArray(result.dados)) {
-          
-          // --- INÍCIO DA CORREÇÃO ---
-          // Ordena a lista de conversas recebida da API.
-          // Comparamos a 'dataUltimaMensagem' de 'b' com 'a' para obter uma ordem decrescente (mais novo para mais antigo).
           const sortedConversations: ApiConversation[] = result.dados.sort((a: ApiConversation, b: ApiConversation) => 
               new Date(b.dataUltimaMensagem).getTime() - new Date(a.dataUltimaMensagem).getTime()
           );
-          // --- FIM DA CORREÇÃO ---
           
-          // Agora, mapeamos a lista JÁ ORDENADA para o formato que o componente precisa.
           const formattedContacts: Contact[] = sortedConversations.map((convo: ApiConversation) => ({
               id: convo.idConversa,
               name: convo.nomeCliente || convo.numeroWhatsapp,
@@ -86,7 +80,6 @@ const ChatPage = () => {
               phone: convo.numeroWhatsapp,
               messagesByDate: {} 
           }));
-
           setContacts(formattedContacts);
           if (isInitialLoad && formattedContacts.length > 0) {
               setSelectedContactId(formattedContacts[0].id);
@@ -126,6 +119,7 @@ const ChatPage = () => {
                     text: msg.mensagem,
                     sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
                     time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    status: 'sent'
                 };
                 if (!acc[date]) acc[date] = [];
                 acc[date].push(formattedMessage);
@@ -162,30 +156,67 @@ const ChatPage = () => {
   
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || selectedContactId === null) return;
-
     const token = localStorage.getItem('authToken');
     if (!token) { navigate('/login'); return; }
 
+    const tempId = Date.now();
+    const today = new Date();
+    const dateKey = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    
+    const optimisticMessage: Message = {
+      id: tempId,
+      text: text,
+      sender: 'me',
+      time: today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      status: 'sending',
+    };
+
+    // --- INÍCIO DA CORREÇÃO ---
+    // Esta é a forma "imutável" e segura de atualizar o estado.
+    // Criamos uma cópia do objeto principal e uma cópia do array interno antes de adicionar a nova mensagem.
+    setActiveConversationMessages(prev => {
+      const newMessagesByDate = { ...prev };
+      const currentMessages = prev[dateKey] || [];
+      newMessagesByDate[dateKey] = [...currentMessages, optimisticMessage];
+      return newMessagesByDate;
+    });
+    // --- FIM DA CORREÇÃO ---
+
     try {
-        const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(text), 
-        });
+      const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(text),
+      });
 
-        if (!response.ok) {
-            throw new Error('Falha ao enviar mensagem.');
-        }
-
-        await fetchMessages(selectedContactId);
-        await fetchConversations(false);
+      if (!response.ok) {
+        throw new Error('Falha ao enviar mensagem na API.');
+      }
+      
+      await fetchMessages(selectedContactId);
+      await fetchConversations(false);
 
     } catch (err) {
-        console.error("Erro ao enviar mensagem:", err);
-        alert("Não foi possível enviar a mensagem. Tente novamente.");
+      console.error("Erro ao enviar mensagem:", err);
+      // A lógica para tratar a falha também foi ajustada para ser imutável
+      setActiveConversationMessages(prev => {
+        const newMessagesByDate = { ...prev };
+        const messagesForDate = prev[dateKey] ? [...prev[dateKey]] : [];
+        const messageIndex = messagesForDate.findIndex(m => m.id === tempId);
+
+        if (messageIndex !== -1) {
+          // Cria uma cópia da mensagem para alterar o status
+          const updatedMessage = { ...messagesForDate[messageIndex], status: 'failed' as const };
+          messagesForDate[messageIndex] = updatedMessage;
+          newMessagesByDate[dateKey] = messagesForDate;
+        }
+
+        return newMessagesByDate;
+      });
+      alert("Não foi possível enviar a mensagem. Verifique sua conexão.");
     }
   };
 

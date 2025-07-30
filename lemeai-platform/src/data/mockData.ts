@@ -6,6 +6,7 @@ export interface Message {
   text: string;
   sender: 'me' | 'other' | 'ia'; // <-- ALTERAÇÃO AQUI
   time: string;
+  status?: 'sending' | 'sent' | 'failed';
 }
 
 export interface Contact {
@@ -33,12 +34,12 @@ export const contactsData: Contact[] = [
     phone: '(41) 99820-7192',
     messagesByDate: {
       'Ontem': [
-        { id: 1, text: 'Olá, como você está hoje?', sender: 'other', time: '15:30' },
-        { id: 2, text: 'Olá, Lucas! Estou bem e você?', sender: 'me', time: '15:31' },
+        { id: 1, text: 'Olá, como você está hoje?', sender: 'other', time: '15:30', status: 'sent' },
+        { id: 2, text: 'Olá, Lucas! Estou bem e você?', sender: 'me', time: '15:31', status: 'sent' },
       ],
       'Hoje': [
-        { id: 3, text: 'Estou ótimo', sender: 'other', time: '09:15' },
-        { id: 4, text: 'Que bom! Podemos agendar uma demonstração do produto para amanhã?', sender: 'me', time: '09:16' }
+        { id: 3, text: 'Estou ótimo', sender: 'other', time: '09:15', status: 'sent' },
+        { id: 4, text: 'Que bom! Podemos agendar uma demonstração do produto para amanhã?', sender: 'me', time: '09:16', status: 'sent' }
       ]
     }
   },
@@ -52,7 +53,7 @@ export const contactsData: Contact[] = [
     phone: '(21) 99999-8888',
     messagesByDate: {
       'Hoje': [
-        { id: 1, text: 'Olá, eu gostaria de um orçamento.', sender: 'other', time: '08:20' }
+        { id: 1, text: 'Olá, eu gostaria de um orçamento.', sender: 'other', time: '08:20', status: 'sent' }
       ]
     }
   },
@@ -66,7 +67,7 @@ export const contactsData: Contact[] = [
     phone: '(31) 98888-7777',
     messagesByDate: {
       'Hoje': [
-        { id: 1, text: 'Olá, tudo bem?', sender: 'other', time: '06:10' }
+        { id: 1, text: 'Olá, tudo bem?', sender: 'other', time: '06:10', status: 'sent' }
       ]
     }
   },

@@ -1,7 +1,7 @@
 // ARQUIVO: src/components/ConversationWindow.tsx
 
 import React, { useEffect, useRef } from 'react';
-import { FaRobot } from 'react-icons/fa';
+import { FaRobot, FaCheck, FaRegClock, FaExclamationCircle } from 'react-icons/fa'; // Importando novos ícones
 import './ConversationWindow.css';
 import type { Message } from '../data/mockData';
 
@@ -9,7 +9,19 @@ interface ConversationWindowProps {
   messagesByDate: { [date: string]: Message[] };
 }
 
-// Função auxiliar para converter data 'dd/mm/yyyy' para um objeto Date
+// Componente auxiliar para o status
+const MessageStatus: React.FC<{ status?: 'sending' | 'sent' | 'failed' }> = ({ status }) => {
+  if (status === 'sending') {
+    return <FaRegClock className="status-icon" title="Enviando..." />;
+  }
+  if (status === 'failed') {
+    return <FaExclamationCircle className="status-icon failed" title="Falha ao enviar" />;
+  }
+  // Para 'sent' ou status indefinido (mensagens antigas), mostramos o check
+  return <FaCheck className="status-icon" title="Enviado" />;
+};
+
+
 const parseDate = (dateString: string) => {
     const [day, month, year] = dateString.split('/');
     return new Date(`${year}-${month}-${day}`);
@@ -19,7 +31,6 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    // Usamos um scroll imediato aqui para garantir que a última mensagem seja visível ao carregar
     messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
   };
 
@@ -29,36 +40,30 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate 
 
   return (
     <div className="messages-list">
-      {/* AQUI A CORREÇÃO PRINCIPAL: Adicionamos .sort() para ordenar as datas */}
       {Object.entries(messagesByDate)
         .sort(([dateA], [dateB]) => parseDate(dateA).getTime() - parseDate(dateB).getTime())
         .map(([date, messages]) => (
         <React.Fragment key={date}>
           <div className="date-divider"><span>{date}</span></div>
-          
-          {/* --- INÍCIO DA CORREÇÃO ---
-            Ordenamos o array de 'messages' de cada dia pelo 'id' da mensagem
-            em ordem crescente (a.id - b.id). Isso garante que a mensagem mais
-            antiga (menor id) apareça primeiro.
-          */}
           {messages
             .sort((a, b) => a.id - b.id)
             .map(msg => (
-              <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
-                <div className={`message-bubble ${msg.sender}`}>
-                  {msg.sender === 'ia' && (
-                    <div className="ia-header">
-                      <FaRobot />
-                      <span>Téo (IA)</span>
-                    </div>
-                  )}
-                  {msg.text}
+            <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
+              <div className={`message-bubble ${msg.sender}`}>
+                {msg.sender === 'ia' && (
+                  <div className="ia-header">
+                    <FaRobot />
+                    <span>Téo (IA)</span>
+                  </div>
+                )}
+                <div className="message-content">{msg.text}</div>
+                <div className="message-meta">
                   <span className="timestamp">{msg.time}</span>
+                  {msg.sender === 'me' && <MessageStatus status={msg.status} />}
                 </div>
               </div>
+            </div>
           ))}
-          {/* --- FIM DA CORREÇÃO --- */}
-
         </React.Fragment>
       ))}
       <div ref={messagesEndRef} />
