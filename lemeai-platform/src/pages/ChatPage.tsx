@@ -33,7 +33,6 @@ interface MessagesByDate {
     [date: string]: Message[];
 }
 
-
 const ChatPage = () => {
   const navigate = useNavigate();
   const [isDetailsPanelOpen, setDetailsPanelOpen] = useState(false);
@@ -52,7 +51,7 @@ const ChatPage = () => {
       navigate('/login');
       return;
     }
-    setIsLoading(true);
+    // Não seta o isLoading aqui para a atualização da lista ser mais sutil
     try {
       const response = await fetch('https://lemeia-api.onrender.com/api/Chat/ConversasPorVendedor', {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -86,13 +85,13 @@ const ChatPage = () => {
     } catch (err) {
       setError("Ocorreu um erro de rede. Tente novamente.");
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Seta o loading principal como false apenas na primeira carga
     }
   }, [navigate, selectedContactId]);
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, []); // Executa apenas na montagem inicial
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -123,7 +122,6 @@ const ChatPage = () => {
                     const formattedMessage: Message = {
                         id: msg.idMensagem,
                         text: msg.mensagem,
-                        // ALTERAÇÃO AQUI para mapear a origem da IA
                         sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
                         time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                     };
@@ -154,9 +152,66 @@ const ChatPage = () => {
     }
   };
   
-  const handleSendMessage = (text: string) => {
-    // A implementação do envio de mensagem será feita no próximo passo
-    console.log(`Enviando "${text}" para a conversa ${selectedContactId}`);
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim() || selectedContactId === null) return;
+
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        navigate('/login');
+        return;
+    }
+
+    // --- Atualização Otimista da UI ---
+    const tempMessageId = Date.now();
+    const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const newMessage: Message = {
+      id: tempMessageId,
+      text,
+      sender: 'me',
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setActiveConversationMessages(prev => {
+        const newMessages = { ...prev };
+        if (!newMessages[today]) {
+            newMessages[today] = [];
+        }
+        newMessages[today].push(newMessage);
+        return { ...newMessages };
+    });
+    // --- Fim da Atualização Otimista ---
+
+    try {
+        const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(text), 
+        });
+
+        if (!response.ok) {
+            // Se a API falhar, a UI será revertida no bloco 'catch'
+            throw new Error('Falha ao enviar mensagem.');
+        }
+
+        // Atualiza a lista de contatos para refletir a última mensagem enviada
+        await fetchConversations();
+
+    } catch (err) {
+        console.error("Erro ao enviar mensagem:", err);
+        alert("Não foi possível enviar a mensagem. Tente novamente.");
+        
+        // Reverte a UI se a API falhar
+        setActiveConversationMessages(prev => {
+            const newMessages = { ...prev };
+            if (newMessages[today]) {
+                newMessages[today] = newMessages[today].filter(msg => msg.id !== tempMessageId);
+            }
+            return { ...newMessages };
+        });
+    }
   };
 
   const handleLogout = () => { 
@@ -200,7 +255,7 @@ const ChatPage = () => {
             </>
           ) : (
             <div className="conversation-area" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <p>Nenhuma conversa encontrada. Comece a interagir com os clientes!</p>
+                <p>Nenhuma conversa encontrada.</p>
             </div>
           )}
         </div>
