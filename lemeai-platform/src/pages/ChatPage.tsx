@@ -66,7 +66,17 @@ const ChatPage = () => {
       const result = await response.json();
       
       if (result.sucesso && Array.isArray(result.dados)) {
-          const formattedContacts: Contact[] = result.dados.map((convo: ApiConversation) => ({
+          
+          // --- INÍCIO DA CORREÇÃO ---
+          // Ordena a lista de conversas recebida da API.
+          // Comparamos a 'dataUltimaMensagem' de 'b' com 'a' para obter uma ordem decrescente (mais novo para mais antigo).
+          const sortedConversations: ApiConversation[] = result.dados.sort((a: ApiConversation, b: ApiConversation) => 
+              new Date(b.dataUltimaMensagem).getTime() - new Date(a.dataUltimaMensagem).getTime()
+          );
+          // --- FIM DA CORREÇÃO ---
+          
+          // Agora, mapeamos a lista JÁ ORDENADA para o formato que o componente precisa.
+          const formattedContacts: Contact[] = sortedConversations.map((convo: ApiConversation) => ({
               id: convo.idConversa,
               name: convo.nomeCliente || convo.numeroWhatsapp,
               lastMessage: convo.ultimaMensagem,
@@ -76,6 +86,7 @@ const ChatPage = () => {
               phone: convo.numeroWhatsapp,
               messagesByDate: {} 
           }));
+
           setContacts(formattedContacts);
           if (isInitialLoad && formattedContacts.length > 0) {
               setSelectedContactId(formattedContacts[0].id);
@@ -162,20 +173,14 @@ const ChatPage = () => {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
-            // Voltamos a enviar a string pura, como estava funcionando antes
             body: JSON.stringify(text), 
         });
 
         if (!response.ok) {
-            // Se a API falhar, a UI será revertida no bloco 'catch'
             throw new Error('Falha ao enviar mensagem.');
         }
 
-        // SUCESSO! Agora buscamos a lista de mensagens ATUALIZADA do servidor.
-        // Isso irá popular a tela com a mensagem recém-enviada, evitando duplicatas.
         await fetchMessages(selectedContactId);
-
-        // Também atualizamos a lista de conversas para o painel da esquerda
         await fetchConversations(false);
 
     } catch (err) {

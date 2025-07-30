@@ -29,27 +29,36 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate 
 
   return (
     <div className="messages-list">
-      {/* AQUI ESTÁ A CORREÇÃO: Adicionamos .sort() para ordenar as datas */}
+      {/* AQUI A CORREÇÃO PRINCIPAL: Adicionamos .sort() para ordenar as datas */}
       {Object.entries(messagesByDate)
         .sort(([dateA], [dateB]) => parseDate(dateA).getTime() - parseDate(dateB).getTime())
         .map(([date, messages]) => (
         <React.Fragment key={date}>
           <div className="date-divider"><span>{date}</span></div>
-          {/* As mensagens já devem vir ordenadas da API, então não precisam de sort aqui */}
-          {messages.map(msg => (
-            <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
-              <div className={`message-bubble ${msg.sender}`}>
-                {msg.sender === 'ia' && (
-                  <div className="ia-header">
-                    <FaRobot />
-                    <span>Téo (IA)</span>
-                  </div>
-                )}
-                {msg.text}
-                <span className="timestamp">{msg.time}</span>
+          
+          {/* --- INÍCIO DA CORREÇÃO ---
+            Ordenamos o array de 'messages' de cada dia pelo 'id' da mensagem
+            em ordem crescente (a.id - b.id). Isso garante que a mensagem mais
+            antiga (menor id) apareça primeiro.
+          */}
+          {messages
+            .sort((a, b) => a.id - b.id)
+            .map(msg => (
+              <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
+                <div className={`message-bubble ${msg.sender}`}>
+                  {msg.sender === 'ia' && (
+                    <div className="ia-header">
+                      <FaRobot />
+                      <span>Téo (IA)</span>
+                    </div>
+                  )}
+                  {msg.text}
+                  <span className="timestamp">{msg.time}</span>
+                </div>
               </div>
-            </div>
           ))}
+          {/* --- FIM DA CORREÇÃO --- */}
+
         </React.Fragment>
       ))}
       <div ref={messagesEndRef} />
