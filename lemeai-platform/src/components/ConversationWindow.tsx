@@ -1,6 +1,7 @@
 // ARQUIVO: src/components/ConversationWindow.tsx
 
-import React, { useEffect, useRef } from 'react'; // 1. Importamos o useEffect e useRef
+import React, { useEffect, useRef } from 'react';
+import { FaRobot } from 'react-icons/fa'; // Importa o ícone
 import './ConversationWindow.css';
 import type { Message } from '../data/mockData';
 
@@ -9,18 +10,15 @@ interface ConversationWindowProps {
 }
 
 const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate }) => {
-  // 2. Criamos uma referência para o final da lista de mensagens
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // 3. Função para rolar para o final
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // 4. Usamos o useEffect para chamar a função de rolagem sempre que as mensagens mudarem
   useEffect(() => {
     scrollToBottom();
-  }, [messagesByDate]); // A dependência é a lista de mensagens
+  }, [messagesByDate]);
 
   return (
     <div className="messages-list">
@@ -28,8 +26,15 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate 
         <React.Fragment key={date}>
           <div className="date-divider"><span>{date}</span></div>
           {messages.map(msg => (
-            <div key={msg.id} className={`message-wrapper ${msg.sender === 'me' ? 'sent' : 'received'}`}>
+            <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
               <div className={`message-bubble ${msg.sender}`}>
+                {/* LÓGICA PARA EXIBIR O CABEÇALHO DA IA */}
+                {msg.sender === 'ia' && (
+                  <div className="ia-header">
+                    <FaRobot />
+                    <span>Téo (IA)</span>
+                  </div>
+                )}
                 {msg.text}
                 <span className="timestamp">{msg.time}</span>
               </div>
@@ -37,7 +42,6 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate 
           ))}
         </React.Fragment>
       ))}
-      {/* 5. Adicionamos um elemento invisível no final da lista, para onde vamos rolar */}
       <div ref={messagesEndRef} />
     </div>
   );

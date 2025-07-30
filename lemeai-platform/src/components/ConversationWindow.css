@@ -75,3 +75,30 @@
 .message-bubble.me .timestamp {
   color: rgba(255, 255, 255, 0.7); /* Cor mais suave para o fundo escuro */
 }
+
+/* --- NOVOS ESTILOS PARA A IA --- */
+
+/* Estilo para mensagens da IA */
+.message-bubble.ia {
+  background: linear-gradient(135deg, #e0eafc, #cfdef3); /* Um gradiente suave azul-claro */
+  color: #3e5067;
+  border: 1px solid #c1d0e8;
+  border-bottom-right-radius: 4px;
+}
+
+/* Estilo para o cabeçalho dentro do balão da IA */
+.ia-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #005f73; /* Cor do tema para o texto do header */
+  opacity: 0.9;
+}
+
+/* Ajuste no timestamp para o balão da IA */
+.message-bubble.ia .timestamp {
+  color: #5a728e;
+}

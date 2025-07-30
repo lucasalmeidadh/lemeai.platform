@@ -1,6 +1,6 @@
 // ARQUIVO: src/pages/ChatPage.tsx
 
-import React, { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ContactList from '../components/ContactList';
@@ -9,7 +9,7 @@ import ConversationWindow from '../components/ConversationWindow';
 import MessageInput from '../components/MessageInput';
 import DetailsPanel from '../components/DetailsPanel';
 import './ChatPage.css';
-import type { Contact, Message } from '../data/mockData'; // Importamos a interface Message
+import type { Contact, Message } from '../data/mockData';
 
 // Interfaces da API
 interface ApiConversation {
@@ -44,7 +44,6 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // NOVO: Estado para as mensagens da conversa ativa
   const [activeConversationMessages, setActiveConversationMessages] = useState<MessagesByDate>({});
 
   const fetchConversations = useCallback(async () => {
@@ -78,25 +77,23 @@ const ChatPage = () => {
               messagesByDate: {} 
           }));
           setContacts(formattedContacts);
-          if (formattedContacts.length > 0) {
+          if (formattedContacts.length > 0 && selectedContactId === null) {
               setSelectedContactId(formattedContacts[0].id);
           }
       } else {
-          setError(result.mensagem || "Não foi possível carregar as conversas.");
+        setContacts([]);
       }
     } catch (err) {
       setError("Ocorreu um erro de rede. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, selectedContactId]);
 
-  // Busca as conversas iniciais
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
+  }, []);
 
-  // **NOVO**: Busca as mensagens quando o contato selecionado muda
   useEffect(() => {
     const fetchMessages = async () => {
         if (selectedContactId === null) return;
@@ -121,29 +118,26 @@ const ChatPage = () => {
 
             const result = await response.json();
             if (result.sucesso && Array.isArray(result.dados.mensagens)) {
-                // Formata as mensagens da API
                 const messagesByDate = result.dados.mensagens.reduce((acc: MessagesByDate, msg: ApiMessage) => {
                     const date = new Date(msg.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                     const formattedMessage: Message = {
                         id: msg.idMensagem,
                         text: msg.mensagem,
-                        // Origem 1 (Vendedor) ou 2 (IA) é 'me', 0 (Cliente) é 'other'
-                        sender: (msg.origemMensagem === 1 || msg.origemMensagem === 2) ? 'me' : 'other',
+                        // ALTERAÇÃO AQUI para mapear a origem da IA
+                        sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
                         time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                     };
-                    if (!acc[date]) {
-                        acc[date] = [];
-                    }
+                    if (!acc[date]) acc[date] = [];
                     acc[date].push(formattedMessage);
                     return acc;
                 }, {});
                 setActiveConversationMessages(messagesByDate);
             } else {
-               setActiveConversationMessages({}); // Limpa mensagens se a busca falhar
+               setActiveConversationMessages({});
             }
         } catch (err) {
             console.error("Erro ao buscar mensagens:", err);
-            setActiveConversationMessages({}); // Limpa em caso de erro de rede
+            setActiveConversationMessages({});
         }
     };
 
@@ -154,11 +148,14 @@ const ChatPage = () => {
   const selectedContact = contacts.find(c => c.id === selectedContactId);
 
   const handleSelectContact = (id: number) => {
-    setSelectedContactId(id);
+    if (id !== selectedContactId) {
+        setActiveConversationMessages({});
+        setSelectedContactId(id);
+    }
   };
   
   const handleSendMessage = (text: string) => {
-    // ... Lógica de envio da mensagem para a API (próximo passo)
+    // A implementação do envio de mensagem será feita no próximo passo
     console.log(`Enviando "${text}" para a conversa ${selectedContactId}`);
   };
 
@@ -190,7 +187,6 @@ const ChatPage = () => {
                   onToggleDetails={toggleDetailsPanel}
                 />
                 <ConversationWindow
-                  // Passa as mensagens da conversa ativa
                   messagesByDate={activeConversationMessages}
                 />
                 <MessageInput onSendMessage={handleSendMessage} />
