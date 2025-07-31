@@ -25,8 +25,6 @@ const ProfileManagementPage = () => {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // --- CORREÇÃO AQUI ---
-  // Removemos o 'setProfiles' que não estava sendo utilizado
   const [profiles] = useState<Profile[]>([
     { id: 1, name: 'Administrador', permissions: { viewDashboard: true, manageUsers: true, accessChat: true, manageProfiles: true } },
     { id: 2, name: 'Vendedor', permissions: { viewDashboard: true, manageUsers: false, accessChat: true, manageProfiles: false } },
