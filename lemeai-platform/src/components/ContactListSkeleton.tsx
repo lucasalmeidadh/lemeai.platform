@@ -1,6 +1,5 @@
 // ARQUIVO: src/components/ContactListSkeleton.tsx
 
-import React from 'react';
 import './ContactList.css'; // Reutilizamos alguns estilos
 import './Skeleton.css';   // E adicionamos os novos
 

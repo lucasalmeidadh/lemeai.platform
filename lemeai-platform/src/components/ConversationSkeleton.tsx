@@ -1,6 +1,5 @@
 // ARQUIVO: src/components/ConversationSkeleton.tsx
 
-import React from 'react';
 import './ConversationWindow.css';
 import './Skeleton.css';
 
