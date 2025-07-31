@@ -10,6 +10,9 @@ import MessageInput from '../components/MessageInput';
 import DetailsPanel from '../components/DetailsPanel';
 import './ChatPage.css';
 import type { Contact, Message } from '../data/mockData';
+import ContactListSkeleton from '../components/ContactListSkeleton';
+import ConversationSkeleton from '../components/ConversationSkeleton';
+
 
 // Interfaces da API
 interface ApiConversation {
@@ -90,7 +93,7 @@ const ChatPage = () => {
     } catch (err) {
       setError("Ocorreu um erro de rede. Tente novamente.");
     } finally {
-      if (isInitialLoad) setIsLoading(false);
+        setTimeout(() => setIsLoading(false), 500);
     }
   }, [navigate]);
 
@@ -171,16 +174,12 @@ const ChatPage = () => {
       status: 'sending',
     };
 
-    // --- INÍCIO DA CORREÇÃO ---
-    // Esta é a forma "imutável" e segura de atualizar o estado.
-    // Criamos uma cópia do objeto principal e uma cópia do array interno antes de adicionar a nova mensagem.
     setActiveConversationMessages(prev => {
       const newMessagesByDate = { ...prev };
       const currentMessages = prev[dateKey] || [];
       newMessagesByDate[dateKey] = [...currentMessages, optimisticMessage];
       return newMessagesByDate;
     });
-    // --- FIM DA CORREÇÃO ---
 
     try {
       const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
@@ -201,14 +200,12 @@ const ChatPage = () => {
 
     } catch (err) {
       console.error("Erro ao enviar mensagem:", err);
-      // A lógica para tratar a falha também foi ajustada para ser imutável
       setActiveConversationMessages(prev => {
         const newMessagesByDate = { ...prev };
         const messagesForDate = prev[dateKey] ? [...prev[dateKey]] : [];
         const messageIndex = messagesForDate.findIndex(m => m.id === tempId);
 
         if (messageIndex !== -1) {
-          // Cria uma cópia da mensagem para alterar o status
           const updatedMessage = { ...messagesForDate[messageIndex], status: 'failed' as const };
           messagesForDate[messageIndex] = updatedMessage;
           newMessagesByDate[dateKey] = messagesForDate;
@@ -224,30 +221,46 @@ const ChatPage = () => {
   const toggleDetailsPanel = () => { setDetailsPanelOpen(!isDetailsPanelOpen); };
   const toggleSidebar = () => { setSidebarCollapsed(!isSidebarCollapsed); };
   
-  if (isLoading) return <div>Carregando...</div>;
-  if (error) return <div>Erro: {error}</div>;
-  
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="chat-layout">
+          <ContactListSkeleton />
+          <ConversationSkeleton />
+        </div>
+      );
+    }
+
+    if (error) {
+      return <div>Erro: {error}</div>;
+    }
+
+    return (
+      <div className="chat-layout">
+        <ContactList contacts={contacts} activeContactId={selectedContactId || 0} onSelectContact={handleSelectContact} />
+        {selectedContact ? (
+          <>
+            <div className="conversation-area">
+              <ConversationHeader contactName={selectedContact.name} onToggleDetails={toggleDetailsPanel} />
+              <ConversationWindow messagesByDate={activeConversationMessages} />
+              <MessageInput onSendMessage={handleSendMessage} />
+            </div>
+            {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} />}
+          </>
+        ) : (
+          <div className="conversation-area" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              <p>Nenhuma conversa encontrada.</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={`dashboard-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <Sidebar onLogout={handleLogout} isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
       <main className="main-content" style={{ padding: 0 }}>
-        <div className="chat-layout">
-          <ContactList contacts={contacts} activeContactId={selectedContactId || 0} onSelectContact={handleSelectContact} />
-          {selectedContact ? (
-            <>
-              <div className="conversation-area">
-                <ConversationHeader contactName={selectedContact.name} onToggleDetails={toggleDetailsPanel} />
-                <ConversationWindow messagesByDate={activeConversationMessages} />
-                <MessageInput onSendMessage={handleSendMessage} />
-              </div>
-              {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} />}
-            </>
-          ) : (
-            <div className="conversation-area" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <p>Nenhuma conversa encontrada.</p>
-            </div>
-          )}
-        </div>
+        {renderContent()}
       </main>
     </div>
   );

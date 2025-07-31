@@ -1,0 +1,74 @@
+/* ARQUIVO: src/components/Skeleton.css */
+
+/* Animação de brilho (shimmer) */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+/* Classe base para todos os elementos do esqueleto */
+.skeleton {
+  background-color: #e9ecef;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efeito de brilho aplicado à classe base */
+.skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: linear-gradient(
+    to right,
+    #e9ecef 0%,
+    #f8f9fa 20%,
+    #e9ecef 40%,
+    #e9ecef 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 800px 104px;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* Modificadores de tamanho */
+.skeleton-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+}
+
+.skeleton-header {
+  height: 40px;
+  width: 60%;
+  margin-bottom: 20px;
+}
+
+.skeleton-text {
+  height: 16px;
+  width: 100%;
+}
+
+.skeleton-text-sm {
+  height: 12px;
+  width: 75%;
+}
+
+.skeleton-input {
+  height: 45px;
+  width: 100%;
+  border-radius: 20px;
+}
+
+.skeleton-bubble {
+  height: 50px;
+  border-radius: 18px;
+  max-width: 65%;
+}
