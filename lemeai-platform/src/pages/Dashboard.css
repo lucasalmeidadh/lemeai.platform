@@ -64,7 +64,6 @@
   background-color: #f8f9fa;
 }
 
-/* O container da tabela agora é um card, então removemos estilos redundantes */
 .table-container {
   overflow-x: auto; /* Mantém a rolagem horizontal caso a tabela seja muito larga */
 }

@@ -10,8 +10,10 @@ import {
 // Importando as páginas
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
-// CORREÇÃO: Importar como ChatPage (com 'P' maiúsculo)
 import ChatPage from './pages/ChatPage.tsx';
+// --- NOVAS IMPORTAÇÕES ---
+import UserManagementPage from './pages/UserManagementPage.tsx';
+import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
 import './index.css'
 
 // Criando as rotas
@@ -30,8 +32,16 @@ const router = createBrowserRouter([
   },
   {
     path: "/chat",
-    // CORREÇÃO: Usar o componente com 'P' maiúsculo
     element: <ChatPage />,
+  },
+  // --- NOVAS ROTAS ---
+  {
+    path: "/users",
+    element: <UserManagementPage />,
+  },
+  {
+    path: "/profiles",
+    element: <ProfileManagementPage />,
   }
 ]);
 
