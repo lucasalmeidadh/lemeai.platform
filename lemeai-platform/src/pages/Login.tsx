@@ -101,10 +101,6 @@ const Login = () => {
             {!isLoading && <FaArrowRight className="button-icon" />}
           </button>
         </form>
-
-        <div className="signup-link-creative">
-          <p>Ainda não tem uma conta? <a href="#">Crie agora</a></p>
-        </div>
       </div>
     </div>
   );
