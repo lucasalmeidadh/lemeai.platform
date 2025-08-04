@@ -1,47 +1,47 @@
+// ARQUIVO: src/components/UserFormModal.tsx
+
 import React, { useState, useEffect } from 'react';
 import './UserFormModal.css';
 import { FaTimes } from 'react-icons/fa';
+// --- CORREÇÃO AQUI ---
+import type { User, Profile } from '../types'; // Usando "import type"
 
-interface User {
-  id: number | null;
-  name: string;
-  email: string;
-  profile: string;
-  status: 'Ativo' | 'Inativo';
-}
-
+// Interface das propriedades do componente
 interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (user: User, password?: string) => void;
   userToEdit?: User | null;
-  isSaving: boolean; // <-- NOVA PROP
+  profiles: Profile[]; 
+  isSaving: boolean;
 }
 
-const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSave, userToEdit, isSaving }) => { // <-- NOVA PROP
-  const initialState: User = {
+const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSave, userToEdit, profiles, isSaving }) => {
+  
+  const getInitialState = (): User => ({
     id: null,
     name: '',
     email: '',
-    profile: 'Vendedor',
+    profileId: profiles.length > 0 ? profiles[0].id : 0, 
     status: 'Ativo',
-  };
+  });
 
-  const [user, setUser] = useState<User>(initialState);
+  const [user, setUser] = useState<User>(getInitialState());
   const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (userToEdit) {
       setUser(userToEdit);
     } else {
-      setUser(initialState);
+      setUser(getInitialState());
     }
     setPassword('');
-  }, [userToEdit, isOpen]);
+  }, [userToEdit, isOpen, profiles]); 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setUser(prev => ({ ...prev, [name]: value }));
+    const processedValue = name === 'profileId' ? Number(value) : value;
+    setUser(prev => ({ ...prev, [name]: processedValue }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -61,31 +61,33 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSave, 
           </button>
         </header>
         <form onSubmit={handleSubmit}>
-          {/* Adicionamos o 'fieldset' para desabilitar tudo durante o saving */}
           <fieldset disabled={isSaving} className="form-fieldset">
             <div className="form-grid">
-              {/* Campo Nome */}
+              {/* Nome Completo */}
               <div className="form-group">
                 <label htmlFor="name">Nome Completo</label>
                 <input type="text" id="name" name="name" value={user.name} onChange={handleChange} required />
               </div>
 
-              {/* Campo Email */}
+              {/* E-mail */}
               <div className="form-group">
                 <label htmlFor="email">E-mail</label>
                 <input type="email" id="email" name="email" value={user.email} onChange={handleChange} required />
               </div>
 
-              {/* Campo Perfil */}
+              {/* Perfil de Acesso (Agora dinâmico) */}
               <div className="form-group">
-                <label htmlFor="profile">Perfil de Acesso</label>
-                <select id="profile" name="profile" value={user.profile} onChange={handleChange}>
-                  <option value="Vendedor">Vendedor</option>
-                  <option value="Administrador">Administrador</option>
+                <label htmlFor="profileId">Perfil de Acesso</label>
+                <select id="profileId" name="profileId" value={user.profileId} onChange={handleChange}>
+                  {profiles.map(profile => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.nome}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Campo Status */}
+              {/* Status */}
               <div className="form-group">
                 <label htmlFor="status">Status</label>
                 <select id="status" name="status" value={user.status} onChange={handleChange}>
@@ -94,10 +96,18 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSave, 
                 </select>
               </div>
 
-              {/* Campo Senha */}
+              {/* Senha */}
               <div className="form-group full-width">
                 <label htmlFor="password">Senha</label>
-                <input type="password" id="password" name="password" placeholder={userToEdit ? 'Deixe em branco para não alterar' : 'Digite a senha'} value={password} onChange={(e) => setPassword(e.target.value)} required={!userToEdit} />
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    placeholder={userToEdit ? 'Deixe em branco para não alterar' : 'Digite a senha'} 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    required={!userToEdit} 
+                />
               </div>
             </div>
           </fieldset>
