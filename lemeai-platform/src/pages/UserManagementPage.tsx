@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import UserFormModal from '../components/UserFormModal';
-// --- CORREÇÃO AQUI ---
-import type { User, Profile } from '../types'; // Usando "import type"
+import type { User, Profile } from '../types';
 import './UserManagementPage.css';
 import { FaPlus } from 'react-icons/fa';
 
@@ -22,6 +21,11 @@ const UserManagementPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // --- ALTERAÇÃO 1: Adicionar estados para os novos filtros ---
+  const [statusFilter, setStatusFilter] = useState<'Ativo' | 'Inativo'>('Ativo');
+  const [searchTerm, setSearchTerm] = useState(''); // Para busca de nome/e-mail
+  const [profileFilter, setProfileFilter] = useState<number | 'Todos'>('Todos'); // Para filtro de perfil
 
   const mapApiUserToFrontend = (apiUser: any): User => ({
     id: apiUser.userId,
@@ -79,6 +83,8 @@ const UserManagementPage = () => {
     fetchData();
   }, [fetchData]);
 
+  // Funções handleLogout, toggleSidebar, handleOpenModal, handleCloseModal, handleSaveUser, handleDeleteUser
+  // permanecem exatamente as mesmas da etapa anterior...
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     navigate('/login');
@@ -144,7 +150,7 @@ const UserManagementPage = () => {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!window.confirm("Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.")) {
+    if (!window.confirm("Tem certeza que deseja desativar este usuário?")) {
         return;
     }
 
@@ -157,25 +163,38 @@ const UserManagementPage = () => {
 
         const result = await response.json();
         if (!response.ok || !result.sucesso) {
-            throw new Error(result.mensagem || 'Falha ao excluir usuário.');
+            throw new Error(result.mensagem || 'Falha ao desativar usuário.');
         }
 
-        alert('Usuário excluído com sucesso!');
+        alert('Usuário desativado com sucesso!');
         fetchData();
 
     } catch (error: any) {
-        console.error("Erro ao excluir usuário:", error);
+        console.error("Erro ao desativar usuário:", error);
         alert(`Erro: ${error.message}`);
     }
   };
 
+
+  // --- ALTERAÇÃO 2: Lógica de filtragem combinada ---
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Um usuário passa se atender a TODAS as condições
+    return (
+      // 1. Condição de Status
+      user.status === statusFilter &&
+      // 2. Condição de Busca (nome OU e-mail)
+      (user.name.toLowerCase().includes(searchLower) || user.email.toLowerCase().includes(searchLower)) &&
+      // 3. Condição de Perfil
+      (profileFilter === 'Todos' || user.profileId === profileFilter)
+    );
+  });
+
   const renderContent = () => {
-    if (isLoading) {
-      return <p className="loading-message">Carregando usuários...</p>;
-    }
-    if (error) {
-      return <p className="error-message">{error}</p>;
-    }
+    if (isLoading) return <p className="loading-message">Carregando usuários...</p>;
+    if (error) return <p className="error-message">{error}</p>;
+    
     return (
       <div className="table-container">
         <table className="management-table">
@@ -189,22 +208,28 @@ const UserManagementPage = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map(user => (
-              <tr key={user.id}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{profiles.find(p => p.id === user.profileId)?.nome || 'N/A'}</td>
-                <td>
-                  <span className={`status-badge status-${user.status.toLowerCase()}`}>
-                    {user.status}
-                  </span>
-                </td>
-                <td className="actions-cell">
-                  <button className="action-button edit" onClick={() => handleOpenModal(user)}>Editar</button>
-                  <button className="action-button delete" onClick={() => handleDeleteUser(user.id!)}>Excluir</button>
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map(user => (
+                <tr key={user.id}>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>{profiles.find(p => p.id === user.profileId)?.nome || 'N/A'}</td>
+                  <td><span className={`status-badge status-${user.status.toLowerCase()}`}>{user.status}</span></td>
+                  <td className="actions-cell">
+                    <button className="action-button edit" onClick={() => handleOpenModal(user)}>Editar</button>
+                    {user.status === 'Ativo' && (
+                      <button className="action-button delete" onClick={() => handleDeleteUser(user.id!)}>Desativar</button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>
+                  Nenhum usuário encontrado com os filtros aplicados.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -236,6 +261,46 @@ const UserManagementPage = () => {
                 <FaPlus /> Adicionar Usuário
               </button>
             </div>
+            
+            {/* --- ALTERAÇÃO 3: Estrutura de filtros completa --- */}
+            <div className="filters-container">
+                <input 
+                  type="text" 
+                  placeholder="Buscar por nome ou e-mail..." 
+                  className="filter-input"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+                <div className="select-filters">
+                  <select 
+                    className="filter-select"
+                    value={profileFilter}
+                    onChange={e => setProfileFilter(e.target.value === 'Todos' ? 'Todos' : Number(e.target.value))}
+                  >
+                    <option value="Todos">Todos os Perfis</option>
+                    {profiles.map(profile => (
+                        <option key={profile.id} value={profile.id}>
+                            {profile.nome}
+                        </option>
+                    ))}
+                  </select>
+                  <div className="users-filters">
+                    <button
+                      className={`filter-button ${statusFilter === 'Ativo' ? 'active' : ''}`}
+                      onClick={() => setStatusFilter('Ativo')}
+                    >
+                      Ativos
+                    </button>
+                    <button
+                      className={`filter-button ${statusFilter === 'Inativo' ? 'active' : ''}`}
+                      onClick={() => setStatusFilter('Inativo')}
+                    >
+                      Inativos
+                    </button>
+                  </div>
+                </div>
+            </div>
+
             {renderContent()}
           </div>
         </main>
