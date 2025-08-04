@@ -22,10 +22,9 @@ const UserManagementPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // --- ALTERAÇÃO 1: Adicionar estados para os novos filtros ---
   const [statusFilter, setStatusFilter] = useState<'Ativo' | 'Inativo'>('Ativo');
-  const [searchTerm, setSearchTerm] = useState(''); // Para busca de nome/e-mail
-  const [profileFilter, setProfileFilter] = useState<number | 'Todos'>('Todos'); // Para filtro de perfil
+  const [searchTerm, setSearchTerm] = useState('');
+  const [profileFilter, setProfileFilter] = useState<number | 'Todos'>('Todos');
 
   const mapApiUserToFrontend = (apiUser: any): User => ({
     id: apiUser.userId,
@@ -83,8 +82,6 @@ const UserManagementPage = () => {
     fetchData();
   }, [fetchData]);
 
-  // Funções handleLogout, toggleSidebar, handleOpenModal, handleCloseModal, handleSaveUser, handleDeleteUser
-  // permanecem exatamente as mesmas da etapa anterior...
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     navigate('/login');
@@ -175,18 +172,12 @@ const UserManagementPage = () => {
     }
   };
 
-
-  // --- ALTERAÇÃO 2: Lógica de filtragem combinada ---
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
     
-    // Um usuário passa se atender a TODAS as condições
     return (
-      // 1. Condição de Status
       user.status === statusFilter &&
-      // 2. Condição de Busca (nome OU e-mail)
       (user.name.toLowerCase().includes(searchLower) || user.email.toLowerCase().includes(searchLower)) &&
-      // 3. Condição de Perfil
       (profileFilter === 'Todos' || user.profileId === profileFilter)
     );
   });
@@ -253,16 +244,18 @@ const UserManagementPage = () => {
           onToggle={toggleSidebar} 
         />
         <main className="main-content">
-          <h1>Gestão de Usuários</h1>
+          {/* --- MUDANÇA AQUI: NOVO CABEÇALHO DA PÁGINA --- */}
+          <div className="page-header">
+            <h1>Gestão de Usuários</h1>
+            <button className="add-button" onClick={() => handleOpenModal()}>
+              <FaPlus /> Adicionar Usuário
+            </button>
+          </div>
+          {/* --- FIM DA MUDANÇA --- */}
+          
           <div className="dashboard-card">
-            <div className="users-header">
-              <h2>Todos os Usuários</h2>
-              <button className="add-button" onClick={() => handleOpenModal()}>
-                <FaPlus /> Adicionar Usuário
-              </button>
-            </div>
+            {/* O cabeçalho antigo foi removido daqui */}
             
-            {/* --- ALTERAÇÃO 3: Estrutura de filtros completa --- */}
             <div className="filters-container">
                 <input 
                   type="text" 

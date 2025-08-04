@@ -1,5 +1,19 @@
 /* ARQUIVO: src/pages/UserManagementPage.css */
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px; /* Espaço entre o header e o card abaixo */
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #343a40;
+  font-weight: 700;
+}
+
 .users-header {
   display: flex;
   justify-content: space-between;
