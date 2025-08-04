@@ -19,3 +19,16 @@ export interface Profile {
   nome: string;
   codigo: string;
 }
+
+export interface Contact {
+  id: number;
+  name: string;
+  lastMessage: string;
+  time: string;
+  unread: number;
+  initials: string;
+  phone: string;
+  messagesByDate: {
+    [date: string]: any[]; // Pode ser mais específico se necessário
+  }
+}

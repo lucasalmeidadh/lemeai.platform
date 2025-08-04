@@ -1,32 +1,21 @@
 /* ARQUIVO: src/pages/UserManagementPage.css */
 
+/* --- NOVO ESTILO PARA O CABEÇALHO DA PÁGINA --- */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px; /* Espaço entre o header e o card abaixo */
+  margin-bottom: 30px; /* Espaçamento entre o cabeçalho e o card */
 }
 
 .page-header h1 {
-  margin: 0;
   font-size: 28px;
   color: #343a40;
   font-weight: 700;
-}
-
-.users-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.users-header h2 {
   margin: 0;
-  font-size: 22px;
-  color: #343a40;
 }
+
+/* --- ESTILO REMOVIDO: .users-header e seus filhos já não existem --- */
 
 /* --- NOVOS ESTILOS PARA O CONTAINER DE FILTROS --- */
 .filters-container {

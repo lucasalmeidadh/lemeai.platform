@@ -37,8 +37,6 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
             <ul>
               {/* Agora o onClick chama nossa nova função */}
               <li onClick={() => handleMenuOptionClick(onToggleDetails)}>Ver Perfil do Contato</li>
-              <li onClick={() => setMenuOpen(false)}>Limpar Histórico</li>
-              <li onClick={() => setMenuOpen(false)}>Bloquear Contato</li>
             </ul>
           </div>
         )}
