@@ -1,9 +1,11 @@
 // ARQUIVO: src/pages/Dashboard.tsx
 
-import { useState, useEffect, useCallback } from 'react'; // Adicionado useEffect e useCallback
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import KPICard from '../components/KPICard';
+import SalesFunnel from '../components/SalesFunnel'; // Importando o Funil
+import SalesByDateChart from '../components/SalesByDateChart'; // Importando o Gráfico de Barras
 import './Dashboard.css';
 import { FaUserPlus, FaHandshake, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 
@@ -12,8 +14,9 @@ interface Deal {
   id: number;
   cliente: string;
   numero: string;
-  tipoSolicitacao: string; // Manteremos este como 'Peças' por enquanto
+  tipoSolicitacao: string;
   status: string;
+  date: string; // Adicionado para o gráfico
 }
 
 // Interface para os dados dos KPIs
@@ -23,6 +26,19 @@ interface Kpi {
   icon: React.ReactNode;
 }
 
+// Interfaces para os dados dos gráficos
+interface FunnelData {
+  name: string;
+  value: number;
+}
+
+interface ChartData {
+  date: string;
+  sales: number;
+  leads: number;
+}
+
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,9 +46,11 @@ const Dashboard = () => {
   const [typeFilter, setTypeFilter] = useState('Todos');
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // --- INÍCIO DAS NOVAS ALTERAÇÕES ---
+  // Estados para os dados
   const [deals, setDeals] = useState<Deal[]>([]);
   const [kpiData, setKpiData] = useState<Kpi[]>([]);
+  const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
+  const [salesChartData, setSalesChartData] = useState<ChartData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,13 +85,14 @@ const Dashboard = () => {
           id: convo.idConversa,
           cliente: convo.nomeCliente || convo.numeroWhatsapp,
           numero: convo.numeroWhatsapp,
-          tipoSolicitacao: 'Peças', // Valor fixo por enquanto
-          status: convo.conversationStatus || 'Novo', // 'conversationStatus' vem da sua API
+          tipoSolicitacao: 'Peças',
+          status: convo.conversationStatus || 'Novo',
+          date: new Date(convo.dataUltimaMensagem).toLocaleDateString('pt-BR'),
         }));
 
         setDeals(formattedDeals);
 
-        // Calcula os valores dos KPIs com base nos dados recebidos
+        // Calcula os valores dos KPIs
         const newLeads = formattedDeals.filter(d => d.status.toLowerCase() === 'aberta').length;
         const inProgress = formattedDeals.filter(d => d.status.toLowerCase() === 'em andamento').length;
         const lost = formattedDeals.filter(d => d.status.toLowerCase() === 'perdida').length;
@@ -85,6 +104,31 @@ const Dashboard = () => {
           { title: 'Vendas perdidas', value: lost.toString(), icon: <FaTimesCircle /> },
           { title: 'Vendas concluídas', value: completed.toString(), icon: <FaCheckCircle /> },
         ]);
+
+        // Prepara dados para o funil de vendas
+        setFunnelData([
+            { name: 'Novos', value: newLeads },
+            { name: 'Em Negociação', value: inProgress },
+            { name: 'Concluídos', value: completed },
+            { name: 'Perdidos', value: lost },
+        ]);
+        
+        // Agrupa dados por data para o gráfico de barras
+        const salesByDate = formattedDeals.reduce((acc: {[key: string]: ChartData}, deal) => {
+            const date = deal.date;
+            if (!acc[date]) {
+                acc[date] = { date, leads: 0, sales: 0 };
+            }
+            if (deal.status.toLowerCase() === 'aberta') {
+                acc[date].leads += 1;
+            }
+            if (deal.status.toLowerCase() === 'finalizada') {
+                acc[date].sales += 1;
+            }
+            return acc;
+        }, {});
+
+        setSalesChartData(Object.values(salesByDate));
 
       }
     } catch (err) {
@@ -99,10 +143,7 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // --- FIM DAS NOVAS ALTERAÇÕES ---
-
   const handleLogout = () => {
-    // Para segurança, vamos implementar a chamada de logout na API no futuro
     localStorage.removeItem('authToken');
     navigate('/login');
   };
@@ -140,6 +181,18 @@ const Dashboard = () => {
               {kpiData.map((kpi, index) => (
                 <KPICard key={index} title={kpi.title} value={kpi.value} icon={kpi.icon} />
               ))}
+            </div>
+
+            {/* --- ÁREA DOS NOVOS GRÁFICOS --- */}
+            <div className="dashboard-charts-area">
+                <div className="dashboard-card">
+                    <h3>Funil de Vendas</h3>
+                    <SalesFunnel data={funnelData} />
+                </div>
+                <div className="dashboard-card">
+                    <h3>Leads e Vendas por Dia</h3>
+                    <SalesByDateChart data={salesChartData} />
+                </div>
             </div>
 
             <div className="dashboard-card">

@@ -4,23 +4,20 @@
   font-size: 28px;
   color: #343a40;
   font-weight: 700;
-  margin-bottom: 30px; /* Aumenta o respiro */
+  margin-bottom: 30px;
 }
-
-/* Removido o .welcome-text que não estava no seu .tsx */
 
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
-  margin-bottom: 30px; /* Espaçamento entre os cards */
+  margin-bottom: 30px;
 }
 
-/* NOVO: Card genérico para encapsular as seções */
 .dashboard-card {
   background-color: #ffffff;
-  border-radius: 16px; /* Bordas arredondadas como no chat */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave como no chat */
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 25px;
   margin-bottom: 30px;
 }
@@ -29,7 +26,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; /* Permite que os filtros quebrem a linha em telas menores */
+  flex-wrap: wrap;
   gap: 20px;
 }
 
@@ -65,7 +62,7 @@
 }
 
 .table-container {
-  overflow-x: auto; /* Mantém a rolagem horizontal caso a tabela seja muito larga */
+  overflow-x: auto;
 }
 
 .deals-table {
@@ -76,15 +73,15 @@
 .deals-table th, .deals-table td {
   padding: 16px 20px;
   text-align: left;
-  border-bottom: 1px solid #f0f2f5; /* Linha mais suave */
+  border-bottom: 1px solid #f0f2f5;
 }
 
 .deals-table th {
   font-size: 13px;
   font-weight: 600;
-  color: #6c757d; /* Cor mais suave para o cabeçalho */
+  color: #6c757d;
   text-transform: uppercase;
-  background-color: transparent; /* O fundo agora é o do card */
+  background-color: transparent;
 }
 
 .deals-table tbody tr {
@@ -116,7 +113,6 @@
   background-color: #004c5a;
 }
 
-/* Estilos para os Badges de Status (mantidos) */
 .status-badge {
   padding: 5px 12px;
   border-radius: 12px;
@@ -124,7 +120,23 @@
   font-weight: 700;
   white-space: nowrap;
 }
-.status-concluído { background-color: #d1e7dd; color: #0f5132; }
-.status-em-negociação { background-color: #fff3cd; color: #664d03; }
-.status-perdido { background-color: #f8d7da; color: #842029; }
-.status-novo { background-color: #cff4fc; color: #055160; }
+.status-concluído, .status-finalizada { background-color: #d1e7dd; color: #0f5132; }
+.status-em-negociação, .status-em-andamento { background-color: #fff3cd; color: #664d03; }
+.status-perdido, .status-perdida { background-color: #f8d7da; color: #842029; }
+.status-novo, .status-aberta { background-color: #cff4fc; color: #055160; }
+
+
+/* --- NOVOS ESTILOS PARA OS GRÁFICOS --- */
+.dashboard-charts-area {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.dashboard-card h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #343a40;
+}
