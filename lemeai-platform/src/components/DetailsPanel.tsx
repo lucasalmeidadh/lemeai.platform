@@ -1,9 +1,9 @@
 // ARQUIVO: src/components/DetailsPanel.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import './DetailsPanel.css';
-// --- NOVO: Adicionando ícone de dinheiro ---
-import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote, FaPlusCircle, FaDollarSign } from 'react-icons/fa';
+import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote, FaDollarSign } from 'react-icons/fa';
 import type { Contact } from '../types';
 
 interface Observation {
@@ -19,19 +19,18 @@ interface DetailsPanelProps {
 }
 
 const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
-  // --- LÓGICA DE ESTADO RESTAURADA E EXPANDIDA ---
   const [status, setStatus] = useState('negotiating');
   const [dealValue, setDealValue] = useState('');
-  const [isDirty, setIsDirty] = useState(false); // <-- Estado para controlar alterações
+  const [newNote, setNewNote] = useState('');
+  
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
 
-  const [newNote, setNewNote] = useState('');
   const [observations, setObservations] = useState<Observation[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [isSavingNote, setIsSavingNote] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
 
-  // Limpa o valor do negócio se o status mudar de "Venda Fechada"
   useEffect(() => {
     if (status !== 'deal-won') {
       setDealValue('');
@@ -71,52 +70,40 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
     }
   }, [activeTab, fetchObservations]);
 
-  // --- NOVA FUNÇÃO para salvar os detalhes (status e valor) ---
-  const handleSaveDetails = () => {
-    // No futuro, aqui iria a chamada para a API
-    console.log('Salvando detalhes:', { status, dealValue });
-    alert(`Status salvo como "${status}" ${dealValue ? `com o valor de R$ ${dealValue}` : ''}`);
-    setIsDirty(false); // Desabilita o botão após salvar
-  };
+  // --- FUNÇÃO DE SALVAR UNIFICADA ---
+  const handleSave = async () => {
+    setIsSaving(true);
 
-  const handleSaveNote = async () => {
-    // ... (função handleSaveNote permanece a mesma)
-    if (!newNote.trim()) {
-      alert('A observação não pode estar vazia.');
-      return;
-    }
-    setIsSavingNote(true);
-    const token = localStorage.getItem('authToken');
-
-    try {
+    // 1. Salva a observação se houver texto
+    if (newNote.trim()) {
+      const token = localStorage.getItem('authToken');
+      try {
         const response = await fetch(`https://lemeia-api.onrender.com/api/Observacao/Criar`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                conversationId: contact.id,
-                content: newNote
-            }),
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ conversationId: contact.id, content: newNote }),
         });
         const result = await response.json();
         if (!response.ok || !result.sucesso) {
             throw new Error(result.mensagem || 'Falha ao salvar a observação.');
         }
-        
-        alert('Observação adicionada com sucesso!');
-        setNewNote('');
-        
-        if (activeTab === 'history') {
+        setNewNote(''); // Limpa o campo após o sucesso
+        if (activeTab === 'history') { // Atualiza o histórico se a aba estiver aberta
             fetchObservations();
         }
-
-    } catch (error: any) {
-        alert(`Erro: ${error.message}`);
-    } finally {
-        setIsSavingNote(false);
+      } catch (error: any) {
+        toast.error(`Erro ao salvar observação: ${error.message}`);
+        setIsSaving(false);
+        return; // Interrompe a execução se a observação falhar
+      }
     }
+
+    // 2. "Salva" os outros detalhes (status e valor)
+    console.log('Salvando detalhes:', { status, dealValue });
+    
+    toast.success('Alterações salvas com sucesso!');
+    setIsDirty(false);
+    setIsSaving(false);
   };
   
   const formatDateTime = (dateString: string) => {
@@ -160,45 +147,32 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
                 </select>
               </div>
 
-              {/* --- CAMPO DE VALOR CONDICIONAL --- */}
               {status === 'deal-won' && (
                 <div className="form-group">
                   <label htmlFor="deal-value"><FaDollarSign className="label-icon" /> Valor</label>
                   <input
-                    type="text"
-                    id="deal-value"
-                    className="details-input"
-                    placeholder="R$ 0,00"
-                    value={dealValue}
-                    onChange={(e) => { setDealValue(e.target.value); setIsDirty(true); }}
+                    type="text" id="deal-value" className="details-input" placeholder="R$ 0,00"
+                    value={dealValue} onChange={(e) => { setDealValue(e.target.value); setIsDirty(true); }}
                   />
                 </div>
               )}
             </div>
 
-            <div className="form-section add-note-section">
+            <div className="form-section">
                 <div className="form-group">
                     <label htmlFor="observations"><FaRegStickyNote className="label-icon" /> Adicionar Observação</label>
                     <textarea 
-                        id="observations" 
-                        className="observations-textarea" 
-                        rows={4} 
-                        placeholder="Digite sua anotação aqui..." 
-                        value={newNote} 
-                        onChange={(e) => setNewNote(e.target.value)}
-                        disabled={isSavingNote}
+                        id="observations" className="observations-textarea" rows={4} placeholder="Digite sua anotação aqui..." 
+                        value={newNote} onChange={(e) => { setNewNote(e.target.value); setIsDirty(true); }}
+                        disabled={isSaving}
                     ></textarea>
                 </div>
-                <button className="add-note-button" onClick={handleSaveNote} disabled={isSavingNote || !newNote.trim()}>
-                    <FaPlusCircle />
-                    <span>{isSavingNote ? 'Adicionando...' : 'Adicionar'}</span>
-                </button>
+                {/* --- BOTÃO DE ADICIONAR FOI REMOVIDO DAQUI --- */}
             </div>
           </div>
         )}
 
         {activeTab === 'history' && (
-            // ... (código do histórico permanece o mesmo)
             <div className="history-content">
             {isLoadingHistory && <p className="loading-text">Carregando histórico...</p>}
             {historyError && <p className="error-text">Erro: {historyError}</p>}
@@ -227,13 +201,11 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
         )}
       </div>
       
-      {/* --- RODAPÉ RESTAURADO --- */}
-      {/* Só aparece na aba de detalhes */}
       {activeTab === 'details' && (
         <div className="details-footer">
-          <button className="save-button" onClick={handleSaveDetails} disabled={!isDirty}>
+          <button className="save-button" onClick={handleSave} disabled={!isDirty || isSaving}>
             <FaSave />
-            <span>{isDirty ? 'Salvar Alterações' : 'Salvo'}</span>
+            <span>{isSaving ? 'Salvando...' : (isDirty ? 'Salvar Alterações' : 'Salvo')}</span>
           </button>
         </div>
       )}

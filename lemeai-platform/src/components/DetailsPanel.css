@@ -12,7 +12,6 @@
 .details-header h3 { margin: 0; font-size: 16px; font-weight: 600; color: #343a40; }
 .close-button { background: none; border: none; font-size: 20px; cursor: pointer; color: #6c757d; padding: 5px; }
 
-/* --- Estilos para Abas --- */
 .panel-tabs {
   display: flex; padding: 5px; background-color: #f8f9fa;
   margin: 15px; border-radius: 10px; flex-shrink: 0;
@@ -24,7 +23,6 @@
 }
 .panel-tab-button.active { background-color: #ffffff; color: #005f73; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-/* --- Wrapper e Conteúdo --- */
 .panel-content-wrapper { flex-grow: 1; overflow-y: auto; }
 .details-content, .history-content { padding: 0 25px 25px 25px; }
 
@@ -48,7 +46,6 @@
 }
 .label-icon { color: #005f73; }
 
-/* --- NOVO ESTILO GENÉRICO PARA INPUTS E SELECTS --- */
 .status-select, .details-input, .observations-textarea {
   width: 100%; padding: 12px; font-size: 15px; border-radius: 8px;
   border: 1px solid #dee2e6; background-color: #ffffff; font-family: inherit;
@@ -59,36 +56,8 @@
 }
 .observations-textarea { resize: vertical; }
 
-/* --- Estilos para o Botão de Adicionar Observação --- */
-.add-note-section {
-    padding-bottom: 15px;
-}
-.add-note-button {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    background-color: #0a9396;
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-}
-.add-note-button:hover:not(:disabled) {
-    background-color: #007f82;
-}
-.add-note-button:disabled {
-    background-color: #e9ecef;
-    color: #adb5bd;
-    cursor: not-allowed;
-}
+/* --- ESTILOS DO BOTÃO 'ADICIONAR' FORAM REMOVIDOS DAQUI --- */
 
-/* --- ESTILOS RESTAURADOS PARA O RODAPÉ --- */
 .details-footer { padding: 25px; border-top: 1px solid #f0f2f5; flex-shrink: 0; }
 .save-button {
   width: 100%; padding: 14px; border-radius: 10px; border: none;
@@ -105,13 +74,13 @@
   background-color: #e9ecef; color: #adb5bd; cursor: not-allowed;
 }
 
-/* --- Estilos para Histórico e Feedback --- */
 .loading-text, .error-text, .empty-history-text {
     text-align: center;
     padding: 40px 20px;
     color: #6c757d;
 }
 .error-text { color: #dc3545; }
+
 .history-list { list-style: none; padding: 0; margin: 0; }
 .history-item { 
     display: flex; 
@@ -121,12 +90,14 @@
     border-bottom: 1px solid #f0f2f5; 
 }
 .history-item:last-child { border-bottom: none; }
+
 .history-icon {
   width: 32px; height: 32px; border-radius: 50%;
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   margin-top: 5px;
 }
 .history-icon.note-added { background-color: #e0f7ff; color: #005f73; }
+
 .history-text { font-size: 14px; color: #343a40; }
 .history-text p { margin: 0 0 8px 0; line-height: 1.5; }
 .history-meta { 

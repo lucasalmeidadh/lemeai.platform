@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast'; // <-- Importar toast
 import Sidebar from '../components/Sidebar';
 import UserFormModal from '../components/UserFormModal';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -9,10 +10,11 @@ import type { User, Profile } from '../types';
 import './UserManagementPage.css';
 import { FaPlus } from 'react-icons/fa';
 
+// ... (const API_BASE_URL permanece a mesma)
 const API_BASE_URL = 'https://lemeia-api.onrender.com/api';
 
 const UserManagementPage = () => {
-    // ... (Todos os hooks useState, useCallback e useEffect permanecem exatamente os mesmos)
+    // ... (todos os hooks e funções até handleSaveUser permanecem os mesmos)
     const navigate = useNavigate();
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -104,223 +106,211 @@ const UserManagementPage = () => {
       setIsUserModalOpen(false);
       setUserToEdit(null);
     };
-  
-    const handleSaveUser = async (user: User, password?: string) => {
-      setIsSaving(true);
-      const token = localStorage.getItem('authToken');
-      const isEditing = user.id !== null;
-  
-      const url = isEditing 
-        ? `${API_BASE_URL}/Usuario/Atualizar/${user.id}` 
-        : `${API_BASE_URL}/Usuario/CriarUsuario`;
-      
-      const method = isEditing ? 'PUT' : 'POST';
-  
-      const requestBody = {
-        Nome: user.name,
-        Email: user.email,
-        Senha: password || null, 
-        TipoUsuarioId: user.profileId,
-        FilialId: 1, 
-        UserDeleted: user.status === 'Inativo',
-      };
-  
-      try {
-        const response = await fetch(url, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(requestBody),
-        });
-  
-        const result = await response.json();
-        if (!response.ok || !result.sucesso) {
-          throw new Error(result.mensagem || `Falha ao ${isEditing ? 'atualizar' : 'criar'} usuário.`);
-        }
-  
-        alert(`Usuário ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
-        handleCloseUserModal();
-        fetchData();
-  
-      } catch (error: any) {
-        console.error("Erro ao salvar usuário:", error);
-        alert(`Erro: ${error.message}`);
-      } finally {
-        setIsSaving(false);
-      }
-    };
-  
-    const handleDeleteUser = async () => {
-      if (!userToDeleteId) return;
-  
-      setIsDeleting(true);
-      const token = localStorage.getItem('authToken');
-      try {
-          const response = await fetch(`${API_BASE_URL}/Usuario/Deletar/${userToDeleteId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` }
-          });
-  
-          const result = await response.json();
-          if (!response.ok || !result.sucesso) {
-              throw new Error(result.mensagem || 'Falha ao desativar usuário.');
-          }
-  
-          alert('Usuário desativado com sucesso!');
-          fetchData();
-  
-      } catch (error: any) {
-          console.error("Erro ao desativar usuário:", error);
-          alert(`Erro: ${error.message}`);
-      } finally {
-          setIsDeleting(false);
-          setUserToDeleteId(null);
-      }
-    };
-  
-  
-    const filteredUsers = users.filter(user => {
-      const searchLower = searchTerm.toLowerCase();
-      
-      return (
-        user.status === statusFilter &&
-        (user.name.toLowerCase().includes(searchLower) || user.email.toLowerCase().includes(searchLower)) &&
-        (profileFilter === 'Todos' || user.profileId === profileFilter)
-      );
-    });
 
-    const renderContent = () => {
-        // ... (renderContent permanece igual)
-        if (isLoading) return <p className="loading-message">Carregando usuários...</p>;
-        if (error) return <p className="error-message">{error}</p>;
+    const handleSaveUser = async (user: User, password?: string) => {
+        setIsSaving(true);
+        const token = localStorage.getItem('authToken');
+        const isEditing = user.id !== null;
+        const action = isEditing ? 'atualizar' : 'criar';
+
+        const url = isEditing 
+            ? `${API_BASE_URL}/Usuario/Atualizar/${user.id}` 
+            : `${API_BASE_URL}/Usuario/CriarUsuario`;
+        
+        const method = isEditing ? 'PUT' : 'POST';
+
+        const requestBody = {
+            Nome: user.name, Email: user.email, Senha: password || null, 
+            TipoUsuarioId: user.profileId, FilialId: 1, UserDeleted: user.status === 'Inativo',
+        };
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(requestBody),
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.sucesso) {
+                throw new Error(result.mensagem || `Falha ao ${action} usuário.`);
+            }
+
+            toast.success(`Usuário ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
+            handleCloseUserModal();
+            fetchData();
+
+        } catch (error: any) {
+            toast.error(`Erro: ${error.message}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteUser = async () => {
+        if (!userToDeleteId) return;
+        setIsDeleting(true);
+        const token = localStorage.getItem('authToken');
+        try {
+            const response = await fetch(`${API_BASE_URL}/Usuario/Deletar/${userToDeleteId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.sucesso) {
+                throw new Error(result.mensagem || 'Falha ao desativar usuário.');
+            }
+
+            toast.success('Usuário desativado com sucesso!');
+            fetchData();
+
+        } catch (error: any) {
+            toast.error(`Erro: ${error.message}`);
+        } finally {
+            setIsDeleting(false);
+            setUserToDeleteId(null);
+        }
+    };
+
+    // ... (o resto do arquivo, incluindo filteredUsers, renderContent e o JSX, permanece o mesmo)
+    const filteredUsers = users.filter(user => {
+        const searchLower = searchTerm.toLowerCase();
         
         return (
-          <div className="table-container">
-            <table className="management-table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>E-mail</th>
-                  <th>Perfil</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map(user => (
-                    <tr key={user.id}>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>{profiles.find(p => p.id === user.profileId)?.nome || 'N/A'}</td>
-                      <td><span className={`status-badge status-${user.status.toLowerCase()}`}>{user.status}</span></td>
-                      <td className="actions-cell">
-                        <button className="action-button edit" onClick={() => handleOpenUserModal(user)}>Editar</button>
-                        {user.status === 'Ativo' && (
-                          <button className="action-button delete" onClick={() => setUserToDeleteId(user.id!)}>
-                            Desativar
-                          </button>
-                        )}
+          user.status === statusFilter &&
+          (user.name.toLowerCase().includes(searchLower) || user.email.toLowerCase().includes(searchLower)) &&
+          (profileFilter === 'Todos' || user.profileId === profileFilter)
+        );
+      });
+  
+      const renderContent = () => {
+          if (isLoading) return <p className="loading-message">Carregando usuários...</p>;
+          if (error) return <p className="error-message">{error}</p>;
+          
+          return (
+            <div className="table-container">
+              <table className="management-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Perfil</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map(user => (
+                      <tr key={user.id}>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{profiles.find(p => p.id === user.profileId)?.nome || 'N/A'}</td>
+                        <td><span className={`status-badge status-${user.status.toLowerCase()}`}>{user.status}</span></td>
+                        <td className="actions-cell">
+                          <button className="action-button edit" onClick={() => handleOpenUserModal(user)}>Editar</button>
+                          {user.status === 'Ativo' && (
+                            <button className="action-button delete" onClick={() => setUserToDeleteId(user.id!)}>
+                              Desativar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>
+                        Nenhum usuário encontrado com os filtros aplicados.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>
-                      Nenhum usuário encontrado com os filtros aplicados.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        );
-    };
-
-    return (
-        <>
-            <UserFormModal 
-              isOpen={isUserModalOpen}
-              onClose={handleCloseUserModal}
-              onSave={handleSaveUser}
-              userToEdit={userToEdit}
-              profiles={profiles}
-              isSaving={isSaving}
-            />
-            <ConfirmationModal
-              isOpen={userToDeleteId !== null}
-              onClose={() => setUserToDeleteId(null)}
-              onConfirm={handleDeleteUser}
-              title="Confirmar Desativação"
-              message="Tem certeza que deseja desativar este usuário? Esta ação não pode ser desfeita."
-              confirmText="Desativar"
-              isConfirming={isDeleting}
-            />
-
-            <div className={`dashboard-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-                <Sidebar 
-                  onLogout={handleLogout}
-                  isCollapsed={isSidebarCollapsed}
-                  onToggle={toggleSidebar} 
-                />
-                <main className="main-content">
-                    {/* --- ESTRUTURA CORRIGIDA --- */}
-                    <div className="page-header">
-                        <h1>Gestão de Usuários</h1>
-                        <button className="add-button" onClick={() => handleOpenUserModal()}>
-                            <FaPlus /> Adicionar Usuário
-                        </button>
-                    </div>
-
-                    <div className="dashboard-card">
-                        {/* --- REMOVIDO: Cabeçalho interno do card --- */}
-                        
-                        <div className="filters-container">
-                            <input 
-                              type="text" 
-                              placeholder="Buscar por nome ou e-mail..." 
-                              className="filter-input"
-                              value={searchTerm}
-                              onChange={e => setSearchTerm(e.target.value)}
-                            />
-                            <div className="select-filters">
-                                <select 
-                                  className="filter-select"
-                                  value={profileFilter}
-                                  onChange={e => setProfileFilter(e.target.value === 'Todos' ? 'Todos' : Number(e.target.value))}
-                                >
-                                    <option value="Todos">Todos os Perfis</option>
-                                    {profiles.map(profile => (
-                                        <option key={profile.id} value={profile.id}>
-                                            {profile.nome}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="users-filters">
-                                    <button
-                                      className={`filter-button ${statusFilter === 'Ativo' ? 'active' : ''}`}
-                                      onClick={() => setStatusFilter('Ativo')}
-                                    >
-                                        Ativos
-                                    </button>
-                                    <button
-                                      className={`filter-button ${statusFilter === 'Inativo' ? 'active' : ''}`}
-                                      onClick={() => setStatusFilter('Inativo')}
-                                    >
-                                        Inativos
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {renderContent()}
-                    </div>
-                </main>
+                  )}
+                </tbody>
+              </table>
             </div>
-        </>
-    );
+          );
+      };
+  
+      return (
+          <>
+              <UserFormModal 
+                isOpen={isUserModalOpen}
+                onClose={handleCloseUserModal}
+                onSave={handleSaveUser}
+                userToEdit={userToEdit}
+                profiles={profiles}
+                isSaving={isSaving}
+              />
+              <ConfirmationModal
+                isOpen={userToDeleteId !== null}
+                onClose={() => setUserToDeleteId(null)}
+                onConfirm={handleDeleteUser}
+                title="Confirmar Desativação"
+                message="Tem certeza que deseja desativar este usuário? Esta ação não pode ser desfeita."
+                confirmText="Desativar"
+                isConfirming={isDeleting}
+              />
+  
+              <div className={`dashboard-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+                  <Sidebar 
+                    onLogout={handleLogout}
+                    isCollapsed={isSidebarCollapsed}
+                    onToggle={toggleSidebar} 
+                  />
+                  <main className="main-content">
+                      <div className="page-header">
+                          <h1>Gestão de Usuários</h1>
+                          <button className="add-button" onClick={() => handleOpenUserModal()}>
+                              <FaPlus /> Adicionar Usuário
+                          </button>
+                      </div>
+  
+                      <div className="dashboard-card">
+                          
+                          <div className="filters-container">
+                              <input 
+                                type="text" 
+                                placeholder="Buscar por nome ou e-mail..." 
+                                className="filter-input"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                              />
+                              <div className="select-filters">
+                                  <select 
+                                    className="filter-select"
+                                    value={profileFilter}
+                                    onChange={e => setProfileFilter(e.target.value === 'Todos' ? 'Todos' : Number(e.target.value))}
+                                  >
+                                      <option value="Todos">Todos os Perfis</option>
+                                      {profiles.map(profile => (
+                                          <option key={profile.id} value={profile.id}>
+                                              {profile.nome}
+                                          </option>
+                                      ))}
+                                  </select>
+                                  <div className="users-filters">
+                                      <button
+                                        className={`filter-button ${statusFilter === 'Ativo' ? 'active' : ''}`}
+                                        onClick={() => setStatusFilter('Ativo')}
+                                      >
+                                          Ativos
+                                      </button>
+                                      <button
+                                        className={`filter-button ${statusFilter === 'Inativo' ? 'active' : ''}`}
+                                        onClick={() => setStatusFilter('Inativo')}
+                                      >
+                                          Inativos
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+  
+                          {renderContent()}
+                      </div>
+                  </main>
+              </div>
+          </>
+      );
 };
 
 export default UserManagementPage;

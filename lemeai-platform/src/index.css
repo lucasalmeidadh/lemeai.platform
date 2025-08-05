@@ -19,19 +19,21 @@ body, html {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--light-gray); /* Fundo global */
+  background-color: var(--light-gray);
+  overflow: hidden; /* Adicionado para garantir que o body não crie scroll */
 }
 
 /* --- ESTILOS DE LAYOUT GLOBAIS --- */
 .dashboard-layout {
   display: flex;
-  width: 100vw;
+  width: 100%; /* ALTERADO: de 100vw para 100% para respeitar a largura da scrollbar */
   height: 100vh;
 }
 
 .main-content {
   flex-grow: 1; 
   height: 100vh;
-  overflow-y: auto; /* Permite rolagem apenas no conteúdo principal */
+  overflow-y: auto;
   padding: 40px;
+  box-sizing: border-box; /* ADICIONADO: Garante que o padding seja incluído na altura total */
 }
