@@ -13,6 +13,10 @@ import type { Contact, Message } from '../data/mockData';
 import ContactListSkeleton from '../components/ContactListSkeleton';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 
+// Interface para os dados do usuário logado
+interface CurrentUser {
+  nome: string;
+}
 
 // Interfaces da API
 interface ApiConversation {
@@ -47,6 +51,31 @@ const ChatPage = () => {
   const [error, setError] = useState<string | null>(null);
   
   const [activeConversationMessages, setActiveConversationMessages] = useState<MessagesByDate>({});
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+
+  const fetchCurrentUser = useCallback(async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    try {
+      // Endpoint para buscar dados do usuário. Ajuste se necessário.
+      const response = await fetch('https://lemeia-api.onrender.com/api/Auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao buscar dados do usuário.');
+      }
+
+      const result = await response.json();
+      if (result.sucesso) {
+        setCurrentUser({ nome: result.dados.userName || result.dados.nome });
+      }
+    } catch (err) {
+      console.error("Erro ao buscar usuário logado:", err);
+      setCurrentUser({ nome: 'Usuário' }); 
+    }
+  }, []);
 
   const fetchConversations = useCallback(async (isInitialLoad = false) => {
     const token = localStorage.getItem('authToken');
@@ -139,8 +168,9 @@ const ChatPage = () => {
   }, [navigate]);
 
   useEffect(() => {
+    fetchCurrentUser();
     fetchConversations(true);
-  }, [fetchConversations]);
+  }, [fetchCurrentUser, fetchConversations]);
 
   useEffect(() => {
     if (selectedContactId !== null) {
@@ -237,7 +267,12 @@ const ChatPage = () => {
 
     return (
       <div className="chat-layout">
-        <ContactList contacts={contacts} activeContactId={selectedContactId || 0} onSelectContact={handleSelectContact} />
+        <ContactList 
+          contacts={contacts} 
+          activeContactId={selectedContactId || 0} 
+          onSelectContact={handleSelectContact}
+          currentUser={currentUser}
+        />
         {selectedContact ? (
           <>
             <div className="conversation-area">
