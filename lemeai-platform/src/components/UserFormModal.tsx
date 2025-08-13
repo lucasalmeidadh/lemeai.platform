@@ -1,12 +1,8 @@
-// ARQUIVO: src/components/UserFormModal.tsx
-
 import React, { useState, useEffect } from 'react';
 import './UserFormModal.css';
 import { FaTimes } from 'react-icons/fa';
-// --- CORREÇÃO AQUI ---
-import type { User, Profile } from '../types'; // Usando "import type"
+import type { User, Profile } from '../types';
 
-// Interface das propriedades do componente
 interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -63,19 +59,19 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSave, 
         <form onSubmit={handleSubmit}>
           <fieldset disabled={isSaving} className="form-fieldset">
             <div className="form-grid">
-              {/* Nome Completo */}
+              {}
               <div className="form-group">
                 <label htmlFor="name">Nome Completo</label>
                 <input type="text" id="name" name="name" value={user.name} onChange={handleChange} required />
               </div>
 
-              {/* E-mail */}
+              {}
               <div className="form-group">
                 <label htmlFor="email">E-mail</label>
                 <input type="email" id="email" name="email" value={user.email} onChange={handleChange} required />
               </div>
 
-              {/* Perfil de Acesso (Agora dinâmico) */}
+              {}
               <div className="form-group">
                 <label htmlFor="profileId">Perfil de Acesso</label>
                 <select id="profileId" name="profileId" value={user.profileId} onChange={handleChange}>
@@ -87,7 +83,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSave, 
                 </select>
               </div>
 
-              {/* Status */}
+              {}
               <div className="form-group">
                 <label htmlFor="status">Status</label>
                 <select id="status" name="status" value={user.status} onChange={handleChange}>
@@ -96,7 +92,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, onSave, 
                 </select>
               </div>
 
-              {/* Senha */}
+              {}
               <div className="form-group full-width">
                 <label htmlFor="password">Senha</label>
                 <input 

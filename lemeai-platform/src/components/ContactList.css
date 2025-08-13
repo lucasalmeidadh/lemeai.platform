@@ -1,5 +1,3 @@
-/* ARQUIVO: src/components/ContactList.css */
-
 .contact-list {
   width: 320px;
   min-width: 300px;
@@ -58,7 +56,6 @@
   width: 100%;
 }
 
-/* --- NOVOS ESTILOS PARA ABAS DE FILTRO --- */
 .filter-tabs {
   display: flex;
   gap: 10px;
@@ -89,7 +86,6 @@
   border-color: #005f73;
 }
 
-
 .contacts-ul {
   list-style: none;
   padding: 10px;
@@ -117,7 +113,6 @@
   background-color: #e0f7ff;
 }
 
-/* --- NOVOS ESTILOS PARA O AVATAR E INDICADOR --- */
 .contact-avatar {
   width: 45px;
   height: 45px;
@@ -129,14 +124,14 @@
   align-items: center;
   font-weight: 600;
   color: #495057;
-  position: relative; /* Âncora para o indicador */
+  position: relative;
 }
 
 .unread-indicator {
   position: absolute;
   top: -2px;
   right: -2px;
-  background-color: #ee9b00; /* Cor de destaque */
+  background-color: #ee9b00;
   color: white;
   width: 20px;
   height: 20px;
@@ -176,7 +171,6 @@
   margin-left: auto;
 }
 
-/* Estilos para o Status do Vendedor (existentes) */
 .seller-status {
   cursor: pointer;
 }

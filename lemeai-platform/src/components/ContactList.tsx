@@ -1,21 +1,17 @@
-// ARQUIVO: src/components/ContactList.tsx
-
 import React, { useState } from 'react';
 import './ContactList.css';
 import { FaSearch } from 'react-icons/fa';
 import type { Contact } from '../data/mockData';
 
-// Interface para os dados do usuário que vamos receber
 interface CurrentUser {
   nome: string;
 }
 
-// Atualizamos as props do componente para incluir o `currentUser`
 interface ContactListProps {
   contacts: Contact[];
   activeContactId: number;
   onSelectContact: (id: number) => void;
-  currentUser: CurrentUser | null; // Pode ser nulo enquanto carrega
+  currentUser: CurrentUser | null;
 }
 
 const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, onSelectContact, currentUser }) => {
@@ -30,7 +26,6 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
     ? contacts.filter(c => c.unread > 0)
     : contacts;
 
-  // Calculamos a inicial do usuário. Se não houver usuário, usamos 'V' como padrão.
   const userInitials = currentUser ? currentUser.nome.charAt(0).toUpperCase() : 'V';
 
   return (
@@ -47,7 +42,7 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
           </h2>
           <div className="seller-status" onClick={toggleSellerStatus} title={isSellerOnline ? 'Status: Online' : 'Status: Offline'}>
             <div className="seller-avatar">
-              {/* Substituímos o "V" fixo pela nossa variável `userInitials` */}
+              {}
               <span>{userInitials}</span>
               <div className={`status-indicator ${isSellerOnline ? 'online' : 'offline'}`}></div>
             </div>

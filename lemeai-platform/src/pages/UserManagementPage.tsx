@@ -1,8 +1,6 @@
-// ARQUIVO: src/pages/UserManagementPage.tsx
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast'; // <-- Importar toast
+import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar';
 import UserFormModal from '../components/UserFormModal';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -10,11 +8,9 @@ import type { User, Profile } from '../types';
 import './UserManagementPage.css';
 import { FaPlus } from 'react-icons/fa';
 
-// ... (const API_BASE_URL permanece a mesma)
 const API_BASE_URL = 'https://lemeia-api.onrender.com/api';
 
 const UserManagementPage = () => {
-    // ... (todos os hooks e funções até handleSaveUser permanecem os mesmos)
     const navigate = useNavigate();
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -173,7 +169,7 @@ const UserManagementPage = () => {
         }
     };
 
-    // ... (o resto do arquivo, incluindo filteredUsers, renderContent e o JSX, permanece o mesmo)
+
     const filteredUsers = users.filter(user => {
         const searchLower = searchTerm.toLowerCase();
         

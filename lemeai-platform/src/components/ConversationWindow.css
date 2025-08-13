@@ -1,5 +1,3 @@
-/* ARQUIVO: src/components/ConversationWindow.css */
-
 .messages-list {
   flex-grow: 1;
   padding: 20px;
@@ -61,8 +59,6 @@
   border-bottom-left-radius: 4px;
 }
 
-/* Timestamp removido daqui para o .message-meta */
-
 .message-bubble.me .timestamp {
   color: rgba(255, 255, 255, 0.7);
 }
@@ -89,8 +85,6 @@
   color: #5a728e;
 }
 
-/* --- NOVOS ESTILOS PARA STATUS DA MENSAGEM --- */
-
 .message-content {
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -114,14 +108,14 @@
 
 .status-icon {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7); /* Cor padrão para o check e relógio */
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .message-bubble.other .timestamp {
-    color: #6c757d; /* Garante que o timestamp de mensagens recebidas seja legível */
+    color: #6c757d;
 }
 
 
 .status-icon.failed {
-  color: #ffc107; /* Amarelo/laranja para o ícone de falha */
+  color: #ffc107;
 }

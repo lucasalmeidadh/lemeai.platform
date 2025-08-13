@@ -1,5 +1,3 @@
-/* ARQUIVO: src/pages/Dashboard.css */
-
 .main-content h1 {
   font-size: 28px;
   color: #343a40;
@@ -126,7 +124,6 @@
 .status-novo, .status-aberta { background-color: #cff4fc; color: #055160; }
 
 
-/* --- NOVOS ESTILOS PARA OS GRÁFICOS --- */
 .dashboard-charts-area {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));

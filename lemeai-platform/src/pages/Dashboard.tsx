@@ -1,5 +1,3 @@
-// ARQUIVO: src/pages/Dashboard.tsx
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
@@ -9,24 +7,21 @@ import SalesByDateChart from '../components/SalesByDateChart'; // Importando o G
 import './Dashboard.css';
 import { FaUserPlus, FaHandshake, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 
-// Interface para os dados que virão da API
 interface Deal {
   id: number;
   cliente: string;
   numero: string;
   tipoSolicitacao: string;
   status: string;
-  date: string; // Adicionado para o gráfico
+  date: string; 
 }
 
-// Interface para os dados dos KPIs
 interface Kpi {
   title: string;
   value: string;
   icon: React.ReactNode;
 }
 
-// Interfaces para os dados dos gráficos
 interface FunnelData {
   name: string;
   value: number;
@@ -183,7 +178,7 @@ const Dashboard = () => {
               ))}
             </div>
 
-            {/* --- ÁREA DOS NOVOS GRÁFICOS --- */}
+            {}
             <div className="dashboard-charts-area">
                 <div className="dashboard-card">
                     <h3>Funil de Vendas</h3>

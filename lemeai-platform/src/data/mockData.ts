@@ -1,10 +1,7 @@
-// ARQUIVO: src/data/mockData.ts
-
-// Definimos os "tipos" dos nossos dados para garantir consistência
 export interface Message {
   id: number;
   text: string;
-  sender: 'me' | 'other' | 'ia'; // <-- ALTERAÇÃO AQUI
+  sender: 'me' | 'other' | 'ia';
   time: string;
   status?: 'sending' | 'sent' | 'failed';
 }
@@ -22,7 +19,6 @@ export interface Contact {
   };
 }
 
-// Nossos dados centralizados
 export const contactsData: Contact[] = [
   {
     id: 1,

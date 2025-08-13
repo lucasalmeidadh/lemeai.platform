@@ -1,5 +1,3 @@
-// ARQUIVO: src/components/ConversationWindow.tsx
-
 import React, { useEffect, useRef } from 'react';
 import { FaRobot, FaCheck, FaRegClock, FaExclamationCircle } from 'react-icons/fa'; // Importando novos ícones
 import './ConversationWindow.css';
@@ -9,7 +7,6 @@ interface ConversationWindowProps {
   messagesByDate: { [date: string]: Message[] };
 }
 
-// Componente auxiliar para o status
 const MessageStatus: React.FC<{ status?: 'sending' | 'sent' | 'failed' }> = ({ status }) => {
   if (status === 'sending') {
     return <FaRegClock className="status-icon" title="Enviando..." />;
@@ -17,7 +14,6 @@ const MessageStatus: React.FC<{ status?: 'sending' | 'sent' | 'failed' }> = ({ s
   if (status === 'failed') {
     return <FaExclamationCircle className="status-icon failed" title="Falha ao enviar" />;
   }
-  // Para 'sent' ou status indefinido (mensagens antigas), mostramos o check
   return <FaCheck className="status-icon" title="Enviado" />;
 };
 

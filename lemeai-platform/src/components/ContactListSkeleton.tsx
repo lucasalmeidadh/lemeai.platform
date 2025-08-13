@@ -1,7 +1,5 @@
-// ARQUIVO: src/components/ContactListSkeleton.tsx
-
-import './ContactList.css'; // Reutilizamos alguns estilos
-import './Skeleton.css';   // E adicionamos os novos
+import './ContactList.css';
+import './Skeleton.css';
 
 const SkeletonContactItem = () => (
   <li style={{ gap: 15, padding: 15 }}>

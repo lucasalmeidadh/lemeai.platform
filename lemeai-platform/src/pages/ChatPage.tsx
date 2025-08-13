@@ -1,5 +1,3 @@
-// ARQUIVO: src/pages/ChatPage.tsx
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
@@ -13,12 +11,10 @@ import type { Contact, Message } from '../data/mockData';
 import ContactListSkeleton from '../components/ContactListSkeleton';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 
-// Interface para os dados do usuário logado
 interface CurrentUser {
   nome: string;
 }
 
-// Interfaces da API
 interface ApiConversation {
   idConversa: number;
   nomeCliente: string;
@@ -35,7 +31,6 @@ interface ApiMessage {
     dataEnvio: string;
 }
 
-// Interface para o formato que o ConversationWindow espera
 interface MessagesByDate {
     [date: string]: Message[];
 }
@@ -58,7 +53,6 @@ const ChatPage = () => {
     if (!token) return;
 
     try {
-      // Endpoint para buscar dados do usuário. Ajuste se necessário.
       const response = await fetch('https://lemeia-api.onrender.com/api/Auth/me', {
         headers: { 'Authorization': `Bearer ${token}` },
       });

@@ -1,11 +1,10 @@
 import React from 'react';
 import './KPICard.css';
 
-// Definimos os tipos das propriedades que nosso cartão receberá
 interface KPICardProps {
   title: string;
   value: string;
-  icon: React.ReactNode; // O ícone será um componente React
+  icon: React.ReactNode;
 }
 
 const KPICard: React.FC<KPICardProps> = ({ title, value, icon }) => {

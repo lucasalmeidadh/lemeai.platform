@@ -1,4 +1,3 @@
-/* Paleta de cores moderna e profissional */
 :root {
   --primary-color: #005f73;
   --secondary-color: #0a9396;
@@ -19,11 +18,10 @@
   height: 100vh;
   background-color: var(--background-light);
   font-family: 'Segoe UI', 'Roboto', sans-serif;
-  overflow: hidden; /* Para as formas não vazarem */
+  overflow: hidden;
   position: relative;
 }
 
-/* Formas geométricas no fundo para um visual dinâmico */
 .login-background .shape {
   position: absolute;
   background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
@@ -54,8 +52,6 @@
   left: 10%;
   animation: float 8s ease-in-out infinite;
 }
-
-/* Animação para as formas */
 @keyframes float {
   0% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-30px) rotate(180deg); }
@@ -69,7 +65,7 @@
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 420px;
-  z-index: 1; /* Para ficar na frente das formas */
+  z-index: 1;
   animation: fadeIn 0.8s ease-out;
 }
 
@@ -117,13 +113,13 @@
 
 .input-group-creative input {
   width: 100%;
-  padding: 14px 14px 14px 45px; /* Espaço para o ícone */
+  padding: 14px 14px 14px 45px;
   border: 1px solid var(--border-color-light);
   border-radius: 8px;
   font-size: 16px;
   background-color: var(--background-light);
   transition: all 0.3s ease;
-  box-sizing: border-box; /* Garante que o padding não aumente o tamanho */
+  box-sizing: border-box;
 }
 
 .input-group-creative input:focus {

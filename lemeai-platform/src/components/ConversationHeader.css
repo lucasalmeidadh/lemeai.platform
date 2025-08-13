@@ -1,5 +1,3 @@
-/* ARQUIVO: src/components/ConversationHeader.css */
-
 .conversation-header {
   display: flex;
   justify-content: space-between;
@@ -38,7 +36,7 @@
 }
 
 .header-menu-area {
-  position: relative; /* Âncora para o menu dropdown */
+  position: relative;
 }
 
 .options-menu {
@@ -71,7 +69,6 @@
   background-color: #f8f9fa;
 }
 
-/* Reutilizando o estilo do MessageInput.css para consistência */
 .icon-button {
   background: transparent;
   border: none;

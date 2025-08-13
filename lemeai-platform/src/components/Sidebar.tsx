@@ -1,9 +1,6 @@
-// ARQUIVO: src/components/Sidebar.tsx
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-// --- ÍCONES NOVOS ---
 import { 
   FaTachometerAlt, 
   FaComments, 
@@ -45,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle }) =>
               <span>Chat</span>
             </Link>
           </li>
-          {/* --- NOVOS ITENS DE MENU --- */}
+          {}
           <li className={location.pathname === '/users' ? 'active' : ''}>
             <Link to="/users" title="Usuários">
               <FaUsersCog className="nav-icon" />

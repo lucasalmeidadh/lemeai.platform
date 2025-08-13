@@ -1,11 +1,8 @@
-/* ARQUIVO: src/pages/UserManagementPage.css */
-
-/* --- NOVO ESTILO PARA O CABEÇALHO DA PÁGINA --- */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px; /* Espaçamento entre o cabeçalho e o card */
+  margin-bottom: 30px; 
 }
 
 .page-header h1 {
@@ -15,9 +12,6 @@
   margin: 0;
 }
 
-/* --- ESTILO REMOVIDO: .users-header e seus filhos já não existem --- */
-
-/* --- NOVOS ESTILOS PARA O CONTAINER DE FILTROS --- */
 .filters-container {
   display: flex;
   justify-content: space-between;
@@ -90,7 +84,6 @@
   border-color: var(--petroleum-blue);
   font-weight: 600;
 }
-/* --- FIM DOS NOVOS ESTILOS --- */
 
 
 .add-button {

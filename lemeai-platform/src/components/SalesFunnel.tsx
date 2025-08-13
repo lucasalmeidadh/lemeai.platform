@@ -1,5 +1,3 @@
-// ARQUIVO: src/components/SalesFunnel.tsx
-
 import React from 'react';
 import { FunnelChart, Tooltip, Funnel, LabelList, Cell } from 'recharts';
 
@@ -24,7 +22,7 @@ const SalesFunnel: React.FC<SalesFunnelProps> = ({ data }) => {
         isAnimationActive
       >
         <LabelList position="right" fill="#000" stroke="none" dataKey="name" />
-        {data.map((entry, index) => (
+        {data.map((_entry, index) => (
           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
         ))}
       </Funnel>

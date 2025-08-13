@@ -1,5 +1,3 @@
-// ARQUIVO: src/components/MessageInput.tsx
-
 import React, { useState } from 'react';
 import { FaPaperPlane, FaPaperclip } from 'react-icons/fa';
 import './MessageInput.css';

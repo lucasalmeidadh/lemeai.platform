@@ -1,5 +1,3 @@
-// ARQUIVO: src/components/ConfirmationModal.tsx
-
 import React from 'react';
 import './ConfirmationModal.css';
 import { FaExclamationTriangle, FaTimes } from 'react-icons/fa';
@@ -12,7 +10,7 @@ interface ConfirmationModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  isConfirming?: boolean; // Para mostrar um estado de carregamento
+  isConfirming?: boolean;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({

@@ -1,5 +1,3 @@
-// ARQUIVO: src/components/ConversationHeader.tsx
-
 import React, { useState } from 'react';
 import './ConversationHeader.css';
 import { FaEllipsisV } from 'react-icons/fa';
@@ -12,10 +10,9 @@ interface ConversationHeaderProps {
 const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
 
-  // Criamos uma função para lidar com o clique na opção do menu
   const handleMenuOptionClick = (action: () => void) => {
-    action(); // Executa a ação original (como abrir o perfil)
-    setMenuOpen(false); // Fecha o menu
+    action();
+    setMenuOpen(false);
   };
 
   return (
@@ -35,7 +32,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
         {isMenuOpen && (
           <div className="options-menu">
             <ul>
-              {/* Agora o onClick chama nossa nova função */}
+              {}
               <li onClick={() => handleMenuOptionClick(onToggleDetails)}>Ver Perfil do Contato</li>
             </ul>
           </div>

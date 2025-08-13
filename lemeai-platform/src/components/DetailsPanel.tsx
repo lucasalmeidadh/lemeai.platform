@@ -1,5 +1,3 @@
-// ARQUIVO: src/components/DetailsPanel.tsx
-
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import './DetailsPanel.css';
@@ -38,7 +36,6 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
   }, [status]);
 
   const fetchObservations = useCallback(async () => {
-    // ... (função fetchObservations permanece a mesma)
     if (!contact) return;
     setIsLoadingHistory(true);
     setHistoryError(null);
@@ -70,11 +67,9 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
     }
   }, [activeTab, fetchObservations]);
 
-  // --- FUNÇÃO DE SALVAR UNIFICADA ---
   const handleSave = async () => {
     setIsSaving(true);
 
-    // 1. Salva a observação se houver texto
     if (newNote.trim()) {
       const token = localStorage.getItem('authToken');
       try {
@@ -87,18 +82,16 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
         if (!response.ok || !result.sucesso) {
             throw new Error(result.mensagem || 'Falha ao salvar a observação.');
         }
-        setNewNote(''); // Limpa o campo após o sucesso
-        if (activeTab === 'history') { // Atualiza o histórico se a aba estiver aberta
+        setNewNote('');
+        if (activeTab === 'history') {
             fetchObservations();
         }
       } catch (error: any) {
         toast.error(`Erro ao salvar observação: ${error.message}`);
         setIsSaving(false);
-        return; // Interrompe a execução se a observação falhar
+        return;
       }
     }
-
-    // 2. "Salva" os outros detalhes (status e valor)
     console.log('Salvando detalhes:', { status, dealValue });
     
     toast.success('Alterações salvas com sucesso!');
@@ -167,7 +160,7 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
                         disabled={isSaving}
                     ></textarea>
                 </div>
-                {/* --- BOTÃO DE ADICIONAR FOI REMOVIDO DAQUI --- */}
+                {}
             </div>
           </div>
         )}

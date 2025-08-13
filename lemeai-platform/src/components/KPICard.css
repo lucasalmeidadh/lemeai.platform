@@ -1,26 +1,24 @@
-/* ARQUIVO: src/components/KPICard.css */
-
 .kpi-card {
   background-color: #ffffff;
-  border: 1px solid #e9ecef; /* Borda mais suave */
-  border-radius: 16px; /* Bordas mais arredondadas */
+  border: 1px solid #e9ecef;
+  border-radius: 16px;
   padding: 25px;
   display: flex;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra um pouco mais sutil */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .kpi-card:hover {
-  transform: translateY(-4px); /* Efeito de elevação mais discreto */
+  transform: translateY(-4px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .kpi-icon-wrapper {
-  font-size: 24px; /* Ícone um pouco menor */
+  font-size: 24px;
   color: var(--petroleum-blue, #005f73);
-  background-color: #eef8fa; /* Cor de fundo mais clara e integrada */
-  border-radius: 12px; /* Menos arredondado para um look mais moderno */
+  background-color: #eef8fa;
+  border-radius: 12px;
   width: 50px;
   height: 50px;
   display: flex;

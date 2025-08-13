@@ -1,5 +1,3 @@
-/* ARQUIVO: src/pages/ProfileManagementPage.css */
-
 .profile-layout {
   display: grid;
   grid-template-columns: 300px 1fr;
@@ -82,7 +80,6 @@
   font-size: 18px;
 }
 
-/* --- Estilos para o Toggle Switch --- */
 .switch {
   position: relative;
   display: inline-block;

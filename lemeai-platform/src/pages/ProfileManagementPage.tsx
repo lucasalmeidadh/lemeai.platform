@@ -1,19 +1,15 @@
-// ARQUIVO: src/pages/ProfileManagementPage.tsx
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import './ProfileManagementPage.css';
 import { FaLock, FaUsers, FaTachometerAlt, FaComments } from 'react-icons/fa';
 
-// Interface para os perfis
 interface Profile {
   id: number;
   name: string;
   permissions: { [key: string]: boolean };
 }
 
-// Permissões disponíveis
 const availablePermissions = {
   viewDashboard: { label: 'Visualizar Painel', icon: <FaTachometerAlt /> },
   manageUsers: { label: 'Gerenciar Usuários', icon: <FaUsers /> },
@@ -59,7 +55,7 @@ const ProfileManagementPage = () => {
         <h1>Gestão de Perfis e Permissões</h1>
 
         <div className="profile-layout">
-          {/* Coluna da Esquerda: Lista de Perfis */}
+          {}
           <div className="dashboard-card profile-list-card">
             <h3>Perfis de Acesso</h3>
             <ul>
@@ -75,7 +71,7 @@ const ProfileManagementPage = () => {
             </ul>
           </div>
 
-          {/* Coluna da Direita: Detalhes e Permissões do Perfil Selecionado */}
+          {}
           <div className="dashboard-card profile-details-card">
             <h3>Permissões para "{selectedProfile.name}"</h3>
             <div className="permissions-grid">
