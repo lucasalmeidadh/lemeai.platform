@@ -10,7 +10,9 @@ import './ChatPage.css';
 import type { Contact, Message } from '../data/mockData';
 import ContactListSkeleton from '../components/ContactListSkeleton';
 import ConversationSkeleton from '../components/ConversationSkeleton';
+import hubService from '../hub/HubConnectionService';
 
+// Interfaces (sem alteração)
 interface CurrentUser {
   nome: string;
 }
@@ -26,6 +28,7 @@ interface ApiConversation {
 
 interface ApiMessage {
     idMensagem: number;
+    idConversa: number; // Supondo que a API retorne o ID da conversa na mensagem
     mensagem: string;
     origemMensagem: number; // 0 = Cliente, 1 = Vendedor, 2 = IA
     dataEnvio: string;
@@ -37,9 +40,11 @@ interface MessagesByDate {
 
 const ChatPage = () => {
   const navigate = useNavigate();
+  // Estados da UI (sem alteração)
   const [isDetailsPanelOpen, setDetailsPanelOpen] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   
+  // Estados de dados (sem alteração)
   const [contacts, setContacts] = useState<Contact[]>([]); 
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,20 +52,20 @@ const ChatPage = () => {
   
   const [activeConversationMessages, setActiveConversationMessages] = useState<MessagesByDate>({});
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-
+  // ADIÇÃO: Novo estado para controlar o status da conexão do Hub
+  const [isHubConnected, setIsHubConnected] = useState(false);
+  // Funções de busca de dados (sem alteração na lógica interna, exceto a remoção do setupChat)
   const fetchCurrentUser = useCallback(async () => {
+    // ...código original sem alteração
     const token = localStorage.getItem('authToken');
     if (!token) return;
-
     try {
       const response = await fetch('https://lemeia-api.onrender.com/api/Auth/me', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
-
       if (!response.ok) {
         throw new Error('Falha ao buscar dados do usuário.');
       }
-
       const result = await response.json();
       if (result.sucesso) {
         setCurrentUser({ nome: result.dados.userName || result.dados.nome });
@@ -72,13 +77,13 @@ const ChatPage = () => {
   }, []);
 
   const fetchConversations = useCallback(async (isInitialLoad = false) => {
+    // ...código original sem alteração
     const token = localStorage.getItem('authToken');
     if (!token) {
       navigate('/login');
       return;
     }
     if (isInitialLoad) setIsLoading(true);
-
     try {
       const response = await fetch('https://lemeia-api.onrender.com/api/Chat/ConversasPorVendedor', {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -90,12 +95,10 @@ const ChatPage = () => {
       }
       if (!response.ok) throw new Error('Falha ao buscar conversas.');
       const result = await response.json();
-      
       if (result.sucesso && Array.isArray(result.dados)) {
           const sortedConversations: ApiConversation[] = result.dados.sort((a: ApiConversation, b: ApiConversation) => 
               new Date(b.dataUltimaMensagem).getTime() - new Date(a.dataUltimaMensagem).getTime()
           );
-          
           const formattedContacts: Contact[] = sortedConversations.map((convo: ApiConversation) => ({
               id: convo.idConversa,
               name: convo.nomeCliente || convo.numeroWhatsapp,
@@ -121,6 +124,7 @@ const ChatPage = () => {
   }, [navigate]);
 
   const fetchMessages = useCallback(async (contactId: number) => {
+    // MUDANÇA: A lógica do setupChat foi removida daqui
     const token = localStorage.getItem('authToken');
     if (!token) { navigate('/login'); return; }
 
@@ -128,14 +132,12 @@ const ChatPage = () => {
         const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${contactId}/Mensagens`, {
             headers: { 'Authorization': `Bearer ${token}` },
         });
-
         if (response.status === 401) {
             localStorage.removeItem('authToken');
             navigate('/login');
             return;
         }
         if (!response.ok) throw new Error('Falha ao buscar mensagens.');
-
         const result = await response.json();
         if (result.sucesso && Array.isArray(result.dados.mensagens)) {
             const messagesByDate = result.dados.mensagens.reduce((acc: MessagesByDate, msg: ApiMessage) => {
@@ -153,7 +155,7 @@ const ChatPage = () => {
             }, {});
             setActiveConversationMessages(messagesByDate);
         } else {
-           setActiveConversationMessages({});
+            setActiveConversationMessages({});
         }
     } catch (err) {
         console.error("Erro ao buscar mensagens:", err);
@@ -161,17 +163,88 @@ const ChatPage = () => {
     }
   }, [navigate]);
 
+  // ADIÇÃO 1: Função para processar novas mensagens recebidas via Hub
+  const handleNewMessage = useCallback((newMessage: ApiMessage) => {
+    console.log("Nova mensagem recebida via Hub:", newMessage);
+
+    // Atualiza a conversa na tela APENAS se ela for a que está aberta
+    if (newMessage.idConversa === selectedContactId) {
+        const formattedMessage: Message = {
+            id: newMessage.idMensagem,
+            text: newMessage.mensagem,
+            sender: newMessage.origemMensagem === 0 ? 'other' : (newMessage.origemMensagem === 1 ? 'me' : 'ia'),
+            time: new Date(newMessage.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            status: 'sent'
+        };
+
+        const dateKey = new Date(newMessage.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        setActiveConversationMessages(prev => {
+            const newMessagesByDate = { ...prev };
+            const currentMessages = prev[dateKey] || [];
+            newMessagesByDate[dateKey] = [...currentMessages, formattedMessage];
+            return newMessagesByDate;
+        });
+    }
+
+    // Atualiza a lista de contatos para refletir a última mensagem e a ordem
+    fetchConversations(false);
+  }, [selectedContactId, fetchConversations]);
+
+  // ADIÇÃO 2: useEffect para gerenciar a conexão global com o Hub
+  useEffect(() => {
+        const setupHubConnection = async () => {
+            try {
+                await hubService.startConnection();
+                hubService.on('ReceiveNewMessage', handleNewMessage);
+                setIsHubConnected(true); // Define o estado para conectado!
+            } catch (e) {
+                console.error("Falha na configuração inicial do Hub", e);
+            }
+        };
+        setupHubConnection();
+
+        return () => {
+            hubService.off('ReceiveNewMessage', handleNewMessage);
+        };
+    }, [handleNewMessage]);
+
+  // ADIÇÃO 3 E MUDANÇA: useEffect para gerenciar entrada/saída de grupos e buscar mensagens
+  useEffect(() => {
+        // Só executa se o Hub estiver conectado E um contato estiver selecionado
+        if (isHubConnected && selectedContactId !== null) {
+            const currentContactId = selectedContactId;
+
+            console.log(`Tentando entrar no grupo ${currentContactId}...`);
+            hubService.invoke('JoinConversationGroup', currentContactId)
+                .then(() => console.log(`Entrou no grupo ${currentContactId} com sucesso.`))
+                .catch(err => console.error(`Erro ao entrar no grupo ${currentContactId}:`, err));
+            
+            // Função de limpeza para sair do grupo
+            return () => {
+                console.log(`Tentando sair do grupo ${currentContactId}...`);
+                hubService.invoke('LeaveConversationGroup', currentContactId)
+                    .then(() => console.log(`Saiu do grupo ${currentContactId} com sucesso.`))
+                    .catch(err => console.error(`Erro ao sair do grupo ${currentContactId}:`, err));
+            };
+        }
+    }, [isHubConnected, selectedContactId]);// Executa quando o contato selecionado muda
+
+  // O useEffect que busca as mensagens agora não precisa mais se preocupar com o Hub
+    useEffect(() => {
+        if (selectedContactId !== null) {
+            fetchMessages(selectedContactId);
+        }
+    }, [selectedContactId, fetchMessages]);
+
+
+  // useEffect original para a carga inicial (sem alteração)
   useEffect(() => {
     fetchCurrentUser();
     fetchConversations(true);
   }, [fetchCurrentUser, fetchConversations]);
-
-  useEffect(() => {
-    if (selectedContactId !== null) {
-        fetchMessages(selectedContactId);
-    }
-  }, [selectedContactId, fetchMessages]);
-
+  
+  // Lógica de manipulação de eventos e renderização (sem alteração)
   const selectedContact = contacts.find(c => c.id === selectedContactId);
 
   const handleSelectContact = (id: number) => {
@@ -182,14 +255,13 @@ const ChatPage = () => {
   };
   
   const handleSendMessage = async (text: string) => {
+    // ...código original sem alteração
     if (!text.trim() || selectedContactId === null) return;
     const token = localStorage.getItem('authToken');
     if (!token) { navigate('/login'); return; }
-
     const tempId = Date.now();
     const today = new Date();
     const dateKey = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    
     const optimisticMessage: Message = {
       id: tempId,
       text: text,
@@ -197,14 +269,12 @@ const ChatPage = () => {
       time: today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       status: 'sending',
     };
-
     setActiveConversationMessages(prev => {
       const newMessagesByDate = { ...prev };
       const currentMessages = prev[dateKey] || [];
       newMessagesByDate[dateKey] = [...currentMessages, optimisticMessage];
       return newMessagesByDate;
     });
-
     try {
       const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
         method: 'POST',
@@ -214,27 +284,22 @@ const ChatPage = () => {
         },
         body: JSON.stringify(text),
       });
-
       if (!response.ok) {
         throw new Error('Falha ao enviar mensagem na API.');
       }
-      
       await fetchMessages(selectedContactId);
       await fetchConversations(false);
-
     } catch (err) {
       console.error("Erro ao enviar mensagem:", err);
       setActiveConversationMessages(prev => {
         const newMessagesByDate = { ...prev };
         const messagesForDate = prev[dateKey] ? [...prev[dateKey]] : [];
         const messageIndex = messagesForDate.findIndex(m => m.id === tempId);
-
         if (messageIndex !== -1) {
           const updatedMessage = { ...messagesForDate[messageIndex], status: 'failed' as const };
           messagesForDate[messageIndex] = updatedMessage;
           newMessagesByDate[dateKey] = messagesForDate;
         }
-
         return newMessagesByDate;
       });
       alert("Não foi possível enviar a mensagem. Verifique sua conexão.");
@@ -246,6 +311,7 @@ const ChatPage = () => {
   const toggleSidebar = () => { setSidebarCollapsed(!isSidebarCollapsed); };
   
   const renderContent = () => {
+    // ...código original sem alteração
     if (isLoading) {
       return (
         <div className="chat-layout">
@@ -254,11 +320,9 @@ const ChatPage = () => {
         </div>
       );
     }
-
     if (error) {
       return <div>Erro: {error}</div>;
     }
-
     return (
       <div className="chat-layout">
         <ContactList 
