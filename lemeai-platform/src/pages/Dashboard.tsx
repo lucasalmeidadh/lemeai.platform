@@ -58,7 +58,7 @@ const Dashboard = () => {
     }
 
     try {
-      const response = await fetch('https://lemeia-api.onrender.com/api/Chat/ConversasPorVendedor', {
+      const response = await fetch('https://lemeia-api.onrender.com/api/Painel/ResumoAtual', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
@@ -74,24 +74,16 @@ const Dashboard = () => {
 
       const result = await response.json();
 
-      if (result.sucesso && Array.isArray(result.dados)) {
-        // Mapeia os dados da API para o formato que a tabela precisa
-        const formattedDeals: Deal[] = result.dados.map((convo: any) => ({
-          id: convo.idConversa,
-          cliente: convo.nomeCliente || convo.numeroWhatsapp,
-          numero: convo.numeroWhatsapp,
-          tipoSolicitacao: 'Peças',
-          status: convo.conversationStatus || 'Novo',
-          date: new Date(convo.dataUltimaMensagem).toLocaleDateString('pt-BR'),
-        }));
+      if (result.sucesso) {
+        const dados = result.dados || [];
 
-        setDeals(formattedDeals);
 
+        //setDeals(formattedDeals);
         // Calcula os valores dos KPIs
-        const newLeads = formattedDeals.filter(d => d.status.toLowerCase() === 'aberta').length;
-        const inProgress = formattedDeals.filter(d => d.status.toLowerCase() === 'em andamento').length;
-        const lost = formattedDeals.filter(d => d.status.toLowerCase() === 'perdida').length;
-        const completed = formattedDeals.filter(d => d.status.toLowerCase() === 'finalizada').length;
+        const newLeads = dados.novosLeads;
+        const inProgress = dados.vendasEmAndamento;
+        const lost = dados.vendasPerdidas;
+        const completed = dados.vendasConcluidas;
 
         setKpiData([
           { title: 'Novos leads', value: newLeads.toString(), icon: <FaUserPlus /> },
@@ -108,22 +100,45 @@ const Dashboard = () => {
             { name: 'Perdidos', value: lost },
         ]);
         
-        // Agrupa dados por data para o gráfico de barras
-        const salesByDate = formattedDeals.reduce((acc: {[key: string]: ChartData}, deal) => {
-            const date = deal.date;
-            if (!acc[date]) {
-                acc[date] = { date, leads: 0, sales: 0 };
-            }
-            if (deal.status.toLowerCase() === 'aberta') {
-                acc[date].leads += 1;
-            }
-            if (deal.status.toLowerCase() === 'finalizada') {
-                acc[date].sales += 1;
-            }
-            return acc;
-        }, {});
+      const response1 = await fetch('https://lemeia-api.onrender.com/api/Painel/LeadsEVendasPorDia', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
 
-        setSalesChartData(Object.values(salesByDate));
+      if (response1.status === 401) {
+        localStorage.removeItem('authToken');
+        navigate('/login');
+        return;
+      }
+
+      if (!response1.ok) {
+        throw new Error('Falha ao buscar dados do dashboard.');
+      }
+
+      const result1 = await response1.json();
+
+      const leadsPorDia = result1.dados || [];
+      const formattedDeals: ChartData[] = leadsPorDia.map((item: any) => ({
+        date: item.data,
+        sales: item.vendas || 0,
+        leads: item.leads || 0,
+      }))
+
+        // Agrupa dados por data para o gráfico de barras
+        // const salesByDate = formattedDeals.reduce((acc: {[key: string]: ChartData}, deal) => {
+        //     const date = deal.date;
+        //     if (!acc[date]) {
+        //         acc[date] = { date, leads: 0, sales: 0 };
+        //     }
+        //     if (deal.status.toLowerCase() === 'aberta') {
+        //         acc[date].leads += 1;
+        //     }
+        //     if (deal.status.toLowerCase() === 'finalizada') {
+        //         acc[date].sales += 1;
+        //     }
+        //     return acc;
+        // }, {});
+
+        setSalesChartData(Object.values(formattedDeals));
 
       }
     } catch (err) {

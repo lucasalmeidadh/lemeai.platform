@@ -17,7 +17,7 @@ interface DetailsPanelProps {
 }
 
 const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
-  const [status, setStatus] = useState('negotiating');
+  const [status, setStatus] = useState('2');
   const [dealValue, setDealValue] = useState('');
   const [newNote, setNewNote] = useState('');
   
@@ -42,7 +42,7 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
     const token = localStorage.getItem('authToken');
 
     try {
-      const response = await fetch(`https://lemeia-api.onrender.com/api/Observacao/PorConversa/${contact.id}`, {
+      const response = await fetch(`https://lemeia-api.onrender.com/api/Detalhes/PorConversa/${contact.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -73,14 +73,24 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
     if (newNote.trim()) {
       const token = localStorage.getItem('authToken');
       try {
-        const response = await fetch(`https://lemeia-api.onrender.com/api/Observacao/Criar`, {
+        const response = await fetch(`https://lemeia-api.onrender.com/api/Detalhes/Adicionar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ conversationId: contact.id, content: newNote }),
+            body: JSON.stringify({ IdConversa: contact.id, Descricao: newNote }),
         });
         const result = await response.json();
         if (!response.ok || !result.sucesso) {
             throw new Error(result.mensagem || 'Falha ao salvar a observação.');
+        }
+        let valor = parseFloat(dealValue.replace('R$', '').replace(',', '.').trim());
+        const responseStatus = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${contact.id}/AtualizarStatus`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ idStatus: status, valor: valor }),
+        });
+        const resultStatus = await responseStatus.json();
+        if (!responseStatus.ok || !resultStatus.sucesso) {
+            throw new Error(result.mensagem || 'Falha ao atualizar status.');
         }
         setNewNote('');
         if (activeTab === 'history') {
@@ -133,14 +143,14 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
               <div className="form-group">
                 <label htmlFor="deal-status"><FaTag className="label-icon" /> Status da Negociação</label>
                 <select id="deal-status" className="status-select" value={status} onChange={(e) => { setStatus(e.target.value); setIsDirty(true); }}>
-                  <option value="not-started">Não iniciado</option>
-                  <option value="negotiating">Em negociação</option>
-                  <option value="deal-won">Venda Fechada</option>
-                  <option value="deal-lost">Venda Perdida</option>
+                  <option value="1">Não iniciado</option>
+                  <option value="2">Em negociação</option>
+                  <option value="3">Venda Fechada</option>
+                  <option value="4">Venda Perdida</option>
                 </select>
               </div>
 
-              {status === 'deal-won' && (
+              {status === '3' && (
                 <div className="form-group">
                   <label htmlFor="deal-value"><FaDollarSign className="label-icon" /> Valor</label>
                   <input
