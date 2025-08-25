@@ -58,89 +58,10 @@ const Dashboard = () => {
     }
 
     try {
-      const response = await fetch('https://lemeia-api.onrender.com/api/Painel/ResumoAtual', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
 
-      if (response.status === 401) {
-        localStorage.removeItem('authToken');
-        navigate('/login');
-        return;
-      }
+      await buscarResumoAtual(token);
+      await buscarLeadsEVendasPorDia(token);
 
-      if (!response.ok) {
-        throw new Error('Falha ao buscar dados do dashboard.');
-      }
-
-      const result = await response.json();
-
-      if (result.sucesso) {
-        const dados = result.dados || [];
-
-
-        //setDeals(formattedDeals);
-        // Calcula os valores dos KPIs
-        const newLeads = dados.novosLeads;
-        const inProgress = dados.vendasEmAndamento;
-        const lost = dados.vendasPerdidas;
-        const completed = dados.vendasConcluidas;
-
-        setKpiData([
-          { title: 'Novos leads', value: newLeads.toString(), icon: <FaUserPlus /> },
-          { title: 'Vendas em andamento', value: inProgress.toString(), icon: <FaHandshake /> },
-          { title: 'Vendas perdidas', value: lost.toString(), icon: <FaTimesCircle /> },
-          { title: 'Vendas concluídas', value: completed.toString(), icon: <FaCheckCircle /> },
-        ]);
-
-        // Prepara dados para o funil de vendas
-        setFunnelData([
-            { name: 'Novos', value: newLeads },
-            { name: 'Em Negociação', value: inProgress },
-            { name: 'Concluídos', value: completed },
-            { name: 'Perdidos', value: lost },
-        ]);
-        
-      const response1 = await fetch('https://lemeia-api.onrender.com/api/Painel/LeadsEVendasPorDia', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-
-      if (response1.status === 401) {
-        localStorage.removeItem('authToken');
-        navigate('/login');
-        return;
-      }
-
-      if (!response1.ok) {
-        throw new Error('Falha ao buscar dados do dashboard.');
-      }
-
-      const result1 = await response1.json();
-
-      const leadsPorDia = result1.dados || [];
-      const formattedDeals: ChartData[] = leadsPorDia.map((item: any) => ({
-        date: item.data,
-        sales: item.vendas || 0,
-        leads: item.leads || 0,
-      }))
-
-        // Agrupa dados por data para o gráfico de barras
-        // const salesByDate = formattedDeals.reduce((acc: {[key: string]: ChartData}, deal) => {
-        //     const date = deal.date;
-        //     if (!acc[date]) {
-        //         acc[date] = { date, leads: 0, sales: 0 };
-        //     }
-        //     if (deal.status.toLowerCase() === 'aberta') {
-        //         acc[date].leads += 1;
-        //     }
-        //     if (deal.status.toLowerCase() === 'finalizada') {
-        //         acc[date].sales += 1;
-        //     }
-        //     return acc;
-        // }, {});
-
-        setSalesChartData(Object.values(formattedDeals));
-
-      }
     } catch (err) {
       setError("Não foi possível carregar os dados do painel. Tente novamente mais tarde.");
       console.error(err);
@@ -157,6 +78,65 @@ const Dashboard = () => {
     localStorage.removeItem('authToken');
     navigate('/login');
   };
+
+  const buscarResumoAtual = async (token: string) => {
+    const response = await fetch('https://lemeia-api.onrender.com/api/Painel/ResumoAtual', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem('authToken');
+      navigate('/login');
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error('Falha ao buscar dados do dashboard.');
+    }
+
+    const result = await response.json();
+    if (result.sucesso) {
+      const dados = result.dados || [];
+
+      const newLeads = dados.novosLeads;
+      const inProgress = dados.vendasEmAndamento;
+      const lost = dados.vendasPerdidas;
+      const completed = dados.vendasConcluidas;
+
+      setKpiData([
+        { title: 'Novos leads', value: newLeads.toString(), icon: <FaUserPlus /> },
+        { title: 'Vendas em andamento', value: inProgress.toString(), icon: <FaHandshake /> },
+        { title: 'Vendas perdidas', value: lost.toString(), icon: <FaTimesCircle /> },
+        { title: 'Vendas concluídas', value: completed.toString(), icon: <FaCheckCircle /> },
+      ]);
+    }
+  };
+
+  const buscarLeadsEVendasPorDia = async (token: string) => {
+    const response = await fetch('https://lemeia-api.onrender.com/api/Painel/LeadsEVendasPorDia', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem('authToken');
+      navigate('/login');
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error('Falha ao buscar dados do dashboard.');
+    }
+
+    const result = await response.json();
+
+    const leadsPorDia = result.dados || [];
+    const formattedDeals: ChartData[] = leadsPorDia.map((item: any) => ({
+      date: item.data,
+      sales: item.vendas || 0,
+      leads: item.leads || 0,
+    }));
+    setSalesChartData(Object.values(formattedDeals));
+  }
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!isSidebarCollapsed);
@@ -195,10 +175,10 @@ const Dashboard = () => {
 
             {}
             <div className="dashboard-charts-area">
-                <div className="dashboard-card">
+                {/* <div className="dashboard-card">
                     <h3>Funil de Vendas</h3>
                     <SalesFunnel data={funnelData} />
-                </div>
+                </div> */}
                 <div className="dashboard-card">
                     <h3>Leads e Vendas por Dia</h3>
                     <SalesByDateChart data={salesChartData} />

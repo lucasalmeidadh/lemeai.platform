@@ -35,8 +35,6 @@ const Login = () => {
 
       localStorage.setItem('authToken', data.token);
 
-      console.log('Login bem-sucedido! Token guardado:', data.token);
-
       navigate('/dashboard');
 
     } catch (err) {

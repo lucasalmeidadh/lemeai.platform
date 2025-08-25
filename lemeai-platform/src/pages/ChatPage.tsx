@@ -11,7 +11,7 @@ import type { Contact, Message } from '../data/mockData';
 import ContactListSkeleton from '../components/ContactListSkeleton';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 import hubService from '../hub/HubConnectionService';
-
+import noConversationImagem from '../assets/undraw_sem_conversa.svg';
 // Interfaces (sem alteração)
 interface CurrentUser {
   nome: string;
@@ -64,7 +64,7 @@ const ChatPage = () => {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) {
-        throw new Error('Falha ao buscar dados do usuário.');
+        return;
       }
       const result = await response.json();
       if (result.sucesso) {
@@ -93,7 +93,12 @@ const ChatPage = () => {
           navigate('/login');
           return;
       }
-      if (!response.ok) throw new Error('Falha ao buscar conversas.');
+      
+      if (!response.ok && response.status == 400) {
+        return;
+      }
+
+
       const result = await response.json();
       if (result.sucesso && Array.isArray(result.dados)) {
           const sortedConversations: ApiConversation[] = result.dados.sort((a: ApiConversation, b: ApiConversation) => 
@@ -341,9 +346,11 @@ const ChatPage = () => {
             {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} />}
           </>
         ) : (
-          <div className="conversation-area" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-              <p>Nenhuma conversa encontrada.</p>
-          </div>
+            <div className="conversation-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+              <img src={noConversationImagem} alt="Nenhuma conversa encontrada" style={{ maxWidth: '300px', marginBottom: '20px' }} />
+              <p style={{ textAlign: 'center', color: '#777' }}>Nenhuma conversa por aqui ainda.</p>
+              {/* Opcional: Botão ou alguma instrução para iniciar uma conversa */}
+            </div>
         )}
       </div>
     );
