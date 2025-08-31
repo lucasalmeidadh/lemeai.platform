@@ -58,7 +58,6 @@ const Dashboard = () => {
     }
 
     try {
-
       await buscarResumoAtual(token);
       await buscarLeadsEVendasPorDia(token);
 
@@ -130,6 +129,9 @@ const Dashboard = () => {
     const result = await response.json();
 
     const leadsPorDia = result.dados || [];
+    
+    if(typeof leadsPorDia == 'object') return;
+
     const formattedDeals: ChartData[] = leadsPorDia.map((item: any) => ({
       date: item.data,
       sales: item.vendas || 0,

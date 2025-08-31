@@ -12,6 +12,9 @@ import ContactListSkeleton from '../components/ContactListSkeleton';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 import hubService from '../hub/HubConnectionService';
 import noConversationImagem from '../assets/undraw_sem_conversa.svg';
+
+const apiUrl = import.meta.env.VITE_API_URL;
+
 // Interfaces (sem alteração)
 interface CurrentUser {
   nome: string;
