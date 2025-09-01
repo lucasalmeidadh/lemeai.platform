@@ -51,15 +51,10 @@ const Dashboard = () => {
 
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
 
     try {
-      await buscarResumoAtual(token);
-      await buscarLeadsEVendasPorDia(token);
+      await buscarResumoAtual();
+      await buscarLeadsEVendasPorDia();
 
     } catch (err) {
       setError("Não foi possível carregar os dados do painel. Tente novamente mais tarde.");
@@ -78,9 +73,9 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-  const buscarResumoAtual = async (token: string) => {
+  const buscarResumoAtual = async () => {
     const response = await fetch('https://lemeia-api.onrender.com/api/Painel/ResumoAtual', {
-      headers: { 'Authorization': `Bearer ${token}` },
+      credentials: 'include'
     });
 
     if (response.status === 401) {
@@ -111,13 +106,12 @@ const Dashboard = () => {
     }
   };
 
-  const buscarLeadsEVendasPorDia = async (token: string) => {
+  const buscarLeadsEVendasPorDia = async () => {
     const response = await fetch('https://lemeia-api.onrender.com/api/Painel/LeadsEVendasPorDia', {
-      headers: { 'Authorization': `Bearer ${token}` },
+      credentials: 'include'
     });
 
     if (response.status === 401) {
-      localStorage.removeItem('authToken');
       navigate('/login');
       return;
     }

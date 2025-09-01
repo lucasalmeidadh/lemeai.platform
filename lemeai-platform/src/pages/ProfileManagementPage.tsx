@@ -29,9 +29,9 @@ const availablePermissions = {
   gerenciar_permissoes: { idPermission: 5, label: 'Gerenciar Usuários', icon: <FaUsers /> }, // AQUI ESTAVA GERENCIAR USUÁRIOS
 };
 
-const BuscarPermissoesPorTipoPerfil = async (tipoPerfil: number, token: string, navigate: any) => {
+const BuscarPermissoesPorTipoPerfil = async (tipoPerfil: number, navigate: any) => {
   const response = await fetch(`https://lemeia-api.onrender.com/api/PermissaoAcesso/PermissoesPorTipoUsuario/${tipoPerfil}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    credentials: 'include',
   });
 
   if (response.status === 401) {
@@ -87,11 +87,6 @@ const ProfileManagementPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfiles = useCallback(async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
     
     setIsLoading(true);
     setError(null);
@@ -99,8 +94,8 @@ const ProfileManagementPage = () => {
     try {
       // Busca os dados em paralelo
       const [dadosAdmin, dadosVendedor] = await Promise.all([
-        BuscarPermissoesPorTipoPerfil(1, token, navigate),
-        BuscarPermissoesPorTipoPerfil(2, token, navigate)
+        BuscarPermissoesPorTipoPerfil(1, navigate),
+        BuscarPermissoesPorTipoPerfil(2, navigate)
       ]);
       
       const profileAdmin = CreateProfileObject(dadosAdmin);
@@ -145,11 +140,6 @@ const ProfileManagementPage = () => {
   };
 
   const handleSave = () => async() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
     if (!selectedProfile) return;
     setIsLoading(true);
     setError(null);
@@ -180,15 +170,19 @@ const ProfileManagementPage = () => {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify(payload) // Converte o payload para JSON
     });
+
+    if(response.status === 401) {
+        navigate('/login');
+        return;
+    }
+    
     if (!response.ok) {
         throw new Error('Erro ao salvar permissões');
     }
-
-    console.log('Payload para salvar:', payload);
     }catch (err: any) {
       setError(err.message || 'Erro ao salvar permissões');
       console.error(err);

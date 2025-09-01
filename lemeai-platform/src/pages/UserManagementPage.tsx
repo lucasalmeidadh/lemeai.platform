@@ -41,17 +41,12 @@ const UserManagementPage = () => {
     const fetchData = useCallback(async () => {
       setIsLoading(true);
       setError(null);
-      const token = localStorage.getItem('authToken');
-  
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+
   
       try {
         const [usersResponse, profilesResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/Usuario/BuscarTodos`, { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(`${API_BASE_URL}/TipoUsuario/BuscarTodos`, { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(`${API_BASE_URL}/Usuario/BuscarTodos`, { credentials: 'include' }),
+          fetch(`${API_BASE_URL}/TipoUsuario/BuscarTodos`, { credentials: 'include' })
         ]);
   
         if (usersResponse.status === 401 || profilesResponse.status === 401) {
@@ -105,7 +100,6 @@ const UserManagementPage = () => {
 
     const handleSaveUser = async (user: User, password?: string) => {
         setIsSaving(true);
-        const token = localStorage.getItem('authToken');
         const isEditing = user.id !== null;
         const action = isEditing ? 'atualizar' : 'criar';
 
@@ -123,10 +117,14 @@ const UserManagementPage = () => {
         try {
             const response = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(requestBody),
             });
-
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
             const result = await response.json();
             if (!response.ok || !result.sucesso) {
                 throw new Error(result.mensagem || `Falha ao ${action} usuário.`);
@@ -146,13 +144,15 @@ const UserManagementPage = () => {
     const handleDeleteUser = async () => {
         if (!userToDeleteId) return;
         setIsDeleting(true);
-        const token = localStorage.getItem('authToken');
         try {
             const response = await fetch(`${API_BASE_URL}/Usuario/Deletar/${userToDeleteId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include',
             });
-
+          if (response.status === 401) {
+            navigate('/login');
+            return;
+          }
             const result = await response.json();
             if (!response.ok || !result.sucesso) {
                 throw new Error(result.mensagem || 'Falha ao desativar usuário.');

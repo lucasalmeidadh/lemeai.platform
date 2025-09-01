@@ -19,8 +19,9 @@ const Login = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://lemeia-api.onrender.com/api/Auth/login', {
+      const response = await fetch('https://lemeia-api.onrender.com/api/Auth/Login', {
         method: 'POST',
+        credentials: "include",
         headers: {
           'Content-Type': 'application/json',
         },
@@ -31,9 +32,15 @@ const Login = () => {
         throw new Error('Falha na autenticação');
       }
 
-      const data = await response.json();
+      const response1 = await fetch('https://lemeia-api.onrender.com/api/Auth/Me', {
+        credentials: 'include'
+      });
+      if (!response1.ok) {
+        throw new Error('Falha na autenticação');
+      }
 
-      localStorage.setItem('authToken', data.token);
+      const data = await response1.json();
+      localStorage.setItem('user', JSON.stringify(data));
 
       navigate('/dashboard');
 

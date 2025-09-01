@@ -59,13 +59,17 @@ const ChatPage = () => {
   const [isHubConnected, setIsHubConnected] = useState(false);
   // Funções de busca de dados (sem alteração na lógica interna, exceto a remoção do setupChat)
   const fetchCurrentUser = useCallback(async () => {
-    // ...código original sem alteração
-    const token = localStorage.getItem('authToken');
-    if (!token) return;
+
     try {
       const response = await fetch('https://lemeia-api.onrender.com/api/Auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include'
       });
+
+      if(response.status === 401) {
+        navigate('/login');
+        return;
+      }
+
       if (!response.ok) {
         return;
       }
@@ -81,18 +85,14 @@ const ChatPage = () => {
 
   const fetchConversations = useCallback(async (isInitialLoad = false) => {
     // ...código original sem alteração
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+
     if (isInitialLoad) setIsLoading(true);
     try {
       const response = await fetch('https://lemeia-api.onrender.com/api/Chat/ConversasPorVendedor', {
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include'
       });
+
       if (response.status === 401) {
-          localStorage.removeItem('authToken');
           navigate('/login');
           return;
       }
@@ -132,16 +132,11 @@ const ChatPage = () => {
   }, [navigate]);
 
   const fetchMessages = useCallback(async (contactId: number) => {
-    // MUDANÇA: A lógica do setupChat foi removida daqui
-    const token = localStorage.getItem('authToken');
-    if (!token) { navigate('/login'); return; }
-
     try {
         const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${contactId}/Mensagens`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include'
         });
         if (response.status === 401) {
-            localStorage.removeItem('authToken');
             navigate('/login');
             return;
         }
@@ -265,8 +260,7 @@ const ChatPage = () => {
   const handleSendMessage = async (text: string) => {
     // ...código original sem alteração
     if (!text.trim() || selectedContactId === null) return;
-    const token = localStorage.getItem('authToken');
-    if (!token) { navigate('/login'); return; }
+
     const tempId = Date.now();
     const today = new Date();
     const dateKey = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -287,11 +281,17 @@ const ChatPage = () => {
       const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(text),
       });
+
+      if(response.status === 401) {
+        navigate('/login');
+        return;
+      }
+
       if (!response.ok) {
         throw new Error('Falha ao enviar mensagem na API.');
       }
