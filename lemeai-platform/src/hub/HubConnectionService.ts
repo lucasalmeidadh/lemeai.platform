@@ -17,7 +17,7 @@ class HubConnectionService {
   public connection: HubConnection;
   // A URL do Hub, obtida de variáveis de ambiente
   private hubUrl: string;
-
+  private apiUrl: string = import.meta.env.VITE_API_URL;
   // Instância estática para o padrão Singleton
   private static instance: HubConnectionService;
 
@@ -29,7 +29,7 @@ class HubConnectionService {
 
   private constructor() {
     // ... código do construtor sem alteração
-    const baseUrl = 'https://lemeia-api.onrender.com';
+    const baseUrl = this.apiUrl;
     this.hubUrl = `${baseUrl.replace(/\/$/, '')}/chatHub`;
     this.connection = new HubConnectionBuilder()
         .withUrl(this.hubUrl)

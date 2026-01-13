@@ -61,7 +61,7 @@ const ChatPage = () => {
   const fetchCurrentUser = useCallback(async () => {
 
     try {
-      const response = await fetch('https://lemeia-api.onrender.com/api/Auth/me', {
+      const response = await fetch(`${apiUrl}/api/Auth/me`, {
         credentials: 'include'
       });
 
@@ -88,7 +88,7 @@ const ChatPage = () => {
 
     if (isInitialLoad) setIsLoading(true);
     try {
-      const response = await fetch('https://lemeia-api.onrender.com/api/Chat/ConversasPorVendedor', {
+      const response = await fetch(`${apiUrl}/api/Chat/ConversasPorVendedor`, {
         credentials: 'include'
       });
 
@@ -133,7 +133,7 @@ const ChatPage = () => {
 
   const fetchMessages = useCallback(async (contactId: number) => {
     try {
-        const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${contactId}/Mensagens`, {
+        const response = await fetch(`${apiUrl}/api/Chat/Conversas/${contactId}/Mensagens`, {
           credentials: 'include'
         });
         if (response.status === 401) {
@@ -278,7 +278,7 @@ const ChatPage = () => {
       return newMessagesByDate;
     });
     try {
-      const response = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
+      const response = await fetch(`${apiUrl}/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -48,7 +48,7 @@ const Dashboard = () => {
   const [salesChartData, setSalesChartData] = useState<ChartData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
 
@@ -74,7 +74,7 @@ const Dashboard = () => {
   };
 
   const buscarResumoAtual = async () => {
-    const response = await fetch('https://lemeia-api.onrender.com/api/Painel/ResumoAtual', {
+    const response = await fetch(`${apiUrl}/api/Painel/ResumoAtual`, {
       credentials: 'include'
     });
 
@@ -107,7 +107,7 @@ const Dashboard = () => {
   };
 
   const buscarLeadsEVendasPorDia = async () => {
-    const response = await fetch('https://lemeia-api.onrender.com/api/Painel/LeadsEVendasPorDia', {
+    const response = await fetch(`${apiUrl}/api/Painel/LeadsEVendasPorDia`, {
       credentials: 'include'
     });
 

@@ -4,6 +4,8 @@ import { FaUser, FaLock, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const endpointLogin = import.meta.env.VITE_ENDPOINT_LOGIN;
   const navigate = useNavigate();
 
   const [email, setEmail] = useState<string>('');
@@ -19,7 +21,7 @@ const Login = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://lemeia-api.onrender.com/api/Auth/Login', {
+      const response = await fetch(`${apiUrl}${endpointLogin}`, {
         method: 'POST',
         credentials: "include",
         headers: {
@@ -32,7 +34,7 @@ const Login = () => {
         throw new Error('Falha na autenticação');
       }
 
-      const response1 = await fetch('https://lemeia-api.onrender.com/api/Auth/Me', {
+      const response1 = await fetch('http://localhost:8080/api/Auth/Me', {
         credentials: 'include'
       });
       if (!response1.ok) {

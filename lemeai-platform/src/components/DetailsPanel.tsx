@@ -36,14 +36,15 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
   }, [status]);
 
   const fetchObservations = useCallback(async () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
     if (!contact) return;
     setIsLoadingHistory(true);
     setHistoryError(null);
     const token = localStorage.getItem('authToken');
 
     try {
-      const response = await fetch(`https://lemeia-api.onrender.com/api/Detalhes/PorConversa/${contact.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await fetch(`${apiUrl}/api/Detalhes/PorConversa/${contact.id}`, {
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Falha ao carregar o histórico.');
@@ -68,14 +69,16 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
   }, [activeTab, fetchObservations]);
 
   const handleSave = async () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
     setIsSaving(true);
 
     if (newNote.trim()) {
       const token = localStorage.getItem('authToken');
       try {
-        const response = await fetch(`https://lemeia-api.onrender.com/api/Detalhes/Adicionar`, {
+        const response = await fetch(`${apiUrl}/api/Detalhes/Adicionar`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ IdConversa: contact.id, Descricao: newNote }),
         });
         const result = await response.json();
@@ -83,9 +86,10 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
             throw new Error(result.mensagem || 'Falha ao salvar a observação.');
         }
         let valor = parseFloat(dealValue.replace('R$', '').replace(',', '.').trim());
-        const responseStatus = await fetch(`https://lemeia-api.onrender.com/api/Chat/Conversas/${contact.id}/AtualizarStatus`, {
+        const responseStatus = await fetch(`${apiUrl}/api/Chat/Conversas/${contact.id}/AtualizarStatus`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idStatus: status, valor: valor }),
         });
         const resultStatus = await responseStatus.json();

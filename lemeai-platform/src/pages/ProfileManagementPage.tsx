@@ -30,7 +30,8 @@ const availablePermissions = {
 };
 
 const BuscarPermissoesPorTipoPerfil = async (tipoPerfil: number, navigate: any) => {
-  const response = await fetch(`https://lemeia-api.onrender.com/api/PermissaoAcesso/PermissoesPorTipoUsuario/${tipoPerfil}`, {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const response = await fetch(`${apiUrl}/api/PermissaoAcesso/PermissoesPorTipoUsuario/${tipoPerfil}`, {
     credentials: 'include',
   });
 
@@ -140,6 +141,7 @@ const ProfileManagementPage = () => {
   };
 
   const handleSave = () => async() => {
+    const apiUrl = import.meta.env.VITE_API_URL;
     if (!selectedProfile) return;
     setIsLoading(true);
     setError(null);
@@ -166,7 +168,7 @@ const ProfileManagementPage = () => {
         permissoes: permissionsToSend
     };
 
-    const response = await fetch('https://lemeia-api.onrender.com/api/PermissaoAcesso/PermissoesPorTipoUsuario', {
+    const response = await fetch(`${apiUrl}/api/PermissaoAcesso/PermissoesPorTipoUsuario`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',

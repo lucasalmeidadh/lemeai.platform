@@ -8,7 +8,7 @@ import type { User, Profile } from '../types';
 import './UserManagementPage.css';
 import { FaPlus } from 'react-icons/fa';
 
-const API_BASE_URL = 'https://lemeia-api.onrender.com/api';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const UserManagementPage = () => {
     const navigate = useNavigate();
@@ -45,8 +45,8 @@ const UserManagementPage = () => {
   
       try {
         const [usersResponse, profilesResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/Usuario/BuscarTodos`, { credentials: 'include' }),
-          fetch(`${API_BASE_URL}/TipoUsuario/BuscarTodos`, { credentials: 'include' })
+          fetch(`${apiUrl}/api/Usuario/BuscarTodos`, { credentials: 'include' }),
+          fetch(`${apiUrl}/api/TipoUsuario/BuscarTodos`, { credentials: 'include' })
         ]);
   
         if (usersResponse.status === 401 || profilesResponse.status === 401) {
@@ -104,8 +104,8 @@ const UserManagementPage = () => {
         const action = isEditing ? 'atualizar' : 'criar';
 
         const url = isEditing 
-            ? `${API_BASE_URL}/Usuario/Atualizar/${user.id}` 
-            : `${API_BASE_URL}/Usuario/CriarUsuario`;
+            ? `${apiUrl}/api/Usuario/Atualizar/${user.id}` 
+            : `${apiUrl}/api/Usuario/CriarUsuario`;
         
         const method = isEditing ? 'PUT' : 'POST';
 
@@ -145,7 +145,7 @@ const UserManagementPage = () => {
         if (!userToDeleteId) return;
         setIsDeleting(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/Usuario/Deletar/${userToDeleteId}`, {
+            const response = await fetch(`${apiUrl}/api/Usuario/Deletar/${userToDeleteId}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
