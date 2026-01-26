@@ -34,7 +34,7 @@ const Login = () => {
         throw new Error('Falha na autenticação');
       }
 
-      const response1 = await fetch('http://localhost:8080/api/Auth/Me', {
+      const response1 = await fetch(`${apiUrl}/api/Auth/Me`, {
         credentials: 'include'
       });
       if (!response1.ok) {

@@ -1,23 +1,25 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import { 
-  FaTachometerAlt, 
-  FaComments, 
-  FaSignOutAlt, 
-  FaAngleLeft, 
-  FaAngleRight, 
-  FaUsersCog, 
-  FaUserShield 
+import {
+  FaTachometerAlt,
+  FaComments,
+  FaSignOutAlt,
+  FaAngleLeft,
+  FaAngleRight,
+  FaUsersCog,
+  FaUserShield,
+  FaUser
 } from 'react-icons/fa';
 
 interface SidebarProps {
   onLogout: () => void;
   isCollapsed: boolean;
   onToggle: () => void;
+  viewProfile: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfile }) => {
   const location = useLocation();
 
   return (
@@ -42,7 +44,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle }) =>
               <span>Chat</span>
             </Link>
           </li>
-          {}
           <li className={location.pathname === '/users' ? 'active' : ''}>
             <Link to="/users" title="Usuários">
               <FaUsersCog className="nav-icon" />
@@ -58,6 +59,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle }) =>
         </ul>
       </nav>
       <div className="sidebar-footer">
+        <button onClick={viewProfile} className="logout-button-sidebar" title="Perfil">
+          <FaUser className="nav-icon" />
+          <span>Perfil</span>
+        </button>
         <button onClick={onLogout} className="logout-button-sidebar" title="Sair">
           <FaSignOutAlt className="nav-icon" />
           <span>Sair</span>

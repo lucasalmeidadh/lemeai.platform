@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
 import KPICard from '../components/KPICard';
-import SalesFunnel from '../components/SalesFunnel'; // Importando o Funil
+
 import SalesByDateChart from '../components/SalesByDateChart'; // Importando o Gráfico de Barras
 import './Dashboard.css';
 import { FaUserPlus, FaHandshake, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
@@ -13,7 +12,7 @@ interface Deal {
   numero: string;
   tipoSolicitacao: string;
   status: string;
-  date: string; 
+  date: string;
 }
 
 interface Kpi {
@@ -22,10 +21,7 @@ interface Kpi {
   icon: React.ReactNode;
 }
 
-interface FunnelData {
-  name: string;
-  value: number;
-}
+
 
 interface ChartData {
   date: string;
@@ -39,12 +35,11 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [typeFilter, setTypeFilter] = useState('Todos');
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+
 
   // Estados para os dados
-  const [deals, setDeals] = useState<Deal[]>([]);
+  const [deals] = useState<Deal[]>([]);
   const [kpiData, setKpiData] = useState<Kpi[]>([]);
-  const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
   const [salesChartData, setSalesChartData] = useState<ChartData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,10 +63,7 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    navigate('/login');
-  };
+
 
   const buscarResumoAtual = async () => {
     const response = await fetch(`${apiUrl}/api/Painel/ResumoAtual`, {
@@ -123,8 +115,8 @@ const Dashboard = () => {
     const result = await response.json();
 
     const leadsPorDia = result.dados || [];
-    
-    if(typeof leadsPorDia == 'object') return;
+
+    if (typeof leadsPorDia == 'object') return;
 
     const formattedDeals: ChartData[] = leadsPorDia.map((item: any) => ({
       date: item.data,
@@ -134,13 +126,11 @@ const Dashboard = () => {
     setSalesChartData(Object.values(formattedDeals));
   }
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!isSidebarCollapsed);
-  };
+
 
   const filteredDeals = deals.filter(deal => {
     const searchMatch = deal.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        deal.numero.toLowerCase().includes(searchTerm.toLowerCase());
+      deal.numero.toLowerCase().includes(searchTerm.toLowerCase());
     const statusMatch = statusFilter === 'Todos' || deal.status === statusFilter;
     const typeMatch = typeFilter === 'Todos' || deal.tipoSolicitacao === typeFilter;
 
@@ -148,99 +138,92 @@ const Dashboard = () => {
   });
 
   return (
-    <div className={`dashboard-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <Sidebar 
-        onLogout={handleLogout}
-        isCollapsed={isSidebarCollapsed}
-        onToggle={toggleSidebar}
-      />
-      <main className="main-content">
-        <h1>Painel Principal</h1>
+    <div style={{ padding: '40px' }}>
+      <h1>Painel Principal</h1>
 
-        {isLoading ? (
-          <p>Carregando dados do painel...</p>
-        ) : error ? (
-          <p style={{ color: 'red' }}>{error}</p>
-        ) : (
-          <>
-            <div className="kpi-grid">
-              {kpiData.map((kpi, index) => (
-                <KPICard key={index} title={kpi.title} value={kpi.value} icon={kpi.icon} />
-              ))}
-            </div>
+      {isLoading ? (
+        <p>Carregando dados do painel...</p>
+      ) : error ? (
+        <p style={{ color: 'red' }}>{error}</p>
+      ) : (
+        <>
+          <div className="kpi-grid">
+            {kpiData.map((kpi, index) => (
+              <KPICard key={index} title={kpi.title} value={kpi.value} icon={kpi.icon} />
+            ))}
+          </div>
 
-            {}
-            <div className="dashboard-charts-area">
-                {/* <div className="dashboard-card">
-                    <h3>Funil de Vendas</h3>
-                    <SalesFunnel data={funnelData} />
-                </div> */}
-                <div className="dashboard-card">
-                    <h3>Leads e Vendas por Dia</h3>
-                    <SalesByDateChart data={salesChartData} />
-                </div>
-            </div>
-
+          { }
+          <div className="dashboard-charts-area">
+            {/* <div className="dashboard-card">
+                  <h3>Funil de Vendas</h3>
+                  <SalesFunnel data={funnelData} />
+              </div> */}
             <div className="dashboard-card">
-              <div className="filters-container">
-                <input 
-                  type="text" 
-                  placeholder="Buscar por cliente ou número..." 
-                  className="filter-input"
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
-                <div className="select-filters">
-                  <select className="filter-select" onChange={e => setTypeFilter(e.target.value)}>
-                    <option value="Todos">Tipo de Solicitação</option>
-                    <option value="Peças">Peças</option>
-                    <option value="Oficina">Oficina</option>
-                  </select>
-                  <select className="filter-select" onChange={e => setStatusFilter(e.target.value)}>
-                    <option value="Todos">Status da Negociação</option>
-                    <option value="aberta">Novo</option>
-                    <option value="em andamento">Em negociação</option>
-                    <option value="finalizada">Concluído</option>
-                    <option value="perdida">Perdido</option>
-                  </select>
-                </div>
+              <h3>Leads e Vendas por Dia</h3>
+              <SalesByDateChart data={salesChartData} />
+            </div>
+          </div>
+
+          <div className="dashboard-card">
+            <div className="filters-container">
+              <input
+                type="text"
+                placeholder="Buscar por cliente ou número..."
+                className="filter-input"
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <div className="select-filters">
+                <select className="filter-select" onChange={e => setTypeFilter(e.target.value)}>
+                  <option value="Todos">Tipo de Solicitação</option>
+                  <option value="Peças">Peças</option>
+                  <option value="Oficina">Oficina</option>
+                </select>
+                <select className="filter-select" onChange={e => setStatusFilter(e.target.value)}>
+                  <option value="Todos">Status da Negociação</option>
+                  <option value="aberta">Novo</option>
+                  <option value="em andamento">Em negociação</option>
+                  <option value="finalizada">Concluído</option>
+                  <option value="perdida">Perdido</option>
+                </select>
               </div>
             </div>
+          </div>
 
-            <div className="dashboard-card">
-              <div className="table-container">
-                <table className="deals-table">
-                  <thead>
-                    <tr>
-                      <th>Cliente</th>
-                      <th>Número</th>
-                      <th>Tipo de Solicitação</th>
-                      <th>Status da Negociação</th>
-                      <th>Detalhes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDeals.length > 0 ? (
-                      filteredDeals.map(deal => (
-                        <tr key={deal.id}>
-                          <td>{deal.cliente}</td>
-                          <td>{deal.numero}</td>
-                          <td>{deal.tipoSolicitacao}</td>
-                          <td><span className={`status-badge status-${deal.status.toLowerCase().replace(/\s/g, '-')}`}>{deal.status}</span></td>
-                          <td><button className="details-button">Ver Detalhes</button></td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>Nenhum resultado encontrado.</td>
+          <div className="dashboard-card">
+            <div className="table-container">
+              <table className="deals-table">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Número</th>
+                    <th>Tipo de Solicitação</th>
+                    <th>Status da Negociação</th>
+                    <th>Detalhes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDeals.length > 0 ? (
+                    filteredDeals.map(deal => (
+                      <tr key={deal.id}>
+                        <td>{deal.cliente}</td>
+                        <td>{deal.numero}</td>
+                        <td>{deal.tipoSolicitacao}</td>
+                        <td><span className={`status-badge status-${deal.status.toLowerCase().replace(/\s/g, '-')}`}>{deal.status}</span></td>
+                        <td><button className="details-button">Ver Detalhes</button></td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>Nenhum resultado encontrado.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-          </>
-        )}
-      </main>
+          </div>
+        </>
+      )}
     </div>
   );
 };
