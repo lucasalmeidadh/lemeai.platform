@@ -7,6 +7,7 @@ import MainLayout from './components/MainLayout.tsx';
 
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
+import ContactsPage from './pages/ContactsPage.tsx';
 import ChatPage from './pages/ChatPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
 import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
           { path: "dashboard", element: <Dashboard /> },
+          { path: "contacts", element: <ContactsPage /> },
           { path: "chat", element: <ChatPage /> },
           { path: "users", element: <UserManagementPage /> },
           { path: "profiles", element: <ProfileManagementPage /> },

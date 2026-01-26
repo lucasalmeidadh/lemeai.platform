@@ -39,7 +39,8 @@
   margin: 0;
 }
 
-.sidebar-nav li a {
+.sidebar-nav li a,
+.nav-item-header {
   display: flex;
   align-items: center;
   padding: 15px 25px;
@@ -48,13 +49,29 @@
   font-weight: 500;
   transition: all 0.2s ease;
   white-space: nowrap;
+  cursor: pointer;
 }
 
-.sidebar-nav li a:hover {
+.nav-item-header {
+  justify-content: space-between;
+}
+
+.sidebar-nav li a {
+  justify-content: flex-start;
+}
+
+.nav-item-content {
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-nav li a:hover,
+.nav-item-header:hover {
   background-color: #f8f9fa;
 }
 
-.sidebar-nav li.active a {
+.sidebar-nav li.active>a,
+.sidebar-nav li.active-parent>.nav-item-header {
   color: #005f73;
   font-weight: 700;
   background-color: #e0f7ff;
@@ -66,6 +83,27 @@
   font-size: 18px;
   min-width: 20px;
 }
+
+/* Submenu styles */
+.submenu {
+  background-color: #f8f9fa;
+  border-left: 3px solid #e9ecef;
+  /* Optional: visual guide */
+}
+
+.submenu li a {
+  padding-left: 55px;
+  /* Indent submenu items */
+  font-size: 0.95em;
+}
+
+.submenu li.active a {
+  border-right: none;
+  /* Subitems might not need the thick border or maybe yes? Let's keep it clean */
+  border-right: 4px solid #005f73;
+  /* actually let's keep consistency */
+}
+
 
 .sidebar-footer {
   padding: 20px;
@@ -128,20 +166,30 @@
 }
 
 .sidebar.collapsed .sidebar-nav span,
-.sidebar.collapsed .sidebar-footer span {
+.sidebar.collapsed .sidebar-footer span,
+.sidebar.collapsed .nav-chevron {
+  /* Hide chevron too */
   opacity: 0;
   width: 0;
   display: inline-block;
   transition: opacity 0.1s ease;
+  overflow: hidden;
+  /* Ensure width 0 hides content */
 }
 
-.sidebar.collapsed .sidebar-nav li a {
+.sidebar.collapsed .sidebar-nav li a,
+.sidebar.collapsed .nav-item-header {
   justify-content: center;
   padding-left: 0;
   padding-right: 0;
 }
 
-.sidebar.collapsed .sidebar-nav li.active a {
+.sidebar.collapsed .nav-item-content {
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-nav li.active a,
+.sidebar.collapsed .sidebar-nav li.active-parent .nav-item-header {
   border-right: none;
 }
 
@@ -152,4 +200,10 @@
 .sidebar.collapsed .nav-icon {
   margin-right: 0;
   font-size: 22px;
+}
+
+/* Collapsed submenu */
+.sidebar.collapsed .submenu li a {
+  padding-left: 0;
+  justify-content: center;
 }

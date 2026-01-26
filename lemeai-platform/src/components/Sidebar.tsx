@@ -9,7 +9,11 @@ import {
   FaAngleRight,
   FaUsersCog,
   FaUserShield,
-  FaUser
+  FaUser,
+  FaCog,
+  FaChevronUp,
+  FaChevronDown,
+  FaAddressBook
 } from 'react-icons/fa';
 
 interface SidebarProps {
@@ -21,6 +25,13 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfile }) => {
   const location = useLocation();
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (location.pathname === '/users' || location.pathname === '/profiles') {
+      setIsSettingsOpen(true);
+    }
+  }, [location.pathname]);
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -38,23 +49,51 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
               <span>Painel</span>
             </Link>
           </li>
+          <li className={location.pathname === '/contacts' ? 'active' : ''}>
+            <Link to="/contacts" title="Meus Contatos">
+              <FaAddressBook className="nav-icon" />
+              <span>Meus Contatos</span>
+            </Link>
+          </li>
           <li className={location.pathname === '/chat' ? 'active' : ''}>
             <Link to="/chat" title="Chat">
               <FaComments className="nav-icon" />
               <span>Chat</span>
             </Link>
           </li>
-          <li className={location.pathname === '/users' ? 'active' : ''}>
-            <Link to="/users" title="Usuários">
-              <FaUsersCog className="nav-icon" />
-              <span>Usuários</span>
-            </Link>
-          </li>
-          <li className={location.pathname === '/profiles' ? 'active' : ''}>
-            <Link to="/profiles" title="Perfis">
-              <FaUserShield className="nav-icon" />
-              <span>Perfis</span>
-            </Link>
+          <li className={location.pathname === '/users' || location.pathname === '/profiles' ? 'active-parent' : ''}>
+            <div
+              className={`nav-item-header ${isSettingsOpen ? 'open' : ''}`}
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              title="Configurações"
+            >
+              <div className="nav-item-content">
+                <FaCog className="nav-icon" />
+                <span>Configurações</span>
+              </div>
+              {!isCollapsed && (
+                <div className="nav-chevron">
+                  {isSettingsOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                </div>
+              )}
+            </div>
+
+            {(isSettingsOpen || (isCollapsed && (location.pathname === '/users' || location.pathname === '/profiles'))) && (
+              <ul className="submenu">
+                <li className={location.pathname === '/users' ? 'active' : ''}>
+                  <Link to="/users" title="Usuários">
+                    <FaUsersCog className="nav-icon" />
+                    <span>Usuários</span>
+                  </Link>
+                </li>
+                <li className={location.pathname === '/profiles' ? 'active' : ''}>
+                  <Link to="/profiles" title="Perfis">
+                    <FaUserShield className="nav-icon" />
+                    <span>Perfis</span>
+                  </Link>
+                </li>
+              </ul>
+            )}
           </li>
         </ul>
       </nav>
