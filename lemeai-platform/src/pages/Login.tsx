@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Login.css';
-import { FaUser, FaLock, FaArrowRight } from 'react-icons/fa';
+import { FaUser, FaLock, FaArrowRight, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -38,7 +38,9 @@ const Login = () => {
         credentials: 'include'
       });
       if (!response1.ok) {
-        throw new Error('Falha na autenticação');
+        // If me fails but login passed, might be an issue, but usually means token not set? 
+        // Let's assume header or cookie logic handles it.
+        throw new Error('Falha na autenticação de sessão');
       }
 
       const data = await response1.json();
@@ -56,58 +58,77 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container-creative">
-      <div className="login-background">
-        <div className="shape shape1"></div>
-        <div className="shape shape2"></div>
-        <div className="shape shape3"></div>
+    <div className="login-page">
+      {/* Branding Section */}
+      <div className="login-branding-section">
+        <div className="brand-content">
+          <div className="brand-logo">LEME.AI</div>
+          <h1 className="brand-tagline">Transforme Conversas em Vendas</h1>
+          <p className="brand-description">
+            A plataforma inteligente para gerenciar seus leads, negociações e atendimento em um só lugar.
+          </p>
+        </div>
       </div>
 
-      <div className="login-form-wrapper">
-        <div className="login-header">
-          <h2 className="logo-creative">LEME.AI</h2>
-          <h3>Seja Bem-vindo</h3>
-          <p>Insira suas credenciais para acessar a plataforma.</p>
+      {/* Form Section */}
+      <div className="login-form-section">
+        <div className="login-card">
+          <div className="login-header">
+            <h2>Bem-vindo de volta!</h2>
+            <p>Acesse sua conta para continuar.</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {error && <div className="error-banner">{error}</div>}
+
+            <div className="form-group">
+              <div className="input-wrapper">
+                <FaUser className="input-icon" />
+                <input
+                  type="email"
+                  className="form-input"
+                  placeholder="Seu e-mail profissional"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <div className="input-wrapper">
+                <FaLock className="input-icon" />
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="Sua senha segura"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-options">
+              <label className="remember-me">
+                <input type="checkbox" /> Manter conectado
+              </label>
+              <a href="#" className="forgot-password">Esqueci a senha</a>
+            </div>
+
+            <button type="submit" className="submit-button" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <FaSpinner className="fa-spin" /> Verificando...
+                </>
+              ) : (
+                <>
+                  Acessar Plataforma <FaArrowRight />
+                </>
+              )}
+            </button>
+          </form>
         </div>
-
-        <form onSubmit={handleSubmit} className="login-form-creative">
-
-          {error && <p className="error-message-creative">{error}</p>}
-
-          <div className="input-group-creative">
-            <FaUser className="icon-creative" />
-            <input
-              type="email"
-              placeholder="Seu e-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="input-group-creative">
-            <FaLock className="icon-creative" />
-            <input
-              type="password"
-              placeholder="Sua senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="options-creative">
-            <label>
-              <input type="checkbox" /> Manter conectado
-            </label>
-            <a href="#">Esqueci a senha</a>
-          </div>
-
-          <button type="submit" className="button-creative" disabled={isLoading}>
-            {isLoading ? 'Verificando...' : 'Acessar Plataforma'}
-            {!isLoading && <FaArrowRight className="button-icon" />}
-          </button>
-        </form>
       </div>
     </div>
   );

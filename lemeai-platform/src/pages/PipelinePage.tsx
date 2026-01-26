@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import './PipelinePage.css';
+import PipelineSkeleton from '../components/PipelineSkeleton';
 import { FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
@@ -192,78 +193,85 @@ const PipelinePage = () => {
 
     return (
         <div className="pipeline-container">
-            <div className="pipeline-header">
-                <h1>Oportunidade de Vendas</h1>
-                <div className="pipeline-actions">
-                    <button className="add-button" onClick={handleAddDeal}>
-                        <FaPlus /> Nova Oportunidade
-                    </button>
-                </div>
-            </div>
 
-            <DragDropContext onDragEnd={onDragEnd}>
-                <div className="pipeline-board">
-                    {columns.map(column => (
-                        <div key={column.id} className="pipeline-column">
-                            <div className="column-header">
-                                <span>{column.title}</span>
-                                <span className="column-count">{column.deals.length}</span>
-                            </div>
-                            <Droppable droppableId={column.id}>
-                                {(provided) => (
-                                    <div
-                                        className="column-body"
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                    >
-                                        {column.deals.map((deal, index) => (
-                                            <Draggable key={deal.id} draggableId={deal.id.toString()} index={index}>
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        className={`kanban-card ${snapshot.isDragging ? 'is-dragging' : ''}`}
-                                                        style={{ ...provided.draggableProps.style }}
-                                                        onClick={() => setSelectedDeal(deal)}
-                                                    >
-                                                        <div className="card-tags">
-                                                            <span className={`card-tag tag-${deal.tag}`}>
-                                                                {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
-                                                            </span>
-                                                        </div>
-                                                        <div className="card-title">{deal.title}</div>
-                                                        <div className="card-value">{deal.value}</div>
-                                                        <div className="card-footer">
-                                                            <span>{deal.date}</span>
-                                                            <div className="card-avatar" title={`Responsável: ${deal.owner}`}>
-                                                                {deal.owner}
+            {isLoading ? (
+                <PipelineSkeleton />
+            ) : (
+                <>
+                    <div className="pipeline-header">
+                        <h1>Oportunidade de Vendas</h1>
+                        <div className="pipeline-actions">
+                            <button className="add-button" onClick={handleAddDeal}>
+                                <FaPlus /> Nova Oportunidade
+                            </button>
+                        </div>
+                    </div>
+
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <div className="pipeline-board">
+                            {columns.map(column => (
+                                <div key={column.id} className="pipeline-column">
+                                    <div className="column-header">
+                                        <span>{column.title}</span>
+                                        <span className="column-count">{column.deals.length}</span>
+                                    </div>
+                                    <Droppable droppableId={column.id}>
+                                        {(provided) => (
+                                            <div
+                                                className="column-body"
+                                                ref={provided.innerRef}
+                                                {...provided.droppableProps}
+                                            >
+                                                {column.deals.map((deal, index) => (
+                                                    <Draggable key={deal.id} draggableId={deal.id.toString()} index={index}>
+                                                        {(provided, snapshot) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
+                                                                className={`kanban-card ${snapshot.isDragging ? 'is-dragging' : ''}`}
+                                                                style={{ ...provided.draggableProps.style }}
+                                                                onClick={() => setSelectedDeal(deal)}
+                                                            >
+                                                                <div className="card-tags">
+                                                                    <span className={`card-tag tag-${deal.tag}`}>
+                                                                        {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="card-title">{deal.title}</div>
+                                                                <div className="card-value">{deal.value}</div>
+                                                                <div className="card-footer">
+                                                                    <span>{deal.date}</span>
+                                                                    <div className="card-avatar" title={`Responsável: ${deal.owner}`}>
+                                                                        {deal.owner}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        )}
+                                                    </Draggable>
+                                                ))}
+                                                {provided.placeholder}
+                                                {column.deals.length === 0 && !isLoading && (
+                                                    <div style={{ textAlign: 'center', color: '#adb5bd', fontSize: '13px', padding: '20px', display: 'none' }}>
+                                                        Nenhuma oportunidade.
                                                     </div>
                                                 )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                        {column.deals.length === 0 && !isLoading && (
-                                            <div style={{ textAlign: 'center', color: '#adb5bd', fontSize: '13px', padding: '20px', display: 'none' }}>
-                                                Nenhuma oportunidade.
                                             </div>
                                         )}
-                                    </div>
-                                )}
-                            </Droppable>
+                                    </Droppable>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </DragDropContext>
+                    </DragDropContext>
 
-            {selectedDeal && (
-                <DealDetailsModal
-                    deal={selectedDeal}
-                    onClose={() => setSelectedDeal(null)}
-                    onUpdate={handleDealUpdate}
-                />
+                    {selectedDeal && (
+                        <DealDetailsModal
+                            deal={selectedDeal}
+                            onClose={() => setSelectedDeal(null)}
+                            onUpdate={handleDealUpdate}
+                        />
+                    )}
+                </>
             )}
         </div>
     );

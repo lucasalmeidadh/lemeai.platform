@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaCommentDots, FaTimes, FaChevronDown, FaArrowLeft } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
 import './GlobalChatWidget.css';
 import ConversationWindow from './ConversationWindow';
 import MessageInput from './MessageInput';
@@ -36,8 +37,10 @@ interface Contact {
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const GlobalChatWidget: React.FC = () => {
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
     const [view, setView] = useState<'list' | 'chat'>('list');
+
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
     const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
@@ -77,7 +80,7 @@ const GlobalChatWidget: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [apiUrl]);
 
     const fetchMessages = useCallback(async (contactId: number) => {
         setIsLoadingChat(true);
@@ -115,13 +118,18 @@ const GlobalChatWidget: React.FC = () => {
         } finally {
             setIsLoadingChat(false);
         }
-    }, []);
+    }, [apiUrl]);
 
     useEffect(() => {
         if (isOpen && view === 'list') {
             fetchConversations();
         }
     }, [isOpen, view, fetchConversations]);
+
+    // Hide on login page
+    if (location.pathname === '/login' || location.pathname === '/') {
+        return null;
+    }
 
     const handleSelectContact = (contact: Contact) => {
         setSelectedContact(contact);

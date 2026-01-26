@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import KPICard from '../components/KPICard';
+import DashboardSkeleton from '../components/DashboardSkeleton';
 
 import SalesByDateChart from '../components/SalesByDateChart'; // Importando o Gráfico de Barras
 import './Dashboard.css';
@@ -21,14 +22,11 @@ interface Kpi {
   icon: React.ReactNode;
 }
 
-
-
 interface ChartData {
   date: string;
   sales: number;
   leads: number;
 }
-
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -142,7 +140,7 @@ const Dashboard = () => {
       <h1>Painel Principal</h1>
 
       {isLoading ? (
-        <p>Carregando dados do painel...</p>
+        <DashboardSkeleton />
       ) : error ? (
         <p style={{ color: 'red' }}>{error}</p>
       ) : (

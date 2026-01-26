@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import './ProfileManagementPage.css';
+import ProfileManagementSkeleton from '../components/ProfileManagementSkeleton';
 import { FaLock, FaUsers, FaTachometerAlt, FaComments, FaBox } from 'react-icons/fa';
 
 // Interfaces (sem alteração)
@@ -188,13 +189,7 @@ const ProfileManagementPage = () => {
 
   // Renderização condicional com base no estado de carregamento e erro
   if (isLoading) {
-    return (
-      <div style={{ padding: '40px' }}>
-        <div className="loading-container">
-          <p>Carregando perfis...</p>
-        </div>
-      </div>
-    );
+    return <ProfileManagementSkeleton />;
   }
 
   if (error) {

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 import UserFormModal from '../components/UserFormModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import UserManagementSkeleton from '../components/UserManagementSkeleton';
 import type { User, Profile } from '../types';
 import './UserManagementPage.css';
 import { FaPlus } from 'react-icons/fa';
@@ -176,7 +177,7 @@ const UserManagementPage = () => {
   });
 
   const renderContent = () => {
-    if (isLoading) return <p className="loading-message">Carregando usuários...</p>;
+    if (isLoading) return <UserManagementSkeleton />;
     if (error) return <p className="error-message">{error}</p>;
 
     return (
