@@ -8,6 +8,7 @@ import MainLayout from './components/MainLayout.tsx';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import ContactsPage from './pages/ContactsPage.tsx';
+import PipelinePage from './pages/PipelinePage.tsx';
 import ChatPage from './pages/ChatPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
 import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
@@ -23,9 +24,10 @@ const router = createBrowserRouter([
       {
         element: <MainLayout />,
         children: [
-          { path: "dashboard", element: <Dashboard /> },
-          { path: "contacts", element: <ContactsPage /> },
           { path: "chat", element: <ChatPage /> },
+          { path: "dashboard", element: <Dashboard /> },
+          { path: "pipeline", element: <PipelinePage /> },
+          { path: "contacts", element: <ContactsPage /> },
           { path: "users", element: <UserManagementPage /> },
           { path: "profiles", element: <ProfileManagementPage /> },
         ]
@@ -36,7 +38,5 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>,
+  <RouterProvider router={router} />
 );

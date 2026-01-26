@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import './ConversationHeader.css';
-import { FaEllipsisV } from 'react-icons/fa';
+import { FaEllipsisV, FaMagic, FaExchangeAlt } from 'react-icons/fa';
+import toast from 'react-hot-toast';
+import TransferModal from './TransferModal';
+import { type InternalUser } from '../data/mockData';
 
 interface ConversationHeaderProps {
   contactName: string;
@@ -10,6 +13,7 @@ interface ConversationHeaderProps {
 
 const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isTransferModalOpen, setTransferModalOpen] = useState(false);
 
   // Mock logic: generate a random status based on name length if not provided, just for demo
   // Or simply hardcode one as requested "mockado"
@@ -30,6 +34,22 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
     setMenuOpen(false);
   };
 
+  const handleAiSummary = () => {
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+      {
+        loading: 'Gerando resumo da conversa com IA...',
+        success: 'Resumo gerado e salvo nas anotações!',
+        error: 'Erro ao gerar resumo.',
+      }
+    );
+  };
+
+  const handleTransfer = (user: InternalUser) => {
+    setTransferModalOpen(false);
+    toast.success(`Conversa transferida para ${user.name}`);
+  };
+
   return (
     <div className="conversation-header">
       <div className="contact-info">
@@ -42,7 +62,11 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
         </div>
       </div>
 
-      <div className="header-menu-area">
+      <div className="header-menu-area" style={{ display: 'flex', gap: '5px' }}>
+        <button className="icon-button" onClick={handleAiSummary} title="Resumo com IA">
+          <FaMagic style={{ color: '#005f73' }} />
+        </button>
+
         <button className="icon-button" onClick={() => setMenuOpen(!isMenuOpen)}>
           <FaEllipsisV />
         </button>
@@ -50,12 +74,21 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
         {isMenuOpen && (
           <div className="options-menu">
             <ul>
-              { }
               <li onClick={() => handleMenuOptionClick(onToggleDetails)}>Ver Perfil do Contato</li>
+              <li onClick={() => handleMenuOptionClick(() => setTransferModalOpen(true))}>
+                Transferir Conversa <FaExchangeAlt style={{ marginLeft: '5px', fontSize: '12px' }} />
+              </li>
             </ul>
           </div>
         )}
       </div>
+
+      {isTransferModalOpen && (
+        <TransferModal
+          onClose={() => setTransferModalOpen(false)}
+          onTransfer={handleTransfer}
+        />
+      )}
     </div>
   );
 };

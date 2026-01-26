@@ -13,7 +13,8 @@ import {
   FaCog,
   FaChevronUp,
   FaChevronDown,
-  FaAddressBook
+  FaAddressBook,
+  FaChartPie
 } from 'react-icons/fa';
 
 interface SidebarProps {
@@ -47,6 +48,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
             <Link to="/dashboard" title="Painel">
               <FaTachometerAlt className="nav-icon" />
               <span>Painel</span>
+            </Link>
+          </li>
+          <li className={location.pathname === '/pipeline' ? 'active' : ''}>
+            <Link to="/pipeline" title="Oportunidades">
+              <FaChartPie className="nav-icon" />
+              <span>Oportunidades</span>
             </Link>
           </li>
           <li className={location.pathname === '/contacts' ? 'active' : ''}>

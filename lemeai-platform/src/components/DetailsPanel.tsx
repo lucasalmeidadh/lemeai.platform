@@ -20,7 +20,7 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
   const [status, setStatus] = useState('2');
   const [dealValue, setDealValue] = useState('');
   const [newNote, setNewNote] = useState('');
-  
+
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
@@ -48,7 +48,7 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
       });
 
       if (!response.ok) throw new Error('Falha ao carregar o histórico.');
-      
+
       const result = await response.json();
       if (result.sucesso) {
         setObservations(result.dados);
@@ -76,29 +76,29 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
       const token = localStorage.getItem('authToken');
       try {
         const response = await fetch(`${apiUrl}/api/Detalhes/Adicionar`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ IdConversa: contact.id, Descricao: newNote }),
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ IdConversa: contact.id, Descricao: newNote }),
         });
         const result = await response.json();
         if (!response.ok || !result.sucesso) {
-            throw new Error(result.mensagem || 'Falha ao salvar a observação.');
+          throw new Error(result.mensagem || 'Falha ao salvar a observação.');
         }
         let valor = parseFloat(dealValue.replace('R$', '').replace(',', '.').trim());
         const responseStatus = await fetch(`${apiUrl}/api/Chat/Conversas/${contact.id}/AtualizarStatus`, {
-            method: 'PATCH',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idStatus: status, valor: valor }),
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idStatus: status, valor: valor }),
         });
         const resultStatus = await responseStatus.json();
         if (!responseStatus.ok || !resultStatus.sucesso) {
-            throw new Error(result.mensagem || 'Falha ao atualizar status.');
+          throw new Error(result.mensagem || 'Falha ao atualizar status.');
         }
         setNewNote('');
         if (activeTab === 'history') {
-            fetchObservations();
+          fetchObservations();
         }
       } catch (error: any) {
         toast.error(`Erro ao salvar observação: ${error.message}`);
@@ -107,12 +107,12 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
       }
     }
     console.log('Salvando detalhes:', { status, dealValue });
-    
+
     toast.success('Alterações salvas com sucesso!');
     setIsDirty(false);
     setIsSaving(false);
   };
-  
+
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -149,8 +149,9 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
                 <select id="deal-status" className="status-select" value={status} onChange={(e) => { setStatus(e.target.value); setIsDirty(true); }}>
                   <option value="1">Não iniciado</option>
                   <option value="2">Em negociação</option>
-                  <option value="3">Venda Fechada</option>
-                  <option value="4">Venda Perdida</option>
+                  <option value="3">Proposta enviada</option>
+                  <option value="4">Venda Fechada</option>
+                  <option value="5">Venda Perdida</option>
                 </select>
               </div>
 
@@ -166,21 +167,21 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
             </div>
 
             <div className="form-section">
-                <div className="form-group">
-                    <label htmlFor="observations"><FaRegStickyNote className="label-icon" /> Adicionar Observação</label>
-                    <textarea 
-                        id="observations" className="observations-textarea" rows={4} placeholder="Digite sua anotação aqui..." 
-                        value={newNote} onChange={(e) => { setNewNote(e.target.value); setIsDirty(true); }}
-                        disabled={isSaving}
-                    ></textarea>
-                </div>
-                {}
+              <div className="form-group">
+                <label htmlFor="observations"><FaRegStickyNote className="label-icon" /> Adicionar Observação</label>
+                <textarea
+                  id="observations" className="observations-textarea" rows={4} placeholder="Digite sua anotação aqui..."
+                  value={newNote} onChange={(e) => { setNewNote(e.target.value); setIsDirty(true); }}
+                  disabled={isSaving}
+                ></textarea>
+              </div>
+              { }
             </div>
           </div>
         )}
 
         {activeTab === 'history' && (
-            <div className="history-content">
+          <div className="history-content">
             {isLoadingHistory && <p className="loading-text">Carregando histórico...</p>}
             {historyError && <p className="error-text">Erro: {historyError}</p>}
             {!isLoadingHistory && !historyError && (
@@ -207,7 +208,7 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose }) => {
           </div>
         )}
       </div>
-      
+
       {activeTab === 'details' && (
         <div className="details-footer">
           <button className="save-button" onClick={handleSave} disabled={!isDirty || isSaving}>

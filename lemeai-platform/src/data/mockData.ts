@@ -67,4 +67,19 @@ export const contactsData: Contact[] = [
       ]
     }
   },
+
+];
+
+export interface InternalUser {
+  id: number;
+  name: string;
+  avatar: string;
+  online: boolean;
+}
+
+export const mockInternalUsers: InternalUser[] = [
+  { id: 101, name: "Ana Souza", avatar: "AS", online: true },
+  { id: 102, name: "Roberto Lima", avatar: "RL", online: false },
+  { id: 103, name: "Fernanda Costa", avatar: "FC", online: true },
+  { id: 104, name: "Gerente Geral", avatar: "GG", online: true },
 ];
