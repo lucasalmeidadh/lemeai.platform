@@ -8,11 +8,12 @@ import { type InternalUser } from '../data/mockData';
 interface ConversationHeaderProps {
   contactName: string;
   onToggleDetails: () => void;
+  onTransfer: (user: InternalUser) => void;
   leadStatus?: 'cold' | 'warm' | 'hot'; // Optional for now
   currentUserId?: number;
 }
 
-const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails, currentUserId }) => {
+const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails, onTransfer, currentUserId }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isTransferModalOpen, setTransferModalOpen] = useState(false);
 
@@ -48,7 +49,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
 
   const handleTransfer = (user: InternalUser) => {
     setTransferModalOpen(false);
-    toast.success(`Conversa transferida para ${user.name}`);
+    onTransfer(user);
   };
 
   return (

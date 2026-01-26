@@ -19,7 +19,7 @@ const TransferModal: React.FC<TransferModalProps> = ({ onClose, onTransfer, curr
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch(`${apiUrl}/api/Usuario/BuscarTodos`, {
+                const response = await fetch(`${apiUrl}/api/Chat/Conversas/BuscarUsuariosTranferencia`, {
                     credentials: 'include'
                 });
 
@@ -34,9 +34,9 @@ const TransferModal: React.FC<TransferModalProps> = ({ onClose, onTransfer, curr
                         id: u.userId,
                         name: u.userName,
                         avatar: u.userName.charAt(0).toUpperCase() + (u.userName.split(' ')[1]?.[0]?.toUpperCase() || ''),
-                        online: !u.userDeleted // Mocking online status based on active/deleted for now, or just random
+                        online: !u.userDeleted
                     }));
-                    const filtered = mappedUsers.filter((u: any) => !u.userDeleted); // Optional: filter out deleted if needed, though 'status' usually handles it
+                    const filtered = mappedUsers.filter((u: any) => !u.userDeleted);
                     setUsers(filtered);
                 } else {
                     throw new Error(data.mensagem || 'Erro desconhecido');

@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import ContactList from '../components/ContactList';
 import ConversationHeader from '../components/ConversationHeader';
@@ -7,7 +8,7 @@ import ConversationWindow from '../components/ConversationWindow';
 import MessageInput from '../components/MessageInput';
 import DetailsPanel from '../components/DetailsPanel';
 import './ChatPage.css';
-import type { Contact, Message } from '../data/mockData';
+import type { Contact, Message, InternalUser } from '../data/mockData';
 import ContactListSkeleton from '../components/ContactListSkeleton';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 import hubService from '../hub/HubConnectionService';
@@ -60,13 +61,19 @@ const ChatPage = () => {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   // ADIÇÃO: Novo estado para controlar o status da conexão do Hub
   const [isHubConnected, setIsHubConnected] = useState(false);
+  // Refs para controle de notificação e mensagens
+  const audioRef = useRef(new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/pang/pop.mp3'));
+  const lastProcessedMessageIdRef = useRef<number | null>(null);
+  const knownConversationIdsRef = useRef<Set<number>>(new Set());
+
   // Funções de busca de dados (sem alteração na lógica interna, exceto a remoção do setupChat)
   const fetchCurrentUser = useCallback(async () => {
-
+    console.log('Auth Debug - Fetching current user...');
     try {
       const response = await fetch(`${apiUrl}/api/Auth/me`, {
         credentials: 'include'
       });
+      console.log('Auth Debug - Response Status:', response.status);
 
       if (response.status === 401) {
         navigate('/login');
@@ -74,15 +81,22 @@ const ChatPage = () => {
       }
 
       if (!response.ok) {
+        console.warn('Auth Debug - Response not OK');
         return;
       }
       const result = await response.json();
-      if (result.sucesso) {
-        // Assuming the API returns 'id' or 'userId' in result.dados
+
+      // API returns the user object directly or a wrapped response
+      if (result.sucesso && result.dados) {
+        // Wrapped response format
         const userId = result.dados.id || result.dados.userId || 0;
         setCurrentUser({ id: userId, nome: result.dados.userName || result.dados.nome });
+      } else if (result.id) {
+        // Direct user object format
+        const userId = Number(result.id) || 0;
+        setCurrentUser({ id: userId, nome: result.userName || result.nome });
       } else {
-        // Fallback if success is false
+        // Fallback if structure is unknown or failure
         setCurrentUser({ id: 0, nome: 'Lucas Almeida' });
       }
     } catch (err) {
@@ -113,6 +127,22 @@ const ChatPage = () => {
 
       const result = await response.json();
       if (result.sucesso && Array.isArray(result.dados)) {
+        // Lógica de Notificação para Novas Conversas
+        const currentIds = new Set<number>(result.dados.map((c: ApiConversation) => Number(c.idConversa)));
+
+        // Se não é a carga inicial, verificamos diferenças
+        if (!isInitialLoad) {
+          const newConversations = result.dados.filter((c: ApiConversation) => !knownConversationIdsRef.current.has(Number(c.idConversa)));
+          if (newConversations.length > 0) {
+            console.log("Novas conversas detectadas:", newConversations);
+            // Toca som se houver nova conversa atribuída
+            audioRef.current.play().catch(e => console.error("Erro ao tocar som:", e));
+            toast(`Você tem ${newConversations.length} nova(s) conversa(s)!`, { icon: '🔔' });
+          }
+        }
+        // Atualiza a lista de IDs conhecidos
+        knownConversationIdsRef.current = currentIds;
+
         const sortedConversations: ApiConversation[] = result.dados.sort((a: ApiConversation, b: ApiConversation) =>
           new Date(b.dataUltimaMensagem).getTime() - new Date(a.dataUltimaMensagem).getTime()
         );
@@ -154,6 +184,24 @@ const ChatPage = () => {
       if (!response.ok) throw new Error('Falha ao buscar mensagens.');
       const result = await response.json();
       if (result.sucesso && Array.isArray(result.dados.mensagens)) {
+        // Lógica de Notificação e "Ping"
+        const allMessages: ApiMessage[] = result.dados.mensagens;
+        // Encontra o ID da mensagem mais recente da lista
+        const maxId = allMessages.reduce((max, current) => Math.max(max, current.idMensagem), 0);
+
+        // Se tivermos um ID rastreado e o novo ID for maior, temos mensagem nova
+        if (lastProcessedMessageIdRef.current !== null && maxId > lastProcessedMessageIdRef.current) {
+          // Verificamos se alguma das novas mensagens não é minha (origem != 1)
+          const newMessages = allMessages.filter(m => m.idMensagem > lastProcessedMessageIdRef.current!);
+          const hasMessageFromOther = newMessages.some(m => m.origemMensagem !== 1);
+
+          if (hasMessageFromOther) {
+            audioRef.current.play().catch(e => console.error("Erro ao tocar som:", e));
+          }
+        }
+        // Atualiza o ID rastreado
+        lastProcessedMessageIdRef.current = maxId;
+
         const messagesByDate = result.dados.mensagens.reduce((acc: MessagesByDate, msg: ApiMessage) => {
           const date = new Date(msg.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
           const formattedMessage: Message = {
@@ -180,6 +228,15 @@ const ChatPage = () => {
   // ADIÇÃO 1: Função para processar novas mensagens recebidas via Hub
   const handleNewMessage = useCallback((newMessage: ApiMessage) => {
     console.log("Nova mensagem recebida via Hub:", newMessage);
+
+    // Toca som se a mensagem não for minha
+    if (newMessage.origemMensagem !== 1) {
+      audioRef.current.play().catch(e => console.error("Erro ao tocar som:", e));
+    }
+    // Atualiza tracking para evitar notificação duplicada no polling
+    if (newMessage.idMensagem > (lastProcessedMessageIdRef.current || 0)) {
+      lastProcessedMessageIdRef.current = newMessage.idMensagem;
+    }
 
     // Atualiza a conversa na tela APENAS se ela for a que está aberta
     if (newMessage.idConversa === selectedContactId) {
@@ -251,6 +308,21 @@ const ChatPage = () => {
     }
   }, [selectedContactId, fetchMessages]);
 
+  // ADIÇÃO 4: Polling de segurança para garantir atualização (Mensagens e Conversas)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Busca atualização da lista de conversas
+      fetchConversations(false);
+
+      // Se tiver chat aberto, busca mensagens dele também
+      if (selectedContactId) {
+        fetchMessages(selectedContactId);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [selectedContactId, fetchMessages, fetchConversations]);
+
 
   // useEffect original para a carga inicial (sem alteração)
   useEffect(() => {
@@ -265,6 +337,7 @@ const ChatPage = () => {
     if (id !== selectedContactId) {
       setActiveConversationMessages({});
       setSelectedContactId(id);
+      lastProcessedMessageIdRef.current = null; // Reinicia o rastreamento ao trocar de chat
     }
   };
 
@@ -325,6 +398,71 @@ const ChatPage = () => {
     }
   };
 
+  const handleTransferConversation = async (targetUser: InternalUser) => {
+    if (!selectedContactId || !currentUser) return;
+
+    try {
+      console.log('Transfer Debug - CurrentUser:', currentUser);
+      console.log('Transfer Debug - Payload:', JSON.stringify({
+        IdResponsavelAtual: currentUser.id,
+        IdNovoResponsavel: targetUser.id
+      }));
+
+      const response = await fetch(`${apiUrl}/api/Chat/Conversas/${selectedContactId}/TranferirConversa`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          IdResponsavelAtual: currentUser.id,
+          IdNovoResponsavel: targetUser.id
+        })
+      });
+
+      if (response.status === 401) {
+        navigate('/login');
+        return;
+      }
+
+      if (!response.ok) {
+        let errorMessage = 'Falha ao transferir conversa';
+        try {
+          const errorData = await response.json();
+          if (errorData?.mensagem) {
+            errorMessage = errorData.mensagem;
+          }
+        } catch (e) {
+          // Ignora erro de parse caso o body esteja vazio
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Success
+      toast.success(`Conversa transferida com sucesso para ${targetUser.name}`, {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+        },
+      });
+
+      // Update state to remove the transferred conversation immediately
+      setContacts(prevContacts => prevContacts.filter(c => c.id !== selectedContactId));
+      setSelectedContactId(null);
+
+    } catch (err: any) {
+      console.error("Erro ao transferir conversa:", err);
+      toast.error(`Erro: ${err.message}`, {
+        style: {
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+        },
+      });
+    }
+  };
+
   const toggleDetailsPanel = () => { setDetailsPanelOpen(!isDetailsPanelOpen); };
 
   const renderContent = () => {
@@ -351,7 +489,12 @@ const ChatPage = () => {
         {selectedContact ? (
           <>
             <div className="conversation-area">
-              <ConversationHeader contactName={selectedContact.name} onToggleDetails={toggleDetailsPanel} />
+              <ConversationHeader
+                contactName={selectedContact.name}
+                onToggleDetails={toggleDetailsPanel}
+                onTransfer={handleTransferConversation}
+                currentUserId={currentUser?.id}
+              />
               <ConversationWindow messagesByDate={activeConversationMessages} />
               <MessageInput onSendMessage={handleSendMessage} />
             </div>
