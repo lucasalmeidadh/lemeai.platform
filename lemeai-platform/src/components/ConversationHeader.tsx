@@ -9,9 +9,10 @@ interface ConversationHeaderProps {
   contactName: string;
   onToggleDetails: () => void;
   leadStatus?: 'cold' | 'warm' | 'hot'; // Optional for now
+  currentUserId?: number;
 }
 
-const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails }) => {
+const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails, currentUserId }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isTransferModalOpen, setTransferModalOpen] = useState(false);
 
@@ -87,6 +88,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
         <TransferModal
           onClose={() => setTransferModalOpen(false)}
           onTransfer={handleTransfer}
+          currentUserId={currentUserId}
         />
       )}
     </div>

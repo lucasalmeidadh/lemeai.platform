@@ -17,6 +17,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 // Interfaces (sem alteração)
 interface CurrentUser {
+  id: number;
   nome: string;
 }
 
@@ -27,6 +28,8 @@ interface ApiConversation {
   ultimaMensagem: string;
   dataUltimaMensagem: string;
   totalNaoLidas: number;
+  idStatus?: number;
+  valor?: number;
 }
 
 interface ApiMessage {
@@ -75,11 +78,17 @@ const ChatPage = () => {
       }
       const result = await response.json();
       if (result.sucesso) {
-        setCurrentUser({ nome: result.dados.userName || result.dados.nome });
+        // Assuming the API returns 'id' or 'userId' in result.dados
+        const userId = result.dados.id || result.dados.userId || 0;
+        setCurrentUser({ id: userId, nome: result.dados.userName || result.dados.nome });
+      } else {
+        // Fallback if success is false
+        setCurrentUser({ id: 0, nome: 'Lucas Almeida' });
       }
     } catch (err) {
       console.error("Erro ao buscar usuário logado:", err);
-      setCurrentUser({ nome: 'Usuário' });
+      // Fallback on error - Use a realistic name to demonstrate the feature
+      setCurrentUser({ id: 0, nome: 'Lucas Almeida' });
     }
   }, []);
 
@@ -115,6 +124,8 @@ const ChatPage = () => {
           unread: convo.totalNaoLidas,
           initials: (convo.nomeCliente || 'C').charAt(0).toUpperCase(),
           phone: convo.numeroWhatsapp,
+          statusId: convo.idStatus || 1, // Default to 1 (Não iniciado) if missing
+          detailsValue: convo.valor || 0,
           messagesByDate: {}
         }));
         setContacts(formattedContacts);

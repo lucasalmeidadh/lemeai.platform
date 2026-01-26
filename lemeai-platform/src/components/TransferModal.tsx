@@ -6,11 +6,12 @@ import { type InternalUser } from '../data/mockData';
 interface TransferModalProps {
     onClose: () => void;
     onTransfer: (user: InternalUser) => void;
+    currentUserId?: number;
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const TransferModal: React.FC<TransferModalProps> = ({ onClose, onTransfer }) => {
+const TransferModal: React.FC<TransferModalProps> = ({ onClose, onTransfer, currentUserId }) => {
     const [users, setUsers] = useState<InternalUser[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -35,7 +36,8 @@ const TransferModal: React.FC<TransferModalProps> = ({ onClose, onTransfer }) =>
                         avatar: u.userName.charAt(0).toUpperCase() + (u.userName.split(' ')[1]?.[0]?.toUpperCase() || ''),
                         online: !u.userDeleted // Mocking online status based on active/deleted for now, or just random
                     }));
-                    setUsers(mappedUsers.filter((u: any) => !u.userDeleted)); // Optional: filter out deleted if needed, though 'status' usually handles it
+                    const filtered = mappedUsers.filter((u: any) => !u.userDeleted); // Optional: filter out deleted if needed, though 'status' usually handles it
+                    setUsers(filtered);
                 } else {
                     throw new Error(data.mensagem || 'Erro desconhecido');
                 }
@@ -48,6 +50,8 @@ const TransferModal: React.FC<TransferModalProps> = ({ onClose, onTransfer }) =>
 
         fetchUsers();
     }, []);
+
+    const visibleUsers = currentUserId ? users.filter(u => u.id !== currentUserId) : users;
 
     return (
         <div className="transfer-modal-overlay" onClick={onClose}>
@@ -64,7 +68,7 @@ const TransferModal: React.FC<TransferModalProps> = ({ onClose, onTransfer }) =>
 
                     {!isLoading && !error && (
                         <ul className="user-list">
-                            {users.map(user => (
+                            {visibleUsers.map(user => (
                                 <li key={user.id} className="user-item">
                                     <div className="user-info">
                                         <div className="user-avatar-placeholder">

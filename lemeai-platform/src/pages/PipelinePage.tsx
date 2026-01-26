@@ -1,82 +1,150 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './PipelinePage.css';
 import { FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import DealDetailsModal from '../components/DealDetailsModal';
+import { useNavigate } from 'react-router-dom';
 
-// Mock Interface
+const apiUrl = import.meta.env.VITE_API_URL;
+
+// Interface for API response
+interface ApiConversation {
+    idConversa: number;
+    nomeCliente: string;
+    numeroWhatsapp: string;
+    ultimaMensagem: string;
+    dataUltimaMensagem: string;
+    totalNaoLidas: number;
+    idStatus?: number;
+    valor?: number;
+}
+
+// Adapted Deal interface to match previous UI structure but with real data mapping
 interface Deal {
     id: number;
     title: string;
     value: string;
-    tag: 'hot' | 'warm' | 'cold' | 'new';
+    tag: 'hot' | 'warm' | 'cold' | 'new'; // We might need to derive this or keep it static for now
     owner: string;
     date: string;
+    contactId: number;
+    statusId: number;
+    rawValue?: number;
+    phone?: string;
 }
 
 interface Column {
     id: string;
     title: string;
+    statusId: number;
     deals: Deal[];
 }
 
-// Mock Data
-const MOCK_COLUMNS: Column[] = [
-    {
-        id: 'intro',
-        title: 'Não iniciado',
-        deals: [
-            { id: 1, title: 'Construtora Horizonte', value: 'R$ 15.000', tag: 'new', owner: 'JS', date: '26 Jan' },
-            { id: 2, title: 'Mercado Silva', value: 'R$ 5.000', tag: 'cold', owner: 'JS', date: '25 Jan' }
-        ]
-    },
-    {
-        id: 'qualified',
-        title: 'Em Negociação',
-        deals: [
-            { id: 3, title: 'Tech Solutions', value: 'R$ 50.000', tag: 'hot', owner: 'MO', date: '24 Jan' }
-        ]
-    },
-    {
-        id: 'proposal',
-        title: 'Proposta Enviada',
-        deals: [
-            { id: 4, title: 'Agência Criativa', value: 'R$ 12.500', tag: 'warm', owner: 'JS', date: '20 Jan' },
-            { id: 5, title: 'Logística Rapida', value: 'R$ 25.000', tag: 'warm', owner: 'MO', date: '18 Jan' }
-
-        ]
-    },
-    {
-        id: 'negotiation',
-        title: 'Venda Perdida',
-        deals: [
-            { id: 6, title: 'Rede Farma', value: 'R$ 100.000', tag: 'hot', owner: 'JS', date: '15 Jan' }
-        ]
-    },
-    {
-        id: 'closed',
-        title: 'Venda Fechada',
-        deals: []
-    }
+// Initial empty columns
+const INITIAL_COLUMNS: Column[] = [
+    { id: 'intro', title: 'Não iniciado', statusId: 1, deals: [] },
+    { id: 'qualified', title: 'Em Negociação', statusId: 2, deals: [] },
+    { id: 'proposal', title: 'Proposta Enviada', statusId: 3, deals: [] },
+    { id: 'closed', title: 'Venda Fechada', statusId: 4, deals: [] },
+    { id: 'negotiation', title: 'Venda Perdida', statusId: 5, deals: [] }
 ];
 
 const PipelinePage = () => {
-    const [columns, setColumns] = useState<Column[]>(MOCK_COLUMNS);
+    const navigate = useNavigate();
+    const [columns, setColumns] = useState<Column[]>(INITIAL_COLUMNS);
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const handleAddDeal = () => {
-        toast('Adicionar oportunidade (Em breve)', { icon: '🚧' });
+    const fetchConversations = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${apiUrl}/api/Chat/ConversasPorVendedor`, {
+                credentials: 'include'
+            });
+
+            if (response.status === 401) {
+                navigate('/login');
+                return;
+            }
+
+            if (!response.ok) {
+                console.error("Failed to fetch conversations");
+                return;
+            }
+
+            const result = await response.json();
+            if (result.sucesso && Array.isArray(result.dados)) {
+                const conversations: ApiConversation[] = result.dados;
+
+                // Map conversations to deals and group by status
+                const newColumns = INITIAL_COLUMNS.map(col => ({ ...col, deals: [] as Deal[] }));
+
+                conversations.forEach(convo => {
+                    const statusId = convo.idStatus || 1; // Default to 1 if null
+
+                    const deal: Deal = {
+                        id: convo.idConversa,
+                        title: convo.nomeCliente || convo.numeroWhatsapp,
+                        value: convo.valor ? `R$ ${convo.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00',
+                        rawValue: convo.valor || 0,
+                        tag: 'new', // Logic to determine tag could be added later
+                        owner: 'Eu', // Since it's 'ConversasPorVendedor'
+                        date: new Date(convo.dataUltimaMensagem).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
+                        contactId: convo.idConversa,
+                        statusId: statusId,
+                        phone: convo.numeroWhatsapp
+                    };
+
+                    const columnIndex = newColumns.findIndex(c => c.statusId === statusId);
+                    if (columnIndex !== -1) {
+                        newColumns[columnIndex].deals.push(deal);
+                    } else {
+                        // Fallback to first column if status not matched
+                        newColumns[0].deals.push(deal);
+                    }
+                });
+
+                setColumns(newColumns);
+            }
+        } catch (error) {
+            console.error("Error fetching pipeline data:", error);
+            toast.error("Erro ao carregar oportunidades.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [navigate]);
+
+    useEffect(() => {
+        fetchConversations();
+    }, [fetchConversations]);
+
+    const updateDealStatus = async (dealId: number, newStatusId: number, value?: number) => {
+        try {
+            const response = await fetch(`${apiUrl}/api/Chat/Conversas/${dealId}/AtualizarStatus`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idStatus: newStatusId, valor: value || 0 }),
+            });
+            const result = await response.json();
+            if (!response.ok || !result.sucesso) {
+                throw new Error(result.mensagem || 'Falha ao atualizar status.');
+            }
+            return true;
+        } catch (error) {
+            console.error("Error updating status:", error);
+            toast.error("Erro ao atualizar status.");
+            return false;
+        }
     };
 
-    const onDragEnd = (result: DropResult) => {
+    const onDragEnd = async (result: DropResult) => {
         const { source, destination } = result;
 
         if (!destination) return;
-
         if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-        // Find source and diff columns
         const sourceColIndex = columns.findIndex(col => col.id === source.droppableId);
         const destColIndex = columns.findIndex(col => col.id === destination.droppableId);
 
@@ -88,20 +156,38 @@ const PipelinePage = () => {
 
         const [removed] = sourceDeals.splice(source.index, 1);
 
+        // Optimistic UI Update
+        const newColumns = [...columns];
+
         if (source.droppableId === destination.droppableId) {
             sourceDeals.splice(destination.index, 0, removed);
-
-            const newColumns = [...columns];
             newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
             setColumns(newColumns);
         } else {
+            // Update the deal status locally
+            removed.statusId = destCol.statusId;
             destDeals.splice(destination.index, 0, removed);
-
-            const newColumns = [...columns];
             newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
             newColumns[destColIndex] = { ...destCol, deals: destDeals };
             setColumns(newColumns);
+
+            // Call API
+            const success = await updateDealStatus(removed.id, destCol.statusId, removed.rawValue);
+            if (!success) {
+                // Revert if failed (simple revert: refresh)
+                fetchConversations();
+            }
         }
+    };
+
+    const handleAddDeal = () => {
+        toast('Adicionar oportunidade (Em breve)', { icon: '🚧' });
+    };
+
+    const handleDealUpdate = () => {
+        // Callback when modal updates something (like status)
+        fetchConversations();
+        setSelectedDeal(null);
     };
 
     return (
@@ -159,7 +245,7 @@ const PipelinePage = () => {
                                             </Draggable>
                                         ))}
                                         {provided.placeholder}
-                                        {column.deals.length === 0 && (
+                                        {column.deals.length === 0 && !isLoading && (
                                             <div style={{ textAlign: 'center', color: '#adb5bd', fontSize: '13px', padding: '20px', display: 'none' }}>
                                                 Nenhuma oportunidade.
                                             </div>
@@ -176,6 +262,7 @@ const PipelinePage = () => {
                 <DealDetailsModal
                     deal={selectedDeal}
                     onClose={() => setSelectedDeal(null)}
+                    onUpdate={handleDealUpdate}
                 />
             )}
         </div>

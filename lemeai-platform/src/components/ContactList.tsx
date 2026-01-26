@@ -19,14 +19,20 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
   const [activeFilter, setActiveFilter] = useState('all');
 
   const toggleSellerStatus = () => setSellerOnline(!isSellerOnline);
-  
+
   const totalUnread = contacts.reduce((sum, contact) => sum + contact.unread, 0);
 
   const filteredContacts = activeFilter === 'unread'
     ? contacts.filter(c => c.unread > 0)
     : contacts;
 
-  const userInitials = currentUser ? currentUser.nome.charAt(0).toUpperCase() : 'V';
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  const userInitials = currentUser ? getInitials(currentUser.nome) : 'US';
 
   return (
     <div className="contact-list">
@@ -42,7 +48,7 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
           </h2>
           <div className="seller-status" onClick={toggleSellerStatus} title={isSellerOnline ? 'Status: Online' : 'Status: Offline'}>
             <div className="seller-avatar">
-              {}
+              { }
               <span>{userInitials}</span>
               <div className={`status-indicator ${isSellerOnline ? 'online' : 'offline'}`}></div>
             </div>
@@ -53,7 +59,7 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
           <input type="text" placeholder="Buscar conversas" />
         </div>
       </div>
-      
+
       <div className="filter-tabs">
         <button className={`filter-button ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>
           Todas
