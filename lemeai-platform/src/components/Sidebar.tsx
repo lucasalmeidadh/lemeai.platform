@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   React.useEffect(() => {
-    if (location.pathname === '/users' || location.pathname === '/profiles') {
+    if (location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules') {
       setIsSettingsOpen(true);
     }
   }, [location.pathname]);
@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
               <span>Chat</span>
             </Link>
           </li>
-          <li className={location.pathname === '/users' || location.pathname === '/profiles' ? 'active-parent' : ''}>
+          <li className={location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' ? 'active-parent' : ''}>
             <div
               className={`nav-item-header ${isSettingsOpen ? 'open' : ''}`}
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
               )}
             </div>
 
-            {(isSettingsOpen || (isCollapsed && (location.pathname === '/users' || location.pathname === '/profiles'))) && (
+            {(isSettingsOpen || (isCollapsed && (location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules'))) && (
               <ul className="submenu">
                 <li className={location.pathname === '/users' ? 'active' : ''}>
                   <Link to="/users" title="Usuários">
@@ -97,6 +97,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
                   <Link to="/profiles" title="Perfis">
                     <FaUserShield className="nav-icon" />
                     <span>Perfis</span>
+                  </Link>
+                </li>
+                <li className={location.pathname === '/chat-rules' ? 'active' : ''}>
+                  <Link to="/chat-rules" title="Regras do Chat">
+                    <FaComments className="nav-icon" />
+                    <span>Regras do Chat</span>
                   </Link>
                 </li>
               </ul>

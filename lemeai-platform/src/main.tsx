@@ -12,6 +12,7 @@ import PipelinePage from './pages/PipelinePage.tsx';
 import ChatPage from './pages/ChatPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
 import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
+import SystemPromptsPage from './pages/SystemPromptsPage.tsx';
 import './index.css';
 import NotFoundPage from './pages/NotFoundPage.tsx';
 const router = createBrowserRouter([
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
           { path: "contacts", element: <ContactsPage /> },
           { path: "users", element: <UserManagementPage /> },
           { path: "profiles", element: <ProfileManagementPage /> },
+          { path: "chat-rules", element: <SystemPromptsPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }

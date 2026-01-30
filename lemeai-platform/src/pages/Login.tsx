@@ -62,7 +62,7 @@ const Login = () => {
       {/* Branding Section */}
       <div className="login-branding-section">
         <div className="brand-content">
-          <div className="brand-logo">LEME.AI</div>
+          <div className="brand-logo">CRM AI</div>
           <h1 className="brand-tagline">Transforme Conversas em Vendas</h1>
           <p className="brand-description">
             A plataforma inteligente para gerenciar seus leads, negociações e atendimento em um só lugar.
