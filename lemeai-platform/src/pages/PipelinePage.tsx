@@ -5,28 +5,16 @@ import { FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import DealDetailsModal from '../components/DealDetailsModal';
-import { useNavigate } from 'react-router-dom';
+import { OpportunityService, type Opportunity } from '../services/OpportunityService';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-// Interface for API response
-interface ApiConversation {
-    idConversa: number;
-    nomeCliente: string;
-    numeroWhatsapp: string;
-    ultimaMensagem: string;
-    dataUltimaMensagem: string;
-    totalNaoLidas: number;
-    idStatus?: number;
-    valor?: number;
-}
-
-// Adapted Deal interface to match previous UI structure but with real data mapping
+// Adapted Deal interface to match real data mapping
 interface Deal {
     id: number;
     title: string;
     value: string;
-    tag: 'hot' | 'warm' | 'cold' | 'new'; // We might need to derive this or keep it static for now
+    tag: 'hot' | 'warm' | 'cold' | 'new';
     owner: string;
     date: string;
     contactId: number;
@@ -42,89 +30,98 @@ interface Column {
     deals: Deal[];
 }
 
-// Initial empty columns
+// Initial columns with UPDATED IDs based on observation
+// 1: Atendimento IA
+// 2: Não Iniciado
+// 6: Venda Perdida
+// We need to verify IDs for "Em Negociação", "Proposta Enviada", "Venda Fechada".
+// For now, I'll assign placeholders or logical IDs, but the user must be aware.
+// Assuming IDs might be: 1, 2, 3, 4 ... 6.
+// Let's assume:
+// 1: Atendimento IA (New column?) -> Maybe map to "Não iniciado" or new column.
+// 2: Não Iniciado
+// 3: Em Negociação (Guess)
+// 4: Proposta Enviada (Guess)
+// 5: Venda Fechada (Guess)
+// 6: Venda Perdida (Known)
 const INITIAL_COLUMNS: Column[] = [
-    { id: 'intro', title: 'Não iniciado', statusId: 1, deals: [] },
-    { id: 'qualified', title: 'Em Negociação', statusId: 2, deals: [] },
-    { id: 'proposal', title: 'Proposta Enviada', statusId: 3, deals: [] },
-    { id: 'closed', title: 'Venda Fechada', statusId: 4, deals: [] },
-    { id: 'negotiation', title: 'Venda Perdida', statusId: 5, deals: [] }
+    { id: 'ai_service', title: 'Atendimento IA', statusId: 1, deals: [] },
+    { id: 'intro', title: 'Não Iniciado', statusId: 2, deals: [] },
+    { id: 'qualified', title: 'Em Negociação', statusId: 3, deals: [] },
+    { id: 'proposal', title: 'Proposta Enviada', statusId: 4, deals: [] },
+    { id: 'closed', title: 'Venda Fechada', statusId: 5, deals: [] },
+    { id: 'lost', title: 'Venda Perdida', statusId: 6, deals: [] }
 ];
 
 const PipelinePage = () => {
-    const navigate = useNavigate();
     const [columns, setColumns] = useState<Column[]>(INITIAL_COLUMNS);
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchConversations = useCallback(async () => {
+    const fetchOpportunities = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`${apiUrl}/api/Chat/ConversasPorVendedor`, {
-                credentials: 'include'
-            });
+            const opportunities = await OpportunityService.getAllOpportunities();
 
-            if (response.status === 401) {
-                navigate('/login');
-                return;
-            }
+            // Map opportunities to deals
+            const newColumns = INITIAL_COLUMNS.map(col => ({ ...col, deals: [] as Deal[] }));
 
-            if (!response.ok) {
-                console.error("Failed to fetch conversations");
-                return;
-            }
+            // Track unmapped statuses to log them
+            const unmappedDeals: Opportunity[] = [];
 
-            const result = await response.json();
-            if (result.sucesso && Array.isArray(result.dados)) {
-                const conversations: ApiConversation[] = result.dados;
+            opportunities.forEach(opp => {
+                const statusId = opp.idStauts; // Note the typo in key from API
 
-                // Map conversations to deals and group by status
-                const newColumns = INITIAL_COLUMNS.map(col => ({ ...col, deals: [] as Deal[] }));
+                const deal: Deal = {
+                    id: opp.idConversa,
+                    title: opp.nomeContato || opp.numeroWhatsapp,
+                    value: 'R$ 0,00', // API doesn't return value yet
+                    rawValue: 0,
+                    tag: 'new',
+                    owner: 'Sistema',
+                    date: new Date(opp.dataConversaCriada).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
+                    contactId: opp.idContato,
+                    statusId: statusId,
+                    phone: opp.numeroWhatsapp
+                };
 
-                conversations.forEach(convo => {
-                    const statusId = convo.idStatus || 1; // Default to 1 if null
-
-                    const deal: Deal = {
-                        id: convo.idConversa,
-                        title: convo.nomeCliente || convo.numeroWhatsapp,
-                        value: convo.valor ? `R$ ${convo.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00',
-                        rawValue: convo.valor || 0,
-                        tag: 'new', // Logic to determine tag could be added later
-                        owner: 'Eu', // Since it's 'ConversasPorVendedor'
-                        date: new Date(convo.dataUltimaMensagem).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
-                        contactId: convo.idConversa,
-                        statusId: statusId,
-                        phone: convo.numeroWhatsapp
-                    };
-
-                    const columnIndex = newColumns.findIndex(c => c.statusId === statusId);
-                    if (columnIndex !== -1) {
-                        newColumns[columnIndex].deals.push(deal);
+                const columnIndex = newColumns.findIndex(c => c.statusId === statusId);
+                if (columnIndex !== -1) {
+                    newColumns[columnIndex].deals.push(deal);
+                } else {
+                    unmappedDeals.push(opp);
+                    // Optionally put in the first column or a 'Unknown' column
+                    // For now, let's put in 'Não Iniciado' (index 1) if it exists, or 0
+                    if (newColumns[1]) {
+                        newColumns[1].deals.push(deal);
                     } else {
-                        // Fallback to first column if status not matched
                         newColumns[0].deals.push(deal);
                     }
-                });
+                }
+            });
 
-                setColumns(newColumns);
+            if (unmappedDeals.length > 0) {
+                console.warn("Unmapped status IDs found:", unmappedDeals.map(d => d.idStauts));
             }
+
+            setColumns(newColumns);
         } catch (error) {
-            console.error("Error fetching pipeline data:", error);
+            console.error("Error fetching opportunities:", error);
             toast.error("Erro ao carregar oportunidades.");
         } finally {
             setIsLoading(false);
         }
-    }, [navigate]);
+    }, []);
 
     useEffect(() => {
-        fetchConversations();
-    }, [fetchConversations]);
+        fetchOpportunities();
+    }, [fetchOpportunities]);
 
     const updateDealStatus = async (dealId: number, newStatusId: number, value?: number) => {
         try {
             const response = await fetch(`${apiUrl}/api/Chat/Conversas/${dealId}/AtualizarStatus`, {
                 method: 'PATCH',
-                credentials: 'include',
+                credentials: 'include', // Uncomment if needed
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ idStatus: newStatusId, valor: value || 0 }),
             });
@@ -176,7 +173,7 @@ const PipelinePage = () => {
             const success = await updateDealStatus(removed.id, destCol.statusId, removed.rawValue);
             if (!success) {
                 // Revert if failed (simple revert: refresh)
-                fetchConversations();
+                fetchOpportunities();
             }
         }
     };
@@ -187,7 +184,7 @@ const PipelinePage = () => {
 
     const handleDealUpdate = () => {
         // Callback when modal updates something (like status)
-        fetchConversations();
+        fetchOpportunities();
         setSelectedDeal(null);
     };
 
@@ -243,7 +240,7 @@ const PipelinePage = () => {
                                                                 <div className="card-footer">
                                                                     <span>{deal.date}</span>
                                                                     <div className="card-avatar" title={`Responsável: ${deal.owner}`}>
-                                                                        {deal.owner}
+                                                                        {deal.owner.substring(0, 2).toUpperCase()}
                                                                     </div>
                                                                 </div>
                                                             </div>
