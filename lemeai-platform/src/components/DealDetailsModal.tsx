@@ -51,7 +51,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         setIsLoadingChat(true);
         setChatError(null);
         try {
-            const response = await fetch(`${apiUrl}/api/Chat/Conversas/${deal.contactId}/Mensagens`, {
+            const response = await fetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/Mensagens`, {
                 credentials: 'include'
             });
 
@@ -176,7 +176,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         setNotesError(null);
 
         try {
-            const response = await fetch(`${apiUrl}/api/Detalhes/PorConversa/${deal.contactId}`, {
+            const response = await fetch(`${apiUrl}/api/Detalhes/PorConversa/${deal.id}`, {
                 credentials: 'include',
             });
 
