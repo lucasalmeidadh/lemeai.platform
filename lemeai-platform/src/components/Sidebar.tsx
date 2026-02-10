@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect, type FC } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import {
@@ -14,7 +14,8 @@ import {
   FaChevronUp,
   FaChevronDown,
   FaAddressBook,
-  FaChartPie
+  FaChartPie,
+  FaBox
 } from 'react-icons/fa';
 
 interface SidebarProps {
@@ -24,12 +25,12 @@ interface SidebarProps {
   viewProfile: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfile }) => {
+const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfile }) => {
   const location = useLocation();
-  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  React.useEffect(() => {
-    if (location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules') {
+  useEffect(() => {
+    if (location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' || location.pathname === '/products') {
       setIsSettingsOpen(true);
     }
   }, [location.pathname]);
@@ -68,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
               <span>Chat</span>
             </Link>
           </li>
-          <li className={location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' ? 'active-parent' : ''}>
+          <li className={location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' || location.pathname === '/products' ? 'active-parent' : ''}>
             <div
               className={`nav-item-header ${isSettingsOpen ? 'open' : ''}`}
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
@@ -85,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
               )}
             </div>
 
-            {(isSettingsOpen || (isCollapsed && (location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules'))) && (
+            {(isSettingsOpen || (isCollapsed && (location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' || location.pathname === '/products'))) && (
               <ul className="submenu">
                 <li className={location.pathname === '/users' ? 'active' : ''}>
                   <Link to="/users" title="Usuários">
@@ -103,6 +104,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, view
                   <Link to="/chat-rules" title="Regras do Chat">
                     <FaComments className="nav-icon" />
                     <span>Regras do Chat</span>
+                  </Link>
+                </li>
+                <li className={location.pathname === '/products' ? 'active' : ''}>
+                  <Link to="/products" title="Produtos">
+                    <FaBox className="nav-icon" />
+                    <span>Produtos</span>
                   </Link>
                 </li>
               </ul>

@@ -1,0 +1,109 @@
+
+export interface Product {
+    produtoId: number;
+    codigo: string;
+    nome: string;
+    marca: string;
+    preco: number;
+    peso: number;
+    dataCriacao?: string;
+}
+
+export interface ApiResponse<T> {
+    sucesso: boolean;
+    mensagem: string;
+    dados: T;
+}
+
+export interface CreateProductDTO {
+    codigo: string;
+    nome: string;
+    marca: string;
+    preco: number;
+    peso: number;
+}
+
+export interface UpdateProductDTO {
+    produtoId: number;
+    codigo: string;
+    nome: string;
+    marca: string;
+    preco: number;
+    peso: number;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+export const ProductService = {
+    getAll: async (): Promise<ApiResponse<Product[]>> => {
+        const response = await fetch(`${API_URL}/api/Produto/BuscarTodos`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao buscar produtos');
+        }
+        return response.json();
+    },
+
+    getById: async (id: number): Promise<ApiResponse<Product>> => {
+        const response = await fetch(`${API_URL}/api/Produto/BuscarPorId/${id}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao buscar produto');
+        }
+        return response.json();
+    },
+
+    create: async (product: CreateProductDTO): Promise<ApiResponse<Product>> => {
+        const response = await fetch(`${API_URL}/api/Produto/Criar`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(product),
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao criar produto');
+        }
+        return response.json();
+    },
+
+    update: async (product: UpdateProductDTO): Promise<ApiResponse<Product>> => {
+        const response = await fetch(`${API_URL}/api/Produto/Atualizar/${product.produtoId}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(product),
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao atualizar produto');
+        }
+        return response.json();
+    },
+
+    delete: async (id: number): Promise<ApiResponse<any>> => {
+        const response = await fetch(`${API_URL}/api/Produto/Deletar/${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao excluir produto');
+        }
+        return response.json();
+    },
+};

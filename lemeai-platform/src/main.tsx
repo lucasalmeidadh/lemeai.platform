@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
@@ -13,6 +12,7 @@ import ChatPage from './pages/ChatPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
 import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
 import SystemPromptsPage from './pages/SystemPromptsPage.tsx';
+import ProductsPage from './pages/ProductsPage.tsx';
 import './index.css';
 import NotFoundPage from './pages/NotFoundPage.tsx';
 const router = createBrowserRouter([
@@ -32,6 +32,7 @@ const router = createBrowserRouter([
           { path: "users", element: <UserManagementPage /> },
           { path: "profiles", element: <ProfileManagementPage /> },
           { path: "chat-rules", element: <SystemPromptsPage /> },
+          { path: "products", element: <ProductsPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }

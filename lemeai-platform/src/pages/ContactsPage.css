@@ -169,30 +169,3 @@
     display: flex;
     gap: 10px;
 }
-
-.action-button {
-    border: 1px solid transparent;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-button.edit {
-    color: var(--petroleum-blue);
-    background-color: #e0f7ff;
-}
-
-.action-button.edit:hover {
-    background-color: #b3e9ff;
-}
-
-.action-button.delete {
-    color: #842029;
-    background-color: #f8d7da;
-}
-
-.action-button.delete:hover {
-    background-color: #f1c2c6;
-}

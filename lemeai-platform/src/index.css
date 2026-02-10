@@ -7,7 +7,8 @@
   --border-color: #dee2e6;
 }
 
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -28,9 +29,40 @@ body, html {
 }
 
 .main-content {
-  flex-grow: 1; 
+  flex-grow: 1;
   height: 100vh;
   overflow-y: auto;
   padding: 40px;
   box-sizing: border-box;
+}
+
+/* Global Action Buttons */
+.action-button {
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-button.edit {
+  color: var(--petroleum-blue);
+  background-color: #e0f7ff;
+}
+
+.action-button.edit:hover {
+  background-color: #b3e9ff;
+}
+
+.action-button.delete {
+  color: #842029;
+  background-color: #f8d7da;
+}
+
+.action-button.delete:hover {
+  background-color: #f1c2c6;
 }
