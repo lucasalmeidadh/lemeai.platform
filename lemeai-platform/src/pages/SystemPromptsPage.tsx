@@ -1,36 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import './SystemPromptsPage.css';
-
-interface SystemRule {
-    id: number;
-    content: string;
-}
-
-const INITIAL_RULES: SystemRule[] = [
-    { id: 1, content: 'Pergunte o nome do cliente e o motivo do contato' },
-    { id: 2, content: 'Se o cliente já informou o nome, não repita a pergunta' },
-    { id: 3, content: 'Atue como Especialista: Além de atender, dê dicas breves de cultivo. Se o cliente falar de uma planta específica (ex: orquídea, suculenta), sugira o produto ideal do seu catálogo.' },
-    { id: 4, content: 'Use o Catálogo: Se o cliente buscar um produto, verifique se temos no link do Mercado Livre e envie o link direto se possível (ou direcione para a busca da loja).' },
-    { id: 5, content: 'Tom de Voz: Use uma linguagem cordial, prestativa e leve. Pode usar emojis relacionados a natureza (🌿, 🌱, 🌻) com moderação.' },
-    { id: 6, content: 'Resolução de Dúvidas: Se o cliente não souber qual adubo/terra usar, pergunte: Qual planta ele vai cultivar? Qual a fase da planta (crescimento, floração)' },
-    { id: 7, content: 'Proibido Narrar Ações Internas: Nunca diga que vai "verificar", "consultar o sistema" ou pedir para o cliente "aguardar". Faça a consulta internamente e entregue a resposta final com a recomendação do produto imediatamente na mesma mensagem.' },
-    { id: 8, content: 'PROTOCOLO DE APRESENTAÇÃO DE PRODUTO: Ao identificar o produto, envie as especificações (Nome, Tipo, Descrição resumida, Peso e Preço). O canal de comunicação é WHATSAPP. O WhatsApp NÃO suporta hiperlinks mascarados. REGRA CRÍTICA DE LINK: É ESTRITAMENTE PROIBIDO usar formatação Markdown em links (ex: [clique aqui](url)). Envie a URL crua, exatamente como está no banco de dados, incluindo todos os parâmetros. A URL deve ficar em uma linha separada.' },
-    { id: 9, content: 'Tamanho da Resposta: Responda de forma objetiva. Evite parágrafos longos. Prefira listas curtas. Limite a resposta a no máximo 6 linhas, exceto ao apresentar produtos.' },
-    { id: 10, content: 'Evite repetição: Nunca repita informações já fornecidas pelo cliente ou por você, a menos que o cliente peça confirmação.' },
-];
+import { RegrasIAService, type IARule } from '../services/RegrasIAService';
 
 const SystemPromptsPage = () => {
-    const [rules, setRules] = useState<SystemRule[]>(INITIAL_RULES);
+    const [rules, setRules] = useState<IARule[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentRule, setCurrentRule] = useState<SystemRule | null>(null);
+    const [currentRule, setCurrentRule] = useState<IARule | null>(null);
     const [ruleText, setRuleText] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleOpenModal = (rule?: SystemRule) => {
+    useEffect(() => {
+        loadRules();
+    }, []);
+
+    const loadRules = async () => {
+        setIsLoading(true);
+        try {
+            const response = await RegrasIAService.getAll();
+            if (response.sucesso) {
+                setRules(response.dados);
+            } else {
+                toast.error(response.mensagem || 'Erro ao carregar regras.');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao conectar com o servidor.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleOpenModal = (rule?: IARule) => {
         if (rule) {
             setCurrentRule(rule);
-            setRuleText(rule.content);
+            setRuleText(rule.descricaoRegra);
         } else {
             setCurrentRule(null);
             setRuleText('');
@@ -44,29 +49,61 @@ const SystemPromptsPage = () => {
         setRuleText('');
     };
 
-    const handleSaveRule = () => {
+    const handleSaveRule = async () => {
         if (!ruleText.trim()) {
             toast.error('O texto da regra não pode estar vazio.');
             return;
         }
 
-        if (currentRule) {
-            // Edit
-            setRules(rules.map(r => r.id === currentRule.id ? { ...r, content: ruleText } : r));
-            toast.success('Regra atualizada com sucesso!');
-        } else {
-            // Create
-            const newId = rules.length > 0 ? Math.max(...rules.map(r => r.id)) + 1 : 1;
-            setRules([...rules, { id: newId, content: ruleText }]);
-            toast.success('Regra criada com sucesso!');
+        try {
+            if (currentRule) {
+                // Edit
+                const response = await RegrasIAService.update({
+                    id: currentRule.id,
+                    descricaoRegra: ruleText,
+                    ordem: currentRule.ordem || 1
+                });
+                if (response.sucesso) {
+                    toast.success('Regra atualizada com sucesso!');
+                    loadRules();
+                    handleCloseModal();
+                } else {
+                    toast.error(response.mensagem || 'Erro ao atualizar regra.');
+                }
+            } else {
+                // Create
+                const response = await RegrasIAService.create({
+                    descricaoRegra: ruleText,
+                    ordem: rules.length + 1
+                });
+                if (response.sucesso) {
+                    toast.success('Regra criada com sucesso!');
+                    loadRules();
+                    handleCloseModal();
+                } else {
+                    toast.error(response.mensagem || 'Erro ao criar regra.');
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao salvar regra.');
         }
-        handleCloseModal();
     };
 
-    const handleDeleteRule = (id: number) => {
+    const handleDeleteRule = async (id: number) => {
         if (confirm('Tem certeza que deseja excluir esta regra?')) {
-            setRules(rules.filter(r => r.id !== id));
-            toast.success('Regra removida com sucesso!');
+            try {
+                const response = await RegrasIAService.delete(id);
+                if (response.sucesso) {
+                    toast.success('Regra removida com sucesso!');
+                    loadRules();
+                } else {
+                    toast.error(response.mensagem || 'Erro ao remover regra.');
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error('Erro ao remover regra.');
+            }
         }
     };
 
@@ -90,24 +127,31 @@ const SystemPromptsPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {rules.map((rule, index) => (
-                                <tr key={rule.id}>
-                                    <td><strong>{index + 1}</strong></td>
-                                    <td style={{ whiteSpace: 'pre-wrap' }}>{rule.content}</td>
-                                    <td className="actions-cell">
-                                        <button className="action-button edit" onClick={() => handleOpenModal(rule)} title="Editar">
-                                            <FaEdit />
-                                        </button>
-                                        <button className="action-button delete" onClick={() => handleDeleteRule(rule.id)} title="Excluir">
-                                            <FaTrash />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {rules.length === 0 && (
+                            {isLoading ? (
                                 <tr>
                                     <td colSpan={3} style={{ textAlign: 'center', padding: '40px' }}>
-                                        Nenhuma regra cadastrada.
+                                        Carregando regras...
+                                    </td>
+                                </tr>
+                            ) : rules.length > 0 ? (
+                                rules.map((rule, index) => (
+                                    <tr key={rule.id}>
+                                        <td><strong>{index + 1}</strong></td>
+                                        <td style={{ whiteSpace: 'pre-wrap' }}>{rule.descricaoRegra}</td>
+                                        <td className="actions-cell">
+                                            <button className="action-button edit" onClick={() => handleOpenModal(rule)} title="Editar">
+                                                <FaEdit />
+                                            </button>
+                                            <button className="action-button delete" onClick={() => handleDeleteRule(rule.id)} title="Excluir">
+                                                <FaTrash />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={3} style={{ textAlign: 'center', padding: '40px' }}>
+                                        Nenhuma regra encontrada.
                                     </td>
                                 </tr>
                             )}
