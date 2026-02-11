@@ -1,22 +1,6 @@
 /* .products-page padding and .page-header styles handled by global index.css */
 
-.add-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    transition: background-color 0.2s;
-}
 
-.add-button:hover {
-    background-color: #0056b3;
-}
 
 .dashboard-card {
     background: white;

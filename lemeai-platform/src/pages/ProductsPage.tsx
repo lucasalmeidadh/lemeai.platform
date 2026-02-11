@@ -14,11 +14,19 @@ const ProductsPage = () => {
     // Form state
     const [formData, setFormData] = useState<CreateProductDTO>({
         codigo: '',
+        codigoReferencia: '',
         nome: '',
+        codigoBarra: '',
         marca: '',
+        secao: '',
         preco: 0,
+        precoDeCusto: 0,
         peso: 0
     });
+
+    // Temporary state for currency inputs to handle masking
+    const [priceInput, setPriceInput] = useState('');
+    const [costPriceInput, setCostPriceInput] = useState('');
 
     useEffect(() => {
         loadProducts();
@@ -41,25 +49,54 @@ const ProductsPage = () => {
         }
     };
 
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    };
+
+    // Formats input value as currency (R$ X.XXX,XX) while typing
+    const formatCurrencyInput = (value: string) => {
+        const numericValue = value.replace(/\D/g, '');
+        const number = Number(numericValue) / 100;
+        return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    };
+
+    // Parses formatted currency string back to number
+    const parseCurrencyInput = (value: string) => {
+        const numericValue = value.replace(/\D/g, '');
+        return Number(numericValue) / 100;
+    };
+
     const handleOpenModal = (product?: Product) => {
         if (product) {
             setCurrentProduct(product);
             setFormData({
                 codigo: product.codigo,
+                codigoReferencia: product.codigoReferencia || '',
                 nome: product.nome,
+                codigoBarra: product.codigoBarra || '',
                 marca: product.marca,
+                secao: product.secao || '',
                 preco: product.preco,
+                precoDeCusto: product.precoDeCusto || 0,
                 peso: product.peso
             });
+            setPriceInput(product.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+            setCostPriceInput((product.precoDeCusto || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
         } else {
             setCurrentProduct(null);
             setFormData({
                 codigo: '',
+                codigoReferencia: '',
                 nome: '',
+                codigoBarra: '',
                 marca: '',
+                secao: '',
                 preco: 0,
+                precoDeCusto: 0,
                 peso: 0
             });
+            setPriceInput('');
+            setCostPriceInput('');
         }
         setIsModalOpen(true);
     };
@@ -67,21 +104,27 @@ const ProductsPage = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setCurrentProduct(null);
-        setFormData({
-            codigo: '',
-            nome: '',
-            marca: '',
-            preco: 0,
-            peso: 0
-        });
+        setPriceInput('');
+        setCostPriceInput('');
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: name === 'preco' || name === 'peso' ? Number(value) : value
-        }));
+
+        if (name === 'preco') {
+            const numericValue = parseCurrencyInput(value);
+            setPriceInput(formatCurrencyInput(value)); // Update display with mask
+            setFormData(prev => ({ ...prev, preco: numericValue })); // Update actual number
+        } else if (name === 'precoDeCusto') {
+            const numericValue = parseCurrencyInput(value);
+            setCostPriceInput(formatCurrencyInput(value)); // Update display with mask
+            setFormData(prev => ({ ...prev, precoDeCusto: numericValue })); // Update actual number
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: name === 'peso' ? Number(value) : value
+            }));
+        }
     };
 
     const handleSaveProduct = async () => {
@@ -173,7 +216,7 @@ const ProductsPage = () => {
                                         <td>{product.codigo}</td>
                                         <td>{product.nome}</td>
                                         <td>{product.marca}</td>
-                                        <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.preco)}</td>
+                                        <td>{formatCurrency(product.preco)}</td>
                                         <td>{product.peso}</td>
                                         <td className="actions-cell">
                                             <button className="action-button edit" onClick={() => handleOpenModal(product)} title="Editar">
@@ -205,19 +248,33 @@ const ProductsPage = () => {
                             <button className="close-button" onClick={handleCloseModal}>&times;</button>
                         </div>
                         <div className="modal-body">
-                            <div className="form-group">
-                                <label htmlFor="codigo">Código</label>
-                                <input
-                                    type="text"
-                                    id="codigo"
-                                    name="codigo"
-                                    value={formData.codigo}
-                                    onChange={handleInputChange}
-                                    placeholder="Ex: 001"
-                                />
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="codigo">Código *</label>
+                                    <input
+                                        type="text"
+                                        id="codigo"
+                                        name="codigo"
+                                        value={formData.codigo}
+                                        onChange={handleInputChange}
+                                        placeholder="Ex: 001"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="codigoReferencia">Cód. Referência</label>
+                                    <input
+                                        type="text"
+                                        id="codigoReferencia"
+                                        name="codigoReferencia"
+                                        value={formData.codigoReferencia}
+                                        onChange={handleInputChange}
+                                        placeholder="Ex: REF-001"
+                                    />
+                                </div>
                             </div>
+
                             <div className="form-group">
-                                <label htmlFor="nome">Nome</label>
+                                <label htmlFor="nome">Nome *</label>
                                 <input
                                     type="text"
                                     id="nome"
@@ -227,40 +284,81 @@ const ProductsPage = () => {
                                     placeholder="Nome do produto"
                                 />
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="marca">Marca</label>
-                                <input
-                                    type="text"
-                                    id="marca"
-                                    name="marca"
-                                    value={formData.marca}
-                                    onChange={handleInputChange}
-                                    placeholder="Marca do produto"
-                                />
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="codigoBarra">Código de Barras</label>
+                                    <input
+                                        type="text"
+                                        id="codigoBarra"
+                                        name="codigoBarra"
+                                        value={formData.codigoBarra}
+                                        onChange={handleInputChange}
+                                        placeholder="Ex: 789..."
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="marca">Marca</label>
+                                    <input
+                                        type="text"
+                                        id="marca"
+                                        name="marca"
+                                        value={formData.marca}
+                                        onChange={handleInputChange}
+                                        placeholder="Marca do produto"
+                                    />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="preco">Preço</label>
-                                <input
-                                    type="number"
-                                    id="preco"
-                                    name="preco"
-                                    value={formData.preco}
-                                    onChange={handleInputChange}
-                                    placeholder="0.00"
-                                    step="0.01"
-                                />
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="secao">Seção</label>
+                                    <input
+                                        type="text"
+                                        id="secao"
+                                        name="secao"
+                                        value={formData.secao}
+                                        onChange={handleInputChange}
+                                        placeholder="Seção na loja"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="peso">Peso (kg)</label>
+                                    <input
+                                        type="number"
+                                        id="peso"
+                                        name="peso"
+                                        value={formData.peso}
+                                        onChange={handleInputChange}
+                                        placeholder="0.00"
+                                        step="0.01"
+                                    />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label htmlFor="peso">Peso (kg)</label>
-                                <input
-                                    type="number"
-                                    id="peso"
-                                    name="peso"
-                                    value={formData.peso}
-                                    onChange={handleInputChange}
-                                    placeholder="0.00"
-                                    step="0.01"
-                                />
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="preco">Preço de Venda (R$)</label>
+                                    <input
+                                        type="text"
+                                        id="preco"
+                                        name="preco"
+                                        value={priceInput}
+                                        onChange={handleInputChange}
+                                        placeholder="R$ 0,00"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="precoDeCusto">Preço de Custo (R$)</label>
+                                    <input
+                                        type="text"
+                                        id="precoDeCusto"
+                                        name="precoDeCusto"
+                                        value={costPriceInput}
+                                        onChange={handleInputChange}
+                                        placeholder="R$ 0,00"
+                                    />
+                                </div>
                             </div>
                         </div>
                         <div className="modal-footer">

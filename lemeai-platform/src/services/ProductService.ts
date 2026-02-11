@@ -2,10 +2,14 @@
 export interface Product {
     produtoId: number;
     codigo: string;
+    codigoReferencia?: string;
     nome: string;
+    codigoBarra?: string;
     marca: string;
-    preco: number;
+    secao?: string;
     peso: number;
+    preco: number;
+    precoDeCusto: number;
     dataCriacao?: string;
 }
 
@@ -17,19 +21,27 @@ export interface ApiResponse<T> {
 
 export interface CreateProductDTO {
     codigo: string;
+    codigoReferencia?: string;
     nome: string;
+    codigoBarra?: string;
     marca: string;
-    preco: number;
+    secao?: string;
     peso: number;
+    preco: number;
+    precoDeCusto: number;
 }
 
 export interface UpdateProductDTO {
     produtoId: number;
     codigo: string;
+    codigoReferencia?: string;
     nome: string;
+    codigoBarra?: string;
     marca: string;
-    preco: number;
+    secao?: string;
     peso: number;
+    preco: number;
+    precoDeCusto: number;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -73,11 +85,7 @@ export const ProductService = {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                ...product,
-                preco: Math.round(product.preco),
-                peso: Math.round(product.peso)
-            }),
+            body: JSON.stringify(product),
         });
         if (!response.ok) {
             throw new Error('Erro ao criar produto');
@@ -92,11 +100,7 @@ export const ProductService = {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                ...product,
-                preco: Math.round(product.preco),
-                peso: Math.round(product.peso)
-            }),
+            body: JSON.stringify(product),
         });
         if (!response.ok) {
             throw new Error('Erro ao atualizar produto');
