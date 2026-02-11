@@ -1,46 +1,94 @@
 .kpi-card {
-  background-color: #ffffff;
-  border: 1px solid #e9ecef;
+  background: #ffffff;
   border-radius: 16px;
-  padding: 25px;
+  padding: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.03);
   display: flex;
-  align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+}
+
+.kpi-data-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  margin-right: 16px;
+  z-index: 2;
 }
 
 .kpi-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-.kpi-icon-wrapper {
-  font-size: 24px;
-  color: var(--petroleum-blue, #005f73);
-  background-color: #eef8fa;
-  border-radius: 12px;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-right: 20px;
-}
-
-.kpi-content {
-  display: flex;
-  flex-direction: column;
+.kpi-card::before {
+  display: none;
 }
 
 .kpi-title {
-  font-size: 14px;
-  color: #6c757d;
-  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  display: block;
+  word-break: break-word;
 }
 
 .kpi-value {
-  font-size: 28px;
-  color: #343a40;
+  color: #111827;
+  font-size: 2rem;
   font-weight: 700;
+  margin-bottom: 0;
+  display: block;
   line-height: 1.2;
+}
+
+.kpi-icon-wrapper {
+  font-size: 20px;
+  color: var(--petroleum-blue, #005f73);
+  background-color: #e0f7ff;
+  padding: 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.kpi-card:hover .kpi-icon-wrapper {
+  background-color: var(--petroleum-blue, #005f73);
+  color: #ffffff;
+  transform: rotate(10deg);
+}
+
+.kpi-content {
+  z-index: 2;
+  position: relative;
+}
+
+.kpi-card.clickable {
+  cursor: pointer;
+}
+
+.kpi-card.active {
+  background-color: #f0f9ff;
+  border-color: #005f73;
+  box-shadow: 0 0 0 2px #005f73;
+}
+
+.kpi-card.active .kpi-title {
+  color: #005f73;
 }

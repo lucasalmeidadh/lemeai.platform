@@ -243,7 +243,7 @@ const UserManagementPage = () => {
         isConfirming={isDeleting}
       />
 
-      <div style={{ padding: '40px' }}>
+      <div className="page-container">
         <div className="page-header">
           <h1>Gestão de Usuários</h1>
           <button className="add-button" onClick={() => handleOpenUserModal()}>

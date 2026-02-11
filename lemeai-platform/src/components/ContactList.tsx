@@ -79,6 +79,7 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
             <div className="contact-details">
               <span className="contact-name">{contact.name}</span>
               <span className="contact-last-message">{contact.lastMessage}</span>
+
             </div>
             <span className="contact-time">{contact.time}</span>
           </li>

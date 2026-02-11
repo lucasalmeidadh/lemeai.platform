@@ -108,7 +108,7 @@ const SystemPromptsPage = () => {
     };
 
     return (
-        <div style={{ padding: '40px' }}>
+        <div className="page-container">
             <div className="page-header">
                 <h1>Regras do Chat (System Prompts)</h1>
                 <button className="add-button" onClick={() => handleOpenModal()}>

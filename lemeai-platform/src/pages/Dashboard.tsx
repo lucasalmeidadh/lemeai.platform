@@ -1,20 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
 import KPICard from '../components/KPICard';
 import DashboardSkeleton from '../components/DashboardSkeleton';
-
-import SalesByDateChart from '../components/SalesByDateChart'; // Importando o Gráfico de Barras
+import ConversationChart from '../components/ConversationChart';
 import './Dashboard.css';
 import { FaUserPlus, FaHandshake, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
-
-interface Deal {
-  id: number;
-  cliente: string;
-  numero: string;
-  tipoSolicitacao: string;
-  status: string;
-  date: string;
-}
+import { OpportunityService } from '../services/OpportunityService';
+import type { Opportunity } from '../services/OpportunityService';
+import DateRangeFilter from '../components/DateRangeFilter';
 
 interface Kpi {
   title: string;
@@ -22,32 +15,52 @@ interface Kpi {
   icon: React.ReactNode;
 }
 
-interface ChartData {
-  date: string;
-  sales: number;
-  leads: number;
-}
+
 
 const Dashboard = () => {
-  const navigate = useNavigate();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
-  const [typeFilter, setTypeFilter] = useState('Todos');
-
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
   // Estados para os dados
-  const [deals] = useState<Deal[]>([]);
+  const [deals, setDeals] = useState<Opportunity[]>([]);
   const [kpiData, setKpiData] = useState<Kpi[]>([]);
-  const [salesChartData, setSalesChartData] = useState<ChartData[]>([]);
+  // chartData is now derived from filteredDeals
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const [expandedDeals, setExpandedDeals] = useState<{ [key: number]: boolean }>({});
+
+  const toggleDetails = (id: number) => {
+    setExpandedDeals(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleKpiClick = (title: string) => {
+    // Determine status based on title
+    if (title === statusFilter) {
+      setStatusFilter('Todos'); // Toggle off
+    } else {
+      setStatusFilter(title);
+    }
+  };
+
+  const handleSummarize = (id: number) => {
+    // Placeholder for AI Summary
+    alert("Gerando resumo com IA... (Funcionalidade em desenvolvimento)");
+    // TODO: Implement actual API call
+  };
+
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
 
     try {
-      await buscarResumoAtual();
-      await buscarLeadsEVendasPorDia();
+      const opportunities = await OpportunityService.getAllOpportunities();
+
+      setDeals(opportunities || []);
+
+      // Calculate KPIs from deals
+      calculateKPIs(opportunities || []);
 
     } catch (err) {
       setError("Não foi possível carregar os dados do painel. Tente novamente mais tarde.");
@@ -55,89 +68,138 @@ const Dashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [navigate]);
+  }, []); // Removed navigate from dependencies as it's stable
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  const calculateKPIs = (opportunities: Opportunity[]) => {
+    // Define all target statuses with initial count 0
+    const counts: { [key: string]: number } = {
+      'Atendimento IA': 0,
+      'Não Iniciado': 0,
+      'Em Negociação': 0,
+      'Proposta Enviada': 0,
+      'Venda Fechada': 0,
+      'Venda Perdida': 0
+    };
 
-
-  const buscarResumoAtual = async () => {
-    const response = await fetch(`${apiUrl}/api/Painel/ResumoAtual`, {
-      credentials: 'include'
+    opportunities.forEach(op => {
+      const status = op.descricaoStatus || 'Não Iniciado';
+      // Normalize status string if needed (e.g. trimming spaces)
+      // Simple mapping based on known strings.
+      // If status doesn't match keys exactly, try to map or default
+      if (counts.hasOwnProperty(status)) {
+        counts[status]++;
+      } else {
+        // Try flexible matching
+        const lower = status.toLowerCase();
+        if (lower.includes('ia')) counts['Atendimento IA']++;
+        else if (lower.includes('não iniciado') || lower.includes('novo')) counts['Não Iniciado']++;
+        else if (lower.includes('negociação') || lower.includes('andamento')) counts['Em Negociação']++;
+        else if (lower.includes('proposta')) counts['Proposta Enviada']++;
+        else if (lower.includes('fechada') || lower.includes('concluída')) counts['Venda Fechada']++;
+        else if (lower.includes('perdida')) counts['Venda Perdida']++;
+      }
     });
 
-    if (response.status === 401) {
-      localStorage.removeItem('authToken');
-      navigate('/login');
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error('Falha ao buscar dados do dashboard.');
-    }
-
-    const result = await response.json();
-    if (result.sucesso) {
-      const dados = result.dados || [];
-
-      const newLeads = dados.novosLeads;
-      const inProgress = dados.vendasEmAndamento;
-      const lost = dados.vendasPerdidas;
-      const completed = dados.vendasConcluidas;
-
-      setKpiData([
-        { title: 'Novos leads', value: newLeads.toString(), icon: <FaUserPlus /> },
-        { title: 'Vendas em andamento', value: inProgress.toString(), icon: <FaHandshake /> },
-        { title: 'Vendas perdidas', value: lost.toString(), icon: <FaTimesCircle /> },
-        { title: 'Vendas concluídas', value: completed.toString(), icon: <FaCheckCircle /> },
-      ]);
-    }
+    setKpiData([
+      { title: 'Atendimento IA', value: counts['Atendimento IA'].toString(), icon: <FaUserPlus /> },
+      { title: 'Não Iniciado', value: counts['Não Iniciado'].toString(), icon: <FaUserPlus /> },
+      { title: 'Em Negociação', value: counts['Em Negociação'].toString(), icon: <FaHandshake /> },
+      { title: 'Proposta Enviada', value: counts['Proposta Enviada'].toString(), icon: <FaHandshake /> },
+      { title: 'Venda Fechada', value: counts['Venda Fechada'].toString(), icon: <FaCheckCircle /> },
+      { title: 'Venda Perdida', value: counts['Venda Perdida'].toString(), icon: <FaTimesCircle /> },
+    ]);
   };
 
-  const buscarLeadsEVendasPorDia = async () => {
-    const response = await fetch(`${apiUrl}/api/Painel/LeadsEVendasPorDia`, {
-      credentials: 'include'
+  const filteredDeals = useMemo(() => {
+    return deals.filter(deal => {
+      const searchMatch = deal.nomeContato?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        deal.numeroWhatsapp?.includes(searchTerm);
+
+      // Robust status matching
+      let statusMatch = true;
+      if (statusFilter !== 'Todos') {
+        const dealStatus = (deal.descricaoStatus || '').toLowerCase();
+        const filterStatus = statusFilter.toLowerCase();
+
+        // Direct match or partial match for flexibility
+        if (dealStatus === filterStatus) {
+          statusMatch = true;
+        } else if (filterStatus === 'não iniciado' && (dealStatus.includes('novo') || dealStatus.includes('iniciado'))) {
+          statusMatch = true;
+        } else if (filterStatus === 'em negociação' && (dealStatus.includes('negociação') || dealStatus.includes('andamento'))) {
+          statusMatch = true;
+        } else {
+          statusMatch = dealStatus.includes(filterStatus);
+        }
+      } else {
+        statusMatch = true;
+      }
+
+      // Date Range Filtering
+      let dateMatch = true;
+      if (startDate || endDate) {
+        const dealDate = new Date(deal.dataConversaCriada);
+        // Reset time part for accurate date comparison
+        dealDate.setHours(0, 0, 0, 0);
+
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (dealDate < start) dateMatch = false;
+        }
+
+        if (endDate && dateMatch) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999); // Include the end date fully
+          if (dealDate > end) dateMatch = false;
+        }
+      }
+
+      const typeMatch = true;
+
+      return searchMatch && statusMatch && typeMatch && dateMatch;
+    });
+  }, [deals, searchTerm, statusFilter, startDate, endDate]);
+
+  const chartData = useMemo(() => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    const dailyCounts: { [key: string]: number } = {};
+
+    // Initialize last 30 days with 0
+    for (let d = new Date(thirtyDaysAgo); d <= today; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      dailyCounts[dateStr] = 0;
+    }
+
+    // Use filteredDeals for the chart to reflect current dashboard state
+    filteredDeals.forEach(op => {
+      const date = new Date(op.dataConversaCriada);
+      if (date >= thirtyDaysAgo && date <= today) {
+        const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        if (dailyCounts.hasOwnProperty(dateStr)) {
+          dailyCounts[dateStr]++;
+        }
+      }
     });
 
-    if (response.status === 401) {
-      navigate('/login');
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error('Falha ao buscar dados do dashboard.');
-    }
-
-    const result = await response.json();
-
-    const leadsPorDia = result.dados || [];
-
-    if (typeof leadsPorDia == 'object') return;
-
-    const formattedDeals: ChartData[] = leadsPorDia.map((item: any) => ({
-      date: item.data,
-      sales: item.vendas || 0,
-      leads: item.leads || 0,
+    return Object.entries(dailyCounts).map(([date, count]) => ({
+      date,
+      conversations: count
     }));
-    setSalesChartData(Object.values(formattedDeals));
-  }
-
-
-
-  const filteredDeals = deals.filter(deal => {
-    const searchMatch = deal.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      deal.numero.toLowerCase().includes(searchTerm.toLowerCase());
-    const statusMatch = statusFilter === 'Todos' || deal.status === statusFilter;
-    const typeMatch = typeFilter === 'Todos' || deal.tipoSolicitacao === typeFilter;
-
-    return searchMatch && statusMatch && typeMatch;
-  });
+  }, [filteredDeals]);
 
   return (
-    <div style={{ padding: '40px' }}>
-      <h1>Painel Principal</h1>
+    <div className="page-container">
+      <div className="page-header">
+        <h1>Painel Principal</h1>
+      </div>
 
       {isLoading ? (
         <DashboardSkeleton />
@@ -145,75 +207,140 @@ const Dashboard = () => {
         <p style={{ color: 'red' }}>{error}</p>
       ) : (
         <>
-          <div className="kpi-grid">
+          <div className="kpi-grid" style={{ gap: '32px' }}>
             {kpiData.map((kpi, index) => (
-              <KPICard key={index} title={kpi.title} value={kpi.value} icon={kpi.icon} />
+              <KPICard
+                key={index}
+                title={kpi.title}
+                value={kpi.value}
+                icon={kpi.icon}
+                isActive={statusFilter === kpi.title}
+                onClick={() => handleKpiClick(kpi.title)}
+              />
             ))}
           </div>
 
-          { }
           <div className="dashboard-charts-area">
-            {/* <div className="dashboard-card">
-                  <h3>Funil de Vendas</h3>
-                  <SalesFunnel data={funnelData} />
-              </div> */}
             <div className="dashboard-card">
-              <h3>Leads e Vendas por Dia</h3>
-              <SalesByDateChart data={salesChartData} />
+              <h3>Conversas nos últimos 30 dias</h3>
+              <p className="chart-subtitle">
+                Acompanhe o volume de conversas iniciadas diariamente.
+              </p>
+              <ConversationChart data={chartData} />
             </div>
           </div>
 
           <div className="dashboard-card">
-            <div className="filters-container">
-              <input
-                type="text"
-                placeholder="Buscar por cliente ou número..."
-                className="filter-input"
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-              <div className="select-filters">
-                <select className="filter-select" onChange={e => setTypeFilter(e.target.value)}>
-                  <option value="Todos">Tipo de Solicitação</option>
-                  <option value="Peças">Peças</option>
-                  <option value="Oficina">Oficina</option>
-                </select>
-                <select className="filter-select" onChange={e => setStatusFilter(e.target.value)}>
-                  <option value="Todos">Status da Negociação</option>
-                  <option value="aberta">Novo</option>
-                  <option value="em andamento">Em negociação</option>
-                  <option value="finalizada">Concluído</option>
-                  <option value="perdida">Perdido</option>
+            <div className="dashboard-header-row">
+              <h3>Atividades Recentes</h3>
+
+              <div className="filters-inline">
+                <DateRangeFilter
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChangeStartDate={setStartDate}
+                  onChangeEndDate={setEndDate}
+                />
+
+
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  className="filter-input-compact"
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+                <select
+                  className="filter-select-compact"
+                  onChange={e => setStatusFilter(e.target.value)}
+                  value={statusFilter}
+                >
+                  <option value="Todos">Status</option>
+                  <option value="Não Iniciado">Não Iniciado</option>
+                  <option value="Em Negociação">Em Negociação</option>
+                  <option value="Proposta Enviada">Proposta Enviada</option>
+                  <option value="Venda Fechada">Venda Fechada</option>
+                  <option value="Venda Perdida">Venda Perdida</option>
+                  <option value="Atendimento IA">Atendimento IA</option>
                 </select>
               </div>
             </div>
-          </div>
 
-          <div className="dashboard-card">
             <div className="table-container">
               <table className="deals-table">
                 <thead>
                   <tr>
                     <th>Cliente</th>
-                    <th>Número</th>
-                    <th>Tipo de Solicitação</th>
-                    <th>Status da Negociação</th>
-                    <th>Detalhes</th>
+                    <th>Whatsapp</th>
+                    <th>Data Início</th>
+                    <th>Status</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredDeals.length > 0 ? (
                     filteredDeals.map(deal => (
-                      <tr key={deal.id}>
-                        <td>{deal.cliente}</td>
-                        <td>{deal.numero}</td>
-                        <td>{deal.tipoSolicitacao}</td>
-                        <td><span className={`status-badge status-${deal.status.toLowerCase().replace(/\s/g, '-')}`}>{deal.status}</span></td>
-                        <td><button className="details-button">Ver Detalhes</button></td>
-                      </tr>
+                      <React.Fragment key={deal.idConversa}>
+                        <tr>
+                          <td>{deal.nomeContato}</td>
+                          <td>{deal.numeroWhatsapp}</td>
+                          <td>{new Date(deal.dataConversaCriada).toLocaleDateString()}</td>
+                          <td>
+                            <span className={`status-badge status-${deal.descricaoStatus?.toLowerCase().replace(/\s/g, '-')}`}>
+                              {deal.descricaoStatus}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="details-button"
+                              onClick={() => toggleDetails(deal.idConversa)}
+                            >
+                              {expandedDeals[deal.idConversa] ? 'Ocultar Detalhes' : 'Ver Detalhes'}
+                            </button>
+                          </td>
+                        </tr>
+                        {expandedDeals[deal.idConversa] && (
+                          <tr>
+                            <td colSpan={5} style={{ backgroundColor: '#f9fafb', padding: '20px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <h4 style={{ margin: 0, color: '#4b5563' }}>Anotações e Detalhes</h4>
+                                  <button
+                                    className="ai-summary-button"
+                                    onClick={() => handleSummarize(deal.idConversa)}
+                                  >
+                                    ✨ Resumir e Gerar Insights (IA)
+                                  </button>
+                                </div>
+
+                                {deal.detalhesConversa && deal.detalhesConversa.length > 0 ? (
+                                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                    {deal.detalhesConversa.map((detail, idx) => (
+                                      <li key={idx} style={{
+                                        padding: '12px',
+                                        backgroundColor: 'white',
+                                        borderRadius: '8px',
+                                        marginBottom: '8px',
+                                        border: '1px solid #e5e7eb'
+                                      }}>
+                                        <p style={{ margin: '0 0 8px 0', color: '#1f2937' }}>{detail.descricaoDetalhe}</p>
+                                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                          {detail.nomeUsuarioCriador} • {new Date(detail.dataDetalheCriado).toLocaleString()}
+                                        </div>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p style={{ color: '#6b7280', fontStyle: 'italic' }}>Nenhuma anotação disponível para esta conversa.</p>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>Nenhum resultado encontrado.</td>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Nenhum resultado encontrado.</td>
                     </tr>
                   )}
                 </tbody>

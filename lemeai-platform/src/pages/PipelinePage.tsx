@@ -5,7 +5,7 @@ import { FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import DealDetailsModal from '../components/DealDetailsModal';
-import { OpportunityService, type Opportunity } from '../services/OpportunityService';
+import { OpportunityService, type Opportunity, type DetalheConversa } from '../services/OpportunityService';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -21,6 +21,7 @@ interface Deal {
     statusId: number;
     rawValue?: number;
     phone?: string;
+    details?: DetalheConversa[];
 }
 
 interface Column {
@@ -47,9 +48,9 @@ interface Column {
 const INITIAL_COLUMNS: Column[] = [
     { id: 'ai_service', title: 'Atendimento IA', statusId: 1, deals: [] },
     { id: 'intro', title: 'Não Iniciado', statusId: 2, deals: [] },
-    { id: 'qualified', title: 'Em Negociação', statusId: 3, deals: [] },
+    { id: 'qualified', title: 'Em Negociação', statusId: 5, deals: [] },
     { id: 'proposal', title: 'Proposta Enviada', statusId: 4, deals: [] },
-    { id: 'closed', title: 'Venda Fechada', statusId: 5, deals: [] },
+    { id: 'closed', title: 'Venda Fechada', statusId: 3, deals: [] },
     { id: 'lost', title: 'Venda Perdida', statusId: 6, deals: [] }
 ];
 
@@ -75,14 +76,15 @@ const PipelinePage = () => {
                 const deal: Deal = {
                     id: opp.idConversa,
                     title: opp.nomeContato || opp.numeroWhatsapp,
-                    value: 'R$ 0,00', // API doesn't return value yet
-                    rawValue: 0,
+                    value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(opp.valor || 0),
+                    rawValue: opp.valor || 0,
                     tag: 'new',
-                    owner: 'Sistema',
+                    owner: opp.nomeUsuarioResponsavel || 'Sistema',
                     date: new Date(opp.dataConversaCriada).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
                     contactId: opp.idContato,
                     statusId: statusId,
-                    phone: opp.numeroWhatsapp
+                    phone: opp.numeroWhatsapp,
+                    details: opp.detalhesConversa
                 };
 
                 const columnIndex = newColumns.findIndex(c => c.statusId === statusId);
@@ -112,7 +114,6 @@ const PipelinePage = () => {
             setIsLoading(false);
         }
     }, []);
-
     useEffect(() => {
         fetchOpportunities();
     }, [fetchOpportunities]);
@@ -189,13 +190,13 @@ const PipelinePage = () => {
     };
 
     return (
-        <div className="pipeline-container">
+        <div className="page-container pipeline-page-wrapper">
 
             {isLoading ? (
                 <PipelineSkeleton />
             ) : (
                 <>
-                    <div className="pipeline-header">
+                    <div className="page-header">
                         <h1>Oportunidade de Vendas</h1>
                         <div className="pipeline-actions">
                             <button className="add-button" onClick={handleAddDeal}>
@@ -238,9 +239,15 @@ const PipelinePage = () => {
                                                                 <div className="card-title">{deal.title}</div>
                                                                 <div className="card-value">{deal.value}</div>
                                                                 <div className="card-footer">
-                                                                    <span>{deal.date}</span>
-                                                                    <div className="card-avatar" title={`Responsável: ${deal.owner}`}>
-                                                                        {deal.owner.substring(0, 2).toUpperCase()}
+                                                                    <span className="card-status-label" style={{ fontSize: '11px', color: '#6c757d', fontWeight: 600 }}>{column.title}</span>
+
+                                                                    <div className="card-footer-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                        <span style={{ fontSize: '11px', color: '#6c757d' }}>{deal.date}</span>
+                                                                        <div className="card-avatar" title={`Responsável: ${deal.owner}`} style={{ width: '24px', height: '24px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e9ecef', borderRadius: '50%', color: '#495057', fontWeight: 600 }}>
+                                                                            {deal.owner.split(' ').length > 1
+                                                                                ? (deal.owner.split(' ')[0][0] + deal.owner.split(' ')[deal.owner.split(' ').length - 1][0]).toUpperCase()
+                                                                                : deal.owner.substring(0, 2).toUpperCase()}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>

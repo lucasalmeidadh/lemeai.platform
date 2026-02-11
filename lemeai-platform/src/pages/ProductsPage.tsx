@@ -139,7 +139,7 @@ const ProductsPage = () => {
     };
 
     return (
-        <div className="products-page">
+        <div className="page-container products-page">
             <div className="page-header">
                 <h1>Produtos</h1>
                 <button className="add-button" onClick={() => handleOpenModal()}>

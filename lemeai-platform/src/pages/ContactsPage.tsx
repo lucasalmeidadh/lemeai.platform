@@ -99,7 +99,7 @@ const ContactsPage = () => {
     });
 
     return (
-        <div style={{ padding: '40px' }}>
+        <div className="page-container">
             <div className="page-header">
                 <h1>Meus Contatos</h1>
                 <button className="add-button" onClick={handleAddContact}>

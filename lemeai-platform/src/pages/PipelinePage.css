@@ -1,26 +1,13 @@
-.pipeline-container {
-    padding: 30px;
-    height: calc(100vh - 60px);
-    /* Adjust based on valid header/sidebar height */
+/* Pipeline specific overrrides */
+.pipeline-page-wrapper {
+    /* Padding is handled by .page-container global */
+    height: 100%;
+    /* Ensure full height for kanban */
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    /* Kanban scrolls internally */
 }
 
-.pipeline-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-shrink: 0;
-}
-
-.pipeline-header h1 {
-    font-size: 28px;
-    color: #343a40;
-    font-weight: 700;
-    margin: 0;
-}
+/* H1 handled by .page-header global */
 
 .pipeline-actions {
     display: flex;

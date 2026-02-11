@@ -14,6 +14,9 @@ export interface Contact {
   unread: number;
   initials: string;
   phone: string;
+  responsibleName?: string;
+  statusId?: number;
+  detailsValue?: number;
   messagesByDate: {
     [date: string]: Message[];
   };

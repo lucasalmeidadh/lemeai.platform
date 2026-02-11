@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -124,21 +124,39 @@ const ChatPage = () => {
 
       const result = await response.json();
       if (result.sucesso && Array.isArray(result.dados)) {
+        // Fetch opportunities to get the correct status and value
+        let opportunitiesMap: Record<number, any> = {};
+        try {
+          const { OpportunityService } = await import('../services/OpportunityService');
+          const opportunities = await OpportunityService.getAllOpportunities();
+          opportunities.forEach(opp => {
+            opportunitiesMap[opp.idConversa] = opp;
+          });
+        } catch (oppErr) {
+          console.error("Error fetching opportunities:", oppErr);
+        }
+
         const sortedConversations: ApiConversation[] = result.dados.sort((a: ApiConversation, b: ApiConversation) =>
           new Date(b.dataUltimaMensagem).getTime() - new Date(a.dataUltimaMensagem).getTime()
         );
-        const formattedContacts: Contact[] = sortedConversations.map((convo: ApiConversation) => ({
-          id: convo.idConversa,
-          name: convo.nomeCliente || convo.numeroWhatsapp,
-          lastMessage: convo.ultimaMensagem,
-          time: new Date(convo.dataUltimaMensagem).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          unread: convo.totalNaoLidas,
-          initials: (convo.nomeCliente || 'C').charAt(0).toUpperCase(),
-          phone: convo.numeroWhatsapp,
-          statusId: convo.idStatus || 1, // Default to 1 (Não iniciado) if missing
-          detailsValue: convo.valor || 0,
-          messagesByDate: {}
-        }));
+        const formattedContacts: Contact[] = sortedConversations.map((convo: ApiConversation) => {
+          const opportunity = opportunitiesMap[convo.idConversa];
+
+          return {
+            id: convo.idConversa,
+            name: convo.nomeCliente || convo.numeroWhatsapp,
+            lastMessage: convo.ultimaMensagem,
+            time: new Date(convo.dataUltimaMensagem).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            unread: convo.totalNaoLidas,
+            initials: (convo.nomeCliente || 'C').charAt(0).toUpperCase(),
+            phone: convo.numeroWhatsapp,
+            // Use opportunity status/value if available, otherwise fall back to conversation data or default
+            statusId: opportunity ? opportunity.idStauts : (convo.idStatus || 1),
+            detailsValue: opportunity ? opportunity.valor : (convo.valor || 0),
+            responsibleName: opportunity ? opportunity.nomeUsuarioResponsavel : 'N/A',
+            messagesByDate: {}
+          };
+        });
         setContacts(formattedContacts);
         if (isInitialLoad && formattedContacts.length > 0) {
           setSelectedContactId(formattedContacts[0].id);
@@ -436,6 +454,7 @@ const ChatPage = () => {
                 onToggleDetails={toggleDetailsPanel}
                 onTransfer={handleTransferConversation}
                 currentUserId={currentUser?.id}
+                conversationId={selectedContact.id}
               />
               <ConversationWindow
                 messagesByDate={activeConversationMessages}
@@ -443,7 +462,7 @@ const ChatPage = () => {
               />
               <MessageInput onSendMessage={handleSendMessage} />
             </div>
-            {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} />}
+            {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} onUpdate={() => fetchConversations(false)} />}
           </>
         ) : (
           <div className="conversation-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>

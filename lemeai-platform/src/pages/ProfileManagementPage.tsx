@@ -203,8 +203,10 @@ const ProfileManagementPage = () => {
   }
 
   return (
-    <div style={{ padding: '40px' }}>
-      <h1>Gestão de Perfis e Permissões</h1>
+    <div className="page-container">
+      <div className="page-header">
+        <h1>Gestão de Perfis e Permissões</h1>
+      </div>
 
       <div className="profile-layout">
         {/* Lista de Perfis */}

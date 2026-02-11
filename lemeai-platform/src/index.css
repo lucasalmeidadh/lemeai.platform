@@ -66,3 +66,41 @@ html {
 .action-button.delete:hover {
   background-color: #f1c2c6;
 }
+
+/* Global Layout */
+.page-container {
+  padding: 40px;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Prevent double scrollbars if nested content scrolls */
+}
+
+/* Allow scrolling within page container if needed, but usually main-content handles it. 
+   Actually, .main-content has overflow-y: auto in index.css. 
+   Let's make .page-container just a wrapper for padding/flex.
+*/
+.main-content .page-container {
+  height: auto;
+  /* Let content grow */
+  min-height: 100%;
+}
+
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-shrink: 0;
+}
+
+.page-header h1 {
+  font-size: 28px;
+  color: var(--text-color);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
