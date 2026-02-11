@@ -207,7 +207,7 @@ const Dashboard = () => {
         <p style={{ color: 'red' }}>{error}</p>
       ) : (
         <>
-          <div className="kpi-grid" style={{ gap: '32px' }}>
+          <div className="kpi-grid">
             {kpiData.map((kpi, index) => (
               <KPICard
                 key={index}

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import './PipelinePage.css';
 import PipelineSkeleton from '../components/PipelineSkeleton';
-import { FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import DealDetailsModal from '../components/DealDetailsModal';
@@ -59,6 +58,9 @@ const PipelinePage = () => {
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedOwner, setSelectedOwner] = useState('all');
+
     const fetchOpportunities = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -107,9 +109,11 @@ const PipelinePage = () => {
             }
 
             setColumns(newColumns);
+            return newColumns; // Return for chaining
         } catch (error) {
             console.error("Error fetching opportunities:", error);
             toast.error("Erro ao carregar oportunidades.");
+            return [];
         } finally {
             setIsLoading(false);
         }
@@ -179,15 +183,37 @@ const PipelinePage = () => {
         }
     };
 
-    const handleAddDeal = () => {
-        toast('Adicionar oportunidade (Em breve)', { icon: '🚧' });
+
+    const handleDealUpdate = async () => {
+        // Callback when modal updates something (like status)
+        const updatedColumns = await fetchOpportunities();
+
+        // Update the selected deal object to reflect changes (like value) in the open modal
+        if (selectedDeal && updatedColumns) {
+            // flatten columns to find the deal
+            const allDeals = updatedColumns.flatMap(col => col.deals);
+            const updatedDeal = allDeals.find(d => d.id === selectedDeal.id);
+            if (updatedDeal) {
+                setSelectedDeal(updatedDeal);
+            }
+        }
     };
 
-    const handleDealUpdate = () => {
-        // Callback when modal updates something (like status)
-        fetchOpportunities();
-        setSelectedDeal(null);
+    // Filter Logic
+    const getUniqueOwners = () => {
+        const owners = new Set<string>();
+        columns.forEach(col => col.deals.forEach(deal => owners.add(deal.owner)));
+        return Array.from(owners).sort();
     };
+
+    const filteredColumns = columns.map(col => ({
+        ...col,
+        deals: col.deals.filter(deal => {
+            const matchesSearch = deal.title.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesOwner = selectedOwner === 'all' || deal.owner === selectedOwner;
+            return matchesSearch && matchesOwner;
+        })
+    }));
 
     return (
         <div className="page-container pipeline-page-wrapper">
@@ -196,18 +222,52 @@ const PipelinePage = () => {
                 <PipelineSkeleton />
             ) : (
                 <>
-                    <div className="page-header">
-                        <h1>Oportunidade de Vendas</h1>
-                        <div className="pipeline-actions">
-                            <button className="add-button" onClick={handleAddDeal}>
-                                <FaPlus /> Nova Oportunidade
-                            </button>
+                    <div className="page-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                            <h1>Oportunidade de Vendas</h1>
+                            <div className="pipeline-actions">
+
+                            </div>
+                        </div>
+
+                        <div className="pipeline-filters" style={{ display: 'flex', gap: '15px', width: '100%' }}>
+                            <input
+                                type="text"
+                                placeholder="Buscar por nome..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #dee2e6',
+                                    fontSize: '14px',
+                                    width: '300px'
+                                }}
+                            />
+
+                            <select
+                                value={selectedOwner}
+                                onChange={(e) => setSelectedOwner(e.target.value)}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #dee2e6',
+                                    fontSize: '14px',
+                                    minWidth: '200px',
+                                    backgroundColor: 'white'
+                                }}
+                            >
+                                <option value="all">Todos os Responsáveis</option>
+                                {getUniqueOwners().map(owner => (
+                                    <option key={owner} value={owner}>{owner}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
                     <DragDropContext onDragEnd={onDragEnd}>
                         <div className="pipeline-board">
-                            {columns.map(column => (
+                            {filteredColumns.map(column => (
                                 <div key={column.id} className="pipeline-column">
                                     <div className="column-header">
                                         <span>{column.title}</span>
