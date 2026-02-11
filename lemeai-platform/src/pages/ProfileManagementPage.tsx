@@ -41,7 +41,17 @@ const BuscarPermissoesPorTipoPerfil = async (tipoPerfil: number, navigate: any) 
     return null;
   }
 
-  const data = await response.json();
+  if (response.status === 204) {
+    return { tipoUsuario: tipoPerfil, permissoes: [] };
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    console.warn("Empty or invalid JSON from permissions API", e);
+    return { tipoUsuario: tipoPerfil, permissoes: [] };
+  }
   if (!data.sucesso) {
     throw new Error(data.message || 'Erro ao buscar permissões');
   }

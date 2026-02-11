@@ -20,7 +20,7 @@ const SystemPromptsPage = () => {
         try {
             const response = await RegrasIAService.getAll();
             if (response.sucesso) {
-                setRules(response.dados);
+                setRules(response.dados || []);
             } else {
                 toast.error(response.mensagem || 'Erro ao carregar regras.');
             }

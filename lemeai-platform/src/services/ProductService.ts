@@ -44,6 +44,9 @@ export const ProductService = {
             },
         });
         if (!response.ok) {
+            if (response.status === 400 || response.status === 404) {
+                return { sucesso: true, mensagem: 'Sem produtos', dados: [] };
+            }
             throw new Error('Erro ao buscar produtos');
         }
         return response.json();
@@ -70,7 +73,11 @@ export const ProductService = {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(product),
+            body: JSON.stringify({
+                ...product,
+                preco: Math.round(product.preco),
+                peso: Math.round(product.peso)
+            }),
         });
         if (!response.ok) {
             throw new Error('Erro ao criar produto');
@@ -85,7 +92,11 @@ export const ProductService = {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(product),
+            body: JSON.stringify({
+                ...product,
+                preco: Math.round(product.preco),
+                peso: Math.round(product.peso)
+            }),
         });
         if (!response.ok) {
             throw new Error('Erro ao atualizar produto');

@@ -117,12 +117,21 @@ const ChatPage = () => {
         return;
       }
 
-      if (!response.ok && response.status == 400) {
-        return;
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 404) {
+          setContacts([]);
+          return;
+        }
       }
 
-
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (e) {
+        console.warn("Failed to parse chat conversations JSON", e);
+        setContacts([]);
+        return;
+      }
       if (result.sucesso && Array.isArray(result.dados)) {
         // Fetch opportunities to get the correct status and value
         let opportunitiesMap: Record<number, any> = {};

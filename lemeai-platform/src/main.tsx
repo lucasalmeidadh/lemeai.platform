@@ -10,7 +10,7 @@ import ContactsPage from './pages/ContactsPage.tsx';
 import PipelinePage from './pages/PipelinePage.tsx';
 import ChatPage from './pages/ChatPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
-import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
+// import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
 import SystemPromptsPage from './pages/SystemPromptsPage.tsx';
 import ProductsPage from './pages/ProductsPage.tsx';
 import './index.css';
@@ -30,7 +30,7 @@ const router = createBrowserRouter([
           { path: "pipeline", element: <PipelinePage /> },
           { path: "contacts", element: <ContactsPage /> },
           { path: "users", element: <UserManagementPage /> },
-          { path: "profiles", element: <ProfileManagementPage /> },
+          // { path: "profiles", element: <ProfileManagementPage /> },
           { path: "chat-rules", element: <SystemPromptsPage /> },
           { path: "products", element: <ProductsPage /> },
         ]

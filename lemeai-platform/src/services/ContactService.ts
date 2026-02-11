@@ -37,6 +37,9 @@ export const ContactService = {
             },
         });
         if (!response.ok) {
+            if (response.status === 400) {
+                return { sucesso: true, mensagem: 'Sem contatos', dados: [] };
+            }
             throw new Error('Erro ao buscar contatos');
         }
         return response.json();

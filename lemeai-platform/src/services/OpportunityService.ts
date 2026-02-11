@@ -160,6 +160,9 @@ export const OpportunityService = {
             });
 
             if (!response.ok) {
+                if (response.status === 400) {
+                    return [];
+                }
                 throw new Error('Erro ao buscar oportunidades');
             }
 

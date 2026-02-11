@@ -56,16 +56,28 @@ const UserManagementPage = () => {
         return;
       }
 
-      const usersResult = await usersResponse.json();
+      let usersResult, profilesResult;
+
+      try {
+        usersResult = usersResponse.status === 204 ? { sucesso: true, dados: [] } : await usersResponse.json();
+      } catch (e) {
+        usersResult = { sucesso: false, mensagem: 'Erro ao processar resposta de usuários' };
+      }
+
       if (usersResult.sucesso) {
-        setUsers(usersResult.dados.map(mapApiUserToFrontend));
+        setUsers(usersResult.dados ? usersResult.dados.map(mapApiUserToFrontend) : []);
       } else {
         throw new Error(usersResult.mensagem || 'Falha ao buscar usuários.');
       }
 
-      const profilesResult = await profilesResponse.json();
+      try {
+        profilesResult = profilesResponse.status === 204 ? { sucesso: true, dados: [] } : await profilesResponse.json();
+      } catch (e) {
+        profilesResult = { sucesso: false, mensagem: 'Erro ao processar resposta de perfis' };
+      }
+
       if (profilesResult.sucesso) {
-        setProfiles(profilesResult.dados);
+        setProfiles(profilesResult.dados || []);
       } else {
         throw new Error(profilesResult.mensagem || 'Falha ao buscar perfis.');
       }

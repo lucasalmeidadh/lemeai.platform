@@ -8,7 +8,7 @@ import {
   FaAngleLeft,
   FaAngleRight,
   FaUsersCog,
-  FaUserShield,
+  // FaUserShield,
   FaUser,
   FaCog,
   FaChevronUp,
@@ -94,12 +94,12 @@ const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfil
                     <span>Usuários</span>
                   </Link>
                 </li>
-                <li className={location.pathname === '/profiles' ? 'active' : ''}>
+                {/* <li className={location.pathname === '/profiles' ? 'active' : ''}>
                   <Link to="/profiles" title="Perfis">
                     <FaUserShield className="nav-icon" />
                     <span>Perfis</span>
                   </Link>
-                </li>
+                </li> */}
                 <li className={location.pathname === '/chat-rules' ? 'active' : ''}>
                   <Link to="/chat-rules" title="Regras do Chat">
                     <FaComments className="nav-icon" />
