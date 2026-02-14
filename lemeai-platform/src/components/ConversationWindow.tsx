@@ -63,15 +63,36 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
     }
   };
 
+  const handleImageLoad = () => {
+    if (isAtBottomRef.current) {
+      scrollToBottom();
+    }
+  };
+
   // Effect for when conversation changes (switching chats)
   useEffect(() => {
     isAtBottomRef.current = true; // Reset tracking
-    scrollToBottom();
+    // Use timeout to ensure DOM is ready and layout is stable
+    setTimeout(() => scrollToBottom(), 0);
   }, [conversationId]);
 
   // Effect for when messages update (new message received)
   useEffect(() => {
-    if (isAtBottomRef.current) {
+    const dates = Object.keys(messagesByDate).sort((a, b) => parseDate(a).getTime() - parseDate(b).getTime());
+    let lastMessage: Message | undefined;
+
+    if (dates.length > 0) {
+      const lastDate = dates[dates.length - 1];
+      const messages = messagesByDate[lastDate];
+      if (messages && messages.length > 0) {
+        // Sort to ensure we get the true last message
+        const sortedMessages = [...messages].sort((a, b) => a.id - b.id);
+        lastMessage = sortedMessages[sortedMessages.length - 1];
+      }
+    }
+
+    // Scroll if duplicate logic: it's a new message from 'me' OR we were already at the bottom
+    if (lastMessage?.sender === 'me' || isAtBottomRef.current) {
       scrollToBottom(true); // Smooth scroll for new messages
     }
   }, [messagesByDate]);
@@ -101,6 +122,7 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
                           src={msg.mediaUrl}
                           alt="Imagem enviada"
                           className="message-image"
+                          onLoad={handleImageLoad}
                           onClick={() => setSelectedImage(msg.mediaUrl!)}
                         />
                         {msg.text && msg.text !== '[Imagem]' && <div className="message-caption">{msg.text}</div>}

@@ -170,9 +170,8 @@ const ChatPage = () => {
           };
         });
         setContacts(formattedContacts);
-        if (isInitialLoad && formattedContacts.length > 0) {
-          setSelectedContactId(formattedContacts[0].id);
-        }
+        setContacts(formattedContacts);
+        // Removed auto-selection logic to allow user to choose conversation manually
       } else {
         setContacts([]);
       }
@@ -540,7 +539,11 @@ const ChatPage = () => {
         ) : (
           <div className="conversation-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             <img src={noConversationImagem} alt="Nenhuma conversa encontrada" style={{ maxWidth: '300px', marginBottom: '20px' }} />
-            <p style={{ textAlign: 'center', color: '#777' }}>Nenhuma conversa por aqui ainda.</p>
+            <p style={{ textAlign: 'center', color: '#777' }}>
+              {contacts.length > 0
+                ? "Selecione uma conversa para iniciar o atendimento."
+                : "Nenhuma conversa encontrada."}
+            </p>
             {/* Opcional: Botão ou alguma instrução para iniciar uma conversa */}
           </div>
         )}
