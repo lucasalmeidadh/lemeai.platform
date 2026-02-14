@@ -46,7 +46,11 @@ const Login = () => {
       const data = await response1.json();
       localStorage.setItem('user', JSON.stringify(data));
 
-      navigate('/dashboard');
+      if (window.innerWidth <= 768) {
+        navigate('/chat');
+      } else {
+        navigate('/dashboard');
+      }
 
     } catch (err) {
       console.error(err);

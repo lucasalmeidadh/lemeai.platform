@@ -221,8 +221,61 @@
 }
 
 /* Mobile Responsiveness */
+/* Mobile Responsiveness */
 @media (max-width: 900px) {
+  .login-page {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
   .login-branding-section {
-    display: none;
+    display: flex;
+    /* Show branding */
+    padding: 40px 20px;
+    flex: 0 0 auto;
+    /* Allow it to take natural height */
+    min-height: 300px;
+  }
+
+  .login-branding-section::before,
+  .login-branding-section::after {
+    /* Adjust shapes for smaller space */
+    width: 300px;
+    height: 300px;
+  }
+
+  .login-branding-section::before {
+    top: -100px;
+    left: -100px;
+  }
+
+  .login-branding-section::after {
+    bottom: -50px;
+    right: -50px;
+  }
+
+  .brand-logo {
+    font-size: 2.5rem;
+  }
+
+  .brand-tagline {
+    font-size: 1.2rem;
+  }
+
+  .login-form-section {
+    padding: 20px;
+    background-color: var(--white);
+    /* Match card background or keep gray */
+    align-items: flex-start;
+    /* Align top on mobile scroll */
+  }
+
+  .login-card {
+    box-shadow: none;
+    /* Simplify on mobile */
+    padding: 20px;
+    max-width: 100%;
   }
 }

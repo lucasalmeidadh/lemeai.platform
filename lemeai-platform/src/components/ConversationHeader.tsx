@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './ConversationHeader.css';
-import { FaEllipsisV, FaMagic, FaExchangeAlt } from 'react-icons/fa';
+import { FaEllipsisV, FaMagic, FaExchangeAlt, FaArrowLeft } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import TransferModal from './TransferModal';
 import { type InternalUser } from '../data/mockData';
@@ -14,9 +14,10 @@ interface ConversationHeaderProps {
   leadStatus?: 'cold' | 'warm' | 'hot'; // Optional for now
   currentUserId?: number;
   conversationId: number;
+  onBack?: () => void;
 }
 
-const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails, onTransfer, currentUserId, conversationId }) => {
+const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails, onTransfer, currentUserId, conversationId, onBack }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isTransferModalOpen, setTransferModalOpen] = useState(false);
 
@@ -75,6 +76,11 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
   return (
     <div className="conversation-header">
       <div className="contact-info">
+        {onBack && (
+          <button onClick={onBack} className="icon-button back-button" style={{ marginRight: '10px', display: 'flex' }}>
+            <FaArrowLeft />
+          </button>
+        )}
         <div className="avatar">
           {contactName.charAt(0).toUpperCase()}
         </div>

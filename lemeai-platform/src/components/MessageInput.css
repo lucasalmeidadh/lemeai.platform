@@ -7,9 +7,10 @@
   border-top: 1px solid #f0f2f5;
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
+  flex-shrink: 0;
 }
 
-.message-input-container > .input-wrapper {
+.message-input-container>.input-wrapper {
   flex-grow: 1;
   display: flex;
   align-items: center;
@@ -19,7 +20,7 @@
   padding: 0 20px;
 }
 
-.message-input-container > .input-wrapper > input {
+.message-input-container>.input-wrapper>input {
   width: 100%;
   border: none;
   background: transparent;
@@ -29,7 +30,7 @@
   color: #343a40;
 }
 
-.message-input-container > .icon-button {
+.message-input-container>.icon-button {
   background: transparent;
   border: none;
   color: #6c757d;
@@ -44,17 +45,25 @@
   flex-shrink: 0;
 }
 
-.message-input-container > .icon-button:hover {
+.message-input-container>.icon-button:hover {
   background-color: #e9ecef;
 }
 
-.message-input-container > .send-button {
+.message-input-container>.send-button {
   background-color: #005f73;
   color: white;
   width: 45px;
   height: 45px;
 }
 
-.message-input-container > .send-button:hover {
+.message-input-container>.send-button:hover {
   background-color: #004c5a;
+}
+
+@media (max-width: 768px) {
+  .message-input-container {
+    padding-bottom: 25px;
+    /* Add extra padding for touch devices/home bar */
+    border-radius: 0;
+  }
 }

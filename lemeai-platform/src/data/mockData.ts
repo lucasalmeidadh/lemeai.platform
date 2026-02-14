@@ -4,6 +4,8 @@ export interface Message {
   sender: 'me' | 'other' | 'ia';
   time: string;
   status?: 'sending' | 'sent' | 'failed';
+  type?: 'text' | 'image' | 'audio';
+  mediaUrl?: string;
 }
 
 export interface Contact {

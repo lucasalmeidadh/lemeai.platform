@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { FaRobot, FaCheck, FaRegClock, FaExclamationCircle } from 'react-icons/fa'; // Importando novos ícones
+import React, { useEffect, useRef, useState } from 'react';
+import { FaRobot, FaCheck, FaRegClock, FaExclamationCircle, FaTimes, FaDownload, FaImage } from 'react-icons/fa'; // Importando novos ícones
 import './ConversationWindow.css';
 import type { Message } from '../data/mockData';
 
@@ -28,6 +28,27 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const isAtBottomRef = useRef(true); // Track if user is at the bottom
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const handleDownload = async () => {
+    if (!selectedImage) return;
+    try {
+      const response = await fetch(selectedImage);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `imagem-${Date.now()}.jpg`; // Nome genérico ou extraído da URL
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Erro ao baixar imagem:", err);
+      // Fallback para abrir em nova aba se o fetch falhar (CORS etc)
+      window.open(selectedImage, '_blank');
+    }
+  };
 
   const scrollToBottom = (smooth = false) => {
     messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "end" });
@@ -66,14 +87,39 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
               .sort((a, b) => a.id - b.id)
               .map(msg => (
                 <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
-                  <div className={`message-bubble ${msg.sender}`}>
+                  <div className={`message-bubble ${msg.sender} ${msg.type === 'image' ? 'media-message' : ''}`}>
                     {msg.sender === 'ia' && (
                       <div className="ia-header">
                         <FaRobot />
                         <span>Téo (IA)</span>
                       </div>
                     )}
-                    <div className="message-content">{msg.text}</div>
+
+                    {msg.type === 'image' && msg.mediaUrl ? (
+                      <div className="message-image-container">
+                        <img
+                          src={msg.mediaUrl}
+                          alt="Imagem enviada"
+                          className="message-image"
+                          onClick={() => setSelectedImage(msg.mediaUrl!)}
+                        />
+                        {msg.text && msg.text !== '[Imagem]' && <div className="message-caption">{msg.text}</div>}
+                      </div>
+                    ) : msg.type === 'audio' && msg.mediaUrl ? (
+                      <div className="message-audio-container">
+                        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                        <audio controls className="message-audio">
+                          <source src={msg.mediaUrl} type="audio/ogg" />
+                          <source src={msg.mediaUrl} type="audio/mpeg" />
+                          <source src={msg.mediaUrl} type="audio/wav" />
+                          Seu navegador não suporta áudio.
+                        </audio>
+                        {msg.text && msg.text !== '[Áudio]' && <div className="message-caption">{msg.text}</div>}
+                      </div>
+                    ) : (
+                      <div className="message-content">{msg.text}</div>
+                    )}
+
                     <div className="message-meta">
                       <span className="timestamp">{msg.time}</span>
                       {msg.sender === 'me' && <MessageStatus status={msg.status} />}
@@ -84,6 +130,31 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
           </React.Fragment>
         ))}
       <div ref={messagesEndRef} />
+
+      {selectedImage && (
+        <div className="image-modal-overlay" onClick={() => setSelectedImage(null)}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <header className="image-modal-header">
+              <h3>
+                <FaImage style={{ marginRight: '8px' }} />
+                Visualizar Imagem
+              </h3>
+              <button className="image-modal-close" onClick={() => setSelectedImage(null)}>
+                <FaTimes />
+              </button>
+            </header>
+            <div className="image-modal-body">
+              <img src={selectedImage} alt="Visualização em tela cheia" />
+            </div>
+            <footer className="image-modal-footer">
+              <button className="download-btn" onClick={handleDownload}>
+                <FaDownload style={{ marginRight: '8px' }} />
+                Baixar Imagem
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

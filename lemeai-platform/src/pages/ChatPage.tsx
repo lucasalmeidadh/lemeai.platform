@@ -39,6 +39,9 @@ interface ApiMessage {
   mensagem: string;
   origemMensagem: number; // 0 = Cliente, 1 = Vendedor, 2 = IA
   dataEnvio: string;
+  tipoMensagem?: 'text' | 'image' | 'audio';
+  urlMidia?: string;
+  caminhoArquivo?: string;
 }
 
 interface MessagesByDate {
@@ -199,7 +202,9 @@ const ChatPage = () => {
             text: msg.mensagem,
             sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
             time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: 'sent'
+            status: 'sent',
+            type: msg.tipoMensagem || 'text',
+            mediaUrl: msg.urlMidia || msg.caminhoArquivo
           };
           if (!acc[date]) acc[date] = [];
           acc[date].push(formattedMessage);
@@ -217,7 +222,12 @@ const ChatPage = () => {
 
   // ADIÇÃO 1: Função para processar novas mensagens recebidas via Hub
   const handleNewMessage = useCallback((newMessage: ApiMessage) => {
-    console.log("Nova mensagem recebida via Hub:", newMessage);
+    console.log("Nova mensagem recebida via Hub (RAW):", newMessage);
+    console.log("Campos de mídia:", {
+      tipo: newMessage.tipoMensagem,
+      url: newMessage.urlMidia,
+      caminho: newMessage.caminhoArquivo
+    });
 
     // Atualiza a conversa na tela APENAS se ela for a que está aberta
     if (newMessage.idConversa === selectedContactId) {
@@ -226,7 +236,9 @@ const ChatPage = () => {
         text: newMessage.mensagem,
         sender: newMessage.origemMensagem === 0 ? 'other' : (newMessage.origemMensagem === 1 ? 'me' : 'ia'),
         time: new Date(newMessage.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        status: 'sent'
+        status: 'sent',
+        type: newMessage.tipoMensagem || 'text',
+        mediaUrl: newMessage.urlMidia || newMessage.caminhoArquivo
       };
 
       const dateKey = new Date(newMessage.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -434,19 +446,71 @@ const ChatPage = () => {
 
   const toggleDetailsPanel = () => { setDetailsPanelOpen(!isDetailsPanelOpen); };
 
+  // ADIÇÃO: Estado para detecção de mobile
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleBackToContacts = () => {
+    setSelectedContactId(null);
+  };
+
   const renderContent = () => {
     // ...código original sem alteração
     if (isLoading) {
       return (
         <div className="chat-layout">
           <ContactListSkeleton />
-          <ConversationSkeleton />
+          {!isMobile && <ConversationSkeleton />}
         </div>
       );
     }
     if (error) {
       return <div>Erro: {error}</div>;
     }
+
+    // Renderização Condicional para Mobile
+    if (isMobile) {
+      if (selectedContactId && selectedContact) {
+        return (
+          <div className="chat-layout mobile-view">
+            <div className="conversation-area mobile-active">
+              <ConversationHeader
+                contactName={selectedContact.name}
+                onToggleDetails={toggleDetailsPanel}
+                onTransfer={handleTransferConversation}
+                currentUserId={currentUser?.id}
+                conversationId={selectedContact.id}
+                onBack={handleBackToContacts} // Passa a função de voltar
+              />
+              <ConversationWindow
+                messagesByDate={activeConversationMessages}
+                conversationId={selectedContact.id}
+              />
+              <MessageInput onSendMessage={handleSendMessage} />
+            </div>
+            {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} onUpdate={() => fetchConversations(false)} />}
+          </div>
+        )
+      } else {
+        return (
+          <div className="chat-layout mobile-view">
+            <ContactList
+              contacts={contacts}
+              activeContactId={selectedContactId || 0}
+              onSelectContact={handleSelectContact}
+              currentUser={currentUser}
+            />
+          </div>
+        )
+      }
+    }
+
+    // Renderização Padrão (Desktop)
     return (
       <div className="chat-layout">
         <ContactList

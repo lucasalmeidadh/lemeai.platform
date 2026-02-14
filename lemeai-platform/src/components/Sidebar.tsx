@@ -45,19 +45,19 @@ const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfil
       </div>
       <nav className="sidebar-nav">
         <ul>
-          <li className={location.pathname === '/dashboard' ? 'active' : ''}>
+          <li className={`${location.pathname === '/dashboard' ? 'active' : ''} mobile-hide`}>
             <Link to="/dashboard" title="Painel">
               <FaTachometerAlt className="nav-icon" />
               <span>Painel</span>
             </Link>
           </li>
-          <li className={location.pathname === '/pipeline' ? 'active' : ''}>
+          <li className={`${location.pathname === '/pipeline' ? 'active' : ''} mobile-hide`}>
             <Link to="/pipeline" title="Oportunidades">
               <FaChartPie className="nav-icon" />
               <span>Oportunidades</span>
             </Link>
           </li>
-          <li className={location.pathname === '/contacts' ? 'active' : ''}>
+          <li className={`${location.pathname === '/contacts' ? 'active' : ''} mobile-hide`}>
             <Link to="/contacts" title="Meus Contatos">
               <FaAddressBook className="nav-icon" />
               <span>Meus Contatos</span>
@@ -69,7 +69,7 @@ const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfil
               <span>Chat</span>
             </Link>
           </li>
-          <li className={location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' || location.pathname === '/products' ? 'active-parent' : ''}>
+          <li className={`${location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' || location.pathname === '/products' ? 'active-parent' : ''} mobile-hide`}>
             <div
               className={`nav-item-header ${isSettingsOpen ? 'open' : ''}`}
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}

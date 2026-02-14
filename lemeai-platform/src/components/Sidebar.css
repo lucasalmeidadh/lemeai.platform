@@ -202,8 +202,139 @@
   font-size: 22px;
 }
 
-/* Collapsed submenu */
-.sidebar.collapsed .submenu li a {
-  padding-left: 0;
-  justify-content: center;
+/* Mobile Header Styles */
+.mobile-header {
+  display: none;
+  /* Hidden on desktop */
+  height: 80px;
+  /* Increased from 60px */
+  background-color: #005f73;
+  /* Dark teal background */
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Increased gap */
+  padding: 10px;
+  /* Increased padding */
+}
+
+.hamburger-icon {
+  width: 28px;
+  /* Increased size */
+  height: 3px;
+  /* Thicker */
+  background-color: #fff;
+  /* White icon */
+  display: block;
+  border-radius: 2px;
+}
+
+.mobile-brand {
+  font-size: 24px;
+  /* Increased font size */
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 950;
+  /* Below sidebar (1000) but above everything else */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .mobile-header {
+    display: flex;
+    /* Show on mobile */
+  }
+
+  .sidebar-overlay {
+    display: block;
+    /* Enable on mobile */
+    pointer-events: none;
+    /* Default to pass-through unless visible */
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 80px;
+    /* Below header */
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    height: calc(100% - 80px);
+    z-index: 1000;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+    /* Slide out instead of width 0 */
+    width: 260px;
+    /* Keep width, just move it */
+    overflow: visible;
+    border: none;
+    padding: 0;
+    /* padding reset handled below if needed, but width preservation helps */
+  }
+
+  /* Reset the "width: 0" style from pervious desktop collapsed logic if it conflicts */
+  /* Actually, the previous media query used width: 0. We are overriding it here. */
+
+  .sidebar.collapsed .sidebar-header,
+  .sidebar.collapsed .sidebar-nav,
+  .sidebar.collapsed .sidebar-footer {
+    display: flex;
+    /* Keep content visible for when it slides in, or handle visibility */
+    /* wait, if we translate X -100%, content is off screen. We don't need to hide it with display:none */
+  }
+
+  /* Override previous specific mobile styles if any */
+  .sidebar-header {
+    display: none;
+    /* Hide internal sidebar header on mobile since we have Main Header? 
+                      Or keep it for "Collapse" button? 
+                      Let's hide the toggle button inside sidebar on mobile since we have the header toggle */
+  }
+
+  /* Filter Sidebar Items on Mobile */
+  .mobile-hide {
+    display: none !important;
+  }
 }

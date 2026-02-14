@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import GlobalChatWidget from './components/GlobalChatWidget';
 
 function App() {
   return (
@@ -19,8 +18,6 @@ function App() {
 
       { }
       <Outlet />
-
-      <GlobalChatWidget />
     </>
   );
 }
