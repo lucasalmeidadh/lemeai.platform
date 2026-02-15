@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Login.css';
-import { FaUser, FaLock, FaArrowRight, FaSpinner } from 'react-icons/fa';
+import { FaUser, FaLock, FaArrowRight, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -10,13 +10,11 @@ const Login = () => {
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     setIsLoading(true);
     setError(null);
 
@@ -38,8 +36,6 @@ const Login = () => {
         credentials: 'include'
       });
       if (!response1.ok) {
-        // If me fails but login passed, might be an issue, but usually means token not set? 
-        // Let's assume header or cookie logic handles it.
         throw new Error('Falha na autenticação de sessão');
       }
 
@@ -54,8 +50,7 @@ const Login = () => {
 
     } catch (err) {
       console.error(err);
-      setError('Email ou senha inválidos. Por favor, tente novamente.');
-
+      setError('Acesso negado. Verifique suas credenciais.');
     } finally {
       setIsLoading(false);
     }
@@ -63,77 +58,74 @@ const Login = () => {
 
   return (
     <div className="login-page">
-      {/* Branding Section */}
-      <div className="login-branding-section">
-        <div className="brand-content">
-          <div className="brand-logo">CRM AI</div>
-          <h1 className="brand-tagline">Transforme Conversas em Vendas</h1>
-          <p className="brand-description">
-            A plataforma inteligente para gerenciar seus leads, negociações e atendimento em um só lugar.
-          </p>
-        </div>
-      </div>
+      {/* Immersive Background Effects */}
+      <div className="tech-grid"></div>
+      <div className="wave-layer wave-1"></div>
+      <div className="wave-layer wave-2"></div>
 
-      {/* Form Section */}
-      <div className="login-form-section">
-        <div className="login-card">
-          <div className="login-header">
-            <h2>Bem-vindo de volta!</h2>
-            <p>Acesse sua conta para continuar.</p>
+      {/* Centered Login Card */}
+      <div className="login-card">
+        <div className="card-header">
+          <div className="brand-badge">LEME AI</div>
+          <h2>Bem-vindo de volta!</h2>
+          <p>Acesse seu painel administrativo</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="login-form-stack">
+          {error && (
+            <div className="error-alert">
+              <FaExclamationCircle /> {error}
+            </div>
+          )}
+
+          <div className="input-container">
+            <label className="input-label">Email</label>
+            <div className="modern-input-wrapper">
+              <FaUser className="input-icon-left" />
+              <input
+                type="email"
+                className="modern-input"
+                placeholder="nome@empresa.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            {error && <div className="error-banner">{error}</div>}
-
-            <div className="form-group">
-              <div className="input-wrapper">
-                <FaUser className="input-icon" />
-                <input
-                  type="email"
-                  className="form-input"
-                  placeholder="Seu e-mail profissional"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+          <div className="input-container">
+            <label className="input-label">Senha</label>
+            <div className="modern-input-wrapper">
+              <FaLock className="input-icon-left" />
+              <input
+                type="password"
+                className="modern-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
+          </div>
 
-            <div className="form-group">
-              <div className="input-wrapper">
-                <FaLock className="input-icon" />
-                <input
-                  type="password"
-                  className="form-input"
-                  placeholder="Sua senha segura"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-options">
-              <label className="remember-me">
-                <input type="checkbox" /> Manter conectado
-              </label>
-              <a href="#" className="forgot-password">Esqueci a senha</a>
-            </div>
-
-            <button type="submit" className="submit-button" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <FaSpinner className="fa-spin" /> Verificando...
-                </>
-              ) : (
-                <>
-                  Acessar Plataforma <FaArrowRight />
-                </>
-              )}
-            </button>
-          </form>
-        </div>
+          <button type="submit" className="btn-primary" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <FaSpinner className="fa-spin" /> Verificando...
+              </>
+            ) : (
+              <>
+                ACESSAR SISTEMA <FaArrowRight />
+              </>
+            )}
+          </button>
+        </form>
       </div>
+
+      <div className="page-footer">
+        <p>Powered by <a href="https://gbcode.com.br/" target="_blank" rel="noopener noreferrer">GbCode</a></p>
+      </div>
+
     </div>
   );
 };
