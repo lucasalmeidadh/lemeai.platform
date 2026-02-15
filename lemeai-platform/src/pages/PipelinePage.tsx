@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import './PipelinePage.css';
+import DateRangeFilter from '../components/DateRangeFilter';
 import PipelineSkeleton from '../components/PipelineSkeleton';
 import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
@@ -8,7 +9,6 @@ import { OpportunityService, type Opportunity, type DetalheConversa } from '../s
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-// Adapted Deal interface to match real data mapping
 interface Deal {
     id: number;
     title: string;
@@ -16,6 +16,7 @@ interface Deal {
     tag: 'hot' | 'warm' | 'cold' | 'new';
     owner: string;
     date: string;
+    rawDate: Date; // Added for filtering
     contactId: number;
     statusId: number;
     rawValue?: number;
@@ -34,16 +35,6 @@ interface Column {
 // 1: Atendimento IA
 // 2: Não Iniciado
 // 6: Venda Perdida
-// We need to verify IDs for "Em Negociação", "Proposta Enviada", "Venda Fechada".
-// For now, I'll assign placeholders or logical IDs, but the user must be aware.
-// Assuming IDs might be: 1, 2, 3, 4 ... 6.
-// Let's assume:
-// 1: Atendimento IA (New column?) -> Maybe map to "Não iniciado" or new column.
-// 2: Não Iniciado
-// 3: Em Negociação (Guess)
-// 4: Proposta Enviada (Guess)
-// 5: Venda Fechada (Guess)
-// 6: Venda Perdida (Known)
 const INITIAL_COLUMNS: Column[] = [
     { id: 'ai_service', title: 'Atendimento IA', statusId: 1, deals: [] },
     { id: 'intro', title: 'Não Iniciado', statusId: 2, deals: [] },
@@ -61,6 +52,10 @@ const PipelinePage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOwner, setSelectedOwner] = useState('all');
 
+    // Date Filter State
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
+
     const fetchOpportunities = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -74,6 +69,7 @@ const PipelinePage = () => {
 
             opportunities.forEach(opp => {
                 const statusId = opp.idStauts; // Note the typo in key from API
+                const createdDate = new Date(opp.dataConversaCriada);
 
                 const deal: Deal = {
                     id: opp.idConversa,
@@ -82,7 +78,8 @@ const PipelinePage = () => {
                     rawValue: opp.valor || 0,
                     tag: 'new',
                     owner: opp.nomeUsuarioResponsavel || 'Sistema',
-                    date: new Date(opp.dataConversaCriada).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
+                    date: createdDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
+                    rawDate: createdDate,
                     contactId: opp.idContato,
                     statusId: statusId,
                     phone: opp.numeroWhatsapp,
@@ -211,7 +208,30 @@ const PipelinePage = () => {
         deals: col.deals.filter(deal => {
             const matchesSearch = deal.title.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesOwner = selectedOwner === 'all' || deal.owner === selectedOwner;
-            return matchesSearch && matchesOwner;
+
+            let matchesDate = true;
+            if (startDate && endDate) {
+                // Set start date to 00:00:00 and end date to 23:59:59 for inclusive comparison
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+
+                const dealDate = new Date(deal.rawDate);
+                matchesDate = dealDate >= start && dealDate <= end;
+            } else if (startDate) {
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                const dealDate = new Date(deal.rawDate);
+                matchesDate = dealDate >= start;
+            } else if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                const dealDate = new Date(deal.rawDate);
+                matchesDate = dealDate <= end;
+            }
+
+            return matchesSearch && matchesOwner && matchesDate;
         })
     }));
 
@@ -230,29 +250,30 @@ const PipelinePage = () => {
                             </div>
                         </div>
 
-                        <div className="pipeline-filters" style={{ display: 'flex', gap: '15px', width: '100%' }}>
+                        <div className="pipeline-filters" style={{ display: 'flex', gap: '15px', width: '100%', flexWrap: 'wrap', alignItems: 'center' }}>
                             <input
                                 type="text"
                                 placeholder="Buscar por nome..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pipeline-filter-input"
                                 style={{
-                                    padding: '8px 12px',
-                                    borderRadius: '6px',
-                                    border: '1px solid #dee2e6',
-                                    fontSize: '14px',
                                     width: '300px'
                                 }}
+                            />
+
+                            <DateRangeFilter
+                                startDate={startDate}
+                                endDate={endDate}
+                                onChangeStartDate={setStartDate}
+                                onChangeEndDate={setEndDate}
                             />
 
                             <select
                                 value={selectedOwner}
                                 onChange={(e) => setSelectedOwner(e.target.value)}
+                                className="pipeline-filter-input"
                                 style={{
-                                    padding: '8px 12px',
-                                    borderRadius: '6px',
-                                    border: '1px solid #dee2e6',
-                                    fontSize: '14px',
                                     minWidth: '200px',
                                     backgroundColor: 'white'
                                 }}
@@ -268,10 +289,17 @@ const PipelinePage = () => {
                     <DragDropContext onDragEnd={onDragEnd}>
                         <div className="pipeline-board">
                             {filteredColumns.map(column => (
-                                <div key={column.id} className="pipeline-column">
+                                <div key={column.id} className={`pipeline-column ${column.id === 'lost' ? 'column-lost' : ''}`}>
                                     <div className="column-header">
-                                        <span>{column.title}</span>
-                                        <span className="column-count">{column.deals.length}</span>
+                                        <div className="column-header-top">
+                                            <span>{column.title}</span>
+                                            <span className="column-count">{column.deals.length}</span>
+                                        </div>
+                                        <div className="column-total">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                                column.deals.reduce((acc, deal) => acc + (deal.rawValue || 0), 0)
+                                            )}
+                                        </div>
                                     </div>
                                     <Droppable droppableId={column.id}>
                                         {(provided) => (

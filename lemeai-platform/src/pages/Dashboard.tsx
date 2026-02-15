@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import toast from 'react-hot-toast';
 
 import KPICard from '../components/KPICard';
 import DashboardSkeleton from '../components/DashboardSkeleton';
@@ -8,6 +9,8 @@ import { FaUserPlus, FaHandshake, FaTimesCircle, FaCheckCircle } from 'react-ico
 import { OpportunityService } from '../services/OpportunityService';
 import type { Opportunity } from '../services/OpportunityService';
 import DateRangeFilter from '../components/DateRangeFilter';
+import { ChatService } from '../services/ChatService';
+import SummaryModal from '../components/SummaryModal';
 
 interface Kpi {
   title: string;
@@ -32,6 +35,11 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [expandedDeals, setExpandedDeals] = useState<{ [key: number]: boolean }>({});
 
+  // Summary Modal State
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [selectedSummary, setSelectedSummary] = useState('');
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+
   const toggleDetails = (id: number) => {
     setExpandedDeals(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -45,10 +53,28 @@ const Dashboard = () => {
     }
   };
 
-  const handleSummarize = (id: number) => {
-    // Placeholder for AI Summary
-    alert("Gerando resumo com IA... (Funcionalidade em desenvolvimento)");
-    // TODO: Implement actual API call
+  const handleSummarize = async (id: number) => {
+    if (isSummaryLoading) return;
+
+    setIsSummaryLoading(true);
+    const toastId = toast.loading('Gerando resumo e insights com IA...');
+
+    try {
+      const response = await ChatService.getConversationSummary(id);
+
+      if (response.sucesso) {
+        setSelectedSummary(response.dados);
+        setIsSummaryModalOpen(true);
+        toast.success('Resumo gerado com sucesso!', { id: toastId });
+      } else {
+        toast.error(response.mensagem || 'Erro ao gerar resumo.', { id: toastId });
+      }
+    } catch (error) {
+      console.error('Erro ao gerar resumo:', error);
+      toast.error('Erro ao conectar com o serviço de IA.', { id: toastId });
+    } finally {
+      setIsSummaryLoading(false);
+    }
   };
 
   const fetchDashboardData = useCallback(async () => {
@@ -308,26 +334,43 @@ const Dashboard = () => {
                                     className="ai-summary-button"
                                     onClick={() => handleSummarize(deal.idConversa)}
                                   >
-                                    ✨ Resumir e Gerar Insights (IA)
+                                    {isSummaryLoading ? 'Gerando...' : '✨ Resumir e Gerar Insights (IA)'}
                                   </button>
                                 </div>
 
                                 {deal.detalhesConversa && deal.detalhesConversa.length > 0 ? (
                                   <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                                    {deal.detalhesConversa.map((detail, idx) => (
-                                      <li key={idx} style={{
-                                        padding: '12px',
-                                        backgroundColor: 'white',
-                                        borderRadius: '8px',
-                                        marginBottom: '8px',
-                                        border: '1px solid #e5e7eb'
-                                      }}>
-                                        <p style={{ margin: '0 0 8px 0', color: '#1f2937' }}>{detail.descricaoDetalhe}</p>
-                                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                          {detail.nomeUsuarioCriador} • {new Date(detail.dataDetalheCriado).toLocaleString()}
-                                        </div>
-                                      </li>
-                                    ))}
+                                    {[...deal.detalhesConversa]
+                                      .sort((a, b) => new Date(b.dataDetalheCriado).getTime() - new Date(a.dataDetalheCriado).getTime())
+                                      .map((detail, idx) => {
+                                        const isSummary = detail.descricaoDetalhe.startsWith('Resumo gerado pelo sistema');
+                                        return (
+                                          <li key={idx} style={{
+                                            padding: '12px',
+                                            backgroundColor: 'white',
+                                            borderRadius: '8px',
+                                            marginBottom: '8px',
+                                            border: '1px solid #e5e7eb'
+                                          }}>
+                                            {isSummary ? (
+                                              <button
+                                                className="view-summary-btn"
+                                                onClick={() => {
+                                                  setSelectedSummary(detail.descricaoDetalhe);
+                                                  setIsSummaryModalOpen(true);
+                                                }}
+                                              >
+                                                Ver resumo da conversa
+                                              </button>
+                                            ) : (
+                                              <p style={{ margin: '0 0 8px 0', color: '#1f2937' }}>{detail.descricaoDetalhe}</p>
+                                            )}
+                                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                              {detail.nomeUsuarioCriador} • {new Date(detail.dataDetalheCriado).toLocaleString()}
+                                            </div>
+                                          </li>
+                                        );
+                                      })}
                                   </ul>
                                 ) : (
                                   <p style={{ color: '#6b7280', fontStyle: 'italic' }}>Nenhuma anotação disponível para esta conversa.</p>
@@ -349,6 +392,11 @@ const Dashboard = () => {
           </div>
         </>
       )}
+      <SummaryModal
+        isOpen={isSummaryModalOpen}
+        onClose={() => setIsSummaryModalOpen(false)}
+        summary={selectedSummary}
+      />
     </div>
   );
 };
