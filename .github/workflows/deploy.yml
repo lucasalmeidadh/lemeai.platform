@@ -1,0 +1,26 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [ "main" ] # Confirme se sua branch principal chama 'main' ou 'master'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acessar servidor via SSH e atualizar
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Entra na pasta do projeto
+            cd gbcode-crm/lemeai-platform/
+            
+            # Baixa as alterações do GitHub
+            git pull
+            
+            # Reconstrói e sobe apenas o container do frontend
+            docker compose up -d --build frontend
