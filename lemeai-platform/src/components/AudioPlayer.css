@@ -1,0 +1,93 @@
+.custom-audio-player {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: rgba(255, 255, 255, 0.95);
+    /* High opacity white */
+    padding: 10px 14px;
+    border-radius: 20px;
+    width: 260px;
+    /* Fixed robust width */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+    /* Removed border */
+}
+
+.play-button {
+    background: #ffffff;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #374151;
+    font-size: 0.8rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.play-button:hover {
+    background-color: #f9fafb;
+    transform: scale(1.05);
+    color: #111827;
+}
+
+.progress-container {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+
+.progress-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: #d1d5db;
+    /* Grey background track */
+    outline: none;
+    cursor: pointer;
+    background-image: linear-gradient(#3b82f6, #3b82f6);
+    /* Blue progress fill */
+    background-repeat: no-repeat;
+}
+
+/* Slider Thumb (Chrome/Safari) */
+.progress-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    transition: transform 0.1s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* Slider Thumb (Firefox) */
+.progress-bar::-moz-range-thumb {
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.time-display {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-variant-numeric: tabular-nums;
+    min-width: 35px;
+    text-align: right;
+}

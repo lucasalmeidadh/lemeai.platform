@@ -4,7 +4,7 @@ export interface Message {
   sender: 'me' | 'other' | 'ia';
   time: string;
   status?: 'sending' | 'sent' | 'failed';
-  type?: 'text' | 'image' | 'audio';
+  type?: 'text' | 'image' | 'audio' | 'file' | 'document';
   mediaUrl?: string;
 }
 

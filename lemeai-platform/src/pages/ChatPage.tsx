@@ -12,6 +12,7 @@ import type { Contact, Message, InternalUser } from '../data/mockData';
 import ContactListSkeleton from '../components/ContactListSkeleton';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 import hubService from '../hub/HubConnectionService';
+import { ChatService } from '../services/ChatService';
 import noConversationImagem from '../assets/undraw_sem_conversa.svg';
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -39,7 +40,7 @@ interface ApiMessage {
   mensagem: string;
   origemMensagem: number; // 0 = Cliente, 1 = Vendedor, 2 = IA
   dataEnvio: string;
-  tipoMensagem?: 'text' | 'image' | 'audio';
+  tipoMensagem?: 'text' | 'image' | 'audio' | 'file' | 'document';
   urlMidia?: string;
   caminhoArquivo?: string;
 }
@@ -378,6 +379,56 @@ const ChatPage = () => {
     }
   };
 
+  const handleSendMedia = async (file: File, type: 'image' | 'audio' | 'file') => {
+    if (selectedContactId === null) return;
+
+    const tempId = Date.now();
+    const today = new Date();
+    const dateKey = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    // Map internal type to Message type
+    let messageType: 'image' | 'audio' | 'file' | 'document' = type;
+    if (type === 'file') messageType = 'document';
+
+    const optimisticMessage: Message = {
+      id: tempId,
+      text: type === 'image' ? '[Imagem]' : (type === 'audio' ? '[Áudio]' : file.name),
+      sender: 'me',
+      time: today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      status: 'sending',
+      type: messageType,
+      mediaUrl: URL.createObjectURL(file)
+    };
+
+    setActiveConversationMessages(prev => {
+      const newMessagesByDate = { ...prev };
+      const currentMessages = prev[dateKey] || [];
+      newMessagesByDate[dateKey] = [...currentMessages, optimisticMessage];
+      return newMessagesByDate;
+    });
+
+    try {
+      await ChatService.enviarMidia(selectedContactId, file, type);
+      await fetchMessages(selectedContactId);
+      await fetchConversations(false);
+    } catch (err: any) {
+      console.error("Erro ao enviar mídia:", err);
+      setActiveConversationMessages(prev => {
+        const newMessagesByDate = { ...prev };
+        const messagesForDate = prev[dateKey] ? [...prev[dateKey]] : [];
+        const messageIndex = messagesForDate.findIndex(m => m.id === tempId);
+        if (messageIndex !== -1) {
+          const updatedMessage = { ...messagesForDate[messageIndex], status: 'failed' as const };
+          messagesForDate[messageIndex] = updatedMessage;
+          newMessagesByDate[dateKey] = messagesForDate;
+        }
+        return newMessagesByDate;
+      });
+      toast.error(`Erro ao enviar mídia: ${err.message}`);
+    }
+  };
+
+
   const handleTransferConversation = async (targetUser: InternalUser) => {
     if (!selectedContactId || !currentUser) return;
 
@@ -490,7 +541,7 @@ const ChatPage = () => {
                 messagesByDate={activeConversationMessages}
                 conversationId={selectedContact.id}
               />
-              <MessageInput onSendMessage={handleSendMessage} />
+              <MessageInput onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} />
             </div>
             {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} onUpdate={() => fetchConversations(false)} />}
           </div>
@@ -532,7 +583,7 @@ const ChatPage = () => {
                 messagesByDate={activeConversationMessages}
                 conversationId={selectedContact.id}
               />
-              <MessageInput onSendMessage={handleSendMessage} />
+              <MessageInput onSendMessage={handleSendMessage} onSendMedia={handleSendMedia} />
             </div>
             {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} onUpdate={() => fetchConversations(false)} />}
           </>

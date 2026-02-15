@@ -28,4 +28,41 @@ export const ChatService = {
             throw error;
         }
     },
+
+    enviarMidia: async (conversationId: number, file: File, tipoMidia: string): Promise<any> => {
+        try {
+            const formData = new FormData();
+            formData.append('Arquivo', file);
+
+            // Append query parameters to the URL
+            const url = new URL(`${apiUrl}/api/Chat/Conversa/${conversationId}/EnviarMidia`);
+            url.searchParams.append('TipoMidia', tipoMidia);
+
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                // Content-Type is automatically set by browser for FormData with boundary
+                credentials: 'include',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                let errorMessage = `Erro ao enviar mídia: ${response.statusText}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData?.mensagem) {
+                        errorMessage = errorData.mensagem;
+                    }
+                } catch (e) {
+                    // Ignore parsing error
+                }
+                throw new Error(errorMessage);
+            }
+
+            // Return response if needed, or just void
+            return true;
+        } catch (error) {
+            console.error('Erro no ChatService.enviarMidia:', error);
+            throw error;
+        }
+    },
 };

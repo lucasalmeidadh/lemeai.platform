@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FaRobot, FaCheck, FaRegClock, FaExclamationCircle, FaTimes, FaDownload, FaImage } from 'react-icons/fa'; // Importando novos ícones
 import './ConversationWindow.css';
+import AudioPlayer from './AudioPlayer';
 import type { Message } from '../data/mockData';
 
 interface ConversationWindowProps {
@@ -63,10 +64,9 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
     }
   };
 
+  // Scroll when image loads. If it's the last message, we want to ensure visibility.
   const handleImageLoad = () => {
-    if (isAtBottomRef.current) {
-      scrollToBottom();
-    }
+    scrollToBottom(true);
   };
 
   // Effect for when conversation changes (switching chats)
@@ -91,9 +91,12 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
       }
     }
 
-    // Scroll if duplicate logic: it's a new message from 'me' OR we were already at the bottom
-    if (lastMessage?.sender === 'me' || isAtBottomRef.current) {
-      scrollToBottom(true); // Smooth scroll for new messages
+    // Always scroll to bottom for new messages sent by 'me'
+    if (lastMessage?.sender === 'me') {
+      scrollToBottom(true);
+    } else if (isAtBottomRef.current) {
+      // For other messages, only scroll if we were already at the bottom
+      scrollToBottom(true);
     }
   }, [messagesByDate]);
 
@@ -125,18 +128,19 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
                           onLoad={handleImageLoad}
                           onClick={() => setSelectedImage(msg.mediaUrl!)}
                         />
-                        {msg.text && msg.text !== '[Imagem]' && <div className="message-caption">{msg.text}</div>}
+                        {msg.text && msg.text !== '[Imagem]' && msg.text !== '[image]' && <div className="message-caption">{msg.text}</div>}
                       </div>
                     ) : msg.type === 'audio' && msg.mediaUrl ? (
                       <div className="message-audio-container">
-                        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                        <audio controls className="message-audio">
-                          <source src={msg.mediaUrl} type="audio/ogg" />
-                          <source src={msg.mediaUrl} type="audio/mpeg" />
-                          <source src={msg.mediaUrl} type="audio/wav" />
-                          Seu navegador não suporta áudio.
-                        </audio>
+                        <AudioPlayer src={msg.mediaUrl} />
                         {msg.text && msg.text !== '[Áudio]' && <div className="message-caption">{msg.text}</div>}
+                      </div>
+                    ) : (msg.type === 'file' || msg.type === 'document') && msg.mediaUrl ? (
+                      <div className="message-file-container">
+                        <a href={msg.mediaUrl} target="_blank" rel="noopener noreferrer" className="file-attachment-link">
+                          <FaDownload className="file-icon" />
+                          <span className="file-name">{msg.text || 'Arquivo'}</span>
+                        </a>
                       </div>
                     ) : (
                       <div className="message-content">{msg.text}</div>
