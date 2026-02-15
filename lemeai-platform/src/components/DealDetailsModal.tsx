@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus } from 'react-icons/fa';
+import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt } from 'react-icons/fa';
+import SummaryModal from './SummaryModal';
 import './DealDetailsModal.css';
 import ConversationWindow from './ConversationWindow';
 import MessageInput from './MessageInput';
@@ -43,6 +44,10 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
     const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
     const [isLoadingChat, setIsLoadingChat] = useState(false);
     const [chatError, setChatError] = useState<string | null>(null);
+
+    // Summary Modal State
+    const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+    const [selectedSummary, setSelectedSummary] = useState('');
 
     // Email state
     const [contactEmail, setContactEmail] = useState<string>('');
@@ -212,16 +217,35 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
     }, [deal]);
 
     const handleSaveDetails = async () => {
-        if (!detailsDescription.trim()) {
-            toast.error('Informe uma descrição.');
+        // Check for value change
+        const previousValue = deal.rawValue || 0;
+        const newValue = detailsValue || 0;
+        const valueChanged = previousValue !== newValue;
+
+        if (!detailsDescription.trim() && !valueChanged) {
+            toast.error('Informe uma descrição ou altere o valor.');
             return;
         }
 
         setIsSavingDetails(true);
         try {
+            let descriptionToSend = detailsDescription;
+
+            if (valueChanged) {
+                const formattedPrevious = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(previousValue);
+                const formattedNew = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(newValue);
+                const autoNote = `Alteração de valor: De ${formattedPrevious} para ${formattedNew}`;
+
+                if (descriptionToSend.trim()) {
+                    descriptionToSend += `\n\n${autoNote}`;
+                } else {
+                    descriptionToSend = autoNote;
+                }
+            }
+
             const result = await OpportunityService.addDetails({
                 idConversa: deal.id,
-                descricao: detailsDescription,
+                descricao: descriptionToSend,
                 statusNegociacaoId: detailsStatusId,
                 valor: detailsValue
             });
@@ -301,6 +325,11 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         const date = new Date(dateString);
         return `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     }
+
+    const handleOpenSummary = (content: string) => {
+        setSelectedSummary(content);
+        setIsSummaryModalOpen(true);
+    };
 
     return (
         <div className="deal-modal-overlay" onClick={onClose}>
@@ -489,15 +518,15 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                                             fetchObservations();
                                                             if (onUpdate) onUpdate();
                                                         }}
-                                                        disabled={isSavingDetails || !detailsDescription.trim()}
+                                                        disabled={isSavingDetails || (!detailsDescription.trim() && (deal.rawValue || 0) === detailsValue)}
                                                         style={{
                                                             padding: '6px 12px',
                                                             borderRadius: '4px',
                                                             border: 'none',
                                                             backgroundColor: '#005f73',
                                                             color: 'white',
-                                                            cursor: isSavingDetails || !detailsDescription.trim() ? 'not-allowed' : 'pointer',
-                                                            opacity: isSavingDetails || !detailsDescription.trim() ? 0.7 : 1
+                                                            cursor: isSavingDetails || (!detailsDescription.trim() && (deal.rawValue || 0) === detailsValue) ? 'not-allowed' : 'pointer',
+                                                            opacity: isSavingDetails || (!detailsDescription.trim() && (deal.rawValue || 0) === detailsValue) ? 0.7 : 1
                                                         }}
                                                     >
                                                         {isSavingDetails ? 'Salvando...' : 'Salvar'}
@@ -512,17 +541,35 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                     ) : notesError ? (
                                         <p style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Não há anotações para esta conversa.</p>
                                     ) : observations.length > 0 ? (
-                                        observations.map((obs: any) => (
-                                            <div key={obs.id} className="activity-item">
-                                                <div className="activity-icon"><FaStickyNote /></div>
-                                                <div className="activity-details">
-                                                    <div className="activity-text">{obs.content}</div>
-                                                    <div className="activity-date">
-                                                        Adicionado por {obs.userName || `Usuário ${obs.userId}`} - {formatDateTime(obs.createdAt)}
+                                        observations
+                                            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                                            .map((obs: any) => {
+                                                const isSummary = obs.content.startsWith('Resumo gerado pelo sistema');
+                                                return (
+                                                    <div key={obs.id} className="activity-item">
+                                                        <div className={`activity-icon ${isSummary ? 'summary-added' : ''}`}>
+                                                            {isSummary ? <FaFileAlt /> : <FaStickyNote />}
+                                                        </div>
+                                                        <div className="activity-details">
+                                                            <div className="activity-text">
+                                                                {isSummary ? (
+                                                                    <button
+                                                                        className="view-summary-btn"
+                                                                        onClick={() => handleOpenSummary(obs.content)}
+                                                                    >
+                                                                        Ver resumo da conversa
+                                                                    </button>
+                                                                ) : (
+                                                                    obs.content
+                                                                )}
+                                                            </div>
+                                                            <div className="activity-date">
+                                                                Adicionado por {obs.userName || `Usuário ${obs.userId}`} - {formatDateTime(obs.createdAt)}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        ))
+                                                );
+                                            })
                                     ) : (
                                         <p style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Não há anotações para esta conversa.</p>
                                     )}
@@ -532,6 +579,11 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                     </main>
                 </div>
             </div>
+            <SummaryModal
+                isOpen={isSummaryModalOpen}
+                onClose={() => setIsSummaryModalOpen(false)}
+                summary={selectedSummary}
+            />
         </div>
     );
 };

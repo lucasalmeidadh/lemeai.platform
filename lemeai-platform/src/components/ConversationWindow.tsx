@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { FaRobot, FaCheck, FaRegClock, FaExclamationCircle, FaTimes, FaDownload, FaImage } from 'react-icons/fa'; // Importando novos ícones
 import './ConversationWindow.css';
 import AudioPlayer from './AudioPlayer';
@@ -70,11 +70,26 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
   };
 
   // Effect for when conversation changes (switching chats)
-  useEffect(() => {
+  // Effect for when conversation changes (switching chats)
+  useLayoutEffect(() => {
     isAtBottomRef.current = true; // Reset tracking
-    // Use timeout to ensure DOM is ready and layout is stable
-    setTimeout(() => scrollToBottom(), 0);
-  }, [conversationId]);
+
+    const scrollToBottomInstant = () => {
+      if (listRef.current) {
+        listRef.current.scrollTop = listRef.current.scrollHeight;
+      }
+    };
+
+    // Instant scroll to bottom without animation
+    scrollToBottomInstant();
+
+    // Double check to catch any immediate layout shifts or rendering delays
+    requestAnimationFrame(() => {
+      scrollToBottomInstant();
+      // One more time for good measure in case of heavy layout calculations
+      requestAnimationFrame(scrollToBottomInstant);
+    });
+  }, [conversationId, messagesByDate]);
 
   // Effect for when messages update (new message received)
   useEffect(() => {

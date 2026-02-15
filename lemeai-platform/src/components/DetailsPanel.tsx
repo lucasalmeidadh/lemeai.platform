@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import './DetailsPanel.css';
-import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote, FaDollarSign } from 'react-icons/fa';
+import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote, FaDollarSign, FaFileAlt } from 'react-icons/fa';
 import type { Contact } from '../types';
 import type { Detail } from '../types/Details';
 import { DetailsService } from '../services/DetailsService';
+import SummaryModal from './SummaryModal';
 
 interface DetailsPanelProps {
   contact: Contact;
@@ -13,8 +14,35 @@ interface DetailsPanelProps {
 }
 
 const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate }) => {
+  // Format currency helper
+  const formatCurrency = (value: string | number) => {
+    if (value === '' || value === undefined || value === null) return '';
+
+    // If it's already a number, format it directly (handle distinct from typing)
+    if (typeof value === 'number') {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    }
+
+    // Remove everything that is not a digit
+    const onlyDigits = String(value).replace(/\D/g, '');
+
+    if (onlyDigits === '') return '';
+
+    // Convert to number and divide by 100 to account for cents
+    const numberValue = Number(onlyDigits) / 100;
+
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(numberValue);
+  };
+
   const [status, setStatus] = useState(contact.statusId ? String(contact.statusId) : '2');
-  const [dealValue, setDealValue] = useState(contact.detailsValue ? String(contact.detailsValue) : '');
+  // Initialize with formatted value
+  const [dealValue, setDealValue] = useState(contact.detailsValue ? formatCurrency(contact.detailsValue) : '');
   const [newNote, setNewNote] = useState('');
 
   const [isDirty, setIsDirty] = useState(false);
@@ -25,10 +53,15 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
 
+  // Summary Modal State
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [selectedSummary, setSelectedSummary] = useState('');
+
   useEffect(() => {
     if (contact) {
       setStatus(contact.statusId ? String(contact.statusId) : '2');
-      setDealValue(contact.detailsValue ? String(contact.detailsValue) : '');
+      // Format value when contact changes
+      setDealValue(contact.detailsValue ? formatCurrency(contact.detailsValue) : '');
     }
   }, [contact]);
 
@@ -53,20 +86,45 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
     }
   }, [activeTab, fetchObservations]);
 
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const formatted = formatCurrency(rawValue);
+    setDealValue(formatted);
+    setIsDirty(true);
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Ensure we parse correctly depending on input type (text vs number)
+      // Parse currency string back to number
+      // 'R$ 1.234,56' -> remove non-digits -> 123456 -> divide by 100 -> 1234.56
       let valor = 0;
       if (typeof dealValue === 'string') {
-        valor = parseFloat(dealValue.replace('R$', '').replace(',', '.').trim()) || 0;
+        const onlyDigits = dealValue.replace(/\D/g, '');
+        valor = onlyDigits ? Number(onlyDigits) / 100 : 0;
       } else {
         valor = Number(dealValue) || 0;
       }
 
+      // Check for value change
+      const previousValue = contact.detailsValue || 0;
+      let descriptionToSend = newNote;
+
+      if (valor !== previousValue) {
+        const formattedPrevious = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(previousValue);
+        const formattedNew = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+        const autoNote = `Alteração de valor: De ${formattedPrevious} para ${formattedNew}`;
+
+        if (descriptionToSend.trim()) {
+          descriptionToSend += `\n\n${autoNote}`;
+        } else {
+          descriptionToSend = autoNote;
+        }
+      }
+
       await DetailsService.addDetail({
         idConversa: contact.id,
-        descricao: newNote,
+        descricao: descriptionToSend,
         statusNegociacaoId: parseInt(status),
         valor: valor
       });
@@ -93,6 +151,11 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
     const date = new Date(dateString);
     return `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
   }
+
+  const handleOpenSummary = (content: string) => {
+    setSelectedSummary(content);
+    setIsSummaryModalOpen(true);
+  };
 
   return (
     <aside className="details-panel">
@@ -135,8 +198,12 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
               <div className="form-group">
                 <label htmlFor="deal-value"><FaDollarSign className="label-icon" /> Valor</label>
                 <input
-                  type="number" id="deal-value" className="details-input" placeholder="0.00"
-                  value={dealValue} onChange={(e) => { setDealValue(e.target.value); setIsDirty(true); }}
+                  type="text"
+                  id="deal-value"
+                  className="details-input"
+                  placeholder="R$ 0,00"
+                  value={dealValue}
+                  onChange={handleValueChange}
                 />
               </div>
             </div>
@@ -162,19 +229,33 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
             {!isLoadingHistory && !historyError && (
               <ul className="history-list">
                 {observations.length > 0 ? (
-                  observations.map(obs => (
-                    <li key={obs.id} className="history-item">
-                      <div className="history-icon note-added">
-                        <FaRegStickyNote />
-                      </div>
-                      <div className="history-text">
-                        <p>{obs.content}</p>
-                        <span className="history-meta">
-                          Adicionado por: Usuário {obs.userId} - {formatDateTime(obs.createdAt)}
-                        </span>
-                      </div>
-                    </li>
-                  ))
+                  observations
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .map(obs => {
+                      const isSummary = obs.content.startsWith('Resumo gerado pelo sistema');
+                      return (
+                        <li key={obs.id} className="history-item">
+                          <div className={`history-icon ${isSummary ? 'summary-added' : 'note-added'}`}>
+                            {isSummary ? <FaFileAlt /> : <FaRegStickyNote />}
+                          </div>
+                          <div className="history-text">
+                            {isSummary ? (
+                              <button
+                                className="view-summary-btn"
+                                onClick={() => handleOpenSummary(obs.content)}
+                              >
+                                Ver resumo da conversa
+                              </button>
+                            ) : (
+                              <p>{obs.content}</p>
+                            )}
+                            <span className="history-meta">
+                              Adicionado por: {obs.usuario?.name || obs.usuario?.nome || `Usuário ${obs.userId}`} - {formatDateTime(obs.createdAt)}
+                            </span>
+                          </div>
+                        </li>
+                      );
+                    })
                 ) : (
                   <p className="empty-history-text">Nenhuma observação encontrada para esta conversa.</p>
                 )}
@@ -184,15 +265,23 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
         )}
       </div>
 
-      {activeTab === 'details' && (
-        <div className="details-footer">
-          <button className="save-button" onClick={handleSave} disabled={!isDirty || isSaving}>
-            <FaSave />
-            <span>{isSaving ? 'Salvando...' : (isDirty ? 'Salvar Alterações' : 'Salvo')}</span>
-          </button>
-        </div>
-      )}
-    </aside>
+      {
+        activeTab === 'details' && (
+          <div className="details-footer">
+            <button className="save-button" onClick={handleSave} disabled={!isDirty || isSaving}>
+              <FaSave />
+              <span>{isSaving ? 'Salvando...' : (isDirty ? 'Salvar Alterações' : 'Salvo')}</span>
+            </button>
+          </div>
+        )
+      }
+
+      <SummaryModal
+        isOpen={isSummaryModalOpen}
+        onClose={() => setIsSummaryModalOpen(false)}
+        summary={selectedSummary}
+      />
+    </aside >
   );
 };
 

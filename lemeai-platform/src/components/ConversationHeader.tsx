@@ -92,13 +92,14 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
 
       <div className="header-menu-area" style={{ display: 'flex', gap: '5px' }}>
         <button
-          className="icon-button"
+          className="summary-header-btn"
           onClick={handleAiSummary}
           title="Resumir com IA"
           disabled={isSummaryLoading}
           style={{ opacity: isSummaryLoading ? 0.7 : 1 }}
         >
-          <FaMagic style={{ color: '#005f73' }} />
+          <FaMagic style={{ marginRight: '8px' }} />
+          <span>Resumir com IA</span>
         </button>
 
         <button className="icon-button" onClick={() => setMenuOpen(!isMenuOpen)}>

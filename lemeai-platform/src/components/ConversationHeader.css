@@ -119,3 +119,30 @@
 .icon-button:hover {
   background-color: #e9ecef;
 }
+
+.summary-header-btn {
+  display: flex;
+  align-items: center;
+  background-color: #005f73;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 95, 115, 0.2);
+  margin-right: 10px;
+}
+
+.summary-header-btn:hover:not(:disabled) {
+  background-color: #004c5a;
+  transform: translateY(-1px);
+}
+
+.summary-header-btn:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+  transform: none;
+}
