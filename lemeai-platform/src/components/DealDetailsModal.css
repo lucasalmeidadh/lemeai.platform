@@ -13,7 +13,8 @@
 }
 
 .deal-modal-content {
-    background-color: white;
+    background-color: var(--bg-secondary);
+    /* Was white */
     width: 800px;
     max-width: 90vw;
     height: 80vh;
@@ -49,17 +50,20 @@
 
 .deal-modal-header {
     padding: 20px 30px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-color);
+    /* Was #e9ecef */
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    background-color: #f8f9fa;
+    background-color: var(--bg-primary);
+    /* Was #f8f9fa */
 }
 
 .deal-title-section h2 {
     margin: 0;
     font-size: 24px;
-    color: #343a40;
+    color: var(--text-primary);
+    /* Was #343a40 */
     margin-bottom: 5px;
 }
 
@@ -67,31 +71,42 @@
     display: flex;
     gap: 15px;
     font-size: 14px;
-    color: #6c757d;
+    color: var(--text-secondary);
+    /* Was #6c757d */
 }
 
 .deal-value-highlight {
-    color: #005f73;
+    color: var(--petroleum-blue);
+    /* Was #005f73 */
     font-weight: 700;
-    background-color: #e0f7ff;
+    background-color: var(--petroleum-light);
+    /* Was #e0f7ff */
     padding: 2px 8px;
     border-radius: 6px;
 }
 
-.close-modal-button {
+.deal-close-button {
     background: transparent;
     border: none;
     font-size: 24px;
-    color: #adb5bd;
+    color: var(--text-primary);
     cursor: pointer;
     padding: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
     transition: color 0.2s;
+    opacity: 0.8;
 }
 
-.close-modal-button:hover {
-    color: #343a40;
+.deal-close-button svg {
+    fill: currentColor;
+    color: inherit;
+}
+
+.deal-close-button:hover {
+    color: var(--text-primary);
+    opacity: 1;
 }
 
 .deal-modal-body {
@@ -102,8 +117,10 @@
 
 .deal-sidebar {
     width: 250px;
-    background-color: #f8f9fa;
-    border-right: 1px solid #e9ecef;
+    background-color: var(--bg-primary);
+    /* Was #f8f9fa */
+    border-right: 1px solid var(--border-color);
+    /* Was #e9ecef */
     padding: 20px;
     overflow-y: auto;
 }
@@ -112,7 +129,130 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    background-color: #ffffff;
+    background-color: var(--bg-secondary);
+    /* Was #ffffff */
+}
+
+/* ... existing styles ... */
+
+/* New classes for Note Form to replace inline styles */
+.add-note-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.add-note-btn {
+    background-color: var(--petroleum-blue);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.add-note-btn:hover {
+    background-color: var(--petroleum-blue-hover);
+}
+
+.add-note-form {
+    background-color: var(--bg-primary);
+    /* Was #f8f9fa */
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    /* Was #e9ecef */
+}
+
+.add-note-title {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+    /* Was #495057 */
+}
+
+.note-input-group {
+    margin-bottom: 10px;
+}
+
+.note-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    /* Was #6c757d */
+    margin-bottom: 4px;
+}
+
+.note-input,
+.note-textarea {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    /* Was #ced4da */
+    font-family: inherit;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+    /* details */
+}
+
+.note-input:focus,
+.note-textarea:focus {
+    outline: none;
+    border-color: var(--petroleum-blue);
+    box-shadow: 0 0 0 2px rgba(0, 95, 115, 0.1);
+}
+
+.note-textarea {
+    min-height: 80px;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+.note-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.note-cancel-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    /* Was #ced4da */
+    background-color: var(--bg-secondary);
+    /* Was white */
+    color: var(--text-secondary);
+    /* Was #495057 */
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.note-cancel-btn:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.note-save-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    background-color: var(--petroleum-blue);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.note-save-btn:disabled {
+    background-color: var(--bg-tertiary);
+    cursor: not-allowed;
+    color: var(--text-tertiary);
+    opacity: 0.7;
 }
 
 .info-group {
@@ -123,22 +263,26 @@
     display: block;
     font-size: 12px;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--text-secondary);
+    /* Was #6c757d */
     text-transform: uppercase;
     margin-bottom: 5px;
 }
 
 .info-value {
     font-size: 15px;
-    color: #212529;
+    color: var(--text-primary);
+    /* Was #212529 */
     font-weight: 500;
 }
 
 .deal-tabs {
     display: flex;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-color);
+    /* Was #e9ecef */
     padding: 0 20px;
-    background-color: white;
+    background-color: var(--bg-secondary);
+    /* Was white */
 }
 
 .deal-tab {
@@ -147,19 +291,22 @@
     background: transparent;
     font-size: 14px;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--text-secondary);
+    /* Was #6c757d */
     cursor: pointer;
     border-bottom: 3px solid transparent;
     transition: all 0.2s;
 }
 
 .deal-tab:hover {
-    color: #005f73;
+    color: var(--petroleum-blue);
+    /* Was #005f73 */
 }
 
 .deal-tab.active {
-    color: #005f73;
-    border-bottom-color: #005f73;
+    color: var(--petroleum-blue);
+    /* Was #005f73 */
+    border-bottom-color: var(--petroleum-blue);
 }
 
 .tab-content {
@@ -173,18 +320,21 @@
     gap: 15px;
     padding-bottom: 15px;
     margin-bottom: 15px;
-    border-bottom: 1px solid #f1f3f5;
+    border-bottom: 1px solid var(--border-color);
+    /* Was #f1f3f5 */
 }
 
 .activity-icon {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #e9ecef;
+    background-color: var(--bg-tertiary);
+    /* Was #e9ecef */
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #495057;
+    color: var(--text-secondary);
+    /* Was #495057 */
     flex-shrink: 0;
 }
 
@@ -194,13 +344,15 @@
 
 .activity-text {
     font-size: 14px;
-    color: #343a40;
+    color: var(--text-primary);
+    /* Was #343a40 */
     margin-bottom: 4px;
 }
 
 .activity-date {
     font-size: 12px;
-    color: #adb5bd;
+    color: var(--text-tertiary);
+    /* Was #adb5bd */
 }
 
 .activity-icon.summary-added {
@@ -210,8 +362,8 @@
 
 .view-summary-btn {
     background-color: transparent;
-    border: 1px solid #005f73;
-    color: #005f73;
+    border: 1px solid var(--petroleum-blue);
+    color: var(--petroleum-blue);
     padding: 6px 12px;
     border-radius: 6px;
     font-size: 13px;
@@ -224,5 +376,6 @@
 }
 
 .view-summary-btn:hover {
-    background-color: #e0f7ff;
+    background-color: var(--petroleum-light);
+    /* Was #e0f7ff */
 }

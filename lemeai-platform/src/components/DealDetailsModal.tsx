@@ -345,7 +345,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                             <span>Criado em: {deal.date}</span>
                         </div>
                     </div>
-                    <button className="close-modal-button" onClick={onClose}>
+                    <button className="deal-close-button" onClick={onClose}>
                         <FaTimes />
                     </button>
                 </div>
@@ -433,48 +433,29 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                 <div className="notes-list" style={{ padding: '20px' }}>
                                     <div className="notes-actions" style={{ marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         {!showAddDetails ? (
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                            <div className="add-note-container">
                                                 <button
-                                                    className="add-note-button"
+                                                    className="add-note-btn"
                                                     onClick={() => {
                                                         setShowAddDetails(true);
                                                         // Sync logic: keep current deal value as default when opening form
                                                         setDetailsValue(deal.rawValue || 0);
-                                                    }}
-                                                    style={{
-                                                        backgroundColor: '#005f73',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        padding: '8px 12px',
-                                                        borderRadius: '4px',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '5px',
-                                                        fontSize: '13px',
-                                                        fontWeight: 600
                                                     }}
                                                 >
                                                     <FaPlus /> Nova Anotação
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="add-note-form" style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-                                                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#495057' }}>Nova Anotação</h4>
+                                            <div className="add-note-form">
+                                                <h4 className="add-note-title">Nova Anotação</h4>
 
-                                                <div style={{ marginBottom: '10px' }}>
-                                                    <label style={{ display: 'block', fontSize: '12px', color: '#6c757d', marginBottom: '4px' }}>Valor da Oportunidade</label>
+                                                <div className="note-input-group">
+                                                    <label className="note-label">Valor da Oportunidade</label>
                                                     <input
                                                         type="number"
                                                         value={detailsValue}
                                                         onChange={(e) => setDetailsValue(parseFloat(e.target.value))}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '8px',
-                                                            borderRadius: '4px',
-                                                            border: '1px solid #ced4da',
-                                                            fontFamily: 'inherit'
-                                                        }}
+                                                        className="note-input"
                                                     />
                                                 </div>
 
@@ -482,36 +463,21 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                                     value={detailsDescription}
                                                     onChange={(e) => setDetailsDescription(e.target.value)}
                                                     placeholder="Digite sua anotação..."
-                                                    style={{
-                                                        width: '100%',
-                                                        minHeight: '80px',
-                                                        padding: '10px',
-                                                        borderRadius: '4px',
-                                                        border: '1px solid #ced4da',
-                                                        marginBottom: '10px',
-                                                        resize: 'vertical',
-                                                        fontFamily: 'inherit'
-                                                    }}
+                                                    className="note-textarea"
                                                 />
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                                <div className="note-form-actions">
                                                     <button
+                                                        className="note-cancel-btn"
                                                         onClick={() => {
                                                             setShowAddDetails(false);
                                                             setDetailsDescription('');
                                                         }}
                                                         disabled={isSavingDetails}
-                                                        style={{
-                                                            padding: '6px 12px',
-                                                            borderRadius: '4px',
-                                                            border: '1px solid #ced4da',
-                                                            backgroundColor: 'white',
-                                                            color: '#495057',
-                                                            cursor: 'pointer'
-                                                        }}
                                                     >
                                                         Cancelar
                                                     </button>
                                                     <button
+                                                        className="note-save-btn"
                                                         onClick={async () => {
                                                             await handleSaveDetails();
                                                             // Refresh list explicitly after save
@@ -519,15 +485,6 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                                             if (onUpdate) onUpdate();
                                                         }}
                                                         disabled={isSavingDetails || (!detailsDescription.trim() && (deal.rawValue || 0) === detailsValue)}
-                                                        style={{
-                                                            padding: '6px 12px',
-                                                            borderRadius: '4px',
-                                                            border: 'none',
-                                                            backgroundColor: '#005f73',
-                                                            color: 'white',
-                                                            cursor: isSavingDetails || (!detailsDescription.trim() && (deal.rawValue || 0) === detailsValue) ? 'not-allowed' : 'pointer',
-                                                            opacity: isSavingDetails || (!detailsDescription.trim() && (deal.rawValue || 0) === detailsValue) ? 0.7 : 1
-                                                        }}
                                                     >
                                                         {isSavingDetails ? 'Salvando...' : 'Salvar'}
                                                     </button>

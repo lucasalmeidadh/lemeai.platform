@@ -1,12 +1,12 @@
 .kpi-card {
-  background: #ffffff;
+  background: var(--bg-secondary);
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   /* Stacked layout by default for cleaner look */
@@ -31,12 +31,14 @@
 
 .kpi-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 95, 115, 0.2);
+  box-shadow: var(--shadow-md);
+  border-color: var(--petroleum-blue);
+  /* Was rgba(0, 95, 115, 0.2) - simplifying to brand color */
 }
 
 .kpi-title {
-  color: #6b7280;
+  color: var(--text-secondary);
+  /* Was #6b7280 */
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -49,7 +51,8 @@
 }
 
 .kpi-value {
-  color: #111827;
+  color: var(--text-primary);
+  /* Was #111827 */
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 0;
@@ -60,7 +63,8 @@
 /* Minimalist Icon: Removed background, positioned top-right */
 .kpi-icon-wrapper {
   font-size: 1.25rem;
-  color: #9ca3af;
+  color: var(--text-tertiary);
+  /* Was #9ca3af */
   /* Subtler default color */
   background-color: transparent;
   /* No background */
@@ -80,7 +84,7 @@
 }
 
 .kpi-card:hover .kpi-icon-wrapper {
-  color: var(--petroleum-blue, #005f73);
+  color: var(--petroleum-blue);
   opacity: 1;
   transform: scale(1.1);
   background-color: transparent;
@@ -88,18 +92,19 @@
 }
 
 .kpi-card.active {
-  background-color: #f0f9ff;
-  border-color: #005f73;
-  box-shadow: 0 0 0 1px #005f73;
+  background-color: var(--petroleum-light);
+  /* Was #f0f9ff */
+  border-color: var(--petroleum-blue);
+  box-shadow: 0 0 0 1px var(--petroleum-blue);
   /* Thinner border look */
 }
 
 .kpi-card.active .kpi-title {
-  color: #005f73;
+  color: var(--petroleum-blue);
 }
 
 .kpi-card.active .kpi-icon-wrapper {
-  color: #005f73;
+  color: var(--petroleum-blue);
   opacity: 1;
 }
 

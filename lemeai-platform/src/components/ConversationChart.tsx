@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ChartData {
     date: string;
@@ -12,6 +12,17 @@ interface ConversationChartProps {
 }
 
 const ConversationChart: React.FC<ConversationChartProps> = ({ data }) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
+    // Chart colors based on theme
+    const axisColor = isDark ? '#adb5bd' : '#6c757d';
+    const gridColor = isDark ? '#343a40' : '#e9ecef';
+    const barColor = '#005f73'; // Brand color, works on both but could be lighter on dark
+    const tooltipBg = isDark ? '#1e1e1e' : '#fff';
+    const tooltipColor = isDark ? '#e9ecef' : '#000';
+    const tooltipBorder = isDark ? '1px solid #343a40' : 'none';
+
     return (
         <ResponsiveContainer width="100%" height={250}>
             <BarChart
@@ -23,33 +34,36 @@ const ConversationChart: React.FC<ConversationChartProps> = ({ data }) => {
                     bottom: 5,
                 }}
             >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e9ecef" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
                 <XAxis
                     dataKey="date"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#6c757d', fontSize: 12 }}
+                    tick={{ fill: axisColor, fontSize: 12 }}
                     dy={10}
                 />
                 <YAxis
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: '#6c757d', fontSize: 12 }}
+                    tick={{ fill: axisColor, fontSize: 12 }}
                 />
                 <Tooltip
-                    cursor={{ fill: 'transparent' }}
+                    cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'transparent' }}
                     contentStyle={{
-                        backgroundColor: '#fff',
+                        backgroundColor: tooltipBg,
                         borderRadius: '8px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        border: 'none',
-                        padding: '10px'
+                        border: tooltipBorder,
+                        padding: '10px',
+                        color: tooltipColor
                     }}
+                    itemStyle={{ color: tooltipColor }}
+                    labelStyle={{ color: tooltipColor }}
                 />
                 <Bar
                     dataKey="conversations"
                     name="Conversas"
-                    fill="#005f73"
+                    fill={barColor}
                     radius={[4, 4, 0, 0]}
                     barSize={20}
                 />

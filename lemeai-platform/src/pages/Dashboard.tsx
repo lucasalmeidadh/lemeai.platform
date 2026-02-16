@@ -326,10 +326,10 @@ const Dashboard = () => {
                         </tr>
                         {expandedDeals[deal.idConversa] && (
                           <tr>
-                            <td colSpan={5} style={{ backgroundColor: '#f9fafb', padding: '20px' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <h4 style={{ margin: 0, color: '#4b5563' }}>Anotações e Detalhes</h4>
+                            <td colSpan={5} className="expanded-detail-row">
+                              <div className="detail-container">
+                                <div className="detail-header-row">
+                                  <h4 className="detail-title">Anotações e Detalhes</h4>
                                   <button
                                     className="ai-summary-button"
                                     onClick={() => handleSummarize(deal.idConversa)}
@@ -339,19 +339,13 @@ const Dashboard = () => {
                                 </div>
 
                                 {deal.detalhesConversa && deal.detalhesConversa.length > 0 ? (
-                                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                  <ul className="detail-list">
                                     {[...deal.detalhesConversa]
                                       .sort((a, b) => new Date(b.dataDetalheCriado).getTime() - new Date(a.dataDetalheCriado).getTime())
                                       .map((detail, idx) => {
                                         const isSummary = detail.descricaoDetalhe.startsWith('Resumo gerado pelo sistema');
                                         return (
-                                          <li key={idx} style={{
-                                            padding: '12px',
-                                            backgroundColor: 'white',
-                                            borderRadius: '8px',
-                                            marginBottom: '8px',
-                                            border: '1px solid #e5e7eb'
-                                          }}>
+                                          <li key={idx} className="detail-item">
                                             {isSummary ? (
                                               <button
                                                 className="view-summary-btn"
@@ -363,9 +357,9 @@ const Dashboard = () => {
                                                 Ver resumo da conversa
                                               </button>
                                             ) : (
-                                              <p style={{ margin: '0 0 8px 0', color: '#1f2937' }}>{detail.descricaoDetalhe}</p>
+                                              <p className="detail-text">{detail.descricaoDetalhe}</p>
                                             )}
-                                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                            <div className="detail-meta">
                                               {detail.nomeUsuarioCriador} • {new Date(detail.dataDetalheCriado).toLocaleString()}
                                             </div>
                                           </li>
@@ -373,7 +367,7 @@ const Dashboard = () => {
                                       })}
                                   </ul>
                                 ) : (
-                                  <p style={{ color: '#6b7280', fontStyle: 'italic' }}>Nenhuma anotação disponível para esta conversa.</p>
+                                  <p className="no-notes-text">Nenhuma anotação disponível para esta conversa.</p>
                                 )}
                               </div>
                             </td>
@@ -383,7 +377,7 @@ const Dashboard = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Nenhum resultado encontrado.</td>
+                      <td colSpan={5} className="empty-results-cell">Nenhum resultado encontrado.</td>
                     </tr>
                   )}
                 </tbody>

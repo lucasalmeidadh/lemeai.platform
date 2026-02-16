@@ -11,36 +11,48 @@
   width: 320px;
   min-width: 300px;
   flex-shrink: 0;
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
+  /* Was #ffffff */
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
+  /* Was 0 4px 12px rgba(0, 0, 0, 0.08) */
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border-color);
+  /* Added border for contrast */
 }
 
 .conversation-area {
   flex-grow: 1;
   flex-shrink: 1;
   min-width: 300px;
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
+  /* Was #ffffff */
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
+  /* Was 0 4px 12px rgba(0, 0, 0, 0.08) */
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border-color);
+  /* Added border to match */
 }
 
 .details-panel {
   width: 320px;
   min-width: 300px;
   flex-shrink: 0;
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
+  /* Was #ffffff */
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
+  /* Was 0 4px 12px rgba(0, 0, 0, 0.08) */
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border-color);
+  /* Added border to match */
 }
 
 @media (max-width: 768px) {
@@ -63,6 +75,7 @@
     height: 100%;
     border-radius: 0;
     box-shadow: none;
+    border: none;
   }
 
   .contact-list {
@@ -82,7 +95,8 @@
     z-index: 10;
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background-color: var(--bg-secondary);
+    /* Was #fff */
     /* Ensure background is white */
   }
 

@@ -1,10 +1,10 @@
 .sidebar {
   width: 260px;
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
   height: 100vh;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #e9ecef;
+  border-right: 1px solid var(--border-color);
   flex-shrink: 0;
   transition: width 0.2s ease-in-out;
   position: relative;
@@ -12,7 +12,7 @@
 
 .sidebar-header {
   padding: 20px;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -21,7 +21,7 @@
 
 .sidebar-header h3 {
   margin: 0;
-  color: #005f73;
+  color: var(--petroleum-blue);
   font-size: 24px;
   white-space: nowrap;
 }
@@ -44,7 +44,8 @@
   display: flex;
   align-items: center;
   padding: 15px 25px;
-  color: #495057;
+  color: var(--text-secondary);
+  /* Was #495057, using secondary for nav items */
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease;
@@ -67,15 +68,18 @@
 
 .sidebar-nav li a:hover,
 .nav-item-header:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bg-primary);
+  /* Was #f8f9fa */
+  color: var(--text-primary);
 }
 
 .sidebar-nav li.active>a,
 .sidebar-nav li.active-parent>.nav-item-header {
-  color: #005f73;
+  color: var(--petroleum-blue);
   font-weight: 700;
-  background-color: #e0f7ff;
-  border-right: 4px solid #005f73;
+  background-color: var(--petroleum-light);
+  /* Was #e0f7ff */
+  border-right: 4px solid var(--petroleum-blue);
 }
 
 .nav-icon {
@@ -86,8 +90,10 @@
 
 /* Submenu styles */
 .submenu {
-  background-color: #f8f9fa;
-  border-left: 3px solid #e9ecef;
+  background-color: var(--bg-primary);
+  /* Was #f8f9fa */
+  border-left: 3px solid var(--border-color);
+  /* Was #e9ecef */
   /* Optional: visual guide */
 }
 
@@ -100,14 +106,15 @@
 .submenu li.active a {
   border-right: none;
   /* Subitems might not need the thick border or maybe yes? Let's keep it clean */
-  border-right: 4px solid #005f73;
+  border-right: 4px solid var(--petroleum-blue);
   /* actually let's keep consistency */
 }
 
 
 .sidebar-footer {
   padding: 20px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--border-color);
+  /* Was #e9ecef */
   flex-shrink: 0;
 }
 
@@ -120,19 +127,23 @@
   align-items: center;
   padding: 10px;
   font-size: 16px;
-  color: #495057;
+  color: var(--text-secondary);
+  /* Was #495057 */
   font-family: inherit;
   border-radius: 6px;
   white-space: nowrap;
 }
 
 .logout-button-sidebar:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bg-primary);
+  /* Was #f8f9fa */
+  color: var(--text-primary);
 }
 
 .toggle-button {
   background: transparent;
-  color: #6c757d;
+  color: var(--text-secondary);
+  /* Was #6c757d */
   border: none;
   border-radius: 6px;
   width: 30px;
@@ -146,8 +157,9 @@
 }
 
 .toggle-button:hover {
-  background-color: #f1f3f5;
-  color: #005f73;
+  background-color: var(--bg-primary);
+  /* Was #f1f3f5 */
+  color: var(--petroleum-blue);
 }
 
 
@@ -208,7 +220,8 @@
   /* Hidden on desktop */
   height: 80px;
   /* Increased from 60px */
-  background-color: #005f73;
+  background-color: var(--petroleum-blue);
+  /* Was #005f73 */
   /* Dark teal background */
   color: #fff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);

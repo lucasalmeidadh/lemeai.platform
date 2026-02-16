@@ -1,9 +1,11 @@
 /* MessageInput.css */
 .message-input-wrapper {
   padding: 16px 24px;
-  background-color: #f9fafb;
+  background-color: var(--bg-primary);
+  /* Was #f9fafb */
   /* Light background for the area */
-  border-top: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color-soft);
+  /* Was #e5e7eb */
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -13,18 +15,21 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
+  /* Was #ffffff */
   border-radius: 24px;
   /* Pill shape */
   padding: 8px 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  /* Was #e5e7eb */
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .message-input-container:focus-within {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-  border-color: #d1d5db;
+  box-shadow: var(--shadow-md);
+  border-color: var(--petroleum-blue);
+  /* Was #d1d5db - using brand color for focus */
 }
 
 .input-wrapper {
@@ -38,21 +43,24 @@
   border: none;
   outline: none;
   font-size: 0.95rem;
-  color: #374151;
+  color: var(--text-primary);
+  /* Was #374151 */
   background: transparent;
   padding: 8px 0;
   font-family: 'Inter', sans-serif;
 }
 
 .message-input-container input[type="text"]::placeholder {
-  color: #9ca3af;
+  color: var(--text-tertiary);
+  /* Was #9ca3af */
 }
 
 .icon-button {
   background: transparent;
   border: none;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--text-secondary);
+  /* Was #6b7280 */
   font-size: 1.2rem;
   padding: 8px;
   border-radius: 50%;
@@ -63,8 +71,10 @@
 }
 
 .icon-button:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: var(--bg-tertiary);
+  /* Was #f3f4f6 */
+  color: var(--text-primary);
+  /* Was #111827 */
 }
 
 .icon-button.send-button {
@@ -143,13 +153,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #f3f4f6;
+  background-color: var(--bg-primary);
   padding: 8px 16px;
   border-radius: 12px;
   font-size: 0.9rem;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin-bottom: 4px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color-soft);
 }
 
 .preview-content {
@@ -173,7 +183,7 @@
 
 .file-name {
   font-weight: 500;
-  color: #111827;
+  color: var(--text-primary);
   max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
@@ -182,7 +192,7 @@
 
 .file-type {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .remove-file-button {

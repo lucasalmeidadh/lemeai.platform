@@ -13,7 +13,7 @@
 }
 
 .transfer-modal-content {
-    background-color: white;
+    background-color: var(--bg-secondary);
     width: 400px;
     max-width: 90vw;
     border-radius: 12px;
@@ -38,24 +38,24 @@
 
 .transfer-modal-header {
     padding: 15px 20px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f8f9fa;
+    background-color: var(--bg-primary);
 }
 
 .transfer-modal-header h3 {
     margin: 0;
     font-size: 18px;
-    color: #343a40;
+    color: var(--text-primary);
 }
 
 .close-modal-button {
     background: transparent;
     border: none;
     font-size: 20px;
-    color: #adb5bd;
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -66,8 +66,8 @@
 }
 
 .close-modal-button:hover {
-    background-color: #e9ecef;
-    color: #343a40;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .transfer-modal-body {

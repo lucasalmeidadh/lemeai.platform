@@ -4,11 +4,12 @@
   border: none;
   display: flex;
   flex-direction: column;
+  color: var(--text-primary);
 }
 
 .contact-list-header {
   padding: 25px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--border-color-soft);
 }
 
 .header-top-row {
@@ -24,12 +25,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  color: var(--text-primary);
 }
 
 .new-badge {
   font-size: 12px;
-  background-color: #e0f7ff;
-  color: #005f73;
+  background-color: var(--petroleum-light);
+  /* Was #e0f7ff */
+  color: var(--petroleum-blue);
+  /* Was #005f73 */
   padding: 4px 8px;
   border-radius: 8px;
   font-weight: 600;
@@ -38,13 +42,15 @@
 .search-container {
   display: flex;
   align-items: center;
-  background-color: #f8f9fa;
+  background-color: var(--bg-primary);
+  /* Was #f8f9fa */
   border-radius: 10px;
   padding: 0 15px;
 }
 
 .search-container .search-icon {
-  color: #adb5bd;
+  color: var(--text-tertiary);
+  /* Was #adb5bd */
 }
 
 .search-container input {
@@ -54,36 +60,47 @@
   padding: 12px 10px;
   font-size: 15px;
   width: 100%;
+  color: var(--text-primary);
+}
+
+.search-container input::placeholder {
+  color: var(--text-tertiary);
 }
 
 .filter-tabs {
   display: flex;
   gap: 10px;
   padding: 15px 25px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--border-color-soft);
+  /* Was #f0f2f5 */
 }
 
 .filter-button {
   flex: 1;
   padding: 8px 10px;
-  border: 1px solid #dee2e6;
-  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  /* Was #dee2e6 */
+  background-color: var(--bg-secondary);
+  /* Was #ffffff */
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #495057;
+  color: var(--text-secondary);
+  /* Was #495057 */
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .filter-button:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bg-primary);
+  /* Was #f8f9fa */
 }
 
 .filter-button.active {
-  background-color: #005f73;
+  background-color: var(--petroleum-blue);
+  /* Was #005f73 */
   color: white;
-  border-color: #005f73;
+  border-color: var(--petroleum-blue);
 }
 
 .contacts-ul {
@@ -106,24 +123,28 @@
 }
 
 .contacts-ul li:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bg-primary);
+  /* Was #f8f9fa */
 }
 
 .contacts-ul li.active {
-  background-color: #e0f7ff;
+  background-color: var(--petroleum-light);
+  /* Was #e0f7ff */
 }
 
 .contact-avatar {
   width: 45px;
   height: 45px;
   border-radius: 50%;
-  background-color: #ced4da;
+  background-color: var(--bg-tertiary);
+  /* Was #ced4da */
   flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: 600;
-  color: #495057;
+  color: var(--text-secondary);
+  /* Was #495057 */
   position: relative;
 }
 
@@ -132,6 +153,7 @@
   top: -2px;
   right: -2px;
   background-color: #ee9b00;
+  /* Semantic warning color, keep or use var(--dark-yellow) */
   color: white;
   width: 20px;
   height: 20px;
@@ -141,7 +163,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 2px solid white;
+  border: 2px solid var(--bg-secondary);
+  /* Was white */
 }
 
 .contact-details {
@@ -153,12 +176,14 @@
 
 .contact-name {
   font-weight: 600;
-  color: #343a40;
+  color: var(--text-primary);
+  /* Was #343a40 */
 }
 
 .contact-last-message {
   font-size: 14px;
-  color: #6c757d;
+  color: var(--text-tertiary);
+  /* Was #6c757d */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -166,7 +191,8 @@
 
 .contact-time {
   font-size: 12px;
-  color: #6c757d;
+  color: var(--text-tertiary);
+  /* Was #6c757d */
   flex-shrink: 0;
   margin-left: auto;
 }
@@ -179,7 +205,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #005f73;
+  background-color: var(--petroleum-blue);
+  /* Was #005f73 */
   color: white;
   display: flex;
   justify-content: center;
@@ -187,8 +214,9 @@
   font-weight: 600;
   font-size: 18px;
   position: relative;
-  border: 2px solid white;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  border: 2px solid var(--bg-secondary);
+  /* Was white */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .status-indicator {
@@ -198,7 +226,8 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  border: 2px solid white;
+  border: 2px solid var(--bg-secondary);
+  /* Was white */
   transition: background-color 0.2s ease;
 }
 

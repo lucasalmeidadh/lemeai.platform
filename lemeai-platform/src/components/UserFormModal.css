@@ -15,7 +15,8 @@
 }
 
 .modal-content {
-  background-color: white;
+  background-color: var(--bg-secondary);
+  /* Was white */
   border-radius: 16px;
   width: 100%;
   max-width: 600px;
@@ -25,7 +26,8 @@
 
 .modal-header {
   padding: 20px 30px;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
+  /* Was #e9ecef */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -34,15 +36,23 @@
 .modal-header h2 {
   margin: 0;
   font-size: 20px;
-  color: #343a40;
+  color: var(--text-primary);
+  /* Was #343a40 */
 }
 
 .close-modal-button {
   background: transparent;
   border: none;
   font-size: 20px;
-  color: #6c757d;
+  color: var(--text-primary);
+  /* Was var(--text-secondary) - fixing low contrast */
   cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.close-modal-button:hover {
+  opacity: 1;
 }
 
 .modal-content form {
@@ -67,7 +77,8 @@
 .form-group label {
   font-size: 14px;
   font-weight: 600;
-  color: #495057;
+  color: var(--text-secondary);
+  /* Was #495057 */
   margin-bottom: 8px;
 }
 
@@ -77,8 +88,11 @@
   padding: 12px;
   font-size: 15px;
   border-radius: 8px;
-  border: 1px solid #dee2e6;
-  background-color: #f8f9fa;
+  border: 1px solid var(--border-color);
+  /* Was #dee2e6 */
+  background-color: var(--bg-primary);
+  /* Was #f8f9fa */
+  color: var(--text-primary);
   box-sizing: border-box;
   transition: all 0.2s ease;
 }
@@ -87,12 +101,14 @@
 .form-group select:focus {
   outline: none;
   border-color: var(--petroleum-blue);
-  background-color: #ffffff;
+  background-color: var(--bg-secondary);
+  /* Was #ffffff */
 }
 
 .modal-footer {
   padding: 20px 30px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--border-color);
+  /* Was #e9ecef */
   display: flex;
   justify-content: flex-end;
   gap: 15px;
@@ -112,28 +128,47 @@
   background-color: var(--petroleum-blue);
   color: white;
 }
+
 .button.primary:hover {
-  background-color: #004c5a;
+  background-color: var(--petroleum-blue-hover);
+  /* Was #004c5a */
 }
 
 .button.secondary {
-  background-color: #e9ecef;
-  color: #495057;
-  border-color: #dee2e6;
+  background-color: var(--bg-tertiary);
+  /* Was #e9ecef */
+  color: var(--text-secondary);
+  /* Was #495057 */
+  border-color: var(--border-color);
+  /* Was #dee2e6 */
 }
+
 .button.secondary:hover {
-  background-color: #dee2e6;
+  background-color: var(--border-color);
+  /* Was #dee2e6 */
 }
 
 /* Animações */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { transform: translateY(-30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .form-fieldset:disabled {

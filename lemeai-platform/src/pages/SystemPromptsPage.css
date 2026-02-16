@@ -42,7 +42,14 @@
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #666;
+    color: var(--text-primary);
+    /* Was var(--text-secondary) */
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.close-button:hover {
+    opacity: 1;
 }
 
 .modal-body {

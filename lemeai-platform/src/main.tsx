@@ -40,6 +40,10 @@ const router = createBrowserRouter([
   }
 ]);
 
+import { ThemeProvider } from './contexts/ThemeContext.tsx';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <RouterProvider router={router} />
+  <ThemeProvider>
+    <RouterProvider router={router} />
+  </ThemeProvider>
 );

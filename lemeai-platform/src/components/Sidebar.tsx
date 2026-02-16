@@ -17,6 +17,7 @@ import {
   FaChartPie,
   FaBox
 } from 'react-icons/fa';
+import ThemeToggle from './ThemeToggle';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -118,6 +119,7 @@ const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfil
         </ul>
       </nav>
       <div className="sidebar-footer">
+        <ThemeToggle collapsed={isCollapsed} />
         <button onClick={viewProfile} className="logout-button-sidebar" title="Perfil">
           <FaUser className="nav-icon" />
           <span>Perfil</span>

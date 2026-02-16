@@ -274,8 +274,7 @@ const PipelinePage = () => {
                                 onChange={(e) => setSelectedOwner(e.target.value)}
                                 className="pipeline-filter-input"
                                 style={{
-                                    minWidth: '200px',
-                                    backgroundColor: 'white'
+                                    minWidth: '200px'
                                 }}
                             >
                                 <option value="all">Todos os Responsáveis</option>
@@ -327,11 +326,11 @@ const PipelinePage = () => {
                                                                 <div className="card-title">{deal.title}</div>
                                                                 <div className="card-value">{deal.value}</div>
                                                                 <div className="card-footer">
-                                                                    <span className="card-status-label" style={{ fontSize: '11px', color: '#6c757d', fontWeight: 600 }}>{column.title}</span>
+                                                                    <span className="card-status-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>{column.title}</span>
 
                                                                     <div className="card-footer-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                        <span style={{ fontSize: '11px', color: '#6c757d' }}>{deal.date}</span>
-                                                                        <div className="card-avatar" title={`Responsável: ${deal.owner}`} style={{ width: '24px', height: '24px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e9ecef', borderRadius: '50%', color: '#495057', fontWeight: 600 }}>
+                                                                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{deal.date}</span>
+                                                                        <div className="card-avatar" title={`Responsável: ${deal.owner}`} style={{ width: '24px', height: '24px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 600 }}>
                                                                             {deal.owner.split(' ').length > 1
                                                                                 ? (deal.owner.split(' ')[0][0] + deal.owner.split(' ')[deal.owner.split(' ').length - 1][0]).toUpperCase()
                                                                                 : deal.owner.substring(0, 2).toUpperCase()}
