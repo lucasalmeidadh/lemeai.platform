@@ -123,6 +123,7 @@
     /* Was #e9ecef */
     padding: 20px;
     overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .deal-main-content {

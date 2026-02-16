@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaPaperPlane, FaPaperclip, FaMicrophone, FaTrash, FaImage, FaTimes } from 'react-icons/fa';
+import { FaPaperPlane, FaPaperclip, FaMicrophone, FaTrash, FaImage, FaTimes, FaLock } from 'react-icons/fa';
 import './MessageInput.css';
 
 interface MessageInputProps {
   onSendMessage: (text: string) => void;
   onSendMedia?: (file: File, type: 'image' | 'audio' | 'file') => Promise<void>;
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia, disabled, disabledMessage }) => {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -32,6 +34,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
   };
 
   const startRecording = async () => {
+    if (disabled) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -79,6 +82,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
@@ -87,6 +91,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    if (disabled) return;
     if (e.clipboardData.files && e.clipboardData.files.length > 0) {
       const file = e.clipboardData.files[0];
       if (file.type.startsWith('image/')) {
@@ -98,6 +103,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (disabled) return;
 
     if (selectedFile && onSendMedia) {
       const type = selectedFile.type.startsWith('image/') ? 'image' : 'file';
@@ -116,6 +122,17 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
       setText('');
     }
   };
+
+  if (disabled) {
+    return (
+      <div className="message-input-wrapper disabled-wrapper">
+        <div className="disabled-banner">
+          <FaLock className="lock-icon" />
+          <span>{disabledMessage || "Chat desativado"}</span>
+        </div>
+      </div>
+    );
+  }
 
   if (isRecording) {
     return (
@@ -173,10 +190,20 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
           onChange={(e) => handleFileSelect(e)}
         />
 
-        <button type="button" className="icon-button" onClick={() => imageInputRef.current?.click()} title="Enviar Imagem">
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => imageInputRef.current?.click()}
+          title="Enviar Imagem"
+        >
           <FaImage />
         </button>
-        <button type="button" className="icon-button" onClick={() => fileInputRef.current?.click()} title="Enviar Arquivo">
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => fileInputRef.current?.click()}
+          title="Enviar Arquivo"
+        >
           <FaPaperclip />
         </button>
 
@@ -191,11 +218,18 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
         </div>
 
         {text.trim() || selectedFile ? (
-          <button type="submit" className="icon-button send-button">
+          <button
+            type="submit"
+            className="icon-button send-button"
+          >
             <FaPaperPlane />
           </button>
         ) : (
-          <button type="button" className="icon-button record-button" onClick={startRecording}>
+          <button
+            type="button"
+            className="icon-button record-button"
+            onClick={startRecording}
+          >
             <FaMicrophone />
           </button>
         )}

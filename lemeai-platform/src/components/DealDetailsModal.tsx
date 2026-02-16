@@ -35,6 +35,9 @@ interface ApiMessage {
     mensagem: string;
     origemMensagem: number;
     dataEnvio: string;
+    tipoMensagem?: 'text' | 'image' | 'audio' | 'file' | 'document';
+    urlMidia?: string;
+    caminhoArquivo?: string;
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -84,7 +87,9 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                         text: msg.mensagem,
                         sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
                         time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                        status: 'sent'
+                        status: 'sent',
+                        type: msg.tipoMensagem || 'text',
+                        mediaUrl: msg.urlMidia || msg.caminhoArquivo
                     };
                     if (!acc[date]) acc[date] = [];
                     acc[date].push(formattedMessage);
@@ -418,7 +423,11 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                         ) : (
                                             <>
                                                 <ConversationWindow messagesByDate={messagesByDate} conversationId={deal.id} />
-                                                <MessageInput onSendMessage={handleSendMessage} />
+                                                <MessageInput
+                                                    onSendMessage={handleSendMessage}
+                                                    disabled={[1, 3, 6].includes(statusId)}
+                                                    disabledMessage="Chat disponível apenas para visualização nesta etapa"
+                                                />
                                             </>
                                         )
                                     ) : (
