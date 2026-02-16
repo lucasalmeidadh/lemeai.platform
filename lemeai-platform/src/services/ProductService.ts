@@ -11,6 +11,8 @@ export interface Product {
     preco: number;
     precoDeCusto: number;
     dataCriacao?: string;
+    link?: string;
+    descricaoDetalhada?: string;
 }
 
 export interface ApiResponse<T> {
@@ -29,6 +31,8 @@ export interface CreateProductDTO {
     peso: number;
     preco: number;
     precoDeCusto: number;
+    link?: string;
+    descricaoDetalhada?: string;
 }
 
 export interface UpdateProductDTO {
@@ -42,6 +46,8 @@ export interface UpdateProductDTO {
     peso: number;
     preco: number;
     precoDeCusto: number;
+    link?: string;
+    descricaoDetalhada?: string;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || '';
