@@ -21,13 +21,14 @@ export interface UpdateIARuleDTO {
     ordem?: number;
 }
 
+import { apiFetch } from './api';
+
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 export const RegrasIAService = {
     getAll: async (): Promise<ApiResponse<IARule[]>> => {
-        const response = await fetch(`${API_URL}/api/RegrasIA/BuscarTodos`, {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarTodos`, {
             method: 'GET',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -39,9 +40,8 @@ export const RegrasIAService = {
     },
 
     getById: async (id: number): Promise<ApiResponse<IARule>> => {
-        const response = await fetch(`${API_URL}/api/RegrasIA/BuscarPorId/${id}`, {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarPorId/${id}`, {
             method: 'GET',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -53,9 +53,8 @@ export const RegrasIAService = {
     },
 
     create: async (rule: CreateIARuleDTO): Promise<ApiResponse<IARule>> => {
-        const response = await fetch(`${API_URL}/api/RegrasIA/Criar`, {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/Criar`, {
             method: 'POST',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -68,9 +67,8 @@ export const RegrasIAService = {
     },
 
     update: async (rule: UpdateIARuleDTO): Promise<ApiResponse<IARule>> => {
-        const response = await fetch(`${API_URL}/api/RegrasIA/Atualizar/${rule.id}`, {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/Atualizar/${rule.id}`, {
             method: 'PUT',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -83,9 +81,8 @@ export const RegrasIAService = {
     },
 
     delete: async (id: number): Promise<ApiResponse<any>> => {
-        const response = await fetch(`${API_URL}/api/RegrasIA/Excluir/${id}`, {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/Excluir/${id}`, {
             method: 'DELETE',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },

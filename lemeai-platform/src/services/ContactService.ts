@@ -25,13 +25,16 @@ export interface UpdateContactDTO {
     email: string;
 }
 
+import { apiFetch } from './api';
+
+// ... (interfaces)
+
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 export const ContactService = {
     getAll: async (): Promise<ApiResponse<Contact[]>> => {
-        const response = await fetch(`${API_URL}/api/Contato/BuscarTodos`, {
+        const response = await apiFetch(`${API_URL}/api/Contato/BuscarTodos`, {
             method: 'GET',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -46,9 +49,8 @@ export const ContactService = {
     },
 
     getById: async (id: number): Promise<ApiResponse<Contact>> => {
-        const response = await fetch(`${API_URL}/api/Contato/BuscarPorId/${id}`, {
+        const response = await apiFetch(`${API_URL}/api/Contato/BuscarPorId/${id}`, {
             method: 'GET',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -60,9 +62,8 @@ export const ContactService = {
     },
 
     create: async (contact: CreateContactDTO): Promise<ApiResponse<any>> => {
-        const response = await fetch(`${API_URL}/api/Contato/Criar`, {
+        const response = await apiFetch(`${API_URL}/api/Contato/Criar`, {
             method: 'POST',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -75,9 +76,8 @@ export const ContactService = {
     },
 
     update: async (contact: UpdateContactDTO): Promise<ApiResponse<any>> => {
-        const response = await fetch(`${API_URL}/api/Contato/Atualizar`, {
+        const response = await apiFetch(`${API_URL}/api/Contato/Atualizar`, {
             method: 'POST', // Assuming POST based on user description, usually PUT but sticking to common patterns or explicit user instruction if any. User said /api/Contato/Atualizar and showed payload. usually POST for actions.
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -90,9 +90,8 @@ export const ContactService = {
     },
 
     delete: async (id: number): Promise<ApiResponse<any>> => {
-        const response = await fetch(`${API_URL}/api/Contato/Remover/${id}`, {
+        const response = await apiFetch(`${API_URL}/api/Contato/Remover/${id}`, {
             method: 'DELETE',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },

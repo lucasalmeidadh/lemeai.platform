@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -46,8 +47,8 @@ const UserManagementPage = () => {
 
     try {
       const [usersResponse, profilesResponse] = await Promise.all([
-        fetch(`${apiUrl}/api/Usuario/BuscarTodos`, { credentials: 'include' }),
-        fetch(`${apiUrl}/api/TipoUsuario/BuscarTodos`, { credentials: 'include' })
+        apiFetch(`${apiUrl}/api/Usuario/BuscarTodos`),
+        apiFetch(`${apiUrl}/api/TipoUsuario/BuscarTodos`)
       ]);
 
       if (usersResponse.status === 401 || profilesResponse.status === 401) {
@@ -123,16 +124,12 @@ const UserManagementPage = () => {
     };
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
-      if (response.status === 401) {
-        navigate('/login');
-        return;
-      }
+      // 401 check removed
       const result = await response.json();
       if (!response.ok || !result.sucesso) {
         throw new Error(result.mensagem || `Falha ao ${action} usuário.`);
@@ -153,14 +150,10 @@ const UserManagementPage = () => {
     if (!userToDeleteId) return;
     setIsDeleting(true);
     try {
-      const response = await fetch(`${apiUrl}/api/Usuario/Deletar/${userToDeleteId}`, {
+      const response = await apiFetch(`${apiUrl}/api/Usuario/Deletar/${userToDeleteId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
-      if (response.status === 401) {
-        navigate('/login');
-        return;
-      }
+      // 401 check removed
       const result = await response.json();
       if (!response.ok || !result.sucesso) {
         throw new Error(result.mensagem || 'Falha ao desativar usuário.');

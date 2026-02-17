@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../services/api';
 import { FaCommentDots, FaTimes, FaChevronDown, FaArrowLeft } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
 import './GlobalChatWidget.css';
@@ -166,10 +167,9 @@ const GlobalChatWidget: React.FC = () => {
         });
 
         try {
-            await fetch(`${apiUrl}/api/Chat/Conversas/${selectedContact.id}/EnviarMensagem`, {
+            await apiFetch(`${apiUrl}/api/Chat/Conversas/${selectedContact.id}/EnviarMensagem`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify(text),
             });
         } catch (error) {
@@ -228,7 +228,7 @@ const GlobalChatWidget: React.FC = () => {
                                     <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>Carregando...</div>
                                 ) : (
                                     <>
-                                        <ConversationWindow messagesByDate={messagesByDate} />
+                                        <ConversationWindow messagesByDate={messagesByDate} conversationId={selectedContact?.id || 0} />
                                         <MessageInput onSendMessage={handleSendMessage} />
                                     </>
                                 )}

@@ -1,3 +1,5 @@
+import { apiFetch } from './api';
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export interface DetalheConversa {
@@ -152,11 +154,10 @@ export const OpportunityService = {
 
         // Original logic kept for reference but disabled
         try {
-            const response = await fetch(`${apiUrl}/api/OportunidadeVenda/BuscarTodas`, {
+            const response = await apiFetch(`${apiUrl}/api/OportunidadeVenda/BuscarTodas`, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
             });
 
             if (!response.ok) {
@@ -182,12 +183,11 @@ export const OpportunityService = {
 
     addDetails: async (details: { idConversa: number, descricao: string, statusNegociacaoId: number, valor: number }): Promise<{ sucesso: boolean, mensagem?: string }> => {
         try {
-            const response = await fetch(`${apiUrl}/api/Detalhes/Adicionar`, {
+            const response = await apiFetch(`${apiUrl}/api/Detalhes/Adicionar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
                 body: JSON.stringify(details)
             });
 

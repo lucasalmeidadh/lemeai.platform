@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 import './ProfileManagementPage.css';
@@ -172,19 +173,13 @@ const ProfileManagementPage = () => {
         permissoes: permissionsToSend
       };
 
-      const response = await fetch(`${apiUrl}/api/PermissaoAcesso/PermissoesPorTipoUsuario`, {
+      const response = await apiFetch(`${apiUrl}/api/PermissaoAcesso/PermissoesPorTipoUsuario`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify(payload) // Converte o payload para JSON
       });
-
-      if (response.status === 401) {
-        navigate('/login');
-        return;
-      }
 
       if (!response.ok) {
         throw new Error('Erro ao salvar permissões');

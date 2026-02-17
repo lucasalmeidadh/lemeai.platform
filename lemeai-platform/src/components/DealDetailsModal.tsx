@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../services/api';
 import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt } from 'react-icons/fa';
 import SummaryModal from './SummaryModal';
 import './DealDetailsModal.css';
@@ -178,9 +179,8 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         setIsUpdatingStatus(true);
 
         try {
-            const response = await fetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+            const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
                 method: 'PATCH',
-                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ idStatus: newStatusId, valor: deal.rawValue || 0 }),
             });

@@ -1,15 +1,15 @@
+import { apiFetch } from './api';
 import type { Detail, AddDetailPayload } from '../types/Details';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const DetailsService = {
     getDetailsByConversationId: async (conversationId: number): Promise<Detail[]> => {
-        const response = await fetch(`${API_URL}/api/Detalhes/PorConversa/${conversationId}`, {
+        const response = await apiFetch(`${API_URL}/api/Detalhes/PorConversa/${conversationId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
-            credentials: 'include',
         });
 
         if (!response.ok) {
@@ -25,13 +25,12 @@ export const DetailsService = {
     },
 
     addDetail: async (payload: AddDetailPayload): Promise<void> => {
-        const response = await fetch(`${API_URL}/api/Detalhes/Adicionar`, {
+        const response = await apiFetch(`${API_URL}/api/Detalhes/Adicionar`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),
-            credentials: 'include',
         });
 
         if (!response.ok) {

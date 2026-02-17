@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../services/api';
 import './PipelinePage.css';
 import DateRangeFilter from '../components/DateRangeFilter';
 import PipelineSkeleton from '../components/PipelineSkeleton';
@@ -121,9 +122,8 @@ const PipelinePage = () => {
 
     const updateDealStatus = async (dealId: number, newStatusId: number, value?: number) => {
         try {
-            const response = await fetch(`${apiUrl}/api/Chat/Conversas/${dealId}/AtualizarStatus`, {
+            const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${dealId}/AtualizarStatus`, {
                 method: 'PATCH',
-                credentials: 'include', // Uncomment if needed
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ idStatus: newStatusId, valor: value || 0 }),
             });

@@ -44,13 +44,14 @@ export interface UpdateProductDTO {
     precoDeCusto: number;
 }
 
+import { apiFetch } from './api';
+
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 export const ProductService = {
     getAll: async (): Promise<ApiResponse<Product[]>> => {
-        const response = await fetch(`${API_URL}/api/Produto/BuscarTodos`, {
+        const response = await apiFetch(`${API_URL}/api/Produto/BuscarTodos`, {
             method: 'GET',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -65,9 +66,8 @@ export const ProductService = {
     },
 
     getById: async (id: number): Promise<ApiResponse<Product>> => {
-        const response = await fetch(`${API_URL}/api/Produto/BuscarPorId/${id}`, {
+        const response = await apiFetch(`${API_URL}/api/Produto/BuscarPorId/${id}`, {
             method: 'GET',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -79,9 +79,8 @@ export const ProductService = {
     },
 
     create: async (product: CreateProductDTO): Promise<ApiResponse<Product>> => {
-        const response = await fetch(`${API_URL}/api/Produto/Criar`, {
+        const response = await apiFetch(`${API_URL}/api/Produto/Criar`, {
             method: 'POST',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -94,9 +93,8 @@ export const ProductService = {
     },
 
     update: async (product: UpdateProductDTO): Promise<ApiResponse<Product>> => {
-        const response = await fetch(`${API_URL}/api/Produto/Atualizar/${product.produtoId}`, {
+        const response = await apiFetch(`${API_URL}/api/Produto/Atualizar/${product.produtoId}`, {
             method: 'PUT',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -109,9 +107,8 @@ export const ProductService = {
     },
 
     delete: async (id: number): Promise<ApiResponse<any>> => {
-        const response = await fetch(`${API_URL}/api/Produto/Deletar/${id}`, {
+        const response = await apiFetch(`${API_URL}/api/Produto/Deletar/${id}`, {
             method: 'DELETE',
-            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },

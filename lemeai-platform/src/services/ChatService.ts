@@ -1,20 +1,17 @@
+import { apiFetch } from './api';
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
-export interface ConversationSummaryResponse {
-    sucesso: boolean;
-    mensagem: string;
-    dados: string;
-}
+// ... (interfaces)
 
 export const ChatService = {
     getConversationSummary: async (conversationId: number): Promise<ConversationSummaryResponse> => {
         try {
-            const response = await fetch(`${apiUrl}/api/Conversa/Resumo/${conversationId}`, {
+            const response = await apiFetch(`${apiUrl}/api/Conversa/Resumo/${conversationId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
             });
 
             if (!response.ok) {
@@ -38,10 +35,9 @@ export const ChatService = {
             const url = new URL(`${apiUrl}/api/Chat/Conversa/${conversationId}/EnviarMidia`);
             url.searchParams.append('TipoMidia', tipoMidia);
 
-            const response = await fetch(url.toString(), {
+            const response = await apiFetch(url.toString(), {
                 method: 'POST',
                 // Content-Type is automatically set by browser for FormData with boundary
-                credentials: 'include',
                 body: formData,
             });
 

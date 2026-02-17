@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -71,15 +72,8 @@ const ChatPage = () => {
   const fetchCurrentUser = useCallback(async () => {
     console.log('Auth Debug - Fetching current user...');
     try {
-      const response = await fetch(`${apiUrl}/api/Auth/me`, {
-        credentials: 'include'
-      });
+      const response = await apiFetch(`${apiUrl}/api/Auth/me`);
       console.log('Auth Debug - Response Status:', response.status);
-
-      if (response.status === 401) {
-        navigate('/login');
-        return;
-      }
 
       if (!response.ok) {
         console.warn('Auth Debug - Response not OK');
@@ -112,14 +106,9 @@ const ChatPage = () => {
 
     if (isInitialLoad) setIsLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/api/Chat/ConversasPorVendedor`, {
-        credentials: 'include'
-      });
+      const response = await apiFetch(`${apiUrl}/api/Chat/ConversasPorVendedor`);
 
-      if (response.status === 401) {
-        navigate('/login');
-        return;
-      }
+      // 401 check removed
 
       if (!response.ok) {
         if (response.status === 400 || response.status === 404) {
@@ -185,13 +174,8 @@ const ChatPage = () => {
 
   const fetchMessages = useCallback(async (contactId: number) => {
     try {
-      const response = await fetch(`${apiUrl}/api/Chat/Conversas/${contactId}/Mensagens`, {
-        credentials: 'include'
-      });
-      if (response.status === 401) {
-        navigate('/login');
-        return;
-      }
+      const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${contactId}/Mensagens`);
+      // 401 check removed
       if (!response.ok) throw new Error('Falha ao buscar mensagens.');
       const result = await response.json();
       if (result.sucesso && Array.isArray(result.dados.mensagens)) {
@@ -343,19 +327,15 @@ const ChatPage = () => {
       return newMessagesByDate;
     });
     try {
-      const response = await fetch(`${apiUrl}/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
+      const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${selectedContactId}/EnviarMensagem`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify(text),
       });
 
-      if (response.status === 401) {
-        navigate('/login');
-        return;
-      }
+      // 401 check removed
 
       if (!response.ok) {
         throw new Error('Falha ao enviar mensagem na API.');

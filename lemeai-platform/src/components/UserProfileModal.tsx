@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiFetch } from '../services/api';
 import './UserProfileModal.css';
 import { FaTimes, FaEye, FaEyeSlash, FaCheck } from 'react-icons/fa';
 
@@ -25,9 +26,7 @@ const buscaDadosUsuario = () => {
     if (localStorage.getItem('user')) {
         return JSON.parse(localStorage.getItem('user') || '{}');
     }
-    fetch(`${apiUrl}/api/Auth/Me`, {
-        credentials: 'include'
-    })
+    apiFetch(`${apiUrl}/api/Auth/Me`)
         .then(res => res.json())
         .then(data => {
             localStorage.setItem('user', JSON.stringify(data));

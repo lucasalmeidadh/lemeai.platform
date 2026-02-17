@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiFetch } from '../services/api';
 import { FaTimes, FaExchangeAlt } from 'react-icons/fa';
 import './TransferModal.css';
 import { type InternalUser } from '../data/mockData';
@@ -19,9 +20,7 @@ const TransferModal: React.FC<TransferModalProps> = ({ onClose, onTransfer, curr
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch(`${apiUrl}/api/Chat/Conversas/BuscarUsuariosTranferencia`, {
-                    credentials: 'include'
-                });
+                const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/BuscarUsuariosTranferencia`);
 
                 if (!response.ok) {
                     throw new Error('Falha ao carregar usuários');
