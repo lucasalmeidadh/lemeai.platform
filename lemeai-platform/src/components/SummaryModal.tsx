@@ -11,6 +11,71 @@ interface SummaryModalProps {
 const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, summary }) => {
     if (!isOpen) return null;
 
+
+
+    const reorderSummary = (text: string) => {
+        if (!text) return '';
+
+        let status = '';
+        let intent = '';
+        let remaining = text;
+
+        // Extract Status
+        // Matches "Status Atual:" (case insensitive) followed by content, until next section or end
+        const statusRegex = /(?:##\s*|\*\*|)?Status Atual:(?:\*\*|)?([\s\S]*?)(?=(?:##\s*|\*\*|)?(?:Intenção do Cliente|Resumo da Conversa|Resumo gerado pelo sistema)|$)/i;
+        const statusMatch = remaining.match(statusRegex);
+        if (statusMatch) {
+            status = statusMatch[1].trim();
+            remaining = remaining.replace(statusMatch[0], '');
+        }
+
+        // Extract Intent
+        const intentRegex = /(?:##\s*|\*\*|)?Intenção do Cliente:(?:\*\*|)?([\s\S]*?)(?=(?:##\s*|\*\*|)?(?:Status Atual|Resumo da Conversa|Resumo gerado pelo sistema)|$)/i;
+        const intentMatch = remaining.match(intentRegex);
+        if (intentMatch) {
+            intent = intentMatch[1].trim();
+            remaining = remaining.replace(intentMatch[0], '');
+        }
+
+        // Clean up remaining text (Summary)
+        let summaryContent = remaining.trim();
+
+        // Recursively remove headers to handle stacked prefixes e.g. "Resumo gerado pelo sistema: Resumo da Conversa:"
+        const removeHeaders = (content: string): string => {
+            const newContent = content
+                .replace(/^(?:##\s*|\*\*|)?Resumo gerado pelo sistema(?::)?(?:\*\*|)?\s*/i, '')
+                .replace(/^(?:##\s*|\*\*|)?Resumo da Conversa(?::)?(?:\*\*|)?\s*/i, '')
+                .trim();
+
+            if (newContent !== content) {
+                return removeHeaders(newContent);
+            }
+            return content;
+        };
+
+        summaryContent = removeHeaders(summaryContent);
+
+        const sections = [];
+
+        if (status) {
+            sections.push(`## Status Atual\n${status}`);
+        }
+        if (intent) {
+            sections.push(`## Intenção do Cliente\n${intent}`);
+        }
+        if (summaryContent) {
+            sections.push(`## Resumo da Conversa\n${summaryContent}`);
+        }
+
+        if (sections.length > 0) {
+            return sections.join('\n\n');
+        }
+
+        return text;
+    };
+
+    const processedSummary = reorderSummary(summary);
+
     // Simple parser to convert basic markdown to JSX
     const renderMarkdown = (text: string) => {
         if (!text) return null;
@@ -99,7 +164,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, summary })
                 </header>
                 <div className="summary-modal-body">
                     <div className="summary-markdown">
-                        {renderMarkdown(summary)}
+                        {renderMarkdown(processedSummary)}
                     </div>
                 </div>
                 <footer className="summary-modal-footer">

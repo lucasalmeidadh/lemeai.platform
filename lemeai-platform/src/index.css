@@ -1,10 +1,62 @@
 :root {
-  --petroleum-blue: #005f73;
-  --dark-yellow: #ee9b00;
-  --light-gray: #f8f9fa;
-  --text-color: #343a40;
-  --white: #ffffff;
+  /* GLOBAL VARIABLES (Light Mode Default) */
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e9ecef;
+
+  --text-primary: #343a40;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+
   --border-color: #dee2e6;
+  --border-color-soft: #e9ecef;
+
+  /* Brand Colors */
+  --petroleum-blue: #005f73;
+  --petroleum-blue-hover: #004c5a;
+  --petroleum-light: #e0f7ff;
+
+  --dark-yellow: #ee9b00;
+  --white: #ffffff;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  /* Legacy/Compatibility (Map to new variables) */
+  --light-gray: var(--bg-primary);
+  --text-color: var(--text-primary);
+  --white: var(--bg-secondary);
+}
+
+[data-theme='dark'] {
+  /* DARK MODE VARIABLES */
+  --bg-primary: #121212;
+  /* Very dark grey (Background) */
+  --bg-secondary: #1e1e1e;
+  /* Slightly lighter (Cards/Sidebar) */
+  --bg-tertiary: #2c2c2c;
+  /* Inputs/Hover states */
+
+  --text-primary: #e9ecef;
+  /* Main text */
+  --text-secondary: #adb5bd;
+  /* Secondary text */
+  --text-tertiary: #6c757d;
+  /* Disabled/Placeholder */
+
+  --border-color: #404040;
+  --border-color-soft: #2c2c2c;
+
+  /* Adjust Brand Colors for Dark Mode if needed */
+  --petroleum-blue: #2a9d8f;
+  /* Lighter/Brighter teal for valid contrast on dark */
+  --petroleum-blue-hover: #21867a;
+  --petroleum-light: rgba(42, 157, 143, 0.15);
+  /* Transparent tint instead of solid light color */
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
 }
 
 body,

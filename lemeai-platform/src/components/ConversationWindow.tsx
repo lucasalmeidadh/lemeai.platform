@@ -143,12 +143,12 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
                           onLoad={handleImageLoad}
                           onClick={() => setSelectedImage(msg.mediaUrl!)}
                         />
-                        {msg.text && msg.text !== '[Imagem]' && msg.text !== '[image]' && <div className="message-caption">{msg.text}</div>}
+                        {msg.text && !['[imagem]', '[image]'].includes(msg.text.toLowerCase()) && <div className="message-caption">{msg.text}</div>}
                       </div>
                     ) : msg.type === 'audio' && msg.mediaUrl ? (
                       <div className="message-audio-container">
                         <AudioPlayer src={msg.mediaUrl} />
-                        {msg.text && msg.text !== '[Áudio]' && <div className="message-caption">{msg.text}</div>}
+                        {msg.text && !['[áudio]', '[audio]'].includes(msg.text.toLowerCase()) && <div className="message-caption">{msg.text}</div>}
                       </div>
                     ) : (msg.type === 'file' || msg.type === 'document') && msg.mediaUrl ? (
                       <div className="message-file-container">

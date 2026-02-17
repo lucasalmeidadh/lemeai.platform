@@ -1,16 +1,8 @@
-:root {
-  --petroleum-blue: #005f73;
-  --dark-yellow: #ee9b00;
-  --light-bg: #f3f4f6;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --white: #ffffff;
-  --border-color: #e5e7eb;
-  --primary-color: #005f73;
-}
+/* :root block removed to use global index.css variables */
 
 .main-content {
-  background-color: var(--light-bg);
+  background-color: var(--bg-primary);
+  /* Was var(--light-bg) */
   min-height: 100vh;
   padding: 2rem;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -44,14 +36,17 @@
 }
 
 .dashboard-card {
-  background-color: var(--white);
+  background-color: var(--bg-secondary);
+  /* Was var(--white) */
   width: 100%;
   min-height: 120px;
   margin: 0;
   padding: 24px;
   border-radius: 12px;
   box-sizing: border-box;
-  /* importante */
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  /* Added border for contrast in dark mode */
 }
 
 .dashboard-card:hover {
@@ -91,7 +86,8 @@
   border: 1px solid var(--border-color) !important;
   font-size: 0.875rem;
   color: var(--text-primary);
-  background-color: var(--white);
+  background-color: var(--bg-secondary);
+  /* Was var(--white) */
   transition: all 0.2s;
   outline: none;
   min-width: 150px;
@@ -132,7 +128,8 @@ input[type="date"].filter-input-compact:valid {
 .date-filter-container {
   display: flex;
   align-items: center;
-  background: var(--white);
+  background: var(--bg-secondary);
+  /* Was var(--white) */
   border: 1px solid var(--border-color);
   border-radius: 9999px;
   /* Pill shape for the whole container */
@@ -142,7 +139,8 @@ input[type="date"].filter-input-compact:valid {
 }
 
 .date-filter-container:focus-within {
-  border-color: var(--primary-color);
+  border-color: var(--petroleum-blue);
+  /* Was var(--primary-color) */
   box-shadow: 0 0 0 3px rgba(0, 95, 115, 0.1);
 }
 
@@ -156,6 +154,16 @@ input[type="date"].filter-input-compact:valid {
   width: 100px;
   text-align: center;
   cursor: pointer;
+}
+
+.date-input-clean::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  /* Simple hack for dark mode icon, or rely on browser */
+}
+
+/* Fix for dark mode calendar icon if needed custom */
+[data-theme='dark'] .date-input-clean::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
 
 .date-separator {
@@ -193,7 +201,8 @@ input[type="date"].filter-input-compact:valid {
 }
 
 .deals-table th {
-  background-color: #f9fafb;
+  background-color: var(--bg-primary);
+  /* Was #f9fafb */
   color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.75rem;
@@ -221,7 +230,8 @@ input[type="date"].filter-input-compact:valid {
 }
 
 .deals-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: var(--bg-primary);
+  /* Was #f9fafb */
 }
 
 .status-badge {
@@ -242,11 +252,25 @@ input[type="date"].filter-input-compact:valid {
   color: #047857;
 }
 
+[data-theme='dark'] .status-concluído,
+[data-theme='dark'] .status-finalizada,
+[data-theme='dark'] .status-venda-fechada {
+  background-color: rgba(4, 120, 87, 0.2);
+  color: #6ee7b7;
+}
+
 .status-em-negociação,
 .status-em-andamento,
 .status-atendimento-ia {
   background-color: #fffbeb;
   color: #b45309;
+}
+
+[data-theme='dark'] .status-em-negociação,
+[data-theme='dark'] .status-em-andamento,
+[data-theme='dark'] .status-atendimento-ia {
+  background-color: rgba(180, 83, 9, 0.2);
+  color: #fcd34d;
 }
 
 .status-perdido,
@@ -256,6 +280,13 @@ input[type="date"].filter-input-compact:valid {
   color: #b91c1c;
 }
 
+[data-theme='dark'] .status-perdido,
+[data-theme='dark'] .status-perdida,
+[data-theme='dark'] .status-venda-perdida {
+  background-color: rgba(185, 28, 28, 0.2);
+  color: #fca5a5;
+}
+
 .status-novo,
 .status-aberta,
 .status-não-iniciado {
@@ -263,9 +294,21 @@ input[type="date"].filter-input-compact:valid {
   color: #1d4ed8;
 }
 
+[data-theme='dark'] .status-novo,
+[data-theme='dark'] .status-aberta,
+[data-theme='dark'] .status-não-iniciado {
+  background-color: rgba(29, 78, 216, 0.2);
+  color: #93c5fd;
+}
+
 .status-proposta-enviada {
   background-color: #f0f9ff;
   color: #0284c7;
+}
+
+[data-theme='dark'] .status-proposta-enviada {
+  background-color: rgba(2, 132, 199, 0.2);
+  color: #7dd3fc;
 }
 
 .filters-inline {
@@ -277,7 +320,8 @@ input[type="date"].filter-input-compact:valid {
 
 .details-button {
   background-color: transparent;
-  color: var(--primary-color);
+  color: var(--petroleum-blue);
+  /* Was var(--primary-color) */
   border: 1px solid var(--border-color);
   padding: 6px 16px;
   border-radius: 6px;
@@ -288,9 +332,9 @@ input[type="date"].filter-input-compact:valid {
 }
 
 .details-button:hover {
-  background-color: var(--primary-color);
+  background-color: var(--petroleum-blue);
   color: white;
-  border-color: var(--primary-color);
+  border-color: var(--petroleum-blue);
 }
 
 .ai-summary-button {
@@ -298,7 +342,8 @@ input[type="date"].filter-input-compact:valid {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background-color: var(--primary-color);
+  background-color: var(--petroleum-blue);
+  /* Was var(--primary-color) */
   color: white;
   border: none;
   border-radius: 6px;
@@ -309,15 +354,16 @@ input[type="date"].filter-input-compact:valid {
 }
 
 .ai-summary-button:hover {
-  background-color: #004c5a;
+  background-color: var(--petroleum-blue-hover);
+  /* Was #004c5a */
   /* A bit darker than petroleum-blue */
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .view-summary-btn {
   background-color: transparent;
-  border: 1px solid #005f73;
-  color: #005f73;
+  border: 1px solid var(--petroleum-blue);
+  color: var(--petroleum-blue);
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 13px;
@@ -330,5 +376,65 @@ input[type="date"].filter-input-compact:valid {
 }
 
 .view-summary-btn:hover {
-  background-color: #e0f7ff;
+  background-color: var(--petroleum-light);
+  /* Was #e0f7ff */
+}
+
+/* New classes to replace inline styles in Dashboard.tsx */
+.expanded-detail-row {
+  background-color: var(--bg-primary) !important;
+  padding: 20px;
+}
+
+.detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.detail-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-title {
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.detail-item {
+  padding: 12px;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.detail-text {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+
+.detail-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.no-notes-text {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.empty-results-cell {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
 }

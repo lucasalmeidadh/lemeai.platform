@@ -21,7 +21,9 @@ const ProductsPage = () => {
         secao: '',
         preco: 0,
         precoDeCusto: 0,
-        peso: 0
+        peso: 0,
+        link: '',
+        descricaoDetalhada: ''
     });
 
     // Temporary state for currency inputs to handle masking
@@ -78,7 +80,9 @@ const ProductsPage = () => {
                 secao: product.secao || '',
                 preco: product.preco,
                 precoDeCusto: product.precoDeCusto || 0,
-                peso: product.peso
+                peso: product.peso,
+                link: product.link || '',
+                descricaoDetalhada: product.descricaoDetalhada || ''
             });
             setPriceInput(product.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
             setCostPriceInput((product.precoDeCusto || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
@@ -93,7 +97,9 @@ const ProductsPage = () => {
                 secao: '',
                 preco: 0,
                 precoDeCusto: 0,
-                peso: 0
+                peso: 0,
+                link: '',
+                descricaoDetalhada: ''
             });
             setPriceInput('');
             setCostPriceInput('');
@@ -359,6 +365,31 @@ const ProductsPage = () => {
                                         placeholder="R$ 0,00"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="link">Link</label>
+                                <input
+                                    type="text"
+                                    id="link"
+                                    name="link"
+                                    value={formData.link}
+                                    onChange={handleInputChange}
+                                    placeholder="https://..."
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="descricaoDetalhada">Descrição Detalhada</label>
+                                <textarea
+                                    id="descricaoDetalhada"
+                                    name="descricaoDetalhada"
+                                    value={formData.descricaoDetalhada}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, descricaoDetalhada: e.target.value }))}
+                                    placeholder="Descrição completa do produto..."
+                                    rows={4}
+                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
+                                />
                             </div>
                         </div>
                         <div className="modal-footer">

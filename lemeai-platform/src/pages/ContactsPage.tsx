@@ -108,7 +108,7 @@ const ContactsPage = () => {
             </div>
 
             <div className="dashboard-card">
-                <div className="filters-container">
+                <div className="contacts-filters-container">
                     <input
                         type="text"
                         placeholder="Buscar por nome, telefone ou e-mail..."

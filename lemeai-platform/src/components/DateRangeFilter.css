@@ -12,13 +12,15 @@
 .react-datepicker {
     font-family: inherit !important;
     border-color: var(--border-color) !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: var(--shadow-sm) !important;
     border-radius: 8px !important;
+    background-color: var(--bg-secondary) !important;
 }
 
 /* Header */
 .react-datepicker__header {
-    background-color: var(--light-gray) !important;
+    background-color: var(--bg-primary) !important;
+    /* Was var(--light-gray) */
     border-bottom: 1px solid var(--border-color) !important;
     border-top-left-radius: 8px !important;
     border-top-right-radius: 8px !important;
@@ -26,7 +28,8 @@
 }
 
 .react-datepicker__current-month {
-    color: var(--text-color) !important;
+    color: var(--text-primary) !important;
+    /* Was var(--text-color) */
     font-weight: 600 !important;
     font-size: 0.95rem !important;
     margin-bottom: 5px !important;
@@ -42,13 +45,15 @@
 
 /* Days */
 .react-datepicker__day {
-    color: var(--text-color) !important;
+    color: var(--text-primary) !important;
+    /* Was var(--text-color) */
     border-radius: 50% !important;
     transition: all 0.2s !important;
 }
 
 .react-datepicker__day:hover {
-    background-color: #e0f7ff !important;
+    background-color: var(--petroleum-light) !important;
+    /* Was #e0f7ff */
     /* Light petroleum blue */
     color: var(--petroleum-blue) !important;
 }
@@ -64,6 +69,7 @@
     font-weight: bold !important;
     color: var(--petroleum-blue) !important;
     position: relative;
+    background-color: transparent !important;
 }
 
 .react-datepicker__day--today::after {

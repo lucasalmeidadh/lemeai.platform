@@ -1,12 +1,13 @@
 /* .products-page padding and .page-header styles handled by global index.css */
 
-
-
 .dashboard-card {
-    background: white;
+    background: var(--bg-secondary);
+    /* Was white */
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
+    /* Was 0 2px 4px rgba(0, 0, 0, 0.1) */
     overflow: hidden;
+    border: 1px solid var(--border-color);
 }
 
 .table-container {
@@ -22,25 +23,28 @@
 .management-table td {
     padding: 12px;
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
+    /* Was #eee */
+    color: var(--text-primary);
 }
 
 .management-table th {
-    background-color: #f8f9fa;
+    background-color: var(--bg-primary);
+    /* Was #f8f9fa */
     font-weight: 600;
-    color: #555;
+    color: var(--text-secondary);
+    /* Was #555 */
 }
 
 .management-table tr:hover {
-    background-color: #f8f9fa;
+    background-color: var(--bg-primary);
+    /* Was #f8f9fa */
 }
 
 .actions-cell {
     display: flex;
     gap: 10px;
 }
-
-
 
 /* Modal Styles */
 .modal-overlay {
@@ -57,17 +61,20 @@
 }
 
 .modal-content {
-    background: white;
+    background: var(--bg-secondary);
+    /* Was white */
     padding: 0;
     border-radius: 8px;
     width: 500px;
     max-width: 90%;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
+    /* Was 0 4px 6px rgba(0, 0, 0, 0.1) */
 }
 
 .modal-header {
     padding: 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
+    /* Was #eee */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -76,6 +83,7 @@
 .modal-header h2 {
     margin: 0;
     font-size: 18px;
+    color: var(--text-primary);
 }
 
 .close-button {
@@ -83,7 +91,14 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: #999;
+    color: var(--text-primary);
+    /* Was var(--text-secondary) */
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.close-button:hover {
+    opacity: 1;
 }
 
 .modal-body {
@@ -98,32 +113,42 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
-    color: #555;
+    color: var(--text-secondary);
+    /* Was #555 */
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
+    /* Was #ddd */
     border-radius: 4px;
     font-size: 14px;
+    background-color: var(--bg-primary);
+    /* Added for dark mode inputs */
+    color: var(--text-primary);
 }
 
-.form-group input:focus {
-    border-color: #007bff;
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--petroleum-blue);
+    /* Was #007bff */
     outline: none;
 }
 
 .modal-footer {
     padding: 20px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-color);
+    /* Was #eee */
     display: flex;
     justify-content: flex-end;
     gap: 10px;
 }
 
 .primary-button {
-    background-color: #007bff;
+    background-color: var(--petroleum-blue);
+    /* Was #007bff */
     color: white;
     border: none;
     padding: 10px 20px;
@@ -133,13 +158,16 @@
 }
 
 .primary-button:hover {
-    background-color: #0056b3;
+    background-color: var(--petroleum-blue-hover);
+    /* Was #0056b3 */
 }
 
 .secondary-button {
-    background-color: #6c757d;
-    color: white;
-    border: none;
+    background-color: var(--bg-tertiary);
+    /* Was #6c757d */
+    color: var(--text-primary);
+    /* Was white */
+    border: 1px solid var(--border-color);
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
@@ -147,5 +175,6 @@
 }
 
 .secondary-button:hover {
-    background-color: #5a6268;
+    background-color: var(--border-color);
+    /* Was #5a6268 */
 }

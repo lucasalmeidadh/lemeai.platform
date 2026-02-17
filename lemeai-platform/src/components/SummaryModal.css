@@ -14,7 +14,7 @@
 }
 
 .summary-modal-content {
-    background-color: white;
+    background-color: var(--bg-secondary);
     border-radius: 12px;
     width: 90%;
     max-width: 600px;
@@ -30,20 +30,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .summary-modal-header h2 {
     margin: 0;
     font-size: 1.2rem;
-    color: #333;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
 .summary-header-icon {
-    color: #005f73;
+    color: var(--petroleum-blue);
 }
 
 .close-summary-button {
@@ -51,7 +51,7 @@
     border: none;
     font-size: 1.2rem;
     cursor: pointer;
-    color: #666;
+    color: var(--text-secondary);
     padding: 5px;
     border-radius: 50%;
     display: flex;
@@ -61,8 +61,8 @@
 }
 
 .close-summary-button:hover {
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .summary-modal-body {
@@ -70,16 +70,16 @@
     overflow-y: auto;
     font-size: 0.95rem;
     line-height: 1.6;
-    color: #444;
+    color: var(--text-primary);
 }
 
 /* Markdown Styles within the modal */
 .summary-markdown h3 {
-    color: #005f73;
+    color: var(--petroleum-blue);
     margin-top: 1.5em;
     margin-bottom: 0.5em;
     font-size: 1.1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 5px;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .summary-markdown strong {
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
@@ -107,7 +107,7 @@
 
 .summary-modal-footer {
     padding: 15px 20px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
 }

@@ -2,19 +2,23 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: var(--bg-secondary);
+    /* Was rgba(255, 255, 255, 0.95) */
     /* High opacity white */
     padding: 10px 14px;
     border-radius: 20px;
     width: 260px;
     /* Fixed robust width */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: none;
+    box-shadow: var(--shadow-sm);
+    /* Was 0 2px 8px rgba(0, 0, 0, 0.1) */
+    border: 1px solid var(--border-color);
+    /* Added border for contrast */
     /* Removed border */
 }
 
 .play-button {
-    background: #ffffff;
+    background: var(--bg-primary);
+    /* Was #ffffff */
     border: none;
     cursor: pointer;
     width: 32px;
@@ -23,17 +27,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #374151;
+    color: var(--petroleum-blue);
+    /* Was #374151 */
     font-size: 0.8rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
     transition: all 0.2s;
     flex-shrink: 0;
 }
 
 .play-button:hover {
-    background-color: #f9fafb;
+    background-color: var(--petroleum-light);
+    /* Was #f9fafb */
     transform: scale(1.05);
-    color: #111827;
+    color: var(--petroleum-blue-hover);
+    /* Was #111827 */
 }
 
 .progress-container {
@@ -48,11 +55,13 @@
     width: 100%;
     height: 4px;
     border-radius: 2px;
-    background: #d1d5db;
+    background: var(--border-color);
+    /* Was #d1d5db */
     /* Grey background track */
     outline: none;
     cursor: pointer;
-    background-image: linear-gradient(#3b82f6, #3b82f6);
+    background-image: linear-gradient(var(--petroleum-blue), var(--petroleum-blue));
+    /* Was #3b82f6 */
     /* Blue progress fill */
     background-repeat: no-repeat;
 }
@@ -63,7 +72,8 @@
     height: 12px;
     width: 12px;
     border-radius: 50%;
-    background: #3b82f6;
+    background: var(--petroleum-blue);
+    /* Was #3b82f6 */
     cursor: pointer;
     transition: transform 0.1s;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -78,7 +88,8 @@
     height: 12px;
     width: 12px;
     border-radius: 50%;
-    background: #3b82f6;
+    background: var(--petroleum-blue);
+    /* Was #3b82f6 */
     cursor: pointer;
     border: none;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -86,7 +97,8 @@
 
 .time-display {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: var(--text-secondary);
+    /* Was #6b7280 */
     font-variant-numeric: tabular-nums;
     min-width: 35px;
     text-align: right;

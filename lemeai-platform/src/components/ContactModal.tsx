@@ -51,10 +51,10 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSave, co
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content">
-                <header className="modal-header">
+            <div className="contact-modal-content">
+                <header className="contact-modal-header">
                     <h2>{contactToEdit ? 'Editar Contato' : 'Adicionar Novo Contato'}</h2>
-                    <button onClick={onClose} className="close-modal-button" disabled={isSaving} type="button">
+                    <button onClick={onClose} className="contact-close-button" disabled={isSaving} type="button">
                         <FaTimes />
                     </button>
                 </header>
