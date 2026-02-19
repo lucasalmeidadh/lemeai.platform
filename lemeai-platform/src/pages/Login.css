@@ -90,6 +90,63 @@ html {
   }
 }
 
+/* Floating Boat Container - Moves across screen */
+.boat-container {
+  position: absolute;
+  bottom: 0px;
+  /* Will be adjusted by wave height */
+  left: -20%;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  animation: sailAcross 45s linear infinite;
+}
+
+/* Inner Boat - Bobs up and down */
+.floating-boat {
+  position: absolute;
+  bottom: 10%;
+  /* Slightly lower to sit in water */
+  animation: boatFloat 5s ease-in-out infinite;
+  /* Slower bobbing */
+  filter: drop-shadow(0 8px 4px rgba(0, 0, 0, 0.15));
+}
+
+@keyframes sailAcross {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(140vw);
+  }
+}
+
+@keyframes boatFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translateY(-15px) rotate(3deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .boat-container {
+    animation-duration: 30s;
+    /* Faster on mobile */
+  }
+
+  .floating-boat {
+    bottom: 8%;
+    transform: scale(0.6);
+  }
+}
+
 /* --- Central Card --- */
 
 .login-card {

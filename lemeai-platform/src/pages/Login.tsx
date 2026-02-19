@@ -63,6 +63,29 @@ const Login = () => {
       <div className="wave-layer wave-1"></div>
       <div className="wave-layer wave-2"></div>
 
+      {/* Floating Boat Container */}
+      <div className="boat-container">
+        <div className="floating-boat">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="140" height="140">
+            <defs>
+              <linearGradient id="boatGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#e0f7ff" stopOpacity="0.8" />
+              </linearGradient>
+            </defs>
+            {/* Origami Paper Boat - More classic shape */}
+            {/* Back Sail (Triangle) */}
+            <path d="M50,15 L20,65 L50,65 Z" fill="#b3e5fc" opacity="0.9" />
+            {/* Front Sail (Triangle) */}
+            <path d="M50,15 L80,65 L50,65 Z" fill="#ffffff" opacity="0.95" />
+            {/* Hull (Trapezoid) */}
+            <path d="M15,65 L85,65 L70,85 L30,85 Z" fill="url(#boatGradient)" />
+            {/* Fold shadow/detail */}
+            <path d="M50,65 L50,85" stroke="#81d4fa" strokeWidth="1" opacity="0.5" />
+          </svg>
+        </div>
+      </div>
+
       {/* Centered Login Card */}
       <div className="login-card">
         <div className="card-header">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../services/api';
 import './PipelinePage.css';
 import DateRangeFilter from '../components/DateRangeFilter';
@@ -7,6 +7,9 @@ import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import DealDetailsModal from '../components/DealDetailsModal';
 import { OpportunityService, type Opportunity, type DetalheConversa } from '../services/OpportunityService';
+import { ChatService } from '../services/ChatService';
+import SummaryModal from '../components/SummaryModal';
+import { FaMagic } from 'react-icons/fa';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -57,8 +60,15 @@ const PipelinePage = () => {
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
 
-    const fetchOpportunities = useCallback(async () => {
-        setIsLoading(true);
+    // Summary State
+    const [isSummaryModalOpen, setSummaryModalOpen] = useState(false);
+    const [summaryContent, setSummaryContent] = useState('');
+    const [summarizingDealId, setSummarizingDealId] = useState<number | null>(null);
+
+    const isDraggingRef = useRef(false);
+
+    const fetchOpportunities = useCallback(async (isBackground = false) => {
+        if (!isBackground) setIsLoading(true);
         try {
             const opportunities = await OpportunityService.getAllOpportunities();
 
@@ -113,11 +123,19 @@ const PipelinePage = () => {
             toast.error("Erro ao carregar oportunidades.");
             return [];
         } finally {
-            setIsLoading(false);
+            if (!isBackground) setIsLoading(false);
         }
     }, []);
     useEffect(() => {
         fetchOpportunities();
+
+        const interval = setInterval(() => {
+            if (!isDraggingRef.current) {
+                fetchOpportunities(true);
+            }
+        }, 15000); // Refresh every 15 seconds
+
+        return () => clearInterval(interval);
     }, [fetchOpportunities]);
 
     const updateDealStatus = async (dealId: number, newStatusId: number, value?: number) => {
@@ -139,7 +157,12 @@ const PipelinePage = () => {
         }
     };
 
+    const onDragStart = () => {
+        isDraggingRef.current = true;
+    };
+
     const onDragEnd = async (result: DropResult) => {
+        isDraggingRef.current = false;
         const { source, destination } = result;
 
         if (!destination) return;
@@ -193,6 +216,31 @@ const PipelinePage = () => {
             if (updatedDeal) {
                 setSelectedDeal(updatedDeal);
             }
+        }
+    }
+
+
+    const handleAiSummary = async (e: React.MouseEvent, dealId: number) => {
+        e.stopPropagation(); // Prevent opening the deal details modal
+        if (summarizingDealId) return;
+
+        setSummarizingDealId(dealId);
+        const toastId = toast.loading('Gerando resumo...');
+
+        try {
+            const response = await ChatService.getConversationSummary(dealId);
+            if (response.sucesso) {
+                setSummaryContent(response.dados);
+                setSummaryModalOpen(true);
+                toast.success('Resumo gerado!', { id: toastId });
+            } else {
+                toast.error(response.mensagem || 'Erro ao gerar resumo.', { id: toastId });
+            }
+        } catch (error) {
+            console.error('Erro ao gerar resumo:', error);
+            toast.error('Erro ao conectar com a IA.', { id: toastId });
+        } finally {
+            setSummarizingDealId(null);
         }
     };
 
@@ -285,7 +333,7 @@ const PipelinePage = () => {
                         </div>
                     </div>
 
-                    <DragDropContext onDragEnd={onDragEnd}>
+                    <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
                         <div className="pipeline-board">
                             {filteredColumns.map(column => (
                                 <div key={column.id} className={`pipeline-column ${column.id === 'lost' ? 'column-lost' : ''}`}>
@@ -329,6 +377,27 @@ const PipelinePage = () => {
                                                                     <span className="card-status-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>{column.title}</span>
 
                                                                     <div className="card-footer-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                        <button
+                                                                            className="icon-button"
+                                                                            onClick={(e) => handleAiSummary(e, deal.id)}
+                                                                            title="Resumir com IA"
+                                                                            disabled={summarizingDealId === deal.id}
+                                                                            style={{
+                                                                                padding: '4px',
+                                                                                width: '24px',
+                                                                                height: '24px',
+                                                                                borderRadius: '4px',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                background: 'transparent',
+                                                                                border: 'none',
+                                                                                cursor: summarizingDealId === deal.id ? 'wait' : 'pointer',
+                                                                                color: summarizingDealId === deal.id ? 'var(--text-secondary)' : '#8b5cf6' // Purple for magic
+                                                                            }}
+                                                                        >
+                                                                            <FaMagic size={12} className={summarizingDealId === deal.id ? 'spin' : ''} />
+                                                                        </button>
                                                                         <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{deal.date}</span>
                                                                         <div className="card-avatar" title={`Responsável: ${deal.owner}`} style={{ width: '24px', height: '24px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 600 }}>
                                                                             {deal.owner.split(' ').length > 1
@@ -362,6 +431,12 @@ const PipelinePage = () => {
                             onUpdate={handleDealUpdate}
                         />
                     )}
+
+                    <SummaryModal
+                        isOpen={isSummaryModalOpen}
+                        onClose={() => setSummaryModalOpen(false)}
+                        summary={summaryContent}
+                    />
                 </>
             )}
         </div>
