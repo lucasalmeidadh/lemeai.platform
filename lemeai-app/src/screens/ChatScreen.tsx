@@ -393,7 +393,7 @@ export default function ChatScreen({ onLogout, onConversationStateChange }: { on
     }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.bgPrimary }]} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.bgPrimary }]} edges={selectedContactId ? ['top', 'left', 'right', 'bottom'] : ['top', 'left', 'right']}>
             <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.bgPrimary} />
             {selectedContactId && selectedContact ? (
                 <KeyboardAvoidingView

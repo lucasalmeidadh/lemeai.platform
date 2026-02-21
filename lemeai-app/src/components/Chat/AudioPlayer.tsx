@@ -17,6 +17,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isMe = false }) => {
     const soundRef = useRef<Audio.Sound | null>(null);
 
     useEffect(() => {
+        // Pre-load sound on mount to get duration
+        loadSound();
         return () => {
             // Cleanup: unload sound when component unmounts
             if (soundRef.current) {
@@ -55,7 +57,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isMe = false }) => {
         if (status.didJustFinish) {
             setIsPlaying(false);
             setCurrentTime(0);
-            soundRef.current?.setPositionAsync(0);
+            soundRef.current?.stopAsync().then(() => {
+                soundRef.current?.setPositionAsync(0);
+            });
         }
     };
 
