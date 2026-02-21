@@ -2,6 +2,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../contexts/ThemeContext';
 
 import ChatScreen from '../screens/ChatScreen';
@@ -11,6 +12,7 @@ const Tab = createBottomTabNavigator();
 
 export default function MainTabNavigator({ onLogout }: { onLogout: () => void }) {
     const { colors } = useAppTheme();
+    const insets = useSafeAreaInsets();
 
     return (
         <Tab.Navigator
@@ -26,8 +28,8 @@ export default function MainTabNavigator({ onLogout }: { onLogout: () => void })
                     shadowOffset: { width: 0, height: -2 },
                     shadowOpacity: 0.1,
                     shadowRadius: 4,
-                    height: Platform.OS === 'ios' ? 88 : 68,
-                    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+                    height: (Platform.OS === 'ios' ? 88 : 60) + insets.bottom,
+                    paddingBottom: (Platform.OS === 'ios' ? 28 : 10) + insets.bottom,
                     paddingTop: 8,
                 },
                 tabBarLabelStyle: {
