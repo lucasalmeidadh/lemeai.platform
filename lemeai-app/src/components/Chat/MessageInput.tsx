@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Text, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAppTheme } from '../../contexts/ThemeContext';
 
 interface MessageInputProps {
     onSendMessage: (text: string) => void;
@@ -11,6 +13,8 @@ interface MessageInputProps {
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia }) => {
+    const { colors } = useAppTheme();
+    const insets = useSafeAreaInsets();
     const [text, setText] = useState('');
     const [showAttachMenu, setShowAttachMenu] = useState(false);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -124,25 +128,53 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
         }
     };
 
+    const takePhoto = async () => {
+        setShowAttachMenu(false);
+        const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+        if (permissionResult.granted === false) {
+            alert("Precisamos de permissão para acessar a câmera!");
+            return;
+        }
+        const result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            quality: 0.8,
+        });
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+            const asset = result.assets[0];
+            const fileName = asset.fileName || `foto-${Date.now()}.jpg`;
+            const mimeType = asset.mimeType || 'image/jpeg';
+            onSendMedia(asset.uri, fileName, mimeType, 'image');
+        }
+    };
+
+    const iconColor = colors.textSecondary;
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
             {showAttachMenu && !recording && (
-                <View style={styles.attachMenuContainer}>
-                    <TouchableOpacity style={styles.attachMenuItem} onPress={pickImage}>
-                        <FontAwesome5 name="image" size={18} color="#005f73" style={styles.attachMenuIcon} />
-                        <Text style={styles.attachMenuText}>Galeria</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.attachMenuItem} onPress={pickDocument}>
-                        <FontAwesome5 name="file-alt" size={18} color="#005f73" style={styles.attachMenuIcon} />
-                        <Text style={styles.attachMenuText}>Documento</Text>
-                    </TouchableOpacity>
-                </View>
+                <>
+                    <Pressable style={styles.attachMenuBackdrop} onPress={() => setShowAttachMenu(false)} />
+                    <View style={[styles.attachMenuContainer, { backgroundColor: colors.bgSecondary }]}>
+                        <TouchableOpacity style={styles.attachMenuItem} onPress={takePhoto}>
+                            <FontAwesome5 name="camera" size={16} color={colors.brandTeal} style={styles.attachMenuIcon} />
+                            <Text style={[styles.attachMenuText, { color: colors.textPrimary }]}>Câmera</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.attachMenuItem} onPress={pickImage}>
+                            <FontAwesome5 name="image" size={16} color={colors.brandTeal} style={styles.attachMenuIcon} />
+                            <Text style={[styles.attachMenuText, { color: colors.textPrimary }]}>Galeria</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.attachMenuItem} onPress={pickDocument}>
+                            <FontAwesome5 name="file-alt" size={16} color={colors.brandTeal} style={styles.attachMenuIcon} />
+                            <Text style={[styles.attachMenuText, { color: colors.textPrimary }]}>Documento</Text>
+                        </TouchableOpacity>
+                    </View>
+                </>
             )}
 
-            <View style={styles.container}>
+            <View style={[styles.container, { paddingBottom: 12 + insets.bottom, backgroundColor: colors.bgPrimary, borderTopColor: colors.borderColor }]}>
                 {recording ? (
                     <View style={styles.recordingContainer}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -161,13 +193,13 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
                 ) : (
                     <>
                         <TouchableOpacity style={styles.attachButton} onPress={() => setShowAttachMenu(!showAttachMenu)}>
-                            <FontAwesome5 name="paperclip" size={20} color="#4b5563" />
+                            <FontAwesome5 name="paperclip" size={20} color={iconColor} />
                         </TouchableOpacity>
 
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
                             placeholder="Digite uma mensagem..."
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={colors.inputPlaceholder}
                             value={text}
                             onChangeText={setText}
                             multiline
@@ -186,7 +218,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
                                 style={styles.recordButton}
                                 onPress={startRecording}
                             >
-                                <MaterialCommunityIcons name="microphone" size={26} color="#4b5563" />
+                                <MaterialCommunityIcons name="microphone" size={26} color={iconColor} />
                             </TouchableOpacity>
                         )}
                     </>
@@ -201,9 +233,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
-        backgroundColor: '#f9fafb',
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
     },
     attachButton: {
         padding: 8,
@@ -213,21 +243,18 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        backgroundColor: '#ffffff',
         borderRadius: 24,
         paddingHorizontal: 16,
-        paddingTop: 10,
-        paddingBottom: 10,
+        paddingVertical: 10,
         maxHeight: 100,
         minHeight: 44,
         fontSize: 15,
-        color: '#374151',
         borderWidth: 1,
-        borderColor: '#e5e7eb',
         marginRight: 8,
+        textAlignVertical: 'center',
     },
     sendButton: {
-        backgroundColor: '#10b981', // Emerald 500
+        backgroundColor: '#10b981',
         width: 44,
         height: 44,
         borderRadius: 22,
@@ -283,32 +310,36 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 70,
         left: 10,
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 8,
+        borderRadius: 14,
+        padding: 6,
         elevation: 6,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 8,
+        zIndex: 11,
+        minWidth: 170,
+    },
+    attachMenuBackdrop: {
+        position: 'absolute',
+        top: -500,
+        left: -500,
+        right: -500,
+        bottom: -500,
         zIndex: 10,
-        flexDirection: 'row',
-        gap: 8,
     },
     attachMenuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        backgroundColor: '#f8f9fa',
-        borderRadius: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        borderRadius: 10,
     },
     attachMenuIcon: {
         marginRight: 8,
     },
     attachMenuText: {
         fontSize: 14,
-        color: '#333',
         fontWeight: '600',
     },
 });

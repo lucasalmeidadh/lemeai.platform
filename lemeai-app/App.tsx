@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, Alert, StatusBar, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthService } from './src/services/AuthService';
 import ChatScreen from './src/screens/ChatScreen';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
@@ -54,90 +56,100 @@ export default function App() {
 
   if (loading) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: '#0a3d4d' }]}>
-        <ActivityIndicator size="large" color="#ffffff" />
-      </View>
+      <SafeAreaProvider>
+        <View style={[styles.centerContainer, { backgroundColor: '#0a3d4d' }]}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </View>
+      </SafeAreaProvider>
     );
   }
 
   if (user) {
-    return <ChatScreen onLogout={handleLogout} />;
+    return (
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <ChatScreen onLogout={handleLogout} />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    );
   }
 
   return (
-    <LinearGradient
-      colors={['#0a3d4d', '#001f29']}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardContainer}
-        >
-          <View style={styles.contentWrapper}>
-            <View style={styles.formContainer}>
-              <View style={styles.header}>
-                <View style={styles.brandBadge}>
-                  <Text style={styles.brandBadgeText}>LEME AI</Text>
-                </View>
-                <Text style={styles.brandTitle}>Bem-vindo de volta!</Text>
-                <Text style={styles.brandSubtitle}>Acesse seu painel administrativo</Text>
-              </View>
-
-              <View style={styles.form}>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Email</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="nome@empresa.com"
-                    placeholderTextColor="#94a3b8"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
+    <SafeAreaProvider>
+      <LinearGradient
+        colors={['#0a3d4d', '#001f29']}
+        style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <StatusBar barStyle="light-content" />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardContainer}
+          >
+            <View style={styles.contentWrapper}>
+              <View style={styles.formContainer}>
+                <View style={styles.header}>
+                  <View style={styles.brandBadge}>
+                    <Text style={styles.brandBadgeText}>LEME AI</Text>
+                  </View>
+                  <Text style={styles.brandTitle}>Bem-vindo de volta!</Text>
+                  <Text style={styles.brandSubtitle}>Acesse seu painel administrativo</Text>
                 </View>
 
-                <View style={styles.inputContainer}>
-                  <Text style={styles.label}>Senha</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="••••••••"
-                    placeholderTextColor="#94a3b8"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                  />
-                </View>
+                <View style={styles.form}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="nome@empresa.com"
+                      placeholderTextColor="#94a3b8"
+                      value={email}
+                      onChangeText={setEmail}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                    />
+                  </View>
 
-                <TouchableOpacity
-                  style={[styles.loginButton, loggingIn && styles.disabledButton]}
-                  onPress={handleLogin}
-                  disabled={loggingIn}
-                  activeOpacity={0.8}
-                >
-                  {loggingIn ? (
-                    <View style={styles.buttonContent}>
-                      <ActivityIndicator color="#fff" size="small" />
-                      <Text style={[styles.loginButtonText, { marginLeft: 8 }]}>Verificando...</Text>
-                    </View>
-                  ) : (
-                    <Text style={styles.loginButtonText}>ACESSAR SISTEMA</Text>
-                  )}
-                </TouchableOpacity>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Senha</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="••••••••"
+                      placeholderTextColor="#94a3b8"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.loginButton, loggingIn && styles.disabledButton]}
+                    onPress={handleLogin}
+                    disabled={loggingIn}
+                    activeOpacity={0.8}
+                  >
+                    {loggingIn ? (
+                      <View style={styles.buttonContent}>
+                        <ActivityIndicator color="#fff" size="small" />
+                        <Text style={[styles.loginButtonText, { marginLeft: 8 }]}>Verificando...</Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.loginButtonText}>ACESSAR SISTEMA</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Powered by GbCode</Text>
-          </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </LinearGradient>
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Powered by GbCode</Text>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </LinearGradient>
+    </SafeAreaProvider>
   );
 }
 

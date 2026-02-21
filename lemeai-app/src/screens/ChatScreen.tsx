@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ActivityIndicator, Alert, SafeAreaView, TouchableOpacity, Text, BackHandler } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, Text, BackHandler, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch } from '../services/api';
 import hubService from '../hub/HubConnectionService';
 import { ChatService } from '../services/ChatService';
@@ -8,6 +9,8 @@ import { Contact, Message, CurrentUser, ApiConversation, ApiMessage, MessagesByD
 import ContactList from '../components/Chat/ContactList';
 import ConversationWindow from '../components/Chat/ConversationWindow';
 import MessageInput from '../components/Chat/MessageInput';
+import MessageSkeleton from '../components/Chat/MessageSkeleton';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 const API_URL = 'https://api.gbcode.com.br';
 
@@ -18,6 +21,8 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
     const [activeConversationMessages, setActiveConversationMessages] = useState<MessagesByDate>({});
     const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
     const [isHubConnected, setIsHubConnected] = useState(false);
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+    const messageCache = useRef<Map<number, MessagesByDate>>(new Map());
 
     // --- Fetch Logic ---
     const fetchCurrentUser = useCallback(async () => {
@@ -69,6 +74,7 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
     }, []);
 
     const fetchMessages = useCallback(async (contactId: number) => {
+        setIsLoadingMessages(true);
         try {
             const response = await apiFetch(`${API_URL}/api/Chat/Conversas/${contactId}/Mensagens`);
             if (response.ok) {
@@ -90,10 +96,14 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
                         return acc;
                     }, {});
                     setActiveConversationMessages(messagesByDate);
+                    // Cache messages for this conversation
+                    messageCache.current.set(contactId, messagesByDate);
                 }
             }
         } catch (err) {
             console.error("Erro ao buscar mensagens:", err);
+        } finally {
+            setIsLoadingMessages(false);
         }
     }, []);
 
@@ -174,7 +184,9 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
 
     const handleSelectContact = (id: number) => {
         if (id !== selectedContactId) {
-            setActiveConversationMessages({});
+            // Show cached messages instantly, then fetch fresh data
+            const cached = messageCache.current.get(id);
+            setActiveConversationMessages(cached || {});
             setSelectedContactId(id);
         }
     };
@@ -267,35 +279,41 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
     };
 
     const selectedContact = contacts.find(c => c.id === selectedContactId);
+    const { colors } = useAppTheme();
 
     // --- Rendering ---
     if (isLoading && !contacts.length) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0056b3" />
+            <View style={[styles.loadingContainer, { backgroundColor: colors.bgPrimary }]}>
+                <ActivityIndicator size="large" color={colors.brandTeal} />
             </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.bgPrimary }]}>
+            <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.bgPrimary} />
             {selectedContactId && selectedContact ? (
-                <View style={styles.chatArea}>
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={handleBackToContacts} style={styles.backButton}>
-                            <Text style={styles.backButtonIcon}>‹</Text>
-                            <Text style={styles.backButtonText}>Voltar</Text>
+                <View style={[styles.chatArea, { backgroundColor: colors.bgSecondary }]}>
+                    <View style={[styles.header, { backgroundColor: colors.bgSecondary, borderBottomColor: colors.borderColor }]}>
+                        <TouchableOpacity onPress={handleBackToContacts} style={[styles.backButton, { backgroundColor: colors.bgTertiary }]}>
+                            <Text style={[styles.backButtonIcon, { color: colors.brandTeal }]}>‹</Text>
+                            <Text style={[styles.backButtonText, { color: colors.brandTeal }]}>Voltar</Text>
                         </TouchableOpacity>
                         <View style={styles.headerContactInfo}>
-                            <Text style={styles.headerName} numberOfLines={1}>{selectedContact.name}</Text>
+                            <Text style={[styles.headerName, { color: colors.textPrimary }]} numberOfLines={1}>{selectedContact.name}</Text>
                         </View>
-                        <View style={{ width: 60 }} /> {/* Placeholder for balance */}
+                        <View style={{ width: 60 }} />
                     </View>
 
-                    <ConversationWindow
-                        messagesByDate={activeConversationMessages}
-                        conversationId={selectedContactId}
-                    />
+                    {isLoadingMessages && Object.keys(activeConversationMessages).length === 0 ? (
+                        <MessageSkeleton />
+                    ) : (
+                        <ConversationWindow
+                            messagesByDate={activeConversationMessages}
+                            conversationId={selectedContactId}
+                        />
+                    )}
 
                     <MessageInput
                         onSendMessage={handleSendMessage}
@@ -318,7 +336,6 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f7fa',
     },
     loadingContainer: {
         flex: 1,
@@ -327,7 +344,6 @@ const styles = StyleSheet.create({
     },
     chatArea: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     header: {
         flexDirection: 'row',
@@ -335,8 +351,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#dee2e6',
-        backgroundColor: '#ffffff',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -349,18 +363,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 6,
         paddingHorizontal: 12,
-        backgroundColor: '#f8f9fa',
         borderRadius: 20,
     },
     backButtonIcon: {
         fontSize: 22,
-        color: '#005f73',
         marginRight: 4,
         lineHeight: 22,
     },
     backButtonText: {
         fontSize: 15,
-        color: '#005f73',
         fontWeight: '600',
     },
     headerContactInfo: {
@@ -370,6 +381,5 @@ const styles = StyleSheet.create({
     headerName: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#333',
     },
 });
