@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, StatusBar, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AuthService } from './src/services/AuthService';
+import ChatScreen from './src/screens/ChatScreen';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
@@ -37,7 +39,7 @@ export default function App() {
       const userData = await AuthService.login(email, password);
       setUser(userData);
     } catch (error: any) {
-      Alert.alert('Erro no Login', error.message || 'Ocorreu um erro ao tentar entrar.');
+      Alert.alert('Acesso negado', 'Verifique suas credenciais.');
     } finally {
       setLoggingIn(false);
     }
@@ -52,189 +54,213 @@ export default function App() {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
+      <View style={[styles.centerContainer, { backgroundColor: '#0a3d4d' }]}>
+        <ActivityIndicator size="large" color="#ffffff" />
       </View>
     );
   }
 
   if (user) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.dashboardContainer}>
-          <Text style={styles.welcomeText}>Bem-vindo, {user.name || user.nome}!</Text>
-          <Text style={styles.subText}>Você está conectado ao LemeAI Mobile.</Text>
-
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Sair</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
+    return <ChatScreen onLogout={handleLogout} />;
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.loginContainer}>
-        <View style={styles.header}>
-          <Text style={styles.brandTitle}>LEME AI</Text>
-          <Text style={styles.brandSubtitle}>Acesse seu painel</Text>
-        </View>
+    <LinearGradient
+      colors={['#0a3d4d', '#001f29']}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardContainer}
+        >
+          <View style={styles.contentWrapper}>
+            <View style={styles.formContainer}>
+              <View style={styles.header}>
+                <View style={styles.brandBadge}>
+                  <Text style={styles.brandBadgeText}>LEME AI</Text>
+                </View>
+                <Text style={styles.brandTitle}>Bem-vindo de volta!</Text>
+                <Text style={styles.brandSubtitle}>Acesse seu painel administrativo</Text>
+              </View>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="nome@empresa.com"
-            placeholderTextColor="#999"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
+              <View style={styles.form}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Email</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="nome@empresa.com"
+                    placeholderTextColor="#94a3b8"
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
 
-          <Text style={styles.label}>Senha</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="••••••••"
-            placeholderTextColor="#999"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Senha</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor="#94a3b8"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                </View>
 
-          <TouchableOpacity
-            style={[styles.loginButton, loggingIn && styles.disabledButton]}
-            onPress={handleLogin}
-            disabled={loggingIn}
-          >
-            {loggingIn ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>ACESSAR SISTEMA</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+                <TouchableOpacity
+                  style={[styles.loginButton, loggingIn && styles.disabledButton]}
+                  onPress={handleLogin}
+                  disabled={loggingIn}
+                  activeOpacity={0.8}
+                >
+                  {loggingIn ? (
+                    <View style={styles.buttonContent}>
+                      <ActivityIndicator color="#fff" size="small" />
+                      <Text style={[styles.loginButtonText, { marginLeft: 8 }]}>Verificando...</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.loginButtonText}>ACESSAR SISTEMA</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Powered by GbCode</Text>
-        </View>
-      </View>
-    </SafeAreaView>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Powered by GbCode</Text>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
+
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+  },
+  safeArea: {
+    flex: 1,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loginContainer: {
+  keyboardContainer: {
+    flex: 1,
+  },
+  contentWrapper: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 24,
+  },
+  formContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderRadius: 24,
+    padding: width > 400 ? 40 : 28,
+    width: '100%',
+    maxWidth: 440,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 8,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
+  },
+  brandBadge: {
+    backgroundColor: 'rgba(0, 95, 115, 0.1)',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    marginBottom: 20,
+  },
+  brandBadgeText: {
+    color: '#005f73',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
   brandTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#0056b3', // Boat blue-ish
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1e293b',
     marginBottom: 8,
+    textAlign: 'center',
   },
   brandSubtitle: {
-    fontSize: 16,
-    color: '#6c757d',
+    fontSize: 15,
+    color: '#64748b',
+    textAlign: 'center',
   },
   form: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    width: '100%',
+  },
+  inputContainer: {
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#64748b',
     marginBottom: 8,
-    marginTop: 16,
+    marginLeft: 4,
   },
   input: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f1f5f9',
     borderWidth: 1,
-    borderColor: '#e9ecef',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: 'transparent',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     fontSize: 16,
-    color: '#333',
+    color: '#1e293b',
   },
   loginButton: {
-    backgroundColor: '#007bff',
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: '#005f73',
+    borderRadius: 50,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 32,
-    marginBottom: 16,
+    justifyContent: 'center',
+    marginTop: 12,
+    shadowColor: '#005f73',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   disabledButton: {
     opacity: 0.7,
   },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   loginButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  dashboardContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
-  subText: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  logoutButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    backgroundColor: '#dc3545',
-    borderRadius: 8,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   footer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
+    paddingVertical: 20,
     alignItems: 'center',
   },
   footerText: {
-    color: '#aaa',
-    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 14,
+    fontWeight: '500',
   }
 });

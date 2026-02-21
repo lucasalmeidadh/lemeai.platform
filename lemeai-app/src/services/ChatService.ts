@@ -1,17 +1,11 @@
 import { apiFetch } from './api';
 
-const apiUrl = 'https://api.gbcode.com.br';
-
-// TODO: Import interfaces properly or define them
-interface ConversationSummaryResponse {
-    // Define properties based on usage
-    [key: string]: any;
-}
+const API_URL = 'https://api.gbcode.com.br';
 
 export const ChatService = {
-    getConversationSummary: async (conversationId: number): Promise<ConversationSummaryResponse> => {
+    getConversationSummary: async (conversationId: number): Promise<any> => {
         try {
-            const response = await apiFetch(`${apiUrl}/api/Conversa/Resumo/${conversationId}`, {
+            const response = await apiFetch(`${API_URL}/api/Conversa/Resumo/${conversationId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -30,27 +24,22 @@ export const ChatService = {
         }
     },
 
-    enviarMidia: async (conversationId: number, file: any, tipoMidia: string): Promise<any> => {
+    enviarMidia: async (conversationId: number, fileUri: string, fileName: string, mimeType: string, tipoMidia: string): Promise<any> => {
         try {
             const formData = new FormData();
 
-            // React Native FormData expects an object with uri, name, type
+            // In React Native, fetch with FormData and file looks like this
             formData.append('Arquivo', {
-                uri: file.uri,
-                name: file.name,
-                type: file.type || 'application/octet-stream',
+                uri: fileUri,
+                name: fileName,
+                type: mimeType
             } as any);
 
-            // Append query parameters to the URL
-            // URL object might not be fully polyfilled in RN same as Web, but string concat works safely here
-            const url = `${apiUrl}/api/Chat/Conversa/${conversationId}/EnviarMidia?TipoMidia=${tipoMidia}`;
+            const url = new URL(`${API_URL}/api/Chat/Conversa/${conversationId}/EnviarMidia`);
+            url.searchParams.append('TipoMidia', tipoMidia);
 
-            const response = await apiFetch(url, {
+            const response = await apiFetch(url.toString(), {
                 method: 'POST',
-                headers: {
-                    // Content-Type must NOT be set manually for FormData, fetch does it
-                    'Accept': 'application/json',
-                },
                 body: formData,
             });
 

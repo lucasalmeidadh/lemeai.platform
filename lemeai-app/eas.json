@@ -1,0 +1,11 @@
+{
+  "build": {
+    "preview": {
+      "node": "20",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {}
+  }
+}
