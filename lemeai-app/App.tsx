@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, Alert, StatusBar, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { NavigationContainer } from '@react-navigation/native';
 import { AuthService } from './src/services/AuthService';
-import ChatScreen from './src/screens/ChatScreen';
+import MainTabNavigator from './src/navigation/MainTabNavigator';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 
 export default function App() {
@@ -68,7 +69,9 @@ export default function App() {
     return (
       <SafeAreaProvider>
         <ThemeProvider>
-          <ChatScreen onLogout={handleLogout} />
+          <NavigationContainer>
+            <MainTabNavigator onLogout={handleLogout} />
+          </NavigationContainer>
         </ThemeProvider>
       </SafeAreaProvider>
     );

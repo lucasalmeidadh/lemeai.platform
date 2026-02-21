@@ -62,4 +62,34 @@ export const ChatService = {
             throw error;
         }
     },
+
+    transferirConversa: async (conversationId: number, newUserId: number): Promise<any> => {
+        try {
+            const response = await apiFetch(`${API_URL}/api/Chat/Conversa/${conversationId}/Transferir`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newUserId) // The backend expects an int in the body
+            });
+
+            if (!response.ok) {
+                let errorMessage = `Erro ao transferir conversa: ${response.statusText}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData?.mensagem) {
+                        errorMessage = errorData.mensagem;
+                    }
+                } catch (e) {
+                    // Ignore parsing error
+                }
+                throw new Error(errorMessage);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Erro no ChatService.transferirConversa:', error);
+            throw error;
+        }
+    },
 };

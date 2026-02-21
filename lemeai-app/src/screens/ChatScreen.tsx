@@ -10,6 +10,9 @@ import ContactList from '../components/Chat/ContactList';
 import ConversationWindow from '../components/Chat/ConversationWindow';
 import MessageInput from '../components/Chat/MessageInput';
 import MessageSkeleton from '../components/Chat/MessageSkeleton';
+import ContactDetailsModal from '../components/Chat/ContactDetailsModal';
+import SummaryModal from '../components/Chat/SummaryModal';
+import TransferModal from '../components/Chat/TransferModal';
 import { useAppTheme } from '../contexts/ThemeContext';
 
 const API_URL = 'https://api.gbcode.com.br';
@@ -23,6 +26,12 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
     const [isHubConnected, setIsHubConnected] = useState(false);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const messageCache = useRef<Map<number, MessagesByDate>>(new Map());
+
+    const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
+    const [isSummaryModalVisible, setIsSummaryModalVisible] = useState(false);
+    const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
+    const [summaryContent, setSummaryContent] = useState('');
+    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
     // --- Fetch Logic ---
     const fetchCurrentUser = useCallback(async () => {
@@ -278,6 +287,48 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
         }
     };
 
+    const handleGenerateSummary = async () => {
+        if (!selectedContactId || isGeneratingSummary) return;
+
+        setIsGeneratingSummary(true);
+        setIsDetailsModalVisible(false); // Close details modal when opening summary process
+
+        try {
+            const response = await ChatService.getConversationSummary(selectedContactId);
+            if (response.sucesso) {
+                setSummaryContent(response.dados);
+                setIsSummaryModalVisible(true);
+            } else {
+                Alert.alert('Erro', response.mensagem || 'Erro ao gerar resumo.');
+            }
+        } catch (error) {
+            console.error('Erro ao gerar resumo:', error);
+            Alert.alert('Erro', 'Erro ao conectar com o serviço de IA.');
+        } finally {
+            setIsGeneratingSummary(false);
+        }
+    };
+
+    const handleViewExistingSummary = (content: string) => {
+        setSummaryContent(content);
+        setIsSummaryModalVisible(true);
+    };
+
+    const handleTransferConversation = async (user: any) => {
+        if (!selectedContactId) return;
+
+        try {
+            await ChatService.transferirConversa(selectedContactId, user.id);
+            Alert.alert('Sucesso', 'Conversa transferida com sucesso!');
+            setIsTransferModalVisible(false);
+            setIsDetailsModalVisible(false);
+            setSelectedContactId(null);
+            fetchConversations(false);
+        } catch (error: any) {
+            Alert.alert('Erro', error.message || 'Erro ao transferir conversa.');
+        }
+    };
+
     const selectedContact = contacts.find(c => c.id === selectedContactId);
     const { colors } = useAppTheme();
 
@@ -300,10 +351,12 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
                             <Text style={[styles.backButtonIcon, { color: colors.brandTeal }]}>‹</Text>
                             <Text style={[styles.backButtonText, { color: colors.brandTeal }]}>Voltar</Text>
                         </TouchableOpacity>
-                        <View style={styles.headerContactInfo}>
+                        <TouchableOpacity style={styles.headerContactInfo} onPress={() => setIsDetailsModalVisible(true)}>
                             <Text style={[styles.headerName, { color: colors.textPrimary }]} numberOfLines={1}>{selectedContact.name}</Text>
+                        </TouchableOpacity>
+                        <View style={{ width: 60 }}>
+                            {isGeneratingSummary && <ActivityIndicator size="small" color={colors.brandTeal} />}
                         </View>
-                        <View style={{ width: 60 }} />
                     </View>
 
                     {isLoadingMessages && Object.keys(activeConversationMessages).length === 0 ? (
@@ -318,6 +371,32 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
                     <MessageInput
                         onSendMessage={handleSendMessage}
                         onSendMedia={handleSendMedia}
+                    />
+
+                    <ContactDetailsModal
+                        visible={isDetailsModalVisible}
+                        onClose={() => setIsDetailsModalVisible(false)}
+                        contact={selectedContact}
+                        onUpdate={() => fetchConversations(false)}
+                        onOpenSummary={handleGenerateSummary}
+                        onViewExistingSummary={handleViewExistingSummary}
+                        onOpenTransfer={() => {
+                            setIsDetailsModalVisible(false);
+                            setIsTransferModalVisible(true);
+                        }}
+                    />
+
+                    <SummaryModal
+                        visible={isSummaryModalVisible}
+                        onClose={() => setIsSummaryModalVisible(false)}
+                        summary={summaryContent}
+                    />
+
+                    <TransferModal
+                        visible={isTransferModalVisible}
+                        onClose={() => setIsTransferModalVisible(false)}
+                        onTransfer={handleTransferConversation}
+                        currentUserId={currentUser?.id}
                     />
                 </View>
             ) : (
