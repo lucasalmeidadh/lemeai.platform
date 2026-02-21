@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ const Tab = createBottomTabNavigator();
 export default function MainTabNavigator({ onLogout }: { onLogout: () => void }) {
     const { colors } = useAppTheme();
     const insets = useSafeAreaInsets();
+    const [isInConversation, setIsInConversation] = useState(false);
 
     return (
         <Tab.Navigator
@@ -20,18 +21,20 @@ export default function MainTabNavigator({ onLogout }: { onLogout: () => void })
                 headerShown: false,
                 tabBarActiveTintColor: colors.brandTeal,
                 tabBarInactiveTintColor: colors.textTertiary,
-                tabBarStyle: {
-                    backgroundColor: colors.bgSecondary,
-                    borderTopColor: colors.borderColor,
-                    elevation: 8,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: -2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    height: (Platform.OS === 'ios' ? 88 : 60) + insets.bottom,
-                    paddingBottom: (Platform.OS === 'ios' ? 28 : 10) + insets.bottom,
-                    paddingTop: 8,
-                },
+                tabBarStyle: isInConversation
+                    ? { display: 'none' as const }
+                    : {
+                        backgroundColor: colors.bgSecondary,
+                        borderTopColor: colors.borderColor,
+                        elevation: 8,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: -2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 4,
+                        height: (Platform.OS === 'ios' ? 88 : 60) + insets.bottom,
+                        paddingBottom: (Platform.OS === 'ios' ? 28 : 10) + insets.bottom,
+                        paddingTop: 8,
+                    },
                 tabBarLabelStyle: {
                     fontSize: 12,
                     fontWeight: '600',
@@ -40,7 +43,7 @@ export default function MainTabNavigator({ onLogout }: { onLogout: () => void })
         >
             <Tab.Screen
                 name="Chats"
-                children={() => <ChatScreen onLogout={onLogout} />}
+                children={() => <ChatScreen onLogout={onLogout} onConversationStateChange={setIsInConversation} />}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <FontAwesome5 name="comments" size={size} color={color} solid />

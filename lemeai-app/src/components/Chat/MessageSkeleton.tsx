@@ -54,9 +54,6 @@ const MessageSkeleton: React.FC = () => {
         { isMe: true, width: 40 },
         { isMe: true, width: 60 },
         { isMe: false, width: 50 },
-        { isMe: true, width: 45 },
-        { isMe: false, width: 75 },
-        { isMe: true, width: 35 },
     ];
 
     return (
@@ -84,6 +81,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         paddingBottom: 32,
+        overflow: 'hidden',
     },
     dateDivider: {
         alignItems: 'center',

@@ -17,7 +17,7 @@ import { useAppTheme } from '../contexts/ThemeContext';
 
 const API_URL = 'https://api.gbcode.com.br';
 
-export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
+export default function ChatScreen({ onLogout, onConversationStateChange }: { onLogout?: () => void; onConversationStateChange?: (isInConversation: boolean) => void }) {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +26,11 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
     const [isHubConnected, setIsHubConnected] = useState(false);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const messageCache = useRef<Map<number, MessagesByDate>>(new Map());
+
+    // Notify parent navigator about conversation state changes
+    useEffect(() => {
+        onConversationStateChange?.(selectedContactId !== null);
+    }, [selectedContactId, onConversationStateChange]);
 
     const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
     const [isSummaryModalVisible, setIsSummaryModalVisible] = useState(false);
@@ -83,6 +88,28 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
         }
     }, []);
 
+    const updateContactLastMessage = useCallback((conversationId: number, message: string, time?: Date) => {
+        setContacts(prev => {
+            const updated = prev.map(contact => {
+                if (contact.id === conversationId) {
+                    return {
+                        ...contact,
+                        lastMessage: message,
+                        time: (time || new Date()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    };
+                }
+                return contact;
+            });
+            // Move the updated contact to the top of the list
+            const contactIndex = updated.findIndex(c => c.id === conversationId);
+            if (contactIndex > 0) {
+                const [contact] = updated.splice(contactIndex, 1);
+                updated.unshift(contact);
+            }
+            return updated;
+        });
+    }, []);
+
     const fetchMessages = useCallback(async (contactId: number) => {
         setIsLoadingMessages(true);
         try {
@@ -138,8 +165,23 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
                 return newMessagesByDate;
             });
         }
+
+        // Update the contact list preview with the latest message
+        const previewText = newMessage.tipoMensagem === 'image' ? '[Imagem]'
+            : newMessage.tipoMensagem === 'audio' ? 'Áudio'
+                : newMessage.tipoMensagem === 'document' || newMessage.tipoMensagem === 'file' ? '[Documento]'
+                    : newMessage.mensagem;
+        updateContactLastMessage(newMessage.idConversa, previewText, new Date(newMessage.dataEnvio));
+
+        // Also update unread count for conversations not currently viewed
+        if (newMessage.idConversa !== selectedContactId && newMessage.origemMensagem === 0) {
+            setContacts(prev => prev.map(c =>
+                c.id === newMessage.idConversa ? { ...c, unread: c.unread + 1 } : c
+            ));
+        }
+
         fetchConversations(false);
-    }, [selectedContactId, fetchConversations]);
+    }, [selectedContactId, fetchConversations, updateContactLastMessage]);
 
     useEffect(() => {
         const setupHubConnection = async () => {
@@ -235,6 +277,9 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
 
             if (!response.ok) throw new Error('Falha ao enviar mensagem');
 
+            // Update the contact preview immediately
+            updateContactLastMessage(selectedContactId, text);
+
             await fetchMessages(selectedContactId);
             await fetchConversations(false);
         } catch (err) {
@@ -280,6 +325,11 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
 
         try {
             await ChatService.enviarMidia(selectedContactId, fileUri, fileName, mimeType, type);
+
+            // Update the contact preview immediately with media label
+            const mediaLabel = type === 'image' ? '[Imagem]' : (type === 'audio' ? 'Áudio' : fileName);
+            updateContactLastMessage(selectedContactId, mediaLabel);
+
             await fetchMessages(selectedContactId);
             await fetchConversations(false);
         } catch (err: any) {
