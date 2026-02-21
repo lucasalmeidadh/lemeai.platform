@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, Text, BackHandler, StatusBar } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, Text, BackHandler, StatusBar, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch } from '../services/api';
 import hubService from '../hub/HubConnectionService';
@@ -345,60 +345,66 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
         <SafeAreaView style={[styles.container, { backgroundColor: colors.bgPrimary }]}>
             <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.bgPrimary} />
             {selectedContactId && selectedContact ? (
-                <View style={[styles.chatArea, { backgroundColor: colors.bgSecondary }]}>
-                    <View style={[styles.header, { backgroundColor: colors.bgSecondary, borderBottomColor: colors.borderColor }]}>
-                        <TouchableOpacity onPress={handleBackToContacts} style={[styles.backButton, { backgroundColor: colors.bgTertiary }]}>
-                            <Text style={[styles.backButtonIcon, { color: colors.brandTeal }]}>‹</Text>
-                            <Text style={[styles.backButtonText, { color: colors.brandTeal }]}>Voltar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.headerContactInfo} onPress={() => setIsDetailsModalVisible(true)}>
-                            <Text style={[styles.headerName, { color: colors.textPrimary }]} numberOfLines={1}>{selectedContact.name}</Text>
-                        </TouchableOpacity>
-                        <View style={{ width: 60 }}>
-                            {isGeneratingSummary && <ActivityIndicator size="small" color={colors.brandTeal} />}
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                >
+                    <View style={[styles.chatArea, { backgroundColor: colors.bgSecondary }]}>
+                        <View style={[styles.header, { backgroundColor: colors.bgSecondary, borderBottomColor: colors.borderColor }]}>
+                            <TouchableOpacity onPress={handleBackToContacts} style={[styles.backButton, { backgroundColor: colors.bgTertiary }]}>
+                                <Text style={[styles.backButtonIcon, { color: colors.brandTeal }]}>‹</Text>
+                                <Text style={[styles.backButtonText, { color: colors.brandTeal }]}>Voltar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.headerContactInfo} onPress={() => setIsDetailsModalVisible(true)}>
+                                <Text style={[styles.headerName, { color: colors.textPrimary }]} numberOfLines={1}>{selectedContact.name}</Text>
+                            </TouchableOpacity>
+                            <View style={{ width: 60 }}>
+                                {isGeneratingSummary && <ActivityIndicator size="small" color={colors.brandTeal} />}
+                            </View>
                         </View>
-                    </View>
 
-                    {isLoadingMessages && Object.keys(activeConversationMessages).length === 0 ? (
-                        <MessageSkeleton />
-                    ) : (
-                        <ConversationWindow
-                            messagesByDate={activeConversationMessages}
-                            conversationId={selectedContactId}
+                        {isLoadingMessages && Object.keys(activeConversationMessages).length === 0 ? (
+                            <MessageSkeleton />
+                        ) : (
+                            <ConversationWindow
+                                messagesByDate={activeConversationMessages}
+                                conversationId={selectedContactId}
+                            />
+                        )}
+
+                        <MessageInput
+                            onSendMessage={handleSendMessage}
+                            onSendMedia={handleSendMedia}
                         />
-                    )}
 
-                    <MessageInput
-                        onSendMessage={handleSendMessage}
-                        onSendMedia={handleSendMedia}
-                    />
+                        <ContactDetailsModal
+                            visible={isDetailsModalVisible}
+                            onClose={() => setIsDetailsModalVisible(false)}
+                            contact={selectedContact}
+                            onUpdate={() => fetchConversations(false)}
+                            onOpenSummary={handleGenerateSummary}
+                            onViewExistingSummary={handleViewExistingSummary}
+                            onOpenTransfer={() => {
+                                setIsDetailsModalVisible(false);
+                                setIsTransferModalVisible(true);
+                            }}
+                        />
 
-                    <ContactDetailsModal
-                        visible={isDetailsModalVisible}
-                        onClose={() => setIsDetailsModalVisible(false)}
-                        contact={selectedContact}
-                        onUpdate={() => fetchConversations(false)}
-                        onOpenSummary={handleGenerateSummary}
-                        onViewExistingSummary={handleViewExistingSummary}
-                        onOpenTransfer={() => {
-                            setIsDetailsModalVisible(false);
-                            setIsTransferModalVisible(true);
-                        }}
-                    />
+                        <SummaryModal
+                            visible={isSummaryModalVisible}
+                            onClose={() => setIsSummaryModalVisible(false)}
+                            summary={summaryContent}
+                        />
 
-                    <SummaryModal
-                        visible={isSummaryModalVisible}
-                        onClose={() => setIsSummaryModalVisible(false)}
-                        summary={summaryContent}
-                    />
-
-                    <TransferModal
-                        visible={isTransferModalVisible}
-                        onClose={() => setIsTransferModalVisible(false)}
-                        onTransfer={handleTransferConversation}
-                        currentUserId={currentUser?.id}
-                    />
-                </View>
+                        <TransferModal
+                            visible={isTransferModalVisible}
+                            onClose={() => setIsTransferModalVisible(false)}
+                            onTransfer={handleTransferConversation}
+                            currentUserId={currentUser?.id}
+                        />
+                    </View>
+                </KeyboardAvoidingView>
             ) : (
                 <ContactList
                     contacts={contacts}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Text, Pressable } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Platform, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -150,10 +150,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
     const iconColor = colors.textSecondary;
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-        >
+        <>
             {showAttachMenu && !recording && (
                 <>
                     <Pressable style={styles.attachMenuBackdrop} onPress={() => setShowAttachMenu(false)} />
@@ -174,7 +171,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
                 </>
             )}
 
-            <View style={[styles.container, { paddingBottom: 12 + insets.bottom, backgroundColor: colors.bgPrimary, borderTopColor: colors.borderColor }]}>
+            <View style={[styles.container, { paddingBottom: 12, backgroundColor: colors.bgPrimary, borderTopColor: colors.borderColor }]}>
                 {recording ? (
                     <View style={styles.recordingContainer}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -224,7 +221,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
                     </>
                 )}
             </View>
-        </KeyboardAvoidingView>
+        </>
     );
 };
 
