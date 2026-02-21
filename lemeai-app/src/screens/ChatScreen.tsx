@@ -32,6 +32,7 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
     const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
     const [summaryContent, setSummaryContent] = useState('');
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     // --- Fetch Logic ---
     const fetchCurrentUser = useCallback(async () => {
@@ -342,12 +343,12 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
     }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.bgPrimary }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.bgPrimary }]} edges={['top', 'left', 'right']}>
             <StatusBar barStyle={colors.statusBarStyle} backgroundColor={colors.bgPrimary} />
             {selectedContactId && selectedContact ? (
                 <KeyboardAvoidingView
                     style={{ flex: 1 }}
-                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    behavior="padding"
                     keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
                 >
                     <View style={[styles.chatArea, { backgroundColor: colors.bgSecondary }]}>
@@ -412,6 +413,12 @@ export default function ChatScreen({ onLogout }: { onLogout?: () => void }) {
                     onSelectContact={handleSelectContact}
                     currentUser={currentUser}
                     onLogout={onLogout}
+                    onRefresh={async () => {
+                        setRefreshing(true);
+                        await fetchConversations(false);
+                        setRefreshing(false);
+                    }}
+                    refreshing={refreshing}
                 />
             )}
         </SafeAreaView>

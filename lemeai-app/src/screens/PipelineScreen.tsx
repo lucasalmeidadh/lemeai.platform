@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Dimensions, RefreshControl, Alert } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useAppTheme } from '../contexts/ThemeContext';
 import { OpportunityService, Opportunity } from '../services/OpportunityService';
 import ContactDetailsModal from '../components/Chat/ContactDetailsModal';
+import SummaryModal from '../components/Chat/SummaryModal';
+import TransferModal from '../components/Chat/TransferModal';
+import { ChatService } from '../services/ChatService';
 import { Contact } from '../types/chat';
 
 const { width } = Dimensions.get('window');
@@ -27,6 +30,14 @@ export default function PipelineScreen() {
 
     const [selectedOpp, setSelectedOpp] = useState<Opportunity | null>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
+
+    // Summary modal state
+    const [isSummaryModalVisible, setIsSummaryModalVisible] = useState(false);
+    const [summaryContent, setSummaryContent] = useState('');
+    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
+    // Transfer modal state
+    const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
 
     const flatListRef = useRef<FlatList>(null);
     const paginationRef = useRef<FlatList>(null);
@@ -98,6 +109,48 @@ export default function PipelineScreen() {
     const handleCardPress = (opp: Opportunity) => {
         setSelectedOpp(opp);
         setIsModalVisible(true);
+    };
+
+    const handleGenerateSummary = async () => {
+        if (!selectedOpp || isGeneratingSummary) return;
+
+        setIsGeneratingSummary(true);
+        setIsModalVisible(false);
+
+        try {
+            const response = await ChatService.getConversationSummary(selectedOpp.idConversa);
+            if (response.sucesso) {
+                setSummaryContent(response.dados);
+                setIsSummaryModalVisible(true);
+            } else {
+                Alert.alert('Erro', response.mensagem || 'Erro ao gerar resumo.');
+            }
+        } catch (error) {
+            console.error('Erro ao gerar resumo:', error);
+            Alert.alert('Erro', 'Erro ao conectar com o serviço de IA.');
+        } finally {
+            setIsGeneratingSummary(false);
+        }
+    };
+
+    const handleViewExistingSummary = (content: string) => {
+        setSummaryContent(content);
+        setIsSummaryModalVisible(true);
+    };
+
+    const handleTransferConversation = async (user: any) => {
+        if (!selectedOpp) return;
+
+        try {
+            await ChatService.transferirConversa(selectedOpp.idConversa, user.id);
+            Alert.alert('Sucesso', 'Conversa transferida com sucesso!');
+            setIsTransferModalVisible(false);
+            setIsModalVisible(false);
+            setSelectedOpp(null);
+            fetchOpportunities(true);
+        } catch (error: any) {
+            Alert.alert('Erro', error.message || 'Erro ao transferir conversa.');
+        }
     };
 
     const renderCard = ({ item }: { item: Opportunity }) => {
@@ -238,28 +291,48 @@ export default function PipelineScreen() {
             )}
 
             {selectedOpp && (
-                <ContactDetailsModal
-                    visible={isModalVisible}
-                    onClose={() => setIsModalVisible(false)}
-                    contact={{
-                        id: selectedOpp.idConversa,
-                        name: selectedOpp.nomeContato,
-                        phone: selectedOpp.numeroWhatsapp,
-                        initials: selectedOpp.nomeContato ? selectedOpp.nomeContato.charAt(0).toUpperCase() : '?',
-                        statusId: selectedOpp.idStauts,
-                        detailsValue: selectedOpp.valor,
-                        // Dummy fields needed for Contact interface
-                        unreadCount: 0,
-                        unread: 0,
-                        message: '',
-                        lastMessage: '',
-                        time: '',
-                        isOnline: false,
-                        avatar: '',
-                        platform: 'whatsapp',
-                    } as unknown as Contact}
-                    onUpdate={() => fetchOpportunities(true)} // Refetch pipeline on update
-                />
+                <>
+                    <ContactDetailsModal
+                        visible={isModalVisible}
+                        onClose={() => setIsModalVisible(false)}
+                        contact={{
+                            id: selectedOpp.idConversa,
+                            name: selectedOpp.nomeContato,
+                            phone: selectedOpp.numeroWhatsapp,
+                            initials: selectedOpp.nomeContato ? selectedOpp.nomeContato.charAt(0).toUpperCase() : '?',
+                            statusId: selectedOpp.idStauts,
+                            detailsValue: selectedOpp.valor,
+                            // Dummy fields needed for Contact interface
+                            unreadCount: 0,
+                            unread: 0,
+                            message: '',
+                            lastMessage: '',
+                            time: '',
+                            isOnline: false,
+                            avatar: '',
+                            platform: 'whatsapp',
+                        } as unknown as Contact}
+                        onUpdate={() => fetchOpportunities(true)}
+                        onOpenSummary={handleGenerateSummary}
+                        onViewExistingSummary={handleViewExistingSummary}
+                        onOpenTransfer={() => {
+                            setIsModalVisible(false);
+                            setIsTransferModalVisible(true);
+                        }}
+                    />
+
+                    <SummaryModal
+                        visible={isSummaryModalVisible}
+                        onClose={() => setIsSummaryModalVisible(false)}
+                        summary={summaryContent}
+                    />
+
+                    <TransferModal
+                        visible={isTransferModalVisible}
+                        onClose={() => setIsTransferModalVisible(false)}
+                        onTransfer={handleTransferConversation}
+                    />
+                </>
             )}
         </View>
     );

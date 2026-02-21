@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ScrollView, Alert, ActivityIndicator, Switch } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiFetch } from '../../services/api';
@@ -24,6 +25,7 @@ interface ProfileModalProps {
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose, onLogout, userName }) => {
     const { colors, theme, toggleTheme } = useAppTheme();
+    const insets = useSafeAreaInsets();
     const [user, setUser] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -151,7 +153,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose, onLogout,
 
     return (
         <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-            <View style={[styles.container, { backgroundColor: colors.bgPrimary }]}>
+            <SafeAreaView style={[styles.container, { backgroundColor: colors.bgPrimary }]}>
                 {/* Header */}
                 <View style={[styles.header, { backgroundColor: colors.bgSecondary, borderBottomColor: colors.borderColor }]}>
                     <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.brandTealLight }]} onPress={onClose}>
@@ -161,7 +163,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose, onLogout,
                     <View style={{ width: 40 }} />
                 </View>
 
-                <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContentContainer} showsVerticalScrollIndicator={false}>
+                <ScrollView style={styles.scrollContent} contentContainerStyle={[styles.scrollContentContainer, { paddingBottom: 16 + insets.bottom }]} showsVerticalScrollIndicator={false}>
                     {loading ? (
                         <View style={styles.loadingContainer}>
                             <ActivityIndicator size="large" color={colors.brandTeal} />
@@ -373,11 +375,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose, onLogout,
                                 )}
                             </View>
 
-                            <View style={{ height: 40 }} />
+
                         </>
                     )}
                 </ScrollView>
-            </View>
+            </SafeAreaView>
         </Modal>
     );
 };

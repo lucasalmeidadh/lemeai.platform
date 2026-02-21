@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useAppTheme } from '../../contexts/ThemeContext';
 import { DetailsService } from '../../services/DetailsService';
@@ -19,6 +20,7 @@ interface ContactDetailsModalProps {
 
 const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ visible, onClose, contact, onUpdate, onOpenSummary, onViewExistingSummary, onOpenTransfer }) => {
     const { colors } = useAppTheme();
+    const insets = useSafeAreaInsets();
     const [activeTab, setActiveTab] = useState<'details' | 'history'>('details');
 
     const [status, setStatus] = useState(contact.statusId ? String(contact.statusId) : '2');
@@ -47,17 +49,22 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ visible, onCl
         setIsDirty(true);
     };
 
+    // Reset form only when modal opens or a different contact is selected
     useEffect(() => {
         if (visible && contact) {
             setStatus(contact.statusId ? String(contact.statusId) : '2');
             setDealValue(contact.detailsValue ? formatCurrencyDisplay(String(contact.detailsValue)) : '');
             setNewNote('');
             setIsDirty(false);
-            if (activeTab === 'history') {
-                fetchObservations();
-            }
         }
-    }, [visible, contact, activeTab]);
+    }, [visible, contact?.id]);
+
+    // Fetch observations when switching to history tab
+    useEffect(() => {
+        if (visible && contact && activeTab === 'history') {
+            fetchObservations();
+        }
+    }, [visible, contact?.id, activeTab]);
 
     const fetchObservations = useCallback(async () => {
         if (!contact) return;
@@ -323,7 +330,7 @@ const ContactDetailsModal: React.FC<ContactDetailsModalProps> = ({ visible, onCl
 
                     {/* Footer (Save Button for Details) */}
                     {activeTab === 'details' && (
-                        <View style={[styles.footer, { borderTopColor: colors.borderColor, backgroundColor: colors.bgSecondary }]}>
+                        <View style={[styles.footer, { borderTopColor: colors.borderColor, backgroundColor: colors.bgSecondary, paddingBottom: 24 + insets.bottom }]}>
                             <TouchableOpacity
                                 style={[styles.saveButton, { backgroundColor: colors.brandTeal }, (!isDirty || isSaving) && styles.disabledButton]}
                                 onPress={handleSave}

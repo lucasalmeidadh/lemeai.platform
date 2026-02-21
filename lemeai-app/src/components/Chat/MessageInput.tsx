@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Platform, Text, Pressable } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Platform, Text, Pressable, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import EmojiPicker from 'rn-emoji-keyboard';
+import pt from 'rn-emoji-keyboard/src/translation/pt';
 import { useAppTheme } from '../../contexts/ThemeContext';
 
 interface MessageInputProps {
@@ -17,6 +19,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
     const insets = useSafeAreaInsets();
     const [text, setText] = useState('');
     const [showAttachMenu, setShowAttachMenu] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [recordingTime, setRecordingTime] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -90,7 +93,19 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
             onSendMessage(text.trim());
             setText('');
             setShowAttachMenu(false);
+            setShowEmojiPicker(false);
         }
+    };
+
+    const handleEmojiSelected = (emoji: { emoji: string }) => {
+        setText(prev => prev + emoji.emoji);
+    };
+
+    const toggleEmojiPicker = () => {
+        if (!showEmojiPicker) {
+            Keyboard.dismiss();
+        }
+        setShowEmojiPicker(!showEmojiPicker);
     };
 
     const pickImage = async () => {
@@ -136,7 +151,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
             return;
         }
         const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
             quality: 0.8,
         });
         if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -171,7 +185,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
                 </>
             )}
 
-            <View style={[styles.container, { paddingBottom: 12, backgroundColor: colors.bgPrimary, borderTopColor: colors.borderColor }]}>
+            <View style={[styles.container, { backgroundColor: colors.bgPrimary, borderTopColor: colors.borderColor }]}>
                 {recording ? (
                     <View style={styles.recordingContainer}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -193,12 +207,21 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
                             <FontAwesome5 name="paperclip" size={20} color={iconColor} />
                         </TouchableOpacity>
 
+                        <TouchableOpacity style={styles.emojiButton} onPress={toggleEmojiPicker}>
+                            <MaterialCommunityIcons
+                                name={showEmojiPicker ? 'keyboard-outline' : 'emoticon-happy-outline'}
+                                size={24}
+                                color={showEmojiPicker ? colors.brandTeal : iconColor}
+                            />
+                        </TouchableOpacity>
+
                         <TextInput
                             style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText, borderColor: colors.inputBorder }]}
                             placeholder="Digite uma mensagem..."
                             placeholderTextColor={colors.inputPlaceholder}
                             value={text}
                             onChangeText={setText}
+                            onFocus={() => setShowEmojiPicker(false)}
                             multiline
                             maxLength={1000}
                         />
@@ -221,6 +244,15 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia 
                     </>
                 )}
             </View>
+
+            <EmojiPicker
+                onEmojiSelected={handleEmojiSelected}
+                open={showEmojiPicker}
+                onClose={() => setShowEmojiPicker(false)}
+                categoryPosition="top"
+                enableSearchBar
+                translation={pt}
+            />
         </>
     );
 };
@@ -234,6 +266,12 @@ const styles = StyleSheet.create({
     },
     attachButton: {
         padding: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 2,
+    },
+    emojiButton: {
+        padding: 6,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 4,

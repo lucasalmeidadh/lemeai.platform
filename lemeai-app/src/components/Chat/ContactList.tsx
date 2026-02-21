@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Contact, CurrentUser } from '../../types/chat';
 import ProfileModal from './ProfileModal';
@@ -11,9 +11,11 @@ interface ContactListProps {
     onSelectContact: (id: number) => void;
     currentUser: CurrentUser | null;
     onLogout?: () => void;
+    onRefresh?: () => Promise<void>;
+    refreshing?: boolean;
 }
 
-const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, onSelectContact, currentUser, onLogout }) => {
+const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, onSelectContact, currentUser, onLogout, onRefresh, refreshing = false }) => {
     const { colors } = useAppTheme();
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -158,6 +160,17 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
                 keyExtractor={item => item.id.toString()}
                 contentContainerStyle={styles.listContainer}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    onRefresh ? (
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[colors.brandTeal]}
+                            tintColor={colors.brandTeal}
+                            progressBackgroundColor={colors.bgPrimary}
+                        />
+                    ) : undefined
+                }
             />
 
             <ProfileModal
