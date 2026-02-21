@@ -6,7 +6,6 @@ import { useAppTheme } from '../contexts/ThemeContext';
 
 import ChatScreen from '../screens/ChatScreen';
 import PipelineScreen from '../screens/PipelineScreen';
-import DashboardScreen from '../screens/DashboardScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -52,15 +51,6 @@ export default function MainTabNavigator({ onLogout }: { onLogout: () => void })
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <FontAwesome5 name="filter" size={size} color={color} solid />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="Dashboard"
-                component={DashboardScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <FontAwesome5 name="chart-bar" size={size} color={color} solid />
                     ),
                 }}
             />
