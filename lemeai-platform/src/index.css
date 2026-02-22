@@ -1,8 +1,8 @@
 :root {
   /* GLOBAL VARIABLES (Light Mode Default) */
-  --bg-primary: #f8f9fa;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #e9ecef;
+  --bg-primary: #f2f4f7;
+  --bg-secondary: #fcfcfc;
+  --bg-tertiary: #e4e7eb;
 
   --text-primary: #343a40;
   --text-secondary: #6c757d;
@@ -176,4 +176,31 @@ html {
 .add-button:hover {
   background-color: #004c5a;
   transform: translateY(-2px);
+}
+
+/* Custom Scrollbar for the platform */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* For Firefox compatibility */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) var(--bg-primary);
 }

@@ -17,8 +17,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
         if (!audio) return;
 
         const setAudioData = () => {
-            setDuration(audio.duration);
-            setCurrentTime(audio.currentTime);
+            if (audio.duration && !isNaN(audio.duration) && audio.duration !== Infinity) {
+                setDuration(audio.duration);
+            }
         }
 
         const setAudioTime = () => {
@@ -30,12 +31,20 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
             setCurrentTime(0);
         }
 
+        if (audio.readyState >= 1) {
+            setAudioData();
+        }
+
         // Add event listeners
+        audio.addEventListener('loadedmetadata', setAudioData);
+        audio.addEventListener('durationchange', setAudioData);
         audio.addEventListener('loadeddata', setAudioData);
         audio.addEventListener('timeupdate', setAudioTime);
         audio.addEventListener('ended', handleEnded);
 
         return () => {
+            audio.removeEventListener('loadedmetadata', setAudioData);
+            audio.removeEventListener('durationchange', setAudioData);
             audio.removeEventListener('loadeddata', setAudioData);
             audio.removeEventListener('timeupdate', setAudioTime);
             audio.removeEventListener('ended', handleEnded);
@@ -91,7 +100,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
             </div>
 
             <div className="time-display">
-                {formatTime(currentTime)}
+                {(isPlaying || currentTime > 0) ? formatTime(currentTime) : formatTime(duration)}
             </div>
         </div>
     );

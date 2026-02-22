@@ -366,11 +366,13 @@ const PipelinePage = () => {
                                                                 style={{ ...provided.draggableProps.style }}
                                                                 onClick={() => setSelectedDeal(deal)}
                                                             >
-                                                                <div className="card-tags">
-                                                                    <span className={`card-tag tag-${deal.tag}`}>
-                                                                        {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
-                                                                    </span>
-                                                                </div>
+                                                                {column.id === 'ai_service' && (
+                                                                    <div className="card-tags">
+                                                                        <span className={`card-tag tag-${deal.tag}`}>
+                                                                            {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
                                                                 <div className="card-title">{deal.title}</div>
                                                                 <div className="card-value">{deal.value}</div>
                                                                 <div className="card-footer">

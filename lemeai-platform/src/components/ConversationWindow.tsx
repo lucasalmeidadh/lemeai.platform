@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
-import { FaRobot, FaCheck, FaRegClock, FaExclamationCircle, FaTimes, FaDownload, FaImage } from 'react-icons/fa'; // Importando novos ícones
+import { FaRobot, FaCheck, FaRegClock, FaExclamationCircle, FaTimes, FaDownload, FaImage, FaChevronDown } from 'react-icons/fa'; // Importando novos ícones
 import './ConversationWindow.css';
 import AudioPlayer from './AudioPlayer';
 import type { Message } from '../data/mockData';
@@ -30,6 +30,8 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
   const listRef = useRef<HTMLDivElement>(null);
   const isAtBottomRef = useRef(true); // Track if user is at the bottom
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
 
   const handleDownload = async () => {
     if (!selectedImage) return;
@@ -58,10 +60,23 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
   const handleScroll = () => {
     if (listRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = listRef.current;
-      // Consider user at bottom if they are within 100px of the bottom
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+      // Consider user at bottom if they are within 150px of the bottom
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
       isAtBottomRef.current = isAtBottom;
+
+      // Update UI state for showing the "scroll to bottom" button
+      if (isAtBottom) {
+        setIsScrolledUp(false);
+        setHasNewMessage(false);
+      } else {
+        setIsScrolledUp(true);
+      }
     }
+  };
+
+  const forceScrollToBottom = () => {
+    scrollToBottom(true);
+    setHasNewMessage(false);
   };
 
   // Scroll when image loads. If it's the last message, we want to ensure visibility.
@@ -112,89 +127,101 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
     } else if (isAtBottomRef.current) {
       // For other messages, only scroll if we were already at the bottom
       scrollToBottom(true);
+    } else {
+      // Message from someone else and we are scrolled up
+      setHasNewMessage(true);
     }
   }, [messagesByDate]);
 
   return (
-    <div className="messages-list" ref={listRef} onScroll={handleScroll}>
-      {Object.entries(messagesByDate)
-        .sort(([dateA], [dateB]) => parseDate(dateA).getTime() - parseDate(dateB).getTime())
-        .map(([date, messages]) => (
-          <React.Fragment key={date}>
-            <div className="date-divider"><span>{date}</span></div>
-            {messages
-              .sort((a, b) => a.id - b.id)
-              .map(msg => (
-                <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
-                  <div className={`message-bubble ${msg.sender} ${msg.type === 'image' ? 'media-message' : ''}`}>
-                    {msg.sender === 'ia' && (
-                      <div className="ia-header">
-                        <FaRobot />
-                        <span>Téo (IA)</span>
-                      </div>
-                    )}
+    <div className="conversation-window-wrapper">
+      <div className="messages-list" ref={listRef} onScroll={handleScroll}>
+        {Object.entries(messagesByDate)
+          .sort(([dateA], [dateB]) => parseDate(dateA).getTime() - parseDate(dateB).getTime())
+          .map(([date, messages]) => (
+            <React.Fragment key={date}>
+              <div className="date-divider"><span>{date}</span></div>
+              {messages
+                .sort((a, b) => a.id - b.id)
+                .map(msg => (
+                  <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
+                    <div className={`message-bubble ${msg.sender} ${msg.type === 'image' ? 'media-message' : ''}`}>
+                      {msg.sender === 'ia' && (
+                        <div className="ia-header">
+                          <FaRobot />
+                          <span>Téo (IA)</span>
+                        </div>
+                      )}
 
-                    {msg.type === 'image' && msg.mediaUrl ? (
-                      <div className="message-image-container">
-                        <img
-                          src={msg.mediaUrl}
-                          alt="Imagem enviada"
-                          className="message-image"
-                          onLoad={handleImageLoad}
-                          onClick={() => setSelectedImage(msg.mediaUrl!)}
-                        />
-                        {msg.text && !['[imagem]', '[image]'].includes(msg.text.toLowerCase()) && <div className="message-caption">{msg.text}</div>}
-                      </div>
-                    ) : msg.type === 'audio' && msg.mediaUrl ? (
-                      <div className="message-audio-container">
-                        <AudioPlayer src={msg.mediaUrl} />
-                        {msg.text && !['[áudio]', '[audio]'].includes(msg.text.toLowerCase()) && <div className="message-caption">{msg.text}</div>}
-                      </div>
-                    ) : (msg.type === 'file' || msg.type === 'document') && msg.mediaUrl ? (
-                      <div className="message-file-container">
-                        <a href={msg.mediaUrl} target="_blank" rel="noopener noreferrer" className="file-attachment-link">
-                          <FaDownload className="file-icon" />
-                          <span className="file-name">{msg.text || 'Arquivo'}</span>
-                        </a>
-                      </div>
-                    ) : (
-                      <div className="message-content">{msg.text}</div>
-                    )}
+                      {msg.type === 'image' && msg.mediaUrl ? (
+                        <div className="message-image-container">
+                          <img
+                            src={msg.mediaUrl}
+                            alt="Imagem enviada"
+                            className="message-image"
+                            onLoad={handleImageLoad}
+                            onClick={() => setSelectedImage(msg.mediaUrl!)}
+                          />
+                          {msg.text && !['[imagem]', '[image]'].includes(msg.text.toLowerCase()) && <div className="message-caption">{msg.text}</div>}
+                        </div>
+                      ) : msg.type === 'audio' && msg.mediaUrl ? (
+                        <div className="message-audio-container">
+                          <AudioPlayer src={msg.mediaUrl} />
+                          {msg.text && !['[áudio]', '[audio]'].includes(msg.text.toLowerCase()) && <div className="message-caption">{msg.text}</div>}
+                        </div>
+                      ) : (msg.type === 'file' || msg.type === 'document') && msg.mediaUrl ? (
+                        <div className="message-file-container">
+                          <a href={msg.mediaUrl} target="_blank" rel="noopener noreferrer" className="file-attachment-link">
+                            <FaDownload className="file-icon" />
+                            <span className="file-name">{msg.text || 'Arquivo'}</span>
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="message-content">{msg.text}</div>
+                      )}
 
-                    <div className="message-meta">
-                      <span className="timestamp">{msg.time}</span>
-                      {msg.sender === 'me' && <MessageStatus status={msg.status} />}
+                      <div className="message-meta">
+                        <span className="timestamp">{msg.time}</span>
+                        {msg.sender === 'me' && <MessageStatus status={msg.status} />}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-          </React.Fragment>
-        ))}
-      <div ref={messagesEndRef} />
+                ))}
+            </React.Fragment>
+          ))}
+        <div ref={messagesEndRef} />
 
-      {selectedImage && (
-        <div className="image-modal-overlay" onClick={() => setSelectedImage(null)}>
-          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
-            <header className="image-modal-header">
-              <h3>
-                <FaImage style={{ marginRight: '8px' }} />
-                Visualizar Imagem
-              </h3>
-              <button className="image-modal-close" onClick={() => setSelectedImage(null)}>
-                <FaTimes />
-              </button>
-            </header>
-            <div className="image-modal-body">
-              <img src={selectedImage} alt="Visualização em tela cheia" />
+        {selectedImage && (
+          <div className="image-modal-overlay" onClick={() => setSelectedImage(null)}>
+            <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+              <header className="image-modal-header">
+                <h3>
+                  <FaImage style={{ marginRight: '8px' }} />
+                  Visualizar Imagem
+                </h3>
+                <button className="image-modal-close" onClick={() => setSelectedImage(null)}>
+                  <FaTimes />
+                </button>
+              </header>
+              <div className="image-modal-body">
+                <img src={selectedImage} alt="Visualização em tela cheia" />
+              </div>
+              <footer className="image-modal-footer">
+                <button className="download-btn" onClick={handleDownload}>
+                  <FaDownload style={{ marginRight: '8px' }} />
+                  Baixar Imagem
+                </button>
+              </footer>
             </div>
-            <footer className="image-modal-footer">
-              <button className="download-btn" onClick={handleDownload}>
-                <FaDownload style={{ marginRight: '8px' }} />
-                Baixar Imagem
-              </button>
-            </footer>
           </div>
-        </div>
+        )}
+      </div>
+
+      {isScrolledUp && (
+        <button className={`scroll-to-bottom-btn ${hasNewMessage ? 'has-new' : ''}`} onClick={forceScrollToBottom}>
+          <FaChevronDown />
+          {hasNewMessage && <span className="new-message-badge" />}
+        </button>
       )}
     </div>
   );

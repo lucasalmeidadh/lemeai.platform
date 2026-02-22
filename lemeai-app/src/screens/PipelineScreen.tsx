@@ -1,13 +1,24 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Dimensions, RefreshControl, Alert } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Dimensions, RefreshControl, Alert, LayoutAnimation, UIManager, Platform, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { apiFetch } from '../services/api';
+
+if (Platform.OS === 'android') {
+    if (UIManager.setLayoutAnimationEnabledExperimental) {
+        UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+}
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useAppTheme } from '../contexts/ThemeContext';
 import { OpportunityService, Opportunity } from '../services/OpportunityService';
 import ContactDetailsModal from '../components/Chat/ContactDetailsModal';
 import SummaryModal from '../components/Chat/SummaryModal';
 import TransferModal from '../components/Chat/TransferModal';
+import ProfileModal from '../components/Chat/ProfileModal';
 import { ChatService } from '../services/ChatService';
-import { Contact } from '../types/chat';
+import { Contact, CurrentUser } from '../types/chat';
+
+const API_URL = 'https://api.gbcode.com.br';
 
 const { width } = Dimensions.get('window');
 
@@ -21,8 +32,12 @@ const COLUMNS = [
     { id: 6, title: 'Venda Perdida', color: '#ef4444' },
 ];
 
-export default function PipelineScreen() {
-    const { colors } = useAppTheme();
+interface PipelineScreenProps {
+    onLogout?: () => void;
+}
+
+export default function PipelineScreen({ onLogout }: PipelineScreenProps) {
+    const { colors, theme, toggleTheme } = useAppTheme();
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -39,10 +54,28 @@ export default function PipelineScreen() {
     // Transfer modal state
     const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
 
-    const flatListRef = useRef<FlatList>(null);
-    const paginationRef = useRef<FlatList>(null);
-    const [activeColumnIndex, setActiveColumnIndex] = useState(0);
-    const isManualScroll = useRef(false);
+    const [expandedSections, setExpandedSections] = useState<number[]>([COLUMNS[0].id]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+    const [isProfileVisible, setIsProfileVisible] = useState(false);
+
+    const fetchCurrentUser = useCallback(async () => {
+        try {
+            const response = await apiFetch(`${API_URL}/api/Auth/me`);
+            if (response.ok) {
+                const result = await response.json();
+                if (result.sucesso && result.dados) {
+                    const userId = result.dados.id || result.dados.userId || 0;
+                    setCurrentUser({ id: userId, name: result.dados.userName || result.dados.nome });
+                } else if (result.id) {
+                    const userId = Number(result.id) || 0;
+                    setCurrentUser({ id: userId, name: result.userName || result.nome });
+                }
+            }
+        } catch (err) {
+            console.error("Erro ao buscar currentUser:", err);
+        }
+    }, []);
 
     const fetchOpportunities = async (isRefetch = false) => {
         if (!isRefetch) setIsLoading(true);
@@ -59,6 +92,7 @@ export default function PipelineScreen() {
     };
 
     useEffect(() => {
+        fetchCurrentUser();
         fetchOpportunities();
     }, []);
 
@@ -74,36 +108,11 @@ export default function PipelineScreen() {
         }).format(value);
     };
 
-    const handleScroll = (event: any) => {
-        if (isManualScroll.current) return;
-
-        const xOffset = event.nativeEvent.contentOffset.x;
-        const newIndex = Math.round(xOffset / width);
-        if (newIndex !== activeColumnIndex && newIndex >= 0 && newIndex < COLUMNS.length) {
-            setActiveColumnIndex(newIndex);
-            try {
-                paginationRef.current?.scrollToIndex({ index: newIndex, animated: true, viewPosition: 0.5 });
-            } catch (e) {
-                // Ignore scroll errors on unmounted/unmeasured lists
-            }
-        }
-    };
-
-    const handleTabPress = (index: number) => {
-        isManualScroll.current = true;
-        setActiveColumnIndex(index);
-
-        try {
-            flatListRef.current?.scrollToIndex({ index, animated: true });
-            paginationRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
-        } catch (e) {
-            // Ignore
-        }
-
-        // Release lock shortly after animation
-        setTimeout(() => {
-            isManualScroll.current = false;
-        }, 500);
+    const toggleSection = (id: number) => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setExpandedSections(prev =>
+            prev.includes(id) ? prev.filter(colId => colId !== id) : [...prev, id]
+        );
     };
 
     const handleCardPress = (opp: Opportunity) => {
@@ -158,7 +167,7 @@ export default function PipelineScreen() {
 
         return (
             <TouchableOpacity
-                style={[styles.card, { backgroundColor: colors.bgSecondary, borderColor: colors.borderColor }]}
+                style={[styles.card, { backgroundColor: colors.bgPrimary, borderColor: colors.borderColor }]}
                 onPress={() => handleCardPress(item)}
             >
                 <View style={[styles.cardHeader, { borderBottomColor: colors.borderColor }]}>
@@ -188,54 +197,120 @@ export default function PipelineScreen() {
     };
 
     const renderColumn = ({ item: column }: { item: typeof COLUMNS[0] }) => {
-        const columnOpps = opportunities.filter(opp => opp.idStauts === column.id);
+        let columnOpps = opportunities.filter(opp => opp.idStauts === column.id);
+
+        if (searchTerm.trim() !== '') {
+            const query = searchTerm.toLowerCase();
+            columnOpps = columnOpps.filter(opp =>
+                (opp.nomeContato && opp.nomeContato.toLowerCase().includes(query)) ||
+                (opp.nomeUsuarioResponsavel && opp.nomeUsuarioResponsavel.toLowerCase().includes(query))
+            );
+        }
+
         const totalValue = columnOpps.reduce((sum, opp) => sum + (opp.valor || 0), 0);
+        const isExpanded = expandedSections.includes(column.id);
 
         return (
-            <View style={[styles.column, { backgroundColor: colors.bgTertiary, width: width }]}>
-                <View style={[styles.columnHeader, { borderTopColor: column.color }]}>
-                    <View style={styles.columnTitleRow}>
-                        <View style={[styles.columnDot, { backgroundColor: column.color }]} />
+            <View style={[styles.accordionSection, { backgroundColor: colors.bgSecondary, borderColor: colors.borderColor }]}>
+                <TouchableOpacity
+                    style={[styles.accordionHeader, { borderLeftColor: column.color }]}
+                    onPress={() => toggleSection(column.id)}
+                    activeOpacity={0.7}
+                >
+                    <View style={styles.accordionTitleRow}>
                         <Text style={[styles.columnTitle, { color: colors.textPrimary }]}>{column.title}</Text>
-                        <View style={[styles.badge, { backgroundColor: colors.bgSecondary }]}>
+                        <View style={[styles.badge, { backgroundColor: colors.bgTertiary }]}>
                             <Text style={[styles.badgeText, { color: colors.textSecondary }]}>{columnOpps.length}</Text>
                         </View>
                     </View>
-                    <Text style={[styles.columnTotalText, { color: colors.textSecondary }]}>
-                        {formatCurrency(totalValue)}
-                    </Text>
-                </View>
 
-                {isLoading && !isRefreshing ? (
-                    <View style={styles.centerContent}>
-                        <ActivityIndicator size="large" color={colors.brandTeal} />
+                    <View style={styles.accordionHeaderRight}>
+                        <Text style={[styles.columnTotalText, { color: colors.textSecondary }]}>
+                            {formatCurrency(totalValue)}
+                        </Text>
+                        <View style={{ width: 24, alignItems: 'center', marginLeft: 8 }}>
+                            <FontAwesome5
+                                name={isExpanded ? "chevron-up" : "chevron-down"}
+                                size={14}
+                                color={colors.textTertiary}
+                            />
+                        </View>
                     </View>
-                ) : (
-                    <FlatList
-                        data={columnOpps}
-                        keyExtractor={(item) => item.idConversa.toString()}
-                        renderItem={renderCard}
-                        contentContainerStyle={styles.cardList}
-                        showsVerticalScrollIndicator={false}
-                        refreshControl={
-                            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.brandTeal]} />
-                        }
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <FontAwesome5 name="inbox" size={32} color={colors.borderColor} style={{ marginBottom: 16 }} />
+                </TouchableOpacity>
+
+                {isExpanded && (
+                    <View style={[styles.accordionContent, { backgroundColor: colors.bgSecondary }]}>
+                        {isLoading && !isRefreshing ? (
+                            <View style={styles.centerContentSmall}>
+                                <ActivityIndicator size="small" color={colors.brandTeal} />
+                            </View>
+                        ) : columnOpps.length === 0 ? (
+                            <View style={styles.emptyContainerSmall}>
                                 <Text style={[styles.emptyText, { color: colors.textTertiary }]}>Nenhuma oportunidade.</Text>
                             </View>
-                        }
-                    />
+                        ) : (
+                            columnOpps.map(opp => <React.Fragment key={opp.idConversa}>{renderCard({ item: opp })}</React.Fragment>)
+                        )}
+                    </View>
                 )}
             </View>
         );
     };
 
+    const getInitials = (name: string) => {
+        if (!name) return 'US';
+        const parts = name.trim().split(' ');
+        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    };
+
+    const userInitials = currentUser?.name || currentUser?.nome ? getInitials(currentUser.name || currentUser.nome || '') : 'US';
+
     return (
-        <View style={[styles.container, { backgroundColor: colors.bgPrimary }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.bgSecondary }]} edges={['top', 'left', 'right']}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: colors.textPrimary }]}>Funil de Vendas</Text>
+                <View style={styles.headerTopRow}>
+                    <View style={styles.titleContainer}>
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>Funil de Vendas</Text>
+                    </View>
+                    <View style={styles.headerRightControls}>
+                        <TouchableOpacity style={styles.themeToggleBtn} onPress={toggleTheme}>
+                            <FontAwesome5
+                                name={theme === 'dark' ? 'sun' : 'moon'}
+                                size={20}
+                                color={colors.textSecondary}
+                                solid={theme === 'dark'}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.userAvatarContainer} onPress={() => setIsProfileVisible(true)}>
+                            <View style={[styles.userAvatar, { backgroundColor: colors.brandTeal }]}>
+                                <Text style={styles.userAvatarText}>{userInitials}</Text>
+                                <View style={[styles.onlineIndicator, { borderColor: colors.bgSecondary }]} />
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+
+            <View style={styles.filterContainer}>
+                <View style={[styles.searchInputContainer, { backgroundColor: colors.bgPrimary, borderColor: colors.borderColor }]}>
+                    <FontAwesome5 name="search" size={14} color={colors.textTertiary} style={styles.searchIcon} />
+                    <TextInput
+                        style={[styles.searchInput, { color: colors.textPrimary }]}
+                        placeholder="Buscar oportunidade..."
+                        placeholderTextColor={colors.textTertiary}
+                        value={searchTerm}
+                        onChangeText={setSearchTerm}
+                        autoComplete="off"
+                        importantForAutofill="no"
+                        autoCorrect={false}
+                    />
+                    {searchTerm.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchTerm('')} style={styles.clearSearchBtn}>
+                            <FontAwesome5 name="times-circle" size={16} color={colors.textTertiary} />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             {error ? (
@@ -247,48 +322,25 @@ export default function PipelineScreen() {
                 </View>
             ) : (
                 <>
-                    {/* Header Paginador / Indicador de Coluna Ativa */}
-                    <View style={styles.paginationHeader}>
-                        <FlatList
-                            ref={paginationRef}
-                            data={COLUMNS}
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            keyExtractor={i => i.id.toString()}
-                            renderItem={({ item, index }) => (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.paginationTab,
-                                        index === activeColumnIndex && { borderBottomColor: item.color, borderBottomWidth: 2 }
-                                    ]}
-                                    onPress={() => handleTabPress(index)}
-                                >
-                                    <Text style={[
-                                        styles.paginationTabText,
-                                        { color: index === activeColumnIndex ? colors.textPrimary : colors.textTertiary },
-                                        index === activeColumnIndex && { fontWeight: 'bold' }
-                                    ]}>{item.title}</Text>
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-
                     <FlatList
-                        ref={flatListRef}
                         data={COLUMNS}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={renderColumn}
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                        getItemLayout={(data, index) => (
-                            { length: width, offset: width * index, index }
-                        )}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.accordionList}
+                        refreshControl={
+                            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={[colors.brandTeal]} />
+                        }
                     />
                 </>
             )}
+
+            <ProfileModal
+                visible={isProfileVisible}
+                onClose={() => setIsProfileVisible(false)}
+                onLogout={onLogout || (() => { })}
+                userName={currentUser?.name || currentUser?.nome}
+            />
 
             {selectedOpp && (
                 <>
@@ -334,7 +386,7 @@ export default function PipelineScreen() {
                     />
                 </>
             )}
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -344,52 +396,116 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 16,
-        paddingTop: 50,
-        backgroundColor: 'transparent',
+    },
+    headerTopRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
+        marginRight: 8,
     },
-    paginationHeader: {
-        height: 40,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.05)',
-    },
-    paginationTab: {
-        paddingHorizontal: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    paginationTabText: {
-        fontSize: 14,
-    },
-    column: {
-        flex: 1,
-        height: '100%',
-    },
-    columnHeader: {
-        padding: 16,
-        borderTopWidth: 3,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.05)',
-        backgroundColor: 'rgba(255,255,255,0.5)',
-    },
-    columnTitleRow: {
+    headerRightControls: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        gap: 12,
     },
-    columnDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+    themeToggleBtn: {
+        padding: 8,
+    },
+    userAvatarContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    userAvatar: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    userAvatarText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    onlineIndicator: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#28a745',
+        borderWidth: 2,
+    },
+    filterContainer: {
+        paddingHorizontal: 16,
+        paddingBottom: 8,
+    },
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 48,
+    },
+    searchIcon: {
         marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        height: '100%',
+    },
+    clearSearchBtn: {
+        padding: 8,
+    },
+    accordionList: {
+        padding: 16,
+        paddingTop: 8,
+        paddingBottom: 100, // Extra padding for the floating tab bar
+    },
+    accordionSection: {
+        marginBottom: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        overflow: 'hidden',
+    },
+    accordionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        borderLeftWidth: 4,
+    },
+    accordionTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    accordionHeaderRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     columnTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        flex: 1,
+        marginRight: 8,
     },
     badge: {
         paddingHorizontal: 8,
@@ -404,9 +520,17 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
     },
-    cardList: {
+    accordionContent: {
         padding: 16,
-        paddingBottom: 40, // Space for bottom tabs
+        paddingTop: 8,
+    },
+    centerContentSmall: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    emptyContainerSmall: {
+        padding: 20,
+        alignItems: 'center',
     },
     card: {
         borderWidth: 1,

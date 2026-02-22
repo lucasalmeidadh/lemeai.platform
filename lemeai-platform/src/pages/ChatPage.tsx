@@ -18,6 +18,22 @@ import noConversationImagem from '../assets/undraw_sem_conversa.svg';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
+const formatPreviewMessage = (message: string) => {
+  if (!message) return '';
+  const lowerMsg = message.toLowerCase();
+
+  if (lowerMsg === '[audio]' || lowerMsg.includes('.ogg') || lowerMsg.includes('.mp3') || lowerMsg.includes('.oga') || lowerMsg.includes('.wav') || lowerMsg.includes('.m4a')) {
+    return 'Mensagem de voz';
+  }
+  if (lowerMsg === '[image]' || lowerMsg.includes('.jpg') || lowerMsg.includes('.jpeg') || lowerMsg.includes('.png') || lowerMsg.includes('.webp') || lowerMsg.includes('.gif')) {
+    return 'Imagem';
+  }
+  if (lowerMsg === '[document]' || lowerMsg === '[file]' || lowerMsg.includes('.pdf') || lowerMsg.includes('.doc') || lowerMsg.includes('.docx') || lowerMsg.includes('.xls') || lowerMsg.includes('.xlsx') || lowerMsg.includes('.txt')) {
+    return 'Documento';
+  }
+  return message;
+};
+
 // Interfaces (sem alteração)
 interface CurrentUser {
   id: number;
@@ -147,7 +163,7 @@ const ChatPage = () => {
           return {
             id: convo.idConversa,
             name: convo.nomeCliente || convo.numeroWhatsapp,
-            lastMessage: convo.ultimaMensagem,
+            lastMessage: formatPreviewMessage(convo.ultimaMensagem),
             time: new Date(convo.dataUltimaMensagem).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             unread: convo.totalNaoLidas,
             initials: (convo.nomeCliente || 'C').charAt(0).toUpperCase(),

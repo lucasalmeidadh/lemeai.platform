@@ -21,24 +21,30 @@ export default function MainTabNavigator({ onLogout }: { onLogout: () => void })
                 headerShown: false,
                 tabBarActiveTintColor: colors.brandTeal,
                 tabBarInactiveTintColor: colors.textTertiary,
+                tabBarShowLabel: false,
+                tabBarItemStyle: {
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                },
                 tabBarStyle: isInConversation
                     ? { display: 'none' as const }
                     : {
+                        position: 'absolute',
+                        bottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 20) : 20,
+                        left: 40,
+                        right: 40,
                         backgroundColor: colors.bgSecondary,
-                        borderTopColor: colors.borderColor,
-                        elevation: 8,
+                        borderTopWidth: 0,
+                        borderRadius: 30,
+                        elevation: 10,
                         shadowColor: '#000',
-                        shadowOffset: { width: 0, height: -2 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 4,
-                        height: (Platform.OS === 'ios' ? 88 : 60) + insets.bottom,
-                        paddingBottom: (Platform.OS === 'ios' ? 28 : 10) + insets.bottom,
-                        paddingTop: 8,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 10,
+                        height: 60,
+                        paddingBottom: 0,
+                        paddingTop: 0,
                     },
-                tabBarLabelStyle: {
-                    fontSize: 12,
-                    fontWeight: '600',
-                },
             }}
         >
             <Tab.Screen
@@ -52,7 +58,7 @@ export default function MainTabNavigator({ onLogout }: { onLogout: () => void })
             />
             <Tab.Screen
                 name="Funil"
-                component={PipelineScreen}
+                children={() => <PipelineScreen onLogout={onLogout} />}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <FontAwesome5 name="filter" size={size} color={color} solid />

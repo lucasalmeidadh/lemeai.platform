@@ -16,7 +16,7 @@ interface ContactListProps {
 }
 
 const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, onSelectContact, currentUser, onLogout, onRefresh, refreshing = false }) => {
-    const { colors } = useAppTheme();
+    const { colors, theme, toggleTheme } = useAppTheme();
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [isProfileVisible, setIsProfileVisible] = useState(false);
@@ -116,26 +116,44 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
                             </View>
                         )}
                     </View>
-                    <TouchableOpacity style={styles.userAvatarContainer} onPress={handleOpenProfile}>
-                        <View style={[styles.userAvatar, { backgroundColor: colors.brandTeal }]}>
-                            <Text style={styles.userAvatarText}>{userInitials}</Text>
-                            <View style={[styles.onlineIndicator, { borderColor: colors.bgSecondary }]} />
-                        </View>
-                    </TouchableOpacity>
+                    <View style={styles.headerRightControls}>
+                        <TouchableOpacity style={styles.themeToggleBtn} onPress={toggleTheme}>
+                            <FontAwesome5
+                                name={theme === 'dark' ? 'sun' : 'moon'}
+                                size={20}
+                                color={colors.textSecondary}
+                                solid={theme === 'dark'}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.userAvatarContainer} onPress={handleOpenProfile}>
+                            <View style={[styles.userAvatar, { backgroundColor: colors.brandTeal }]}>
+                                <Text style={styles.userAvatarText}>{userInitials}</Text>
+                                <View style={[styles.onlineIndicator, { borderColor: colors.bgSecondary }]} />
+                            </View>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <View style={styles.searchContainer}>
-                    <TextInput
-                        ref={searchInputRef}
-                        style={[styles.searchInput, { backgroundColor: colors.bgPrimary, borderColor: colors.borderColorSoft, color: colors.textPrimary }]}
-                        placeholder="Buscar conversas..."
-                        placeholderTextColor={colors.textTertiary}
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        autoComplete="off"
-                        importantForAutofill="no"
-                        autoCorrect={false}
-                    />
+                    <View style={[styles.searchInputContainer, { backgroundColor: colors.bgPrimary, borderColor: colors.borderColorSoft }]}>
+                        <FontAwesome5 name="search" size={14} color={colors.textTertiary} style={styles.searchIcon} />
+                        <TextInput
+                            ref={searchInputRef}
+                            style={[styles.searchInput, { color: colors.textPrimary }]}
+                            placeholder="Buscar conversas..."
+                            placeholderTextColor={colors.textTertiary}
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            autoComplete="off"
+                            importantForAutofill="no"
+                            autoCorrect={false}
+                        />
+                        {searchQuery.length > 0 && (
+                            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
+                                <FontAwesome5 name="times-circle" size={16} color={colors.textTertiary} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
 
                 <View style={styles.filterTabs}>
@@ -216,6 +234,14 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
     },
+    headerRightControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    themeToggleBtn: {
+        padding: 8,
+    },
     userAvatarContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -252,12 +278,24 @@ const styles = StyleSheet.create({
     searchContainer: {
         marginBottom: 16,
     },
-    searchInput: {
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        fontSize: 14,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 48,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        height: '100%',
+    },
+    clearSearchBtn: {
+        padding: 8,
     },
     filterTabs: {
         flexDirection: 'row',

@@ -31,7 +31,7 @@ export const apiFetch = async (input: RequestInfo | URL, init?: RequestInitRetry
             try {
                 // Tenta renovar o token
                 // Assumindo endpoint padrão. Ajuste conforme necessário.
-                const refreshResponse = await fetch(`${API_URL}/api/Auth/RefreshToken`, {
+                const refreshResponse = await fetch(`${API_URL}/api/Auth/refresh-token`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {

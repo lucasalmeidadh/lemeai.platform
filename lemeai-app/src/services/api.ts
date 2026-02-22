@@ -25,7 +25,7 @@ export const apiFetch = async (input: RequestInfo | URL, init?: RequestInitRetry
             config._retry = true;
 
             try {
-                const refreshResponse = await fetch(`${API_URL}/api/Auth/RefreshToken`, {
+                const refreshResponse = await fetch(`${API_URL}/api/Auth/refresh-token`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -38,9 +38,12 @@ export const apiFetch = async (input: RequestInfo | URL, init?: RequestInitRetry
                 } else {
                     throw new Error('Sessão expirada');
                 }
-            } catch (refreshError) {
+            } catch (refreshError: any) {
                 console.error('Falha na renovação de token:', refreshError);
-                await AsyncStorage.removeItem('user');
+                // Only clear session and logout if the error is explicitly an authentication rejection
+                if (refreshError.message === 'Sessão expirada') {
+                    await AsyncStorage.removeItem('user');
+                }
                 // Could emit an event here to trigger logout
                 return Promise.reject(refreshError);
             }
