@@ -248,6 +248,12 @@ const ChatPage = () => {
       setActiveConversationMessages(prev => {
         const newMessagesByDate = { ...prev };
         const currentMessages = prev[dateKey] || [];
+
+        // Evita duplicatas se o websocket enviar o mesmo evento
+        if (currentMessages.some(m => m.id === formattedMessage.id)) {
+          return prev;
+        }
+
         newMessagesByDate[dateKey] = [...currentMessages, formattedMessage];
         return newMessagesByDate;
       });
