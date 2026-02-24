@@ -88,6 +88,31 @@
   min-width: 20px;
 }
 
+.nav-icon-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sidebar-badge {
+  position: absolute;
+  top: -8px;
+  right: 5px;
+  background-color: #ff4d4f;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--bg-secondary);
+}
+
+.sidebar.collapsed .sidebar-badge {
+  right: -5px;
+  /* Adjust position slightly when collapsed */
+}
+
 /* Submenu styles */
 .submenu {
   background-color: var(--bg-primary);

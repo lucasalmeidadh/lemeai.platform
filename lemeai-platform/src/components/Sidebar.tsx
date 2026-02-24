@@ -1,5 +1,6 @@
 import { useState, useEffect, type FC } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
 import './Sidebar.css';
 import {
   FaTachometerAlt,
@@ -29,6 +30,14 @@ interface SidebarProps {
 const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfile }) => {
   const location = useLocation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { unreadCount, clearUnreadCount } = useGlobalNotification();
+
+  useEffect(() => {
+    // Se o usuário entrou na página de chat, limpamos as notificações globais de mensagens não lidas
+    if (location.pathname === '/chat') {
+      clearUnreadCount();
+    }
+  }, [location.pathname, clearUnreadCount]);
 
   useEffect(() => {
     if (location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' || location.pathname === '/products') {
@@ -65,8 +74,11 @@ const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfil
             </Link>
           </li>
           <li className={location.pathname === '/chat' ? 'active' : ''}>
-            <Link to="/chat" title="Chat">
-              <FaComments className="nav-icon" />
+            <Link to="/chat" title="Chat" className="chat-nav-link">
+              <div className="nav-icon-container">
+                <FaComments className="nav-icon" />
+                {unreadCount > 0 && <span className="sidebar-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+              </div>
               <span>Chat</span>
             </Link>
           </li>

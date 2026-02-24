@@ -15,6 +15,7 @@ import ConversationSkeleton from '../components/ConversationSkeleton';
 import hubService from '../hub/HubConnectionService';
 import { ChatService } from '../services/ChatService';
 import noConversationImagem from '../assets/undraw_sem_conversa.svg';
+import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -80,8 +81,9 @@ const ChatPage = () => {
 
   const [activeConversationMessages, setActiveConversationMessages] = useState<MessagesByDate>({});
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  // ADIÇÃO: Novo estado para controlar o status da conexão do Hub
-  const [isHubConnected, setIsHubConnected] = useState(false);
+
+  // Consome o status global do Hub ao invés de gerenciar localmente
+  const { isHubConnected } = useGlobalNotification();
 
 
   // Funções de busca de dados (sem alteração na lógica interna, exceto a remoção do setupChat)
@@ -255,23 +257,15 @@ const ChatPage = () => {
     fetchConversations(false);
   }, [selectedContactId, fetchConversations]);
 
-  // ADIÇÃO 2: useEffect para gerenciar a conexão global com o Hub
+  // ADIÇÃO 2: useEffect para registrar handler de novas mensagens na tela de chat
   useEffect(() => {
-    const setupHubConnection = async () => {
-      try {
-        await hubService.startConnection();
-        hubService.on('ReceiveNewMessage', handleNewMessage);
-        setIsHubConnected(true); // Define o estado para conectado!
-      } catch (e) {
-        console.error("Falha na configuração inicial do Hub", e);
-      }
-    };
-    setupHubConnection();
-
+    if (isHubConnected) {
+      hubService.on('ReceiveNewMessage', handleNewMessage);
+    }
     return () => {
       hubService.off('ReceiveNewMessage', handleNewMessage);
     };
-  }, [handleNewMessage]);
+  }, [isHubConnected, handleNewMessage]);
 
   // ADIÇÃO 3 E MUDANÇA: useEffect para gerenciar entrada/saída de grupos e buscar mensagens
   useEffect(() => {
