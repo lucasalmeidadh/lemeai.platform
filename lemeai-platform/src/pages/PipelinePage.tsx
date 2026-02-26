@@ -9,6 +9,7 @@ import DealDetailsModal from '../components/DealDetailsModal';
 import { OpportunityService, type Opportunity, type DetalheConversa } from '../services/OpportunityService';
 import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { FaMagic } from 'react-icons/fa';
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -64,6 +65,10 @@ const PipelinePage = () => {
     const [isSummaryModalOpen, setSummaryModalOpen] = useState(false);
     const [summaryContent, setSummaryContent] = useState('');
     const [summarizingDealId, setSummarizingDealId] = useState<number | null>(null);
+
+    // AI Summary Confirmation State
+    const [isSummaryConfirmOpen, setIsSummaryConfirmOpen] = useState(false);
+    const [dealToSummarize, setDealToSummarize] = useState<number | null>(null);
 
     const isDraggingRef = useRef(false);
 
@@ -220,11 +225,20 @@ const PipelinePage = () => {
     }
 
 
-    const handleAiSummary = async (e: React.MouseEvent, dealId: number) => {
+    const handleAiSummaryClick = (e: React.MouseEvent, dealId: number) => {
         e.stopPropagation(); // Prevent opening the deal details modal
         if (summarizingDealId) return;
+        setDealToSummarize(dealId);
+        setIsSummaryConfirmOpen(true);
+    };
 
+    const executeAiSummary = async () => {
+        if (!dealToSummarize) return;
+
+        setIsSummaryConfirmOpen(false);
+        const dealId = dealToSummarize;
         setSummarizingDealId(dealId);
+
         const toastId = toast.loading('Gerando resumo...');
 
         try {
@@ -241,6 +255,7 @@ const PipelinePage = () => {
             toast.error('Erro ao conectar com a IA.', { id: toastId });
         } finally {
             setSummarizingDealId(null);
+            setDealToSummarize(null);
         }
     };
 
@@ -381,7 +396,7 @@ const PipelinePage = () => {
                                                                     <div className="card-footer-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                         <button
                                                                             className="icon-button"
-                                                                            onClick={(e) => handleAiSummary(e, deal.id)}
+                                                                            onClick={(e) => handleAiSummaryClick(e, deal.id)}
                                                                             title="Resumir com IA"
                                                                             disabled={summarizingDealId === deal.id}
                                                                             style={{
@@ -438,6 +453,19 @@ const PipelinePage = () => {
                         isOpen={isSummaryModalOpen}
                         onClose={() => setSummaryModalOpen(false)}
                         summary={summaryContent}
+                    />
+
+                    <ConfirmationModal
+                        isOpen={isSummaryConfirmOpen}
+                        onClose={() => {
+                            setIsSummaryConfirmOpen(false);
+                            setDealToSummarize(null);
+                        }}
+                        onConfirm={executeAiSummary}
+                        title="Gerar Resumo IA"
+                        message="Deseja gerar o resumo inteligente desta conversa agora?"
+                        confirmText="Gerar Resumo"
+                        cancelText="Cancelar"
                     />
                 </>
             )}

@@ -60,6 +60,31 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
     const [statusId, setStatusId] = useState(deal.statusId || 1);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
+    // Current User State
+    const [currentUser, setCurrentUser] = useState<{ id: number, nome: string } | null>(null);
+
+    // Fetch Current User
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            try {
+                const response = await apiFetch(`${apiUrl}/api/Auth/me`);
+                if (!response.ok) return;
+
+                const result = await response.json();
+                if (result.sucesso && result.dados) {
+                    const userId = result.dados.id || result.dados.userId || 0;
+                    setCurrentUser({ id: userId, nome: result.dados.userName || result.dados.nome });
+                } else if (result.id) {
+                    const userId = Number(result.id) || 0;
+                    setCurrentUser({ id: userId, nome: result.userName || result.nome });
+                }
+            } catch (err) {
+                console.error("Erro ao buscar usuário logado:", err);
+            }
+        };
+        fetchCurrentUser();
+    }, []);
+
     const fetchMessages = useCallback(async () => {
         if (!deal.contactId) return;
 
@@ -161,17 +186,15 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         });
 
         try {
-            const response = await fetch(`${apiUrl}/api/Chat/Conversas/${deal.contactId}/EnviarMensagem`, {
+            const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/EnviarMensagem`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify(text),
             });
 
             if (!response.ok) throw new Error('Falha ao enviar.');
 
-            // Refresh to get server timestamp/ID confirmation if needed, or just let optimistic stay
-            // fetchMessages();
+            fetchMessages();
         } catch (error) {
             toast.error('Erro ao enviar mensagem.');
             // Revert or mark as failed logic here if needed
@@ -425,8 +448,15 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                                 <ConversationWindow messagesByDate={messagesByDate} conversationId={deal.id} />
                                                 <MessageInput
                                                     onSendMessage={handleSendMessage}
-                                                    disabled={[1, 3, 6].includes(statusId)}
-                                                    disabledMessage="Chat disponível apenas para visualização nesta etapa"
+                                                    disabled={
+                                                        [1, 3, 6].includes(statusId) ||
+                                                        (currentUser !== null && currentUser.nome !== deal.owner)
+                                                    }
+                                                    disabledMessage={
+                                                        currentUser !== null && currentUser.nome !== deal.owner
+                                                            ? "Apenas o responsável pode enviar mensagens nesta conversa"
+                                                            : "Chat disponível apenas para visualização nesta etapa"
+                                                    }
                                                 />
                                             </>
                                         )
