@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaPlay, FaPause } from 'react-icons/fa';
+import { FaPlay, FaPause, FaDownload } from 'react-icons/fa';
 import './AudioPlayer.css';
 
 interface AudioPlayerProps {
@@ -79,6 +79,23 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
+    const handleDownload = async () => {
+        try {
+            const response = await fetch(src);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `audio_${new Date().getTime()}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Erro ao baixar áudio:', error);
+        }
+    };
+
     return (
         <div className="custom-audio-player">
             <audio ref={audioRef} src={src} preload="metadata" />
@@ -102,6 +119,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
             <div className="time-display">
                 {(isPlaying || currentTime > 0) ? formatTime(currentTime) : formatTime(duration)}
             </div>
+
+            <button className="download-button" onClick={handleDownload} title="Baixar Áudio">
+                <FaDownload />
+            </button>
         </div>
     );
 };
