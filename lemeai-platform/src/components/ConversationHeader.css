@@ -58,10 +58,8 @@
 }
 
 .lead-badge.cold {
-  background-color: var(--bg-tertiary);
-  /* Was #e9ecef */
-  color: var(--text-secondary);
-  /* Was #495057 */
+  background-color: #d0ebff;
+  color: #1864ab;
 }
 
 .lead-badge.warm {
@@ -72,6 +70,54 @@
 .lead-badge.hot {
   background-color: #ffe3e3;
   color: #c92a2a;
+}
+
+.lead-badge.unclassified {
+  background-color: var(--bg-tertiary, #e9ecef);
+  color: var(--text-secondary, #6c757d);
+  border: 1px dashed var(--border-color, #dee2e6);
+}
+
+.lead-badge.cursor-pointer {
+  cursor: pointer;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.lead-badge.cursor-pointer:hover {
+  opacity: 0.8 !important;
+}
+
+.lead-options-menu {
+  position: absolute;
+  top: 25px;
+  /* right below the badge */
+  left: 10px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  width: 160px;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.lead-options-menu ul {
+  list-style: none;
+  padding: 5px 0;
+  margin: 0;
+}
+
+.lead-options-menu li {
+  padding: 8px 15px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.lead-options-menu li:hover {
+  background-color: var(--bg-primary);
 }
 
 .header-menu-area {

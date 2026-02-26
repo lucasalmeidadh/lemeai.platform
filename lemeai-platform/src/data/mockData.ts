@@ -19,6 +19,8 @@ export interface Contact {
   responsibleName?: string;
   statusId?: number;
   detailsValue?: number;
+  tipoLeadId?: number;
+  tipoLeadNome?: string;
   messagesByDate: {
     [date: string]: Message[];
   };

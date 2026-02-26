@@ -61,4 +61,35 @@ export const ChatService = {
             throw error;
         }
     },
+
+    atualizarTipoLead: async (idConversa: number, tipoLeadId: number): Promise<any> => {
+        try {
+            const body = { tipoLeadId };
+            const response = await apiFetch(`${apiUrl}/api/Chat/Conversa/${idConversa}/TipoLead`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+
+            if (!response.ok) {
+                let errorMessage = `Erro ao atualizar tipo de lead: ${response.statusText}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData?.mensagem) {
+                        errorMessage = errorData.mensagem;
+                    }
+                } catch (e) {
+                    // Ignore
+                }
+                throw new Error(errorMessage);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Erro no ChatService.atualizarTipoLead:', error);
+            throw error;
+        }
+    },
 };

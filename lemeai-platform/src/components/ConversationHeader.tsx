@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './ConversationHeader.css';
-import { FaEllipsisV, FaMagic, FaExchangeAlt, FaArrowLeft } from 'react-icons/fa';
+import { FaEllipsisV, FaMagic, FaExchangeAlt, FaArrowLeft, FaChevronDown } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import TransferModal from './TransferModal';
 import { type InternalUser } from '../data/mockData';
@@ -15,27 +15,61 @@ interface ConversationHeaderProps {
   currentUserId?: number;
   conversationId: number;
   onBack?: () => void;
+  tipoLeadId?: number;
+  tipoLeadNome?: string;
+  onLeadTypeChange?: () => void;
 }
 
-const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails, onTransfer, currentUserId, conversationId, onBack }) => {
+const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, onToggleDetails, onTransfer, currentUserId, conversationId, onBack, tipoLeadId, tipoLeadNome, onLeadTypeChange }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isTransferModalOpen, setTransferModalOpen] = useState(false);
+  const [isLeadMenuOpen, setLeadMenuOpen] = useState(false);
+  const [isUpdatingLead, setIsUpdatingLead] = useState(false);
 
   const [isSummaryModalOpen, setSummaryModalOpen] = useState(false);
   const [summary, setSummary] = useState('');
   const [isSummaryLoading, setSummaryLoading] = useState(false);
 
-  // Mock logic: generate a random status based on name length if not provided, just for demo
-  // Or simply hardcode one as requested "mockado"
-  // Let's pick 'hot' as a default mock for visualization
-  const status = 'hot';
+  const getStatusLabel = (id?: number, nome?: string) => {
+    if (nome) return nome;
+    switch (id) {
+      case 1: return 'Lead Quente';
+      case 2: return 'Lead Morno';
+      case 3: return 'Lead Frio';
+      default: return 'Sem Classificação';
+    }
+  };
 
-  const getStatusLabel = (s: string) => {
-    switch (s) {
-      case 'cold': return 'Lead Frio';
-      case 'warm': return 'Lead Morno';
-      case 'hot': return 'Lead Quente';
-      default: return 'Lead';
+  const getStatusClass = (id?: number) => {
+    switch (id) {
+      case 1: return 'hot';
+      case 2: return 'warm';
+      case 3: return 'cold';
+      case 0: return 'unclassified';
+      default: return 'unclassified';
+    }
+  };
+
+  const leadOptions = [
+    { id: 1, label: 'Lead Quente' },
+    { id: 2, label: 'Lead Morno' },
+    { id: 3, label: 'Lead Frio' }
+  ];
+
+  const handleLeadChange = async (newLeadId: number) => {
+    setLeadMenuOpen(false);
+    if (isUpdatingLead || newLeadId === tipoLeadId) return;
+
+    setIsUpdatingLead(true);
+    const toastId = toast.loading('Atualizando tipo de lead...');
+    try {
+      await ChatService.atualizarTipoLead(conversationId, newLeadId);
+      toast.success('Tipo de lead atualizado!', { id: toastId });
+      if (onLeadTypeChange) onLeadTypeChange();
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao atualizar.', { id: toastId });
+    } finally {
+      setIsUpdatingLead(false);
     }
   };
 
@@ -86,7 +120,26 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
         </div>
         <div className="header-contact-details">
           <span className="header-contact-name">{contactName}</span>
-          <span className={`lead-badge ${status}`}>{getStatusLabel(status)}</span>
+          <div className="lead-badge-container" style={{ position: 'relative' }}>
+            <span
+              className={`lead-badge ${getStatusClass(tipoLeadId)} cursor-pointer`}
+              onClick={() => setLeadMenuOpen(!isLeadMenuOpen)}
+              style={{ opacity: isUpdatingLead ? 0.7 : 1, display: 'flex', alignItems: 'center' }}
+            >
+              {getStatusLabel(tipoLeadId, tipoLeadNome)} <FaChevronDown style={{ fontSize: '10px', marginLeft: '6px' }} />
+            </span>
+            {isLeadMenuOpen && (
+              <div className="lead-options-menu">
+                <ul>
+                  {leadOptions.map(opt => (
+                    <li key={opt.id} onClick={() => handleLeadChange(opt.id)}>
+                      {opt.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

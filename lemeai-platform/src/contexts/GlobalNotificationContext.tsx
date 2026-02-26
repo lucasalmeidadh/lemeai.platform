@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import hubService from '../hub/HubConnectionService';
 import { apiFetch } from '../services/api';
 
@@ -23,6 +23,7 @@ export const useGlobalNotification = () => useContext(GlobalNotificationContext)
 export const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isHubConnected, setIsHubConnected] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const previousTotalUnreadRef = useRef(0);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const clearUnreadCount = useCallback(() => {
@@ -75,33 +76,59 @@ export const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }>
       }
     }
   }, []);
-
+  // Fetches /api/Chat/ConversasPorVendedor periodically to check for new messages
   useEffect(() => {
     let isMounted = true;
+    let pollInterval: number | null = null;
 
-    // Only connect globally if we have a user logged in
-    const setupGlobalHub = async () => {
-      if (currentUserId) {
-        try {
-          await hubService.startConnection();
+    const checkUnreadMessages = async () => {
+      if (!currentUserId) return;
+
+      try {
+        const response = await apiFetch(`${apiUrl}/api/Chat/ConversasPorVendedor`);
+        if (!response.ok) return;
+
+        const result = await response.json();
+        if (result.sucesso && Array.isArray(result.dados)) {
+          // Calculate the sum of all unread messages
+          const currentTotalUnread = result.dados.reduce((sum: number, convo: any) => sum + (convo.totalNaoLidas || 0), 0);
+
           if (isMounted) {
-            setIsHubConnected(true);
-            hubService.on('ReceiveNewMessage', handleGlobalNewMessage);
-            console.log("Global Hub Connection established. Listening for notifications.");
+            // Check if we are outside the chat page
+            const isChatPage = window.location.pathname.includes('/chat');
+
+            // If we are getting MORE unread messages than we had before
+            if (currentTotalUnread > previousTotalUnreadRef.current && !isChatPage) {
+              setUnreadCount(currentTotalUnread);
+
+              const audio = new Audio('/notification.mp3');
+              audio.play().catch(e => console.warn("Autoplay bloqueou som.", e));
+            }
+
+            // Always reset unread if we are on the chat page, otherwise use current
+            if (isChatPage) {
+              setUnreadCount(0);
+              // But still update the ref so we know our new "baseline"
+            }
+
+            previousTotalUnreadRef.current = currentTotalUnread;
           }
-        } catch (e) {
-          console.error("Falha na configuração do Hub Global", e);
         }
+      } catch (err) {
+        // Silently fail if polling fails (network issue, etc)
       }
     };
 
-    setupGlobalHub();
+    if (currentUserId) {
+      checkUnreadMessages();
+      pollInterval = window.setInterval(checkUnreadMessages, 15000);
+    }
 
     return () => {
       isMounted = false;
-      hubService.off('ReceiveNewMessage', handleGlobalNewMessage);
+      if (pollInterval) clearInterval(pollInterval);
     };
-  }, [currentUserId, handleGlobalNewMessage]);
+  }, [currentUserId]);
 
   const initializeConnection = useCallback(async () => {
     await fetchCurrentUser();

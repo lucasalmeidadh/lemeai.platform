@@ -50,6 +50,8 @@ interface ApiConversation {
   totalNaoLidas: number;
   idStatus?: number;
   valor?: number;
+  tipoLeadId?: number;
+  tipoLeadNome?: string;
 }
 
 interface ApiMessage {
@@ -174,6 +176,8 @@ const ChatPage = () => {
             statusId: opportunity ? opportunity.idStauts : (convo.idStatus || 1),
             detailsValue: opportunity ? opportunity.valor : (convo.valor || 0),
             responsibleName: opportunity ? opportunity.nomeUsuarioResponsavel : 'N/A',
+            tipoLeadId: convo.tipoLeadId,
+            tipoLeadNome: convo.tipoLeadNome,
             messagesByDate: {}
           };
         });
@@ -532,6 +536,9 @@ const ChatPage = () => {
                 currentUserId={currentUser?.id}
                 conversationId={selectedContact.id}
                 onBack={handleBackToContacts} // Passa a função de voltar
+                tipoLeadId={selectedContact.tipoLeadId}
+                tipoLeadNome={selectedContact.tipoLeadNome}
+                onLeadTypeChange={() => fetchConversations(false)}
               />
               <ConversationWindow
                 messagesByDate={activeConversationMessages}
@@ -574,6 +581,9 @@ const ChatPage = () => {
                 onTransfer={handleTransferConversation}
                 currentUserId={currentUser?.id}
                 conversationId={selectedContact.id}
+                tipoLeadId={selectedContact.tipoLeadId}
+                tipoLeadNome={selectedContact.tipoLeadNome}
+                onLeadTypeChange={() => fetchConversations(false)}
               />
               <ConversationWindow
                 messagesByDate={activeConversationMessages}

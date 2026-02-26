@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaPaperPlane, FaPaperclip, FaMicrophone, FaTrash, FaImage, FaTimes, FaLock } from 'react-icons/fa';
+import { FaPaperPlane, FaPaperclip, FaMicrophone, FaTrash, FaImage, FaTimes, FaLock, FaSmile } from 'react-icons/fa';
+import EmojiPicker, { type EmojiClickData, Theme } from 'emoji-picker-react';
 import './MessageInput.css';
 
 interface MessageInputProps {
@@ -12,20 +13,38 @@ interface MessageInputProps {
 const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia, disabled, disabledMessage }) => {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  }, [text]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -101,9 +120,17 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia,
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as unknown as React.FormEvent);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (disabled) return;
+    setShowEmojiPicker(false);
 
     if (selectedFile && onSendMedia) {
       const type = selectedFile.type.startsWith('image/') ? 'image' : 'file';
@@ -120,6 +147,9 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia,
     if (text.trim()) {
       onSendMessage(text);
       setText('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'; // Reset height after send
+      }
     }
   };
 
@@ -175,7 +205,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia,
           </button>
         </div>
       )}
-      <form className="message-input-container" onSubmit={handleSubmit}>
+      <form className="message-input-container" onSubmit={handleSubmit} style={{ position: 'relative' }}>
         <input
           type="file"
           ref={imageInputRef}
@@ -207,13 +237,44 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia,
           <FaPaperclip />
         </button>
 
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          title="Inserir Emoji"
+        >
+          <FaSmile />
+        </button>
+
+        {showEmojiPicker && (
+          <div ref={emojiPickerRef} className="emoji-picker-container">
+            <EmojiPicker
+              onEmojiClick={(emojiData: EmojiClickData) => {
+                setText((prevText) => prevText + emojiData.emoji);
+              }}
+              theme={Theme.DARK}
+              searchPlaceHolder="Pesquisar emoji"
+              width={350}
+              height={400}
+            />
+          </div>
+        )}
+
         <div className="input-wrapper">
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             placeholder="Digite sua mensagem..."
             value={text}
             onChange={(e) => setText(e.target.value)}
             onPaste={handlePaste}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            style={{
+              resize: 'none',
+              overflowY: 'auto',
+              minHeight: '24px',
+              maxHeight: '120px'
+            }}
           />
         </div>
 

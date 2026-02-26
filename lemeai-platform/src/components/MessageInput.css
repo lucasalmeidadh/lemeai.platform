@@ -38,7 +38,7 @@
   align-items: center;
 }
 
-.message-input-container input[type="text"] {
+.message-input-container textarea {
   width: 100%;
   border: none;
   outline: none;
@@ -50,9 +50,47 @@
   font-family: 'Inter', sans-serif;
 }
 
-.message-input-container input[type="text"]::placeholder {
+.message-input-container textarea::placeholder {
   color: var(--text-tertiary);
   /* Was #9ca3af */
+}
+
+.message-input-container textarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.message-input-container textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.message-input-container textarea::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.emoji-picker-container {
+  position: absolute;
+  bottom: calc(100% + 15px);
+  left: 10px;
+  z-index: 1000;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+
+/* Make sure the EmojiPicker itself doesn't overflow */
+.emoji-picker-container aside.EmojiPickerReact.epr-main {
+  border: 1px solid var(--border-color-soft, #333);
+  background-color: #202c33;
+  /* WhatsApp dark mode color */
+  --epr-bg-color: #202c33;
+  --epr-category-label-bg-color: #202c33;
+  --epr-search-input-bg-color: #2a3942;
+  --epr-text-color: #e9edef;
+}
+
+.emoji-picker-container aside.EmojiPickerReact.epr-main .epr-search-container input {
+  border: none;
+  border-radius: 8px;
 }
 
 .icon-button {
@@ -274,8 +312,8 @@
   .message-input-container {
     padding: 6px 12px;
   }
-  
+
   .message-input-wrapper.disabled-wrapper {
-      padding: 16px;
+    padding: 16px;
   }
 }
