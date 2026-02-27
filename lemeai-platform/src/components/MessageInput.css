@@ -317,3 +317,43 @@
     padding: 16px;
   }
 }
+
+/* Quick Replies */
+.quick-replies-tray {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.quick-replies-tray::-webkit-scrollbar {
+  height: 4px;
+}
+
+.quick-replies-tray::-webkit-scrollbar-thumb {
+  background-color: var(--border-color-soft);
+  border-radius: 4px;
+}
+
+.quick-replies-list {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.quick-reply-chip {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.quick-reply-chip:hover {
+  background-color: var(--petroleum-blue);
+  color: white;
+  border-color: var(--petroleum-blue);
+}

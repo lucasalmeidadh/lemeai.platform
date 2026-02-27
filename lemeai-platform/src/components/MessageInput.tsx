@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaPaperPlane, FaPaperclip, FaMicrophone, FaTrash, FaImage, FaTimes, FaLock, FaSmile } from 'react-icons/fa';
+import { FaPaperPlane, FaPaperclip, FaMicrophone, FaTrash, FaImage, FaTimes, FaLock, FaSmile, FaBolt } from 'react-icons/fa';
 import EmojiPicker, { type EmojiClickData, Theme } from 'emoji-picker-react';
 import './MessageInput.css';
 
@@ -17,6 +17,14 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia,
   const [recordingTime, setRecordingTime] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
+
+  const mockQuickReplies = [
+    "Olá, tudo bem? Como posso ajudar?",
+    "Um momento, por favor, vou verificar.",
+    "Nosso horário de atendimento é das 8h às 18h.",
+    "Agradecemos o seu contato!"
+  ];
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -185,6 +193,26 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia,
 
   return (
     <div className="message-input-wrapper">
+      {showQuickReplies && (
+        <div className="quick-replies-tray">
+          <div className="quick-replies-list">
+            {mockQuickReplies.map((reply, idx) => (
+              <button
+                key={idx}
+                className="quick-reply-chip"
+                type="button"
+                onClick={() => {
+                  setText((prev) => (prev ? prev + ' ' : '') + reply);
+                  setShowQuickReplies(false);
+                  textareaRef.current?.focus();
+                }}
+              >
+                {reply}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {selectedFile && (
         <div className="selected-file-preview">
           <div className="preview-content">
@@ -235,6 +263,15 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia,
           title="Enviar Arquivo"
         >
           <FaPaperclip />
+        </button>
+
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => setShowQuickReplies(!showQuickReplies)}
+          title="Respostas Rápidas"
+        >
+          <FaBolt />
         </button>
 
         <button

@@ -1,0 +1,162 @@
+.campaigns-page {
+    padding: 24px;
+    height: 100%;
+    overflow-y: auto;
+    background-color: var(--bg-primary);
+}
+
+.campaigns-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.campaigns-header h1 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.campaigns-header p {
+    color: var(--text-secondary);
+}
+
+.primary-button {
+    background-color: var(--petroleum-blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.primary-button:hover {
+    background-color: var(--dark-navy);
+    transform: translateY(-2px);
+}
+
+.campaigns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+.campaign-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.campaign-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.campaign-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.campaign-card-header h3 {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+    margin-right: 12px;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+.status-badge.paused {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-badge.draft {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.campaign-stats {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-top: 1px solid var(--border-color-soft);
+    border-bottom: 1px solid var(--border-color-soft);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.campaign-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.campaign-actions .icon-button {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.campaign-actions .icon-button:hover {
+    background-color: var(--petroleum-blue);
+    color: white;
+}
+
+.campaign-actions .icon-button.delete:hover {
+    background-color: #ef4444;
+    color: white;
+}

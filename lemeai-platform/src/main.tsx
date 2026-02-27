@@ -12,6 +12,8 @@ import ChatPage from './pages/ChatPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
 // import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
 import SystemPromptsPage from './pages/SystemPromptsPage.tsx';
+import CampaignsPage from './pages/CampaignsPage.tsx';
+import QuickRepliesPage from './pages/QuickRepliesPage.tsx';
 import ProductsPage from './pages/ProductsPage.tsx';
 import './index.css';
 import NotFoundPage from './pages/NotFoundPage.tsx';
@@ -26,12 +28,14 @@ const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
           { path: "chat", element: <ChatPage /> },
+          { path: "campaigns", element: <CampaignsPage /> },
           { path: "dashboard", element: <Dashboard /> },
           { path: "pipeline", element: <PipelinePage /> },
           { path: "contacts", element: <ContactsPage /> },
           { path: "users", element: <UserManagementPage /> },
           // { path: "profiles", element: <ProfileManagementPage /> },
           { path: "chat-rules", element: <SystemPromptsPage /> },
+          { path: "quick-replies", element: <QuickRepliesPage /> },
           { path: "products", element: <ProductsPage /> },
         ]
       },

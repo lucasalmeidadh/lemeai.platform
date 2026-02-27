@@ -16,7 +16,11 @@ import {
   FaChevronDown,
   FaAddressBook,
   FaChartPie,
-  FaBox
+  FaBox,
+  FaChartBar,
+  FaChartLine,
+  FaBullhorn,
+  FaBolt
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 
@@ -30,6 +34,7 @@ interface SidebarProps {
 const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfile }) => {
   const location = useLocation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isReportsOpen, setIsReportsOpen] = useState(false);
   const { unreadCount, clearUnreadCount } = useGlobalNotification();
 
   useEffect(() => {
@@ -82,6 +87,52 @@ const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfil
               <span>Chat</span>
             </Link>
           </li>
+          <li className={`${location.pathname === '/campaigns' ? 'active' : ''} mobile-hide`}>
+            <Link to="/campaigns" title="Campanhas">
+              <FaBullhorn className="nav-icon" />
+              <span>Campanhas</span>
+            </Link>
+          </li>
+          <li className={`${location.pathname.startsWith('/reports') ? 'active-parent' : ''} mobile-hide`}>
+            <div
+              className={`nav-item-header ${isReportsOpen ? 'open' : ''}`}
+              onClick={() => setIsReportsOpen(!isReportsOpen)}
+              title="Relatórios"
+            >
+              <div className="nav-item-content">
+                <FaChartBar className="nav-icon" />
+                <span>Relatórios</span>
+              </div>
+              {!isCollapsed && (
+                <div className="nav-chevron">
+                  {isReportsOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                </div>
+              )}
+            </div>
+
+            {(isReportsOpen || (isCollapsed && location.pathname.startsWith('/reports'))) && (
+              <ul className="submenu">
+                <li className={location.pathname === '/reports/performance' ? 'active' : ''}>
+                  <Link to="/reports/performance" title="Desempenho">
+                    <FaChartLine className="nav-icon" />
+                    <span>Desempenho</span>
+                  </Link>
+                </li>
+                <li className={location.pathname === '/reports/sales' ? 'active' : ''}>
+                  <Link to="/reports/sales" title="Vendas">
+                    <FaChartPie className="nav-icon" />
+                    <span>Vendas</span>
+                  </Link>
+                </li>
+                <li className={location.pathname === '/reports/support' ? 'active' : ''}>
+                  <Link to="/reports/support" title="Atendimentos">
+                    <FaComments className="nav-icon" />
+                    <span>Atendimentos</span>
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </li>
           <li className={`${location.pathname === '/users' || location.pathname === '/profiles' || location.pathname === '/chat-rules' || location.pathname === '/products' ? 'active-parent' : ''} mobile-hide`}>
             <div
               className={`nav-item-header ${isSettingsOpen ? 'open' : ''}`}
@@ -117,6 +168,12 @@ const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfil
                   <Link to="/chat-rules" title="Regras do Chat">
                     <FaComments className="nav-icon" />
                     <span>Regras do Chat</span>
+                  </Link>
+                </li>
+                <li className={location.pathname === '/quick-replies' ? 'active' : ''}>
+                  <Link to="/quick-replies" title="Respostas Rápidas">
+                    <FaBolt className="nav-icon" />
+                    <span>Respostas Rápidas</span>
                   </Link>
                 </li>
                 <li className={location.pathname === '/products' ? 'active' : ''}>
