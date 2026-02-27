@@ -53,6 +53,28 @@ export const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }>
     fetchCurrentUser();
   }, [fetchCurrentUser]);
 
+  // Connect to the SignalR Hub for real-time chat updates
+  useEffect(() => {
+    let isMounted = true;
+
+    const connectHub = async () => {
+      try {
+        await hubService.startConnection();
+        if (isMounted) {
+          setIsHubConnected(true);
+        }
+      } catch (err) {
+        console.error("Erro ao conectar SignalR Hub Global:", err);
+      }
+    };
+
+    connectHub();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleGlobalNewMessage = useCallback((newMessage: any) => {
     // Only play sound if the message is from someone else (client or ia, if it makes sense)
     // usually: 0 = Cliente, 1 = Vendedor, 2 = IA
@@ -76,6 +98,17 @@ export const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }>
       }
     }
   }, []);
+
+  // Register the global handler for new messages
+  useEffect(() => {
+    if (isHubConnected) {
+      hubService.on('ReceiveNewMessage', handleGlobalNewMessage);
+    }
+    return () => {
+      hubService.off('ReceiveNewMessage', handleGlobalNewMessage);
+    };
+  }, [isHubConnected, handleGlobalNewMessage]);
+
   // Fetches /api/Chat/ConversasPorVendedor periodically to check for new messages
   useEffect(() => {
     let isMounted = true;
