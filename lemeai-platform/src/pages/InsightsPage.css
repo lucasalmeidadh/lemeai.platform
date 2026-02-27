@@ -1,0 +1,224 @@
+/* InsightsPage.css */
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.card-header-simple {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.card-header-simple h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.icon-highlight {
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+/* Colors for Icons */
+.icon-highlight.yellow {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.icon-highlight.red {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
+
+.icon-highlight.blue {
+    background-color: #dbeafe;
+    color: #3b82f6;
+}
+
+.icon-highlight.purple {
+    background-color: #f3e8ff;
+    color: #a855f7;
+}
+
+.icon-highlight.green {
+    background-color: #d1fae5;
+    color: #10b981;
+}
+
+.summary-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+/* Base Buttons that fit Dashboard style */
+.base-button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.base-button.primary {
+    background-color: var(--petroleum-blue);
+    color: white;
+}
+
+.base-button.primary:hover {
+    background-color: var(--dark-navy);
+}
+
+.base-button.purple-btn {
+    background-color: #a855f7;
+    color: white;
+}
+
+.base-button.purple-btn:hover {
+    background-color: #9333ea;
+}
+
+.base-button.small {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+
+.base-button.outline {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.base-button.outline:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* Leads List */
+.leads-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lead-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color-soft);
+}
+
+.lead-item.hot {
+    border-left: 3px solid #ef4444;
+}
+
+.lead-item.cold {
+    border-left: 3px solid #3b82f6;
+}
+
+.lead-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lead-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.lead-score {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.divider {
+    height: 1px;
+    background-color: var(--border-color-soft);
+    margin: 4px 0;
+}
+
+/* Objections Analysis */
+.objection-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.progress-bar-container {
+    width: 100%;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.progress-bg {
+    width: 100%;
+    height: 6px;
+    background-color: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #3b82f6;
+    border-radius: 3px;
+}
+
+.ai-suggestion-box {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    border-left: 3px solid #10b981;
+}
+
+/* Campaign Suggestion */
+.campaign-suggestion h4 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.campaign-suggestion p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 1024px) {
+    .insights-grid {
+        grid-template-columns: 1fr;
+    }
+}

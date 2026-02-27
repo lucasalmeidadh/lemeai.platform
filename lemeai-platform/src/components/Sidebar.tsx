@@ -20,7 +20,9 @@ import {
   FaChartBar,
   FaChartLine,
   FaBullhorn,
-  FaBolt
+  FaBolt,
+  FaRobot,
+  FaCalendarAlt
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 
@@ -85,6 +87,18 @@ const Sidebar: FC<SidebarProps> = ({ onLogout, isCollapsed, onToggle, viewProfil
                 {unreadCount > 0 && <span className="sidebar-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
               </div>
               <span>Chat</span>
+            </Link>
+          </li>
+          <li className={`${location.pathname === '/calendar' ? 'active' : ''} mobile-hide`}>
+            <Link to="/calendar" title="Agenda e Tarefas">
+              <FaCalendarAlt className="nav-icon" />
+              <span>Agenda</span>
+            </Link>
+          </li>
+          <li className={`${location.pathname === '/insights' ? 'active' : ''} mobile-hide`}>
+            <Link to="/insights" title="Insights AI" style={{ color: location.pathname === '/insights' ? 'white' : 'inherit' }}>
+              <FaRobot className="nav-icon" style={{ color: location.pathname === '/insights' ? 'white' : '#10b981' }} />
+              <span style={{ fontWeight: location.pathname === '/insights' ? '600' : 'normal', background: location.pathname === '/insights' ? 'transparent' : 'linear-gradient(90deg, var(--petroleum-blue) 0%, #10b981 100%)', WebkitBackgroundClip: location.pathname === '/insights' ? 'unset' : 'text', WebkitTextFillColor: location.pathname === '/insights' ? 'inherit' : 'transparent', backgroundClip: location.pathname === '/insights' ? 'unset' : 'text' }}>Insights AI</span>
             </Link>
           </li>
           <li className={`${location.pathname === '/campaigns' ? 'active' : ''} mobile-hide`}>

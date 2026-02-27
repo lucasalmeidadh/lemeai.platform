@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FaPlus, FaBolt, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaTimes } from 'react-icons/fa';
+import ConfirmationModal from '../components/ConfirmationModal';
 import './QuickRepliesPage.css';
 
 interface QuickReply {
@@ -16,21 +17,67 @@ const mockReplies: QuickReply[] = [
 ];
 
 const QuickRepliesPage = () => {
-    const [replies] = useState<QuickReply[]>(mockReplies);
+    const [replies, setReplies] = useState<QuickReply[]>(mockReplies);
+
+    // Modal de Edição/Criação
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [editingReply, setEditingReply] = useState<QuickReply | null>(null);
+    const [formData, setFormData] = useState({ shortcut: '', message: '' });
+
+    // Modal de Confirmação de Exclusão
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [replyToDelete, setReplyToDelete] = useState<number | null>(null);
+
+    const handleOpenCreateModal = () => {
+        setEditingReply(null);
+        setFormData({ shortcut: '', message: '' });
+        setIsFormModalOpen(true);
+    };
+
+    const handleOpenEditModal = (reply: QuickReply) => {
+        setEditingReply(reply);
+        setFormData({ shortcut: reply.shortcut, message: reply.message });
+        setIsFormModalOpen(true);
+    };
+
+    const handleSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formData.shortcut.trim() || !formData.message.trim()) return;
+
+        if (editingReply) {
+            setReplies(prev =>
+                prev.map(r => r.id === editingReply.id ? { ...r, ...formData } : r)
+            );
+        } else {
+            const newId = replies.length > 0 ? Math.max(...replies.map(r => r.id)) + 1 : 1;
+            setReplies(prev => [...prev, { id: newId, ...formData }]);
+        }
+        setIsFormModalOpen(false);
+    };
+
+    const confirmDelete = (id: number) => {
+        setReplyToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDelete = () => {
+        if (replyToDelete !== null) {
+            setReplies(prev => prev.filter(r => r.id !== replyToDelete));
+            setIsDeleteModalOpen(false);
+            setReplyToDelete(null);
+        }
+    };
 
     return (
-        <div className="quick-replies-page">
-            <header className="page-header">
-                <div>
-                    <h1><FaBolt style={{ marginRight: '12px' }} /> Respostas Rápidas</h1>
-                    <p>Gerencie atalhos e mensagens frequentes para usar no chat</p>
-                </div>
-                <button className="primary-button">
-                    <FaPlus /> Nova Resposta Rápida
+        <div className="page-container">
+            <div className="page-header">
+                <h1>Respostas Rápidas</h1>
+                <button className="add-button" onClick={handleOpenCreateModal}>
+                    <FaPlus /> Adicionar Resposta Rápida
                 </button>
-            </header>
+            </div>
 
-            <div className="page-content">
+            <div className="dashboard-card">
                 <div className="replies-list">
                     {replies.map((reply) => (
                         <div key={reply.id} className="reply-card">
@@ -40,13 +87,64 @@ const QuickRepliesPage = () => {
                             </div>
 
                             <div className="reply-actions">
-                                <button className="icon-button" title="Editar"><FaEdit /></button>
-                                <button className="icon-button delete" title="Excluir"><FaTrash /></button>
+                                <button className="icon-button" title="Editar" onClick={() => handleOpenEditModal(reply)}><FaEdit /></button>
+                                <button className="icon-button delete" title="Excluir" onClick={() => confirmDelete(reply.id)}><FaTrash /></button>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
+
+            {/* Form Modal */}
+            {isFormModalOpen && (
+                <div className="reply-modal-overlay" onClick={() => setIsFormModalOpen(false)}>
+                    <div className="reply-modal-content" onClick={e => e.stopPropagation()}>
+                        <header className="reply-modal-header">
+                            <h2>{editingReply ? 'Editar Resposta Rápida' : 'Nova Resposta Rápida'}</h2>
+                            <button className="close-button" onClick={() => setIsFormModalOpen(false)}>
+                                <FaTimes />
+                            </button>
+                        </header>
+                        <form onSubmit={handleSave} className="reply-modal-form">
+                            <div className="form-group">
+                                <label>Atalho</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ex: /saudacao"
+                                    value={formData.shortcut}
+                                    onChange={e => setFormData({ ...formData, shortcut: e.target.value })}
+                                    required
+                                />
+                                <small>Como você chamará esta resposta rápida no campo de digitação.</small>
+                            </div>
+                            <div className="form-group">
+                                <label>Mensagem</label>
+                                <textarea
+                                    placeholder="Digite a mensagem completa aqui..."
+                                    value={formData.message}
+                                    onChange={e => setFormData({ ...formData, message: e.target.value })}
+                                    required
+                                    rows={4}
+                                />
+                            </div>
+                            <footer className="reply-modal-footer">
+                                <button type="button" className="secondary-button" onClick={() => setIsFormModalOpen(false)}>Cancelar</button>
+                                <button type="submit" className="primary-button">Salvar</button>
+                            </footer>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDelete}
+                title="Excluir Resposta Rápida"
+                message="Tem certeza que deseja excluir esta resposta rápida? Esta ação não pode ser desfeita."
+                confirmText="Excluir"
+                cancelText="Cancelar"
+            />
         </div>
     );
 };
