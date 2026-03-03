@@ -58,8 +58,8 @@ select.pipeline-filter-input {
 }
 
 .pipeline-column {
-    flex: 1;
-    min-width: 0;
+    flex: 1 0 280px;
+    min-width: 280px;
     background-color: var(--bg-primary);
     /* Was #f8f9fa */
     border-radius: 12px;
