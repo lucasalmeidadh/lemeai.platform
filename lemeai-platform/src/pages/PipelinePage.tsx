@@ -40,8 +40,10 @@ interface Column {
 // 1: Atendimento IA
 // 2: Não Iniciado
 // 6: Venda Perdida
+// 8: Atendimento IA Finalizado
 const INITIAL_COLUMNS: Column[] = [
     { id: 'ai_service', title: 'Atendimento IA', statusId: 1, deals: [] },
+    { id: 'ai_service_finished', title: 'IA Encerrada', statusId: 8, deals: [] },
     { id: 'intro', title: 'Não Iniciado', statusId: 2, deals: [] },
     { id: 'qualified', title: 'Em Negociação', statusId: 5, deals: [] },
     { id: 'proposal', title: 'Proposta Enviada', statusId: 4, deals: [] },

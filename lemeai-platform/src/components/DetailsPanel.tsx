@@ -187,6 +187,7 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
                 <label htmlFor="deal-status"><FaTag className="label-icon" /> Status da Negociação</label>
                 <select id="deal-status" className="status-select" value={status} onChange={(e) => { setStatus(e.target.value); setIsDirty(true); }}>
                   <option value="1">Atendimento IA</option>
+                  <option value="8">Atendimento IA Finalizado</option>
                   <option value="2">Não Iniciado</option>
                   <option value="5">Em Negociação</option>
                   <option value="4">Proposta Enviada</option>

@@ -104,6 +104,7 @@ const Dashboard = () => {
     // Define all target statuses with initial count 0
     const counts: { [key: string]: number } = {
       'Atendimento IA': 0,
+      'Atendimento IA Finalizado': 0,
       'Não Iniciado': 0,
       'Em Negociação': 0,
       'Proposta Enviada': 0,
@@ -121,7 +122,8 @@ const Dashboard = () => {
       } else {
         // Try flexible matching
         const lower = status.toLowerCase();
-        if (lower.includes('ia')) counts['Atendimento IA']++;
+        if (lower.includes('ia finalizado')) counts['Atendimento IA Finalizado']++;
+        else if (lower.includes('ia')) counts['Atendimento IA']++;
         else if (lower.includes('não iniciado') || lower.includes('novo')) counts['Não Iniciado']++;
         else if (lower.includes('negociação') || lower.includes('andamento')) counts['Em Negociação']++;
         else if (lower.includes('proposta')) counts['Proposta Enviada']++;
@@ -132,6 +134,7 @@ const Dashboard = () => {
 
     setKpiData([
       { title: 'Atendimento IA', value: counts['Atendimento IA'].toString(), icon: <FaUserPlus /> },
+      { title: 'Atendimento IA Finalizado', value: counts['Atendimento IA Finalizado'].toString(), icon: <FaCheckCircle /> },
       { title: 'Não Iniciado', value: counts['Não Iniciado'].toString(), icon: <FaUserPlus /> },
       { title: 'Em Negociação', value: counts['Em Negociação'].toString(), icon: <FaHandshake /> },
       { title: 'Proposta Enviada', value: counts['Proposta Enviada'].toString(), icon: <FaHandshake /> },
@@ -287,6 +290,7 @@ const Dashboard = () => {
                   <option value="Venda Fechada">Venda Fechada</option>
                   <option value="Venda Perdida">Venda Perdida</option>
                   <option value="Atendimento IA">Atendimento IA</option>
+                  <option value="Atendimento IA Finalizado">Atendimento IA Finalizado</option>
                 </select>
               </div>
             </div>

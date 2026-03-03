@@ -395,6 +395,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                     style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                                 >
                                     <option value="1">Atendimento IA</option>
+                                    <option value="8">Atendimento IA Finalizado</option>
                                     <option value="2">Não Iniciado</option>
                                     <option value="5">Em Negociação</option>
                                     <option value="4">Proposta Enviada</option>
@@ -449,7 +450,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                                 <MessageInput
                                                     onSendMessage={handleSendMessage}
                                                     disabled={
-                                                        [1, 3, 6].includes(statusId) ||
+                                                        [1, 3, 6, 8].includes(statusId) ||
                                                         (currentUser !== null && currentUser.nome !== deal.owner)
                                                     }
                                                     disabledMessage={
