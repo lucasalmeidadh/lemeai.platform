@@ -51,6 +51,13 @@ export const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }>
 
   useEffect(() => {
     fetchCurrentUser();
+
+    // Solicita permissão para notificações do navegador (OS)
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(err => {
+        console.warn("Erro ao solicitar permissão de notificação:", err);
+      });
+    }
   }, [fetchCurrentUser]);
 
   // Connect to the SignalR Hub for real-time chat updates
@@ -83,9 +90,12 @@ export const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }>
 
       // Only increment counter if we are NOT on the chat page.
       const isChatPage = window.location.pathname.includes('/chat');
+      const isVisible = document.visibilityState === 'visible';
 
-      if (!isChatPage) {
-        setUnreadCount(prev => prev + 1);
+      if (!isChatPage || !isVisible) {
+        if (!isChatPage) {
+          setUnreadCount(prev => prev + 1);
+        }
 
         try {
           const audio = new Audio('/notification.mp3');
@@ -94,6 +104,19 @@ export const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }>
           });
         } catch (err) {
           console.error("Erro ao reproduzir som de notificação:", err);
+        }
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          try {
+            const notification = new Notification("Nova mensagem recebida", {
+              body: "Você tem uma nova mensagem de um cliente.",
+            });
+            notification.onclick = () => {
+              window.focus();
+            };
+          } catch (err) {
+            console.error("Erro ao exibir notificação do navegador:", err);
+          }
         }
       }
     }
@@ -129,17 +152,35 @@ export const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }>
           if (isMounted) {
             // Check if we are outside the chat page
             const isChatPage = window.location.pathname.includes('/chat');
+            const isVisible = document.visibilityState === 'visible';
 
             // If we are getting MORE unread messages than we had before
-            if (currentTotalUnread > previousTotalUnreadRef.current && !isChatPage) {
-              setUnreadCount(currentTotalUnread);
+            if (currentTotalUnread > previousTotalUnreadRef.current) {
+              if (!isChatPage || !isVisible) {
+                if (!isChatPage) {
+                  setUnreadCount(currentTotalUnread);
+                }
 
-              const audio = new Audio('/notification.mp3');
-              audio.play().catch(e => console.warn("Autoplay bloqueou som.", e));
+                const audio = new Audio('/notification.mp3');
+                audio.play().catch(e => console.warn("Autoplay bloqueou som.", e));
+
+                if ("Notification" in window && Notification.permission === "granted") {
+                  try {
+                    const notification = new Notification("Novas mensagens", {
+                      body: `Você tem ${currentTotalUnread} mensagens não lidas.`,
+                    });
+                    notification.onclick = () => {
+                      window.focus();
+                    };
+                  } catch (err) {
+                    console.error("Erro ao exibir notificação do navegador:", err);
+                  }
+                }
+              }
             }
 
-            // Always reset unread if we are on the chat page, otherwise use current
-            if (isChatPage) {
+            // Always reset unread if we are on the chat page and it's visible
+            if (isChatPage && isVisible) {
               setUnreadCount(0);
               // But still update the ref so we know our new "baseline"
             }
