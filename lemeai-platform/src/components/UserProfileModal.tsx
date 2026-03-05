@@ -9,6 +9,8 @@ interface UserData {
     email: string;
     permissoes: string[];
     role: string;
+    tipoUsuarioDescricao?: string;
+    empresaDescricao?: string;
 }
 
 interface UserProfileModalProps {
@@ -128,8 +130,12 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
                                         <span>{user?.email || '—'}</span>
                                     </div>
                                     <div className="info-item">
+                                        <label>Empresa</label>
+                                        <span>{user?.empresaDescricao || '—'}</span>
+                                    </div>
+                                    <div className="info-item">
                                         <label>Função / Cargo</label>
-                                        <span>{user?.role || '—'}</span>
+                                        <span>{user?.tipoUsuarioDescricao || user?.role || '—'}</span>
                                     </div>
                                 </div>
                             </div>

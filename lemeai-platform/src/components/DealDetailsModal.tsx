@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../services/api';
-import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt } from 'react-icons/fa';
+import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt, FaTrash } from 'react-icons/fa';
 import SummaryModal from './SummaryModal';
+import ConfirmationModal from './ConfirmationModal';
 import './DealDetailsModal.css';
 import ConversationWindow from './ConversationWindow';
 import MessageInput from './MessageInput';
@@ -59,6 +60,10 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
     // Status state
     const [statusId, setStatusId] = useState(deal.statusId || 1);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    // Deletion state
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Current User State
     const [currentUser, setCurrentUser] = useState<{ id: number, nome: string } | null>(null);
@@ -226,6 +231,33 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         }
     };
 
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+            const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}`, {
+                method: 'DELETE',
+            });
+            let result;
+            try {
+                result = await response.json();
+            } catch (e) {
+                result = null;
+            }
+
+            if (!response.ok) {
+                throw new Error(result?.mensagem || 'Falha ao excluir conversa.');
+            }
+            toast.success('Conversa excluída com sucesso!');
+            setIsDeleteConfirmOpen(false);
+            if (onUpdate) onUpdate();
+            onClose();
+        } catch (error: any) {
+            toast.error(`Erro: ${error.message}`);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     // Notes state
     const [observations, setObservations] = useState<any[]>([]);
     const [isLoadingNotes, setIsLoadingNotes] = useState(false);
@@ -373,9 +405,28 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                             <span>Criado em: {deal.date}</span>
                         </div>
                     </div>
-                    <button className="deal-close-button" onClick={onClose}>
-                        <FaTimes />
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                            onClick={() => setIsDeleteConfirmOpen(true)}
+                            title="Excluir Oportunidade"
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#dc3545',
+                                cursor: 'pointer',
+                                padding: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '4px',
+                            }}
+                        >
+                            <FaTrash />
+                        </button>
+                        <button className="deal-close-button" onClick={onClose} style={{ marginLeft: 0 }}>
+                            <FaTimes />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="deal-modal-body">
@@ -580,6 +631,15 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                 isOpen={isSummaryModalOpen}
                 onClose={() => setIsSummaryModalOpen(false)}
                 summary={selectedSummary}
+            />
+            <ConfirmationModal
+                isOpen={isDeleteConfirmOpen}
+                onClose={() => setIsDeleteConfirmOpen(false)}
+                onConfirm={handleDelete}
+                title="Excluir Oportunidade"
+                message="Tem certeza que deseja excluir esta oportunidade? Esta ação não pode ser desfeita e todo o histórico da conversa será perdido."
+                confirmText={isDeleting ? "Excluindo..." : "Sim, Excluir"}
+                cancelText="Cancelar"
             />
         </div>
     );

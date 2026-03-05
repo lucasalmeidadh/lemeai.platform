@@ -11,6 +11,10 @@
   --border-color: #dee2e6;
   --border-color-soft: #e9ecef;
 
+  /* Skeletons */
+  --skeleton-bg: #e9ecef;
+  --skeleton-highlight: #f8f9fa;
+
   /* Brand Colors */
   --petroleum-blue: #005f73;
   --petroleum-blue-hover: #004c5a;
@@ -47,6 +51,10 @@
 
   --border-color: #404040;
   --border-color-soft: #2c2c2c;
+
+  /* Skeletons */
+  --skeleton-bg: #2c2c2c;
+  --skeleton-highlight: #404040;
 
   /* Adjust Brand Colors for Dark Mode if needed */
   --petroleum-blue: #2a9d8f;

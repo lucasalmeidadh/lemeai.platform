@@ -14,6 +14,8 @@ interface UserData {
     email: string;
     role: string;
     userName?: string;
+    tipoUsuarioDescricao?: string;
+    empresaDescricao?: string;
 }
 
 interface ProfileModalProps {
@@ -146,7 +148,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose, onLogout,
 
     const displayName = user?.nome || user?.userName || userName || '—';
     const displayEmail = user?.email || '—';
-    const displayRole = user?.role || 'Vendedor';
+    const displayRole = user?.tipoUsuarioDescricao || user?.role || 'Vendedor';
+    const displayEmpresa = user?.empresaDescricao || '—';
     const initials = getInitials(displayName);
 
     const isDark = theme === 'dark';
@@ -229,6 +232,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ visible, onClose, onLogout,
                                         <View style={styles.infoContent}>
                                             <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Email</Text>
                                             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{displayEmail}</Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={[styles.infoSeparator, { backgroundColor: colors.borderColorSoft }]} />
+
+                                    <View style={styles.infoRow}>
+                                        <View style={[styles.infoIconContainer, { backgroundColor: colors.brandTealLight }]}>
+                                            <FontAwesome5 name="building" size={14} color={colors.brandTeal} />
+                                        </View>
+                                        <View style={styles.infoContent}>
+                                            <Text style={[styles.infoLabel, { color: colors.textTertiary }]}>Empresa</Text>
+                                            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{displayEmpresa}</Text>
                                         </View>
                                     </View>
 

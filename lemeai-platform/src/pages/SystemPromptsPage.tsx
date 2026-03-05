@@ -1,36 +1,103 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSave } from 'react-icons/fa';
 import './SystemPromptsPage.css';
-import { RegrasIAService, type IARule } from '../services/RegrasIAService';
+import { RegrasIAService, type IARule, type ConfigAgente } from '../services/RegrasIAService';
+import SystemPromptsSkeleton from '../components/SystemPromptsSkeleton';
 
 const SystemPromptsPage = () => {
+    const [configId, setConfigId] = useState<number | null>(null);
+    const [nome, setNome] = useState('Configuração Gb Code');
+    const [headerText, setHeaderText] = useState('');
+    const [footerText, setFooterText] = useState('');
     const [rules, setRules] = useState<IARule[]>([]);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentRule, setCurrentRule] = useState<IARule | null>(null);
     const [ruleText, setRuleText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isSavingConfig, setIsSavingConfig] = useState(false);
 
     useEffect(() => {
-        loadRules();
+        loadConfig();
     }, []);
 
-    const loadRules = async () => {
+    const loadConfig = async () => {
         setIsLoading(true);
         try {
-            const response = await RegrasIAService.getAll();
-            if (response.sucesso) {
-                setRules(response.dados || []);
+            const response = await RegrasIAService.getConfigAgente();
+            if (response.sucesso && response.dados) {
+                const data = response.dados;
+                setConfigId(data.id);
+                setNome(data.nome || 'Configuração Gb Code');
+                setHeaderText(data.descricaoCabecalho || '');
+                setFooterText(data.descricaoRodape || '');
+                setRules(data.regras || []);
             } else {
-                toast.error(response.mensagem || 'Erro ao carregar regras.');
+                // Not found handling if necessary
+                setConfigId(null);
             }
         } catch (error) {
-            console.error(error);
-            toast.error('Erro ao conectar com o servidor.');
+            console.error("Erro ao buscar configuração do agente", error);
+            setConfigId(null);
         } finally {
             setIsLoading(false);
         }
     };
+
+    const handleSaveConfig = async () => {
+        setIsSavingConfig(true);
+        const payload = {
+            nome,
+            descricaoCabecalho: headerText,
+            descricaoRodape: footerText,
+            regras: rules
+        };
+
+        try {
+            let response;
+            if (configId) {
+                response = await RegrasIAService.updateConfigAgente(configId, payload);
+            } else {
+                response = await RegrasIAService.createConfigAgente(payload);
+            }
+            if (response.sucesso) {
+                toast.success('Configuração salva com sucesso!');
+                loadConfig(); // Reload to get fresh data, including real new IDs for rules if generated
+            } else {
+                toast.error(response.mensagem || 'Erro ao salvar configuração.');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao comunicar com o servidor.');
+        } finally {
+            setIsSavingConfig(false);
+        }
+    };
+
+    const handleDeleteConfig = async () => {
+        if (!configId) return;
+
+        if (confirm('Tem certeza que deseja excluir toda essa configuração?')) {
+            try {
+                const response = await RegrasIAService.deleteConfigAgente(configId);
+                if (response.sucesso) {
+                    toast.success('Configuração excluída com sucesso!');
+                    setConfigId(null);
+                    setHeaderText('');
+                    setFooterText('');
+                    setRules([]);
+                } else {
+                    toast.error(response.mensagem || 'Erro ao excluir configuração.');
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error('Erro ao comunicar com o servidor.');
+            }
+        }
+    };
+
+    // --- Local Rules Management ---
 
     const handleOpenModal = (rule?: IARule) => {
         if (rule) {
@@ -61,14 +128,14 @@ const SystemPromptsPage = () => {
                 const response = await RegrasIAService.update({
                     id: currentRule.id,
                     descricaoRegra: ruleText,
-                    ordem: currentRule.ordem || 1
+                    ordem: currentRule.ordem
                 });
-                if (response.sucesso) {
-                    toast.success('Regra atualizada com sucesso!');
-                    loadRules();
-                    handleCloseModal();
-                } else {
+                if (response.sucesso === false) {
                     toast.error(response.mensagem || 'Erro ao atualizar regra.');
+                } else {
+                    toast.success('Regra atualizada com sucesso!');
+                    loadConfig();
+                    handleCloseModal();
                 }
             } else {
                 // Create
@@ -76,89 +143,158 @@ const SystemPromptsPage = () => {
                     descricaoRegra: ruleText,
                     ordem: rules.length + 1
                 });
-                if (response.sucesso) {
-                    toast.success('Regra criada com sucesso!');
-                    loadRules();
-                    handleCloseModal();
-                } else {
+                if (response.sucesso === false) {
                     toast.error(response.mensagem || 'Erro ao criar regra.');
+                } else {
+                    toast.success('Regra criada com sucesso!');
+                    loadConfig();
+                    handleCloseModal();
                 }
             }
         } catch (error) {
             console.error(error);
             toast.error('Erro ao salvar regra.');
+            handleCloseModal();
         }
     };
 
     const handleDeleteRule = async (id: number) => {
         if (confirm('Tem certeza que deseja excluir esta regra?')) {
             try {
+                if (id < 0) {
+                    setRules(prev => prev.filter(r => r.id !== id));
+                    return;
+                }
                 const response = await RegrasIAService.delete(id);
-                if (response.sucesso) {
-                    toast.success('Regra removida com sucesso!');
-                    loadRules();
+                if (response.sucesso === false) {
+                    toast.error(response.mensagem || 'Erro ao excluir regra.');
                 } else {
-                    toast.error(response.mensagem || 'Erro ao remover regra.');
+                    toast.success('Regra excluída com sucesso!');
+                    loadConfig();
                 }
             } catch (error) {
                 console.error(error);
-                toast.error('Erro ao remover regra.');
+                toast.error('Erro ao excluir regra.');
             }
         }
     };
 
     return (
-        <div className="page-container">
-            <div className="page-header">
-                <h1>Regras do Chat (System Prompts)</h1>
-                <button className="add-button" onClick={() => handleOpenModal()}>
-                    <FaPlus /> Adicionar Regra
-                </button>
-            </div>
-
-            <div className="dashboard-card">
-                <div className="table-container">
-                    <table className="management-table">
-                        <thead>
-                            <tr>
-                                <th style={{ width: '80px' }}>#</th>
-                                <th>Regra</th>
-                                <th style={{ width: '150px' }}>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={3} style={{ textAlign: 'center', padding: '40px' }}>
-                                        Carregando regras...
-                                    </td>
-                                </tr>
-                            ) : rules.length > 0 ? (
-                                rules.map((rule, index) => (
-                                    <tr key={rule.id}>
-                                        <td><strong>{index + 1}</strong></td>
-                                        <td style={{ whiteSpace: 'pre-wrap' }}>{rule.descricaoRegra}</td>
-                                        <td className="actions-cell">
-                                            <button className="action-button edit" onClick={() => handleOpenModal(rule)} title="Editar">
-                                                <FaEdit />
-                                            </button>
-                                            <button className="action-button delete" onClick={() => handleDeleteRule(rule.id)} title="Excluir">
-                                                <FaTrash />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={3} style={{ textAlign: 'center', padding: '40px' }}>
-                                        Nenhuma regra encontrada.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+        <div className="page-container page-system-prompts">
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h1>Regras da IA</h1>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Configure o comportamento, regras e tom de voz da inteligência artificial.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    {configId && (
+                        <button
+                            className="add-button"
+                            onClick={handleDeleteConfig}
+                            title="Excluir Configuração"
+                            style={{ backgroundColor: '#dc3545', padding: '8px 16px', fontSize: '13px' }}
+                        >
+                            <FaTrash /> Excluir Configuração
+                        </button>
+                    )}
+                    <button
+                        className="add-button"
+                        onClick={handleSaveConfig}
+                        disabled={isSavingConfig}
+                        style={{ padding: '8px 16px', fontSize: '13px' }}
+                    >
+                        <FaSave /> {isSavingConfig ? 'Salvando...' : 'Salvar Configuração'}
+                    </button>
                 </div>
             </div>
+
+            {isLoading ? (
+                <SystemPromptsSkeleton />
+            ) : (
+                <div className="config-hamburger-layout">
+
+                    {/* TOP - Cabeçalho */}
+                    <div className="dashboard-card section-cabecalho" style={{ marginBottom: '20px' }}>
+                        <h3>1. Personalidade e Objetivos (Cabeçalho)</h3>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '15px', fontSize: '13px' }}>
+                            Defina quem é o agente, seu tom de voz e como ele deve conduzir os primeiros contatos.
+                        </p>
+                        <textarea
+                            value={headerText}
+                            onChange={(e) => setHeaderText(e.target.value)}
+                            placeholder="Exemplo: Você é o Téo, assistente amigável..."
+                            rows={8}
+                            style={{ width: '100%', padding: '12px', boxSizing: 'border-box', borderRadius: '8px', border: '1px solid var(--border-color)', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.5', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                        />
+                    </div>
+
+                    {/* MIDDLE - Regras */}
+                    <div className="dashboard-card section-regras" style={{ marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <div>
+                                <h3>2. Regras de Conduta</h3>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
+                                    Diretrizes específicas passo a passo para o comportamento da IA.
+                                </p>
+                            </div>
+                            <button className="add-button" onClick={() => handleOpenModal()} style={{ padding: '8px 16px', fontSize: '13px' }}>
+                                <FaPlus /> Adicionar Regra
+                            </button>
+                        </div>
+
+                        <div className="table-container">
+                            <table className="management-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: '60px' }}>Ordem</th>
+                                        <th>Descrição da Regra</th>
+                                        <th style={{ width: '100px' }}>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rules.length > 0 ? (
+                                        rules.map((rule, index) => (
+                                            <tr key={rule.id}>
+                                                <td style={{ textAlign: 'center' }}><strong>{index + 1}</strong></td>
+                                                <td style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{rule.descricaoRegra}</td>
+                                                <td className="actions-cell">
+                                                    <button className="action-button edit" onClick={() => handleOpenModal(rule)} title="Editar">
+                                                        <FaEdit />
+                                                    </button>
+                                                    <button className="action-button delete" onClick={() => handleDeleteRule(rule.id)} title="Remover">
+                                                        <FaTrash />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={3} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-secondary)' }}>
+                                                Nenhuma regra definida ainda.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* BOTTOM - Rodapé */}
+                    <div className="dashboard-card section-rodape" style={{ marginBottom: '20px' }}>
+                        <h3>3. Formatação e Segurança (Rodapé)</h3>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '15px', fontSize: '13px' }}>
+                            Regras rígidas para finalização, estilo do texto (negritos, listas) e tratamento de dados.
+                        </p>
+                        <textarea
+                            value={footerText}
+                            onChange={(e) => setFooterText(e.target.value)}
+                            placeholder="Exemplo: Mantenha as respostas curtas..."
+                            rows={8}
+                            style={{ width: '100%', padding: '12px', boxSizing: 'border-box', borderRadius: '8px', border: '1px solid var(--border-color)', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.5', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                        />
+                    </div>
+                </div>
+            )}
 
             {isModalOpen && (
                 <div className="modal-overlay">
@@ -176,13 +312,13 @@ const SystemPromptsPage = () => {
                                     value={ruleText}
                                     onChange={(e) => setRuleText(e.target.value)}
                                     placeholder="Digite a regra aqui..."
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', resize: 'vertical' }}
+                                    style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '8px', border: '1px solid var(--border-color)', resize: 'vertical', fontFamily: 'inherit', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                                 />
                             </div>
                         </div>
                         <div className="modal-footer">
                             <button className="secondary-button" onClick={handleCloseModal}>Cancelar</button>
-                            <button className="primary-button" onClick={handleSaveRule}>Salvar</button>
+                            <button className="primary-button" onClick={handleSaveRule}>Confirmar</button>
                         </div>
                     </div>
                 </div>
