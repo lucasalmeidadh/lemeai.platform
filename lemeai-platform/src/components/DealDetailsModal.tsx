@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../services/api';
-import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt, FaTrash, FaBoxOpen } from 'react-icons/fa';
 import SummaryModal from './SummaryModal';
 import ConfirmationModal from './ConfirmationModal';
 import './DealDetailsModal.css';
@@ -10,6 +10,7 @@ import { type Message } from '../data/mockData';
 import toast from 'react-hot-toast';
 import { OpportunityService, type DetalheConversa } from '../services/OpportunityService';
 import { ContactService } from '../services/ContactService';
+import CustomSelect from './CustomSelect';
 
 interface Deal {
     id: number;
@@ -438,33 +439,38 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                         <div className="info-group">
                             <span className="info-label">Status da Negociação</span>
                             <div className="info-value">
-                                <select
-                                    className="status-select"
-                                    value={statusId}
-                                    onChange={(e) => handleStatusChange(e.target.value)}
+                                <CustomSelect
+                                    value={statusId.toString()}
+                                    onChange={(val) => handleStatusChange(val)}
                                     disabled={isUpdatingStatus}
-                                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                                >
-                                    <option value="1">Atendimento IA</option>
-                                    <option value="8">Atendimento IA Finalizado</option>
-                                    <option value="2">Não Iniciado</option>
-                                    <option value="5">Em Negociação</option>
-                                    <option value="4">Proposta Enviada</option>
-                                    <option value="3">Venda Fechada</option>
-                                    <option value="6">Venda Perdida</option>
-                                </select>
+                                    options={[
+                                        { value: '1', label: 'Atendimento IA' },
+                                        { value: '8', label: 'Atendimento IA Finalizado' },
+                                        { value: '2', label: 'Atendimento Humano' },
+                                        { value: '5', label: 'Em Negociação' },
+                                        { value: '4', label: 'Proposta Enviada' },
+                                        { value: '3', label: 'Venda Fechada' },
+                                        { value: '6', label: 'Venda Perdida' }
+                                    ]}
+                                />
                             </div>
                         </div>
                         <div className="info-group">
                             <span className="info-label">Telefone</span>
-                            <div className="info-value" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <FaPhone size={12} color="#6c757d" /> {deal.phone || '(Sem telefone)'}
+                            <div className="info-value contact-item">
+                                <div className="contact-icon-wrapper">
+                                    <FaPhone size={11} />
+                                </div>
+                                {deal.phone || '(Sem telefone)'}
                             </div>
                         </div>
                         <div className="info-group">
                             <span className="info-label">Email</span>
-                            <div className="info-value" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <FaEnvelope size={12} color="#6c757d" /> {contactEmail || 'Carregando...'}
+                            <div className="info-value contact-item">
+                                <div className="contact-icon-wrapper">
+                                    <FaEnvelope size={11} />
+                                </div>
+                                {contactEmail || 'Carregando...'}
                             </div>
                         </div>
                     </aside>
@@ -492,7 +498,30 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                 <div className="embedded-chat-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                                     {deal.contactId ? (
                                         isLoadingChat ? (
-                                            <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>Looking for messages...</div>
+                                            <div className="modal-skeleton-wrapper" style={{ justifyContent: 'flex-end', paddingBottom: '30px' }}>
+                                                <div className="chat-skeleton-message other">
+                                                    <div className="skeleton-bubble medium"></div>
+                                                    <div className="skeleton-time"></div>
+                                                </div>
+                                                <div className="chat-skeleton-message me">
+                                                    <div className="skeleton-bubble short"></div>
+                                                    <div className="skeleton-time"></div>
+                                                </div>
+                                                <div className="chat-skeleton-message other">
+                                                    <div className="skeleton-bubble long"></div>
+                                                    <div className="skeleton-time"></div>
+                                                </div>
+                                                <div className="chat-skeleton-message me" style={{ marginBottom: '40px' }}>
+                                                    <div className="skeleton-bubble medium"></div>
+                                                    <div className="skeleton-time"></div>
+                                                </div>
+
+                                                {/* Fake Input Skeleton */}
+                                                <div style={{ padding: '10px 15px', border: '1px solid var(--border-color)', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div className="note-skeleton-icon" style={{ width: '24px', height: '24px' }}></div>
+                                                    <div className="note-skeleton-line half" style={{ margin: 0 }}></div>
+                                                </div>
+                                            </div>
                                         ) : chatError ? (
                                             <div style={{ color: 'red', padding: '20px', textAlign: 'center' }}>{chatError}</div>
                                         ) : (
@@ -585,9 +614,23 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                     </div>
 
                                     {isLoadingNotes ? (
-                                        <p style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Carregando anotações...</p>
+                                        <div className="modal-skeleton-wrapper" style={{ paddingTop: 0 }}>
+                                            {[1, 2, 3].map((i) => (
+                                                <div key={i} className="note-skeleton-item">
+                                                    <div className="note-skeleton-icon"></div>
+                                                    <div className="note-skeleton-content">
+                                                        <div className="note-skeleton-line full"></div>
+                                                        <div className="note-skeleton-line half"></div>
+                                                        <div className="note-skeleton-line short"></div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     ) : notesError ? (
-                                        <p style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Não há anotações para esta conversa.</p>
+                                        <div className="empty-notes-state">
+                                            <FaBoxOpen className="empty-notes-icon" />
+                                            <span className="empty-notes-text">Não há anotações para esta conversa.</span>
+                                        </div>
                                     ) : observations.length > 0 ? (
                                         observations
                                             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -619,7 +662,10 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                                 );
                                             })
                                     ) : (
-                                        <p style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Não há anotações para esta conversa.</p>
+                                        <div className="empty-notes-state">
+                                            <FaBoxOpen className="empty-notes-icon" />
+                                            <span className="empty-notes-text">Não há anotações para esta conversa.</span>
+                                        </div>
                                     )}
                                 </div>
                             )}

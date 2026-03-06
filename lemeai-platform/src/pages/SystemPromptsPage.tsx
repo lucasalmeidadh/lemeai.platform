@@ -189,19 +189,19 @@ const SystemPromptsPage = () => {
                 <div style={{ display: 'flex', gap: '10px' }}>
                     {configId && (
                         <button
-                            className="add-button"
+                            className="secondary-button"
                             onClick={handleDeleteConfig}
                             title="Excluir Configuração"
-                            style={{ backgroundColor: '#dc3545', padding: '8px 16px', fontSize: '13px' }}
+                            style={{ borderColor: '#dc3545', color: '#dc3545', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
                         >
-                            <FaTrash /> Excluir Configuração
+                            <FaTrash /> Excluir
                         </button>
                     )}
                     <button
-                        className="add-button"
+                        className="primary-button"
                         onClick={handleSaveConfig}
                         disabled={isSavingConfig}
-                        style={{ padding: '8px 16px', fontSize: '13px' }}
+                        style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                         <FaSave /> {isSavingConfig ? 'Salvando...' : 'Salvar Configuração'}
                     </button>
@@ -220,11 +220,11 @@ const SystemPromptsPage = () => {
                             Defina quem é o agente, seu tom de voz e como ele deve conduzir os primeiros contatos.
                         </p>
                         <textarea
+                            className="premium-textarea"
                             value={headerText}
                             onChange={(e) => setHeaderText(e.target.value)}
-                            placeholder="Exemplo: Você é o Téo, assistente amigável..."
+                            placeholder="Exemplo: Você é o Téo, um assistente amigável. Seu objetivo principal é qualificar o lead."
                             rows={8}
-                            style={{ width: '100%', padding: '12px', boxSizing: 'border-box', borderRadius: '8px', border: '1px solid var(--border-color)', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.5', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                         />
                     </div>
 
@@ -237,7 +237,7 @@ const SystemPromptsPage = () => {
                                     Diretrizes específicas passo a passo para o comportamento da IA.
                                 </p>
                             </div>
-                            <button className="add-button" onClick={() => handleOpenModal()} style={{ padding: '8px 16px', fontSize: '13px' }}>
+                            <button className="primary-button" onClick={() => handleOpenModal()} style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <FaPlus /> Adicionar Regra
                             </button>
                         </div>
@@ -255,22 +255,29 @@ const SystemPromptsPage = () => {
                                     {rules.length > 0 ? (
                                         rules.map((rule, index) => (
                                             <tr key={rule.id}>
-                                                <td style={{ textAlign: 'center' }}><strong>{index + 1}</strong></td>
-                                                <td style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{rule.descricaoRegra}</td>
-                                                <td className="actions-cell">
-                                                    <button className="action-button edit" onClick={() => handleOpenModal(rule)} title="Editar">
-                                                        <FaEdit />
-                                                    </button>
-                                                    <button className="action-button delete" onClick={() => handleDeleteRule(rule.id)} title="Remover">
-                                                        <FaTrash />
-                                                    </button>
+                                                <td style={{ textAlign: 'center', width: '60px' }}>
+                                                    <span className="rule-number-badge">{index + 1}</span>
+                                                </td>
+                                                <td style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', color: 'var(--text-primary)', fontSize: '14.5px' }}>{rule.descricaoRegra}</td>
+                                                <td>
+                                                    <div className="actions-cell" style={{ justifyContent: 'flex-start' }}>
+                                                        <button className="action-icon-btn edit" onClick={() => handleOpenModal(rule)} title="Editar">
+                                                            <FaEdit size={14} />
+                                                        </button>
+                                                        <button className="action-icon-btn delete" onClick={() => handleDeleteRule(rule.id)} title="Remover">
+                                                            <FaTrash size={14} />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={3} style={{ textAlign: 'center', padding: '30px', color: 'var(--text-secondary)' }}>
-                                                Nenhuma regra definida ainda.
+                                            <td colSpan={3}>
+                                                <div className="rules-empty-state">
+                                                    <div className="rules-empty-icon">📝</div>
+                                                    <div>Nenhuma regra condicional definida ainda.</div>
+                                                </div>
                                             </td>
                                         </tr>
                                     )}
@@ -286,11 +293,11 @@ const SystemPromptsPage = () => {
                             Regras rígidas para finalização, estilo do texto (negritos, listas) e tratamento de dados.
                         </p>
                         <textarea
+                            className="premium-textarea"
                             value={footerText}
                             onChange={(e) => setFooterText(e.target.value)}
-                            placeholder="Exemplo: Mantenha as respostas curtas..."
+                            placeholder="Exemplo: Mantenha as respostas curtas e objetivas. Não use mais que um bloco de texto por mensagem."
                             rows={8}
-                            style={{ width: '100%', padding: '12px', boxSizing: 'border-box', borderRadius: '8px', border: '1px solid var(--border-color)', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.5', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                         />
                     </div>
                 </div>
@@ -307,12 +314,12 @@ const SystemPromptsPage = () => {
                             <div className="form-group">
                                 <label htmlFor="ruleText">Descrição da Regra</label>
                                 <textarea
+                                    className="premium-textarea"
                                     id="ruleText"
                                     rows={6}
                                     value={ruleText}
                                     onChange={(e) => setRuleText(e.target.value)}
                                     placeholder="Digite a regra aqui..."
-                                    style={{ width: '100%', padding: '10px', boxSizing: 'border-box', borderRadius: '8px', border: '1px solid var(--border-color)', resize: 'vertical', fontFamily: 'inherit', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                                 />
                             </div>
                         </div>

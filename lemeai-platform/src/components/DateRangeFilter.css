@@ -97,3 +97,39 @@
 .react-datepicker__triangle {
     display: none !important;
 }
+
+/* Date Presets */
+.date-filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.date-presets {
+    display: flex;
+    gap: 6px;
+}
+
+.preset-btn {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+    background-color: var(--bg-secondary);
+    border-color: var(--petroleum-blue);
+    color: var(--petroleum-blue);
+}
+
+.preset-btn.active {
+    background-color: var(--petroleum-blue);
+    border-color: var(--petroleum-blue);
+    color: white;
+}
