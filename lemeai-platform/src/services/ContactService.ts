@@ -77,7 +77,7 @@ export const ContactService = {
 
     update: async (contact: UpdateContactDTO): Promise<ApiResponse<any>> => {
         const response = await apiFetch(`${API_URL}/api/Contato/Atualizar`, {
-            method: 'POST', // Assuming POST based on user description, usually PUT but sticking to common patterns or explicit user instruction if any. User said /api/Contato/Atualizar and showed payload. usually POST for actions.
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },
