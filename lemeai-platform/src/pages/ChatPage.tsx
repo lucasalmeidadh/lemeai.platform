@@ -14,8 +14,8 @@ import ContactListSkeleton from '../components/ContactListSkeleton';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 import hubService from '../hub/HubConnectionService';
 import { ChatService } from '../services/ChatService';
-import noConversationImagem from '../assets/undraw_sem_conversa.svg';
 import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
+import { FaComments } from 'react-icons/fa';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -594,14 +594,14 @@ const ChatPage = () => {
             {isDetailsPanelOpen && <DetailsPanel contact={selectedContact} onClose={toggleDetailsPanel} onUpdate={() => fetchConversations(false)} />}
           </>
         ) : (
-          <div className="conversation-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <img src={noConversationImagem} alt="Nenhuma conversa encontrada" style={{ maxWidth: '300px', marginBottom: '20px' }} />
-            <p style={{ textAlign: 'center', color: '#777' }}>
+          <div className="chat-empty-state">
+            <FaComments className="chat-empty-icon" />
+            <h3 className="chat-empty-title">Nenhuma conversa selecionada</h3>
+            <p className="chat-empty-subtitle">
               {contacts.length > 0
-                ? "Selecione uma conversa para iniciar o atendimento."
-                : "Nenhuma conversa encontrada."}
+                ? "Clique em um contato na lista lateral para iniciar o atendimento e visualizar o histórico de mensagens."
+                : "Você ainda não possui conversas ativas no momento."}
             </p>
-            {/* Opcional: Botão ou alguma instrução para iniciar uma conversa */}
           </div>
         )}
       </div>

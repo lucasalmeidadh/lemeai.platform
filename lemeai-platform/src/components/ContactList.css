@@ -42,23 +42,31 @@
 .search-container {
   display: flex;
   align-items: center;
-  background-color: var(--bg-primary);
-  /* Was #f8f9fa */
-  border-radius: 10px;
-  padding: 0 15px;
+  background-color: var(--bg-tertiary);
+  border-radius: 999px;
+  /* Pill shape */
+  padding: 4px 18px;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.search-container:focus-within {
+  border-color: var(--petroleum-blue);
+  background-color: var(--bg-secondary);
+  box-shadow: 0 0 0 3px rgba(0, 95, 115, 0.1);
 }
 
 .search-container .search-icon {
   color: var(--text-tertiary);
-  /* Was #adb5bd */
 }
 
 .search-container input {
   border: none;
   background: transparent;
   outline: none;
-  padding: 12px 10px;
-  font-size: 15px;
+  padding: 10px 10px;
+  font-size: 14px;
   width: 100%;
   color: var(--text-primary);
 }
@@ -69,38 +77,36 @@
 
 .filter-tabs {
   display: flex;
-  gap: 10px;
-  padding: 15px 25px;
-  border-bottom: 1px solid var(--border-color-soft);
-  /* Was #f0f2f5 */
+  gap: 0;
+  padding: 4px;
+  margin: 15px 25px;
+  background-color: var(--bg-tertiary);
+  border-radius: 999px;
+  /* Pill container */
+  border: 1px solid var(--border-color-soft);
 }
 
 .filter-button {
   flex: 1;
-  padding: 8px 10px;
-  border: 1px solid var(--border-color);
-  /* Was #dee2e6 */
-  background-color: var(--bg-secondary);
-  /* Was #ffffff */
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 8px 16px;
+  border: none;
+  background-color: transparent;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text-secondary);
-  /* Was #495057 */
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .filter-button:hover {
-  background-color: var(--bg-primary);
-  /* Was #f8f9fa */
+  color: var(--text-primary);
 }
 
 .filter-button.active {
-  background-color: var(--petroleum-blue);
-  /* Was #005f73 */
-  color: white;
-  border-color: var(--petroleum-blue);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .contacts-ul {
@@ -117,19 +123,23 @@
   gap: 15px;
   padding: 15px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   border-radius: 12px;
-  margin: 8px 0;
+  margin: 4px 12px;
+  border-left: 4px solid transparent;
+  /* Prepare for active border */
 }
 
 .contacts-ul li:hover {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-tertiary);
   /* Was #f8f9fa */
 }
 
 .contacts-ul li.active {
-  background-color: var(--petroleum-light);
-  /* Was #e0f7ff */
+  background-color: var(--bg-tertiary);
+  border-left: 4px solid var(--petroleum-blue);
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
 }
 
 .contact-avatar {

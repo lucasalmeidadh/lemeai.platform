@@ -6,6 +6,8 @@
     /* Kanban scrolls internally */
     display: flex;
     flex-direction: column;
+    padding-right: 0 !important;
+    /* Allow the inner board to stretch to edge for scrolling */
 }
 
 .pipeline-filter-input {
@@ -53,10 +55,18 @@ select.pipeline-filter-input {
     gap: 20px;
     overflow-x: auto;
     padding-bottom: 20px;
+    padding-right: 40px;
+    /* Force extra space on the right scroll edge */
     flex-grow: 1;
     min-height: 0;
     align-items: flex-start;
-    /* Align columns to top */
+}
+
+.pipeline-board::after {
+    content: '';
+    min-width: 20px;
+    /* Spacer box to ensure padding is respected by scroll container */
+    display: block;
 }
 
 .pipeline-column {
@@ -93,6 +103,28 @@ select.pipeline-filter-input {
 [data-theme='dark'] .column-lost .column-header {
     background-color: rgba(0, 0, 0, 0.2);
     border-bottom-color: #7f3030;
+}
+
+.column-ai {
+    background-color: var(--petroleum-light);
+    border-color: #bae6fd;
+}
+
+[data-theme='dark'] .column-ai {
+    background-color: var(--bg-primary);
+    /* Use theme bg instead of blue overlay */
+    border-color: rgba(14, 165, 233, 0.3);
+}
+
+.column-ai .column-header {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-bottom-color: #bae6fd;
+}
+
+[data-theme='dark'] .column-ai .column-header {
+    background-color: rgba(14, 165, 233, 0.1);
+    /* Subtle tint on header only */
+    border-bottom-color: rgba(14, 165, 233, 0.3);
 }
 
 .column-header {
@@ -143,28 +175,44 @@ select.pipeline-filter-input {
     flex-direction: column;
     gap: 15px;
     min-height: 150px;
-    /* Ensure drop target is large enough */
+}
+
+/* Custom slim scrollbar for columns */
+.column-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.column-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.column-body::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.column-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
 }
 
 .kanban-card {
     background-color: var(--bg-secondary);
-    /* Was white */
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: var(--shadow-sm);
-    /* Was 0 2px 4px rgba(0, 0, 0, 0.05) */
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     cursor: grab;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .kanban-card:hover {
     box-shadow: var(--shadow-md);
-    /* Was 0 4px 8px rgba(0, 0, 0, 0.1) */
     transform: translateY(-2px);
-    border-color: var(--border-color);
-    /* Was #ced4da */
+    border-color: var(--border-color-soft);
 }
 
 .kanban-card.is-dragging {
@@ -177,19 +225,33 @@ select.pipeline-filter-input {
     opacity: 0.9;
 }
 
-.card-tags {
+.card-top-row {
     display: flex;
-    gap: 5px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0px;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    word-break: break-word;
 }
 
 .card-tag {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 600;
+    font-size: 0.65rem;
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-weight: 700;
     text-transform: uppercase;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tag-hot {
@@ -232,48 +294,85 @@ select.pipeline-filter-input {
     color: #74c0fc;
 }
 
-.card-title {
-    font-weight: 600;
-    color: var(--text-primary);
-    /* Was #343a40 */
-    margin-bottom: 5px;
-    font-size: 15px;
-}
-
 .card-value {
-    font-size: 13px;
+    font-size: 0.85rem;
     color: var(--petroleum-blue);
-    /* Was #005f73 */
-    font-weight: 600;
-    margin-bottom: 10px;
+    font-weight: 700;
 }
 
 .card-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px solid var(--border-color);
-    /* Was #f8f9fa */
-    font-size: 12px;
+    border-top: 1px dashed var(--border-color);
+    margin-top: 4px;
+}
+
+.card-footer-left {
+    display: flex;
+    align-items: center;
+}
+
+.card-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-date {
+    font-size: 0.65rem;
     color: var(--text-tertiary);
-    /* Was #adb5bd */
+    font-weight: 500;
+    white-space: nowrap;
+    text-align: right;
+    line-height: 1;
+}
+
+.summarize-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: #8b5cf6;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    /* Prevent wrapping */
+    width: auto;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.summarize-btn:hover:not(:disabled) {
+    background-color: rgba(139, 92, 246, 0.1);
+    border-color: #8b5cf6;
+}
+
+.summarize-btn:disabled {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+    cursor: wait;
 }
 
 .card-avatar {
     background-color: var(--bg-tertiary);
-    /* Was #dee2e6 */
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 10px;
-    font-weight: bold;
+    font-size: 0.55rem;
+    font-weight: 800;
     color: var(--text-secondary);
-    /* Was #495057 */
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
 /* Scrollbar styling for horizontal scroll */

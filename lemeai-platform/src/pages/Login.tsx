@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './Login.css';
 import { FaUser, FaLock, FaArrowRight, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import logoDark from '../assets/logo-dark.png';
 
 const Login = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -57,41 +58,17 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
-      {/* Immersive Background Effects */}
-      <div className="tech-grid"></div>
-      <div className="wave-layer wave-1"></div>
-      <div className="wave-layer wave-2"></div>
+    <div className="login-centered-page">
+      {/* Background Animated Lights */}
+      <div className="bg-glow bg-glow-1"></div>
+      <div className="bg-glow bg-glow-2"></div>
 
-      {/* Floating Boat Container */}
-      <div className="boat-container">
-        <div className="floating-boat">
-          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="140" height="140">
-            <defs>
-              <linearGradient id="boatGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-                <stop offset="100%" stopColor="#e0f7ff" stopOpacity="0.8" />
-              </linearGradient>
-            </defs>
-            {/* Origami Paper Boat - More classic shape */}
-            {/* Back Sail (Triangle) */}
-            <path d="M50,15 L20,65 L50,65 Z" fill="#b3e5fc" opacity="0.9" />
-            {/* Front Sail (Triangle) */}
-            <path d="M50,15 L80,65 L50,65 Z" fill="#ffffff" opacity="0.95" />
-            {/* Hull (Trapezoid) */}
-            <path d="M15,65 L85,65 L70,85 L30,85 Z" fill="url(#boatGradient)" />
-            {/* Fold shadow/detail */}
-            <path d="M50,65 L50,85" stroke="#81d4fa" strokeWidth="1" opacity="0.5" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Centered Login Card */}
-      <div className="login-card">
-        <div className="card-header">
-          <div className="brand-badge">LEME AI</div>
-          <h2>Bem-vindo de volta!</h2>
-          <p>Acesse seu painel administrativo</p>
+      {/* Centered Glass Card */}
+      <div className="login-glass-card">
+        <div className="card-header-new">
+          <img src={logoDark} alt="Leme AI Logo" className="login-logo" style={{ maxHeight: '60px', marginBottom: '20px' }} />
+          <h2>Leme AI está de cara nova.</h2>
+          <p className="subtitle">Bem-vindo de volta! Acesse seu CRM.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form-stack">
@@ -143,12 +120,11 @@ const Login = () => {
             )}
           </button>
         </form>
-      </div>
 
-      <div className="page-footer">
-        <p>Powered by <a href="https://gbcode.com.br/" target="_blank" rel="noopener noreferrer">GbCode</a></p>
+        <div className="page-footer">
+          <p>Powered by <a href="https://gbcode.com.br/" target="_blank" rel="noopener noreferrer">GbCode</a></p>
+        </div>
       </div>
-
     </div>
   );
 };
