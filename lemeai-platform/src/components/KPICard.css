@@ -1,161 +1,134 @@
 .kpi-card {
   background: var(--bg-secondary);
   border-radius: 12px;
-  padding: 16px;
+  padding: 16px 20px;
   box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  /* Stacked layout by default for cleaner look */
-  justify-content: center;
+  justify-content: space-between;
   align-items: flex-start;
-  min-height: 80px;
-  /* Reduced specific height */
-  height: auto;
-  /* Allow flexible height */
+  min-height: 100px;
+  gap: 12px;
 }
 
-.kpi-data-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  flex: 1;
-  width: 100%;
-  z-index: 2;
-  margin-right: 0;
-  /* No margin needed with absolute icon */
+.kpi-card.clickable {
+  cursor: pointer;
 }
 
 .kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  border-color: var(--petroleum-blue);
-  /* Was rgba(0, 95, 115, 0.2) - simplifying to brand color */
+  border-color: var(--border-color-soft);
+}
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.kpi-icon-wrapper {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .kpi-title {
   color: var(--text-secondary);
-  /* Was #6b7280 */
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  margin-bottom: 4px;
-  display: block;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  margin: 0;
   line-height: 1.2;
+}
+
+.kpi-data-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex: 1;
+  width: 100%;
 }
 
 .kpi-value {
   color: var(--text-primary);
-  /* Was #111827 */
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 0;
-  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
   line-height: 1;
-}
-
-/* Minimalist Icon: Removed background, positioned top-right */
-.kpi-icon-wrapper {
-  font-size: 1.25rem;
-  color: var(--text-tertiary);
-  /* Was #9ca3af */
-  /* Subtler default color */
-  background-color: transparent;
-  /* No background */
-  padding: 0;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: auto;
-  height: auto;
-  z-index: 1;
-  opacity: 0.5;
-  transition: all 0.2s ease;
+  letter-spacing: -0.5px;
 }
 
 .kpi-card:hover .kpi-icon-wrapper {
-  color: var(--petroleum-blue);
-  opacity: 1;
   transform: scale(1.1);
-  background-color: transparent;
-  /* Ensure no background on hover either */
+  color: #fff;
+  background-color: var(--petroleum-blue);
 }
 
 .kpi-card.active {
-  background-color: var(--petroleum-light);
-  /* Was #f0f9ff */
+  background-color: var(--petroleum-blue);
   border-color: var(--petroleum-blue);
-  box-shadow: 0 0 0 1px var(--petroleum-blue);
-  /* Thinner border look */
+  box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.2);
 }
 
 .kpi-card.active .kpi-title {
-  color: var(--petroleum-blue);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.kpi-card.active .kpi-value {
+  color: #ffffff;
 }
 
 .kpi-card.active .kpi-icon-wrapper {
   color: var(--petroleum-blue);
-  opacity: 1;
+  background-color: #ffffff;
 }
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .kpi-value {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
 }
 
 @media (max-width: 900px) {
   .kpi-card {
-    padding: 12px;
+    padding: 14px 16px;
+    min-height: 90px;
+    gap: 10px;
   }
 
   .kpi-title {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
   }
 
   .kpi-value {
-    font-size: 1.25rem;
-  }
-
-  .kpi-icon-wrapper {
-    font-size: 1rem;
-    top: 8px;
-    right: 8px;
+    font-size: 1.6rem;
   }
 }
 
 @media (max-width: 600px) {
   .kpi-card {
-    padding: 8px 10px;
-    min-height: 70px;
-  }
-
-  .kpi-value {
-    font-size: 1.1rem;
+    padding: 12px 14px;
+    min-height: 80px;
   }
 
   .kpi-title {
-    font-size: 0.6rem;
-    white-space: normal;
-    /* Allow wrap */
+    font-size: 0.7rem;
   }
 
-  /* Keep icon visible but small and out of the way */
-  .kpi-icon-wrapper {
-    font-size: 0.9rem;
-    top: 6px;
-    right: 6px;
-    opacity: 0.4;
+  .kpi-value {
+    font-size: 1.4rem;
   }
 }

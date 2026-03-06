@@ -69,10 +69,10 @@
 
 .deal-meta-info {
     display: flex;
-    gap: 15px;
-    font-size: 14px;
+    gap: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
-    /* Was #6c757d */
+    align-items: center;
 }
 
 .deal-value-highlight {
@@ -146,19 +146,22 @@
     background-color: var(--petroleum-blue);
     color: white;
     border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
+    padding: 10px 18px;
+    border-radius: 999px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     font-size: 13px;
     font-weight: 600;
-    transition: background-color 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
 }
 
 .add-note-btn:hover {
     background-color: var(--petroleum-blue-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .add-note-form {
@@ -262,52 +265,99 @@
 
 .info-label {
     display: block;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    /* Was #6c757d */
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-tertiary);
     text-transform: uppercase;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
 }
 
 .info-value {
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-primary);
-    /* Was #212529 */
-    font-weight: 500;
+    font-weight: 600;
+}
+
+.info-value.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13.5px;
+}
+
+.contact-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background-color: var(--bg-tertiary);
+    border-radius: 50%;
+    color: var(--petroleum-blue);
+}
+
+.status-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: var(--petroleum-blue);
+    box-shadow: 0 0 0 2px rgba(0, 95, 115, 0.1);
 }
 
 .deal-tabs {
     display: flex;
     border-bottom: 1px solid var(--border-color);
-    /* Was #e9ecef */
-    padding: 0 20px;
+    padding: 12px 20px 0 20px;
     background-color: var(--bg-secondary);
-    /* Was white */
+    gap: 8px;
 }
 
 .deal-tab {
-    padding: 15px 20px;
+    padding: 10px 24px;
     border: none;
     background: transparent;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-secondary);
-    /* Was #6c757d */
     cursor: pointer;
-    border-bottom: 3px solid transparent;
+    border-radius: 8px 8px 0 0;
     transition: all 0.2s;
+    margin-bottom: -1px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .deal-tab:hover {
     color: var(--petroleum-blue);
-    /* Was #005f73 */
+    background-color: var(--bg-tertiary);
 }
 
 .deal-tab.active {
     color: var(--petroleum-blue);
-    /* Was #005f73 */
-    border-bottom-color: var(--petroleum-blue);
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    border-bottom-color: var(--bg-primary);
 }
 
 .tab-content {
@@ -378,5 +428,135 @@
 
 .view-summary-btn:hover {
     background-color: var(--petroleum-light);
-    /* Was #e0f7ff */
+}
+
+.empty-notes-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-tertiary);
+    text-align: center;
+    gap: 15px;
+}
+
+.empty-notes-icon {
+    font-size: 48px;
+    color: var(--border-color);
+    opacity: 0.6;
+}
+
+.empty-notes-text {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Skeleton Loaders for Modal */
+.modal-skeleton-wrapper {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+}
+
+.chat-skeleton-message {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 70%;
+}
+
+.chat-skeleton-message.me {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.chat-skeleton-message.other {
+    align-self: flex-start;
+}
+
+.skeleton-bubble {
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-bubble.short {
+    width: 120px;
+}
+
+.skeleton-bubble.medium {
+    width: 200px;
+}
+
+.skeleton-bubble.long {
+    width: 280px;
+}
+
+.skeleton-time {
+    height: 10px;
+    width: 40px;
+    border-radius: 4px;
+    background-color: var(--bg-tertiary);
+}
+
+.note-skeleton-item {
+    display: flex;
+    gap: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.note-skeleton-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    flex-shrink: 0;
+}
+
+.note-skeleton-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 5px;
+}
+
+.note-skeleton-line {
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.note-skeleton-line.full {
+    width: 100%;
+}
+
+.note-skeleton-line.half {
+    width: 50%;
+}
+
+.note-skeleton-line.short {
+    width: 30%;
+    height: 10px;
+    margin-top: 4px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }

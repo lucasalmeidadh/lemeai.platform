@@ -15,12 +15,14 @@ const KPICard: React.FC<KPICardProps> = ({ title, value, icon, isActive, onClick
       className={`kpi-card ${isActive ? 'active' : ''} ${onClick ? 'clickable' : ''}`}
       onClick={onClick}
     >
-      <div className="kpi-data-content">
+      <div className="kpi-header">
+        <div className="kpi-icon-wrapper">
+          {icon}
+        </div>
         <div className="kpi-title">{title}</div>
-        <div className="kpi-value">{value}</div>
       </div>
-      <div className="kpi-icon-wrapper">
-        {icon}
+      <div className="kpi-data-content">
+        <div className="kpi-value">{value}</div>
       </div>
     </div>
   );

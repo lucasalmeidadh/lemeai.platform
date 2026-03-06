@@ -4,13 +4,16 @@ import toast from 'react-hot-toast';
 import KPICard from '../components/KPICard';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import ConversationChart from '../components/ConversationChart';
+import FunnelChart from '../components/FunnelChart';
+import type { FunnelData } from '../components/FunnelChart';
 import './Dashboard.css';
-import { FaUserPlus, FaHandshake, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
+import { FaUserPlus, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 import { OpportunityService } from '../services/OpportunityService';
 import type { Opportunity } from '../services/OpportunityService';
 import DateRangeFilter from '../components/DateRangeFilter';
 import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
+import CustomSelect from '../components/CustomSelect';
 
 interface Kpi {
   title: string;
@@ -24,12 +27,17 @@ const Dashboard = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d;
+  });
+  const [endDate, setEndDate] = useState<Date | null>(new Date());
 
   // Estados para os dados
   const [deals, setDeals] = useState<Opportunity[]>([]);
   const [kpiData, setKpiData] = useState<Kpi[]>([]);
+  const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
   // chartData is now derived from filteredDeals
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,13 +141,17 @@ const Dashboard = () => {
     });
 
     setKpiData([
-      { title: 'Atendimento IA', value: counts['Atendimento IA'].toString(), icon: <FaUserPlus /> },
+      { title: 'Total / Não Iniciado', value: (counts['Não Iniciado'] + counts['Atendimento IA']).toString(), icon: <FaUserPlus /> },
       { title: 'Atendimento IA Finalizado', value: counts['Atendimento IA Finalizado'].toString(), icon: <FaCheckCircle /> },
-      { title: 'Não Iniciado', value: counts['Não Iniciado'].toString(), icon: <FaUserPlus /> },
-      { title: 'Em Negociação', value: counts['Em Negociação'].toString(), icon: <FaHandshake /> },
-      { title: 'Proposta Enviada', value: counts['Proposta Enviada'].toString(), icon: <FaHandshake /> },
-      { title: 'Venda Fechada', value: counts['Venda Fechada'].toString(), icon: <FaCheckCircle /> },
-      { title: 'Venda Perdida', value: counts['Venda Perdida'].toString(), icon: <FaTimesCircle /> },
+      { title: 'Vendas Fechadas', value: counts['Venda Fechada'].toString(), icon: <FaCheckCircle /> },
+      { title: 'Vendas Perdidas', value: counts['Venda Perdida'].toString(), icon: <FaTimesCircle /> },
+    ]);
+
+    setFunnelData([
+      { id: 'topo', name: 'Não Iniciado', value: counts['Não Iniciado'], color: 'var(--petroleum-blue, #0284c7)' },
+      { id: 'meio-1', name: 'Atendimento IA', value: counts['Atendimento IA'], color: '#d97706' },
+      { id: 'meio-2', name: 'Em Negociação', value: counts['Em Negociação'] + counts['Proposta Enviada'], color: '#7c3aed' },
+      { id: 'fundo', name: 'Venda Fechada', value: counts['Venda Fechada'], color: '#059669' }
     ]);
   };
 
@@ -226,8 +238,39 @@ const Dashboard = () => {
 
   return (
     <div className="page-container">
-      <div className="page-header">
+      <div className="page-header dashboard-header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <h1>Painel Principal</h1>
+
+        <div className="filters-inline">
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onChangeStartDate={setStartDate}
+            onChangeEndDate={setEndDate}
+          />
+
+          <input
+            type="text"
+            placeholder="Buscar..."
+            className="filter-input-compact"
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+
+          <CustomSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'Todos', label: 'Status' },
+              { value: 'Não Iniciado', label: 'Não Iniciado' },
+              { value: 'Em Negociação', label: 'Em Negociação' },
+              { value: 'Proposta Enviada', label: 'Proposta Enviada' },
+              { value: 'Venda Fechada', label: 'Venda Fechada' },
+              { value: 'Venda Perdida', label: 'Venda Perdida' },
+              { value: 'Atendimento IA', label: 'Atendimento IA' },
+              { value: 'Atendimento IA Finalizado', label: 'Atendimento IA Finalizado' },
+            ]}
+          />
+        </div>
       </div>
 
       {isLoading ? (
@@ -239,7 +282,7 @@ const Dashboard = () => {
           <div className="kpi-grid">
             {kpiData.map((kpi, index) => (
               <KPICard
-                key={index}
+                key={`primary-${index}`}
                 title={kpi.title}
                 value={kpi.value}
                 icon={kpi.icon}
@@ -250,49 +293,26 @@ const Dashboard = () => {
           </div>
 
           <div className="dashboard-charts-area">
-            <div className="dashboard-card">
+            <div className="dashboard-card chart-card">
               <h3>Conversas nos últimos 30 dias</h3>
               <p className="chart-subtitle">
                 Acompanhe o volume de conversas iniciadas diariamente.
               </p>
               <ConversationChart data={chartData} />
             </div>
+
+            <div className="dashboard-card chart-card">
+              <h3>Funil de Vendas</h3>
+              <p className="chart-subtitle">
+                Acompanhe as oportunidades pelas etapas de conversão.
+              </p>
+              <FunnelChart data={funnelData} />
+            </div>
           </div>
 
           <div className="dashboard-card">
             <div className="dashboard-header-row">
               <h3>Atividades Recentes</h3>
-
-              <div className="filters-inline">
-                <DateRangeFilter
-                  startDate={startDate}
-                  endDate={endDate}
-                  onChangeStartDate={setStartDate}
-                  onChangeEndDate={setEndDate}
-                />
-
-
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  className="filter-input-compact"
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
-                <select
-                  className="filter-select-compact"
-                  onChange={e => setStatusFilter(e.target.value)}
-                  value={statusFilter}
-                >
-                  <option value="Todos">Status</option>
-                  <option value="Não Iniciado">Não Iniciado</option>
-                  <option value="Em Negociação">Em Negociação</option>
-                  <option value="Proposta Enviada">Proposta Enviada</option>
-                  <option value="Venda Fechada">Venda Fechada</option>
-                  <option value="Venda Perdida">Venda Perdida</option>
-                  <option value="Atendimento IA">Atendimento IA</option>
-                  <option value="Atendimento IA Finalizado">Atendimento IA Finalizado</option>
-                </select>
-              </div>
             </div>
 
             <div className="table-container">

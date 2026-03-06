@@ -3,6 +3,7 @@ import { apiFetch } from '../services/api';
 import './PipelinePage.css';
 import DateRangeFilter from '../components/DateRangeFilter';
 import PipelineSkeleton from '../components/PipelineSkeleton';
+import CustomSelect from '../components/CustomSelect';
 import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import DealDetailsModal from '../components/DealDetailsModal';
@@ -44,7 +45,7 @@ interface Column {
 const INITIAL_COLUMNS: Column[] = [
     { id: 'ai_service', title: 'Atendimento IA', statusId: 1, deals: [] },
     { id: 'ai_service_finished', title: 'IA Encerrada', statusId: 8, deals: [] },
-    { id: 'intro', title: 'Não Iniciado', statusId: 2, deals: [] },
+    { id: 'intro', title: 'Atendimento Humano', statusId: 2, deals: [] },
     { id: 'qualified', title: 'Em Negociação', statusId: 5, deals: [] },
     { id: 'proposal', title: 'Proposta Enviada', statusId: 4, deals: [] },
     { id: 'closed', title: 'Venda Fechada', statusId: 3, deals: [] },
@@ -110,9 +111,9 @@ const PipelinePage = () => {
                 } else {
                     unmappedDeals.push(opp);
                     // Optionally put in the first column or a 'Unknown' column
-                    // For now, let's put in 'Não Iniciado' (index 1) if it exists, or 0
-                    if (newColumns[1]) {
-                        newColumns[1].deals.push(deal);
+                    // For now, let's put in 'Atendimento Humano' (index 2) if it exists, or 0
+                    if (newColumns[2]) {
+                        newColumns[2].deals.push(deal);
                     } else {
                         newColumns[0].deals.push(deal);
                     }
@@ -334,26 +335,23 @@ const PipelinePage = () => {
                                 onChangeEndDate={setEndDate}
                             />
 
-                            <select
-                                value={selectedOwner}
-                                onChange={(e) => setSelectedOwner(e.target.value)}
-                                className="pipeline-filter-input"
-                                style={{
-                                    minWidth: '200px'
-                                }}
-                            >
-                                <option value="all">Todos os Responsáveis</option>
-                                {getUniqueOwners().map(owner => (
-                                    <option key={owner} value={owner}>{owner}</option>
-                                ))}
-                            </select>
+                            <div style={{ minWidth: '200px' }}>
+                                <CustomSelect
+                                    value={selectedOwner}
+                                    onChange={(val) => setSelectedOwner(val)}
+                                    options={[
+                                        { value: 'all', label: 'Todos os Responsáveis' },
+                                        ...getUniqueOwners().map(owner => ({ value: owner, label: owner }))
+                                    ]}
+                                />
+                            </div>
                         </div>
                     </div>
 
                     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
                         <div className="pipeline-board">
                             {filteredColumns.map(column => (
-                                <div key={column.id} className={`pipeline-column ${column.id === 'lost' ? 'column-lost' : ''}`}>
+                                <div key={column.id} className={`pipeline-column ${column.id === 'lost' ? 'column-lost' : ''} ${['ai_service', 'ai_service_finished'].includes(column.id) ? 'column-ai' : ''}`}>
                                     <div className="column-header">
                                         <div className="column-header-top">
                                             <span>{column.title}</span>
@@ -383,42 +381,31 @@ const PipelinePage = () => {
                                                                 style={{ ...provided.draggableProps.style }}
                                                                 onClick={() => setSelectedDeal(deal)}
                                                             >
-                                                                {column.id === 'ai_service' && (
-                                                                    <div className="card-tags">
+                                                                <div className="card-top-row">
+                                                                    <div className="card-title">{deal.title}</div>
+                                                                    {column.id === 'ai_service' && (
                                                                         <span className={`card-tag tag-${deal.tag}`}>
                                                                             {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
                                                                         </span>
-                                                                    </div>
-                                                                )}
-                                                                <div className="card-title">{deal.title}</div>
+                                                                    )}
+                                                                </div>
                                                                 <div className="card-value">{deal.value}</div>
                                                                 <div className="card-footer">
-                                                                    <span className="card-status-label" style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>{column.title}</span>
-
-                                                                    <div className="card-footer-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div className="card-footer-left">
                                                                         <button
-                                                                            className="icon-button"
+                                                                            className="summarize-btn"
                                                                             onClick={(e) => handleAiSummaryClick(e, deal.id)}
                                                                             title="Resumir com IA"
                                                                             disabled={summarizingDealId === deal.id}
-                                                                            style={{
-                                                                                padding: '4px',
-                                                                                width: '24px',
-                                                                                height: '24px',
-                                                                                borderRadius: '4px',
-                                                                                display: 'flex',
-                                                                                alignItems: 'center',
-                                                                                justifyContent: 'center',
-                                                                                background: 'transparent',
-                                                                                border: 'none',
-                                                                                cursor: summarizingDealId === deal.id ? 'wait' : 'pointer',
-                                                                                color: summarizingDealId === deal.id ? 'var(--text-secondary)' : '#8b5cf6' // Purple for magic
-                                                                            }}
                                                                         >
-                                                                            <FaMagic size={12} className={summarizingDealId === deal.id ? 'spin' : ''} />
+                                                                            <FaMagic size={10} className={summarizingDealId === deal.id ? 'spin' : ''} />
+                                                                            <span>{summarizingDealId === deal.id ? 'Gerando...' : 'Resumo IA'}</span>
                                                                         </button>
-                                                                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{deal.date}</span>
-                                                                        <div className="card-avatar" title={`Responsável: ${deal.owner}`} style={{ width: '24px', height: '24px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 600 }}>
+                                                                    </div>
+
+                                                                    <div className="card-footer-right">
+                                                                        <span className="card-date">{deal.date}</span>
+                                                                        <div className="card-avatar" title={`Responsável: ${deal.owner}`}>
                                                                             {deal.owner.split(' ').length > 1
                                                                                 ? (deal.owner.split(' ')[0][0] + deal.owner.split(' ')[deal.owner.split(' ').length - 1][0]).toUpperCase()
                                                                                 : deal.owner.substring(0, 2).toUpperCase()}
