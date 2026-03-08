@@ -1,0 +1,205 @@
+.agenda-page-container {
+    padding: 10px 24px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    /* Use min-height from calc to prevent overlapping while allowing scroll */
+    min-height: calc(100vh - 120px);
+    box-sizing: border-box;
+}
+
+.agenda-header {
+    margin-bottom: 24px;
+}
+
+.agenda-header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.agenda-header p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.agenda-calendar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    /* Min height to guarantee the calendar cells are reasonable */
+    min-height: 600px;
+}
+
+/* React Big Calendar Overrides & Visual Improvements */
+.rbc-calendar {
+    font-family: inherit;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+/* Force all calendar borders to match the dark theme */
+.rbc-calendar *,
+.rbc-calendar *:before,
+.rbc-calendar *:after {
+    border-color: var(--border-color) !important;
+}
+
+.rbc-header {
+    padding: 12px 8px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view {
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px;
+    background-color: transparent;
+    overflow: hidden;
+}
+
+.rbc-time-content,
+.rbc-time-header {
+    border-color: var(--border-color) !important;
+    background-color: var(--bg-secondary);
+}
+
+.rbc-time-header.rbc-overflowing {
+    border-right-color: var(--border-color) !important;
+}
+
+.rbc-time-slot,
+.rbc-timeslot-group,
+.rbc-time-column {
+    border-color: var(--border-color) !important;
+    background-color: transparent !important;
+}
+
+.rbc-month-row,
+.rbc-day-slot {
+    border-color: var(--border-color) !important;
+    background-color: transparent !important;
+}
+
+.rbc-day-bg {
+    border-left: 1px solid var(--border-color) !important;
+    background-color: transparent !important;
+}
+
+.rbc-day-bg.rbc-today {
+    background-color: var(--petroleum-light);
+}
+
+/* Fix off-range background */
+.rbc-off-range-bg {
+    background-color: var(--bg-primary);
+    /* Use primary bg to differentiate from the secondary card bg */
+}
+
+/* Time Grid Background Fixes */
+.rbc-day-bg {
+    background-color: transparent !important;
+}
+
+.rbc-allday-cell {
+    border-color: var(--border-color) !important;
+    background-color: transparent !important;
+}
+
+.rbc-time-view-resources .rbc-time-header-content {
+    border-color: var(--border-color) !important;
+}
+
+.rbc-time-header.rbc-overflowing {
+    border-right-color: var(--border-color) !important;
+    background-color: transparent !important;
+}
+
+.rbc-time-content {
+    background-color: transparent !important;
+}
+
+.rbc-date-cell {
+    padding: 6px;
+    font-weight: 500;
+}
+
+.rbc-date-cell.rbc-off-range {
+    color: var(--text-tertiary);
+    opacity: 0.6;
+}
+
+/* Toolbar actions */
+.rbc-toolbar {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.rbc-toolbar button {
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.rbc-toolbar button:hover,
+.rbc-toolbar button.rbc-active {
+    background-color: var(--petroleum-blue);
+    color: white;
+    border-color: var(--petroleum-blue);
+    box-shadow: none;
+}
+
+.rbc-toolbar button.rbc-active:hover {
+    background-color: var(--petroleum-blue-hover);
+}
+
+.rbc-toolbar .rbc-toolbar-label {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    text-transform: capitalize;
+}
+
+/* Event Styling */
+.rbc-event {
+    background-color: var(--petroleum-blue);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: white;
+    box-shadow: var(--shadow-sm);
+    transition: opacity 0.2s;
+}
+
+.rbc-event:hover {
+    opacity: 0.9;
+}
+
+/* Agenda View */
+.rbc-agenda-view table.rbc-agenda-table {
+    border-color: var(--border-color) !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table tbody>tr>td {
+    border-color: var(--border-color) !important;
+}

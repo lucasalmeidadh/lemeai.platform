@@ -7,6 +7,7 @@ import {
     FaTachometerAlt,
     FaChartPie,
     FaAddressBook,
+    FaCalendarAlt,
     FaComments,
     FaCog,
     FaUsersCog,
@@ -69,6 +70,9 @@ const MainLayout = () => {
                         </Link>
                         <Link to="/contacts" className={`drawer-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
                             <FaAddressBook /> Contatos
+                        </Link>
+                        <Link to="/agenda" className={`drawer-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
+                            <FaCalendarAlt /> Agenda
                         </Link>
                         <Link to="/chat" className={`drawer-link ${location.pathname === '/chat' ? 'active' : ''}`}>
                             <FaComments /> Chat

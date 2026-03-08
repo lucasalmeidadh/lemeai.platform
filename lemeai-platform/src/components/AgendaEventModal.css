@@ -1,0 +1,112 @@
+/* Extends existing modal styles from UserProfileModal / Base Modals */
+.event-modal-overlay {
+    z-index: 1050;
+    /* Above calendar */
+}
+
+.event-modal {
+    max-width: 500px;
+}
+
+.event-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.event-form .form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.event-form .form-row .form-group {
+    flex: 1;
+}
+
+.event-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.event-modal-footer .footer-right {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.event-form input[type="text"],
+.event-form textarea,
+.custom-datepicker-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    transition: all 0.2s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.event-form input[type="text"]::placeholder,
+.event-form textarea::placeholder,
+.custom-datepicker-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.event-form input[type="text"]:focus,
+.event-form textarea:focus,
+.custom-datepicker-input:focus {
+    outline: none;
+    border-color: var(--petroleum-blue);
+    box-shadow: 0 0 0 3px var(--petroleum-light);
+    background-color: var(--bg-primary);
+}
+
+.event-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* React Datepicker Overrides */
+.event-form .react-datepicker-wrapper {
+    width: 100%;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item {
+    padding: 8px 10px;
+}
+
+/* DatePicker Time Section Dark Mode Compatibility */
+.react-datepicker__time-container {
+    border-left-color: var(--border-color) !important;
+}
+
+.react-datepicker__header--time {
+    background-color: var(--bg-secondary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item:hover {
+    background-color: var(--petroleum-light) !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--selected {
+    background-color: var(--petroleum-blue) !important;
+    color: white !important;
+}

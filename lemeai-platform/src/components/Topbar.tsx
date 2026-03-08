@@ -9,6 +9,7 @@ import {
     FaTachometerAlt,
     FaChartPie,
     FaAddressBook,
+    FaCalendarAlt,
     FaComments,
     FaCog,
     FaChevronDown,
@@ -83,6 +84,10 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                 <Link to="/contacts" className={`nav-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
                     <FaAddressBook />
                     <span>Contatos</span>
+                </Link>
+                <Link to="/agenda" className={`nav-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
+                    <FaCalendarAlt />
+                    <span>Agenda</span>
                 </Link>
                 <Link to="/chat" className={`nav-link chat-nav-link ${location.pathname === '/chat' ? 'active' : ''}`}>
                     <FaComments />
