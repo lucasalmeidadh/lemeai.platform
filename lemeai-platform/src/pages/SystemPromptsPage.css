@@ -209,3 +209,52 @@
     letter-spacing: 0.5px;
     padding-bottom: 8px;
 }
+
+/* Split View Layout */
+.split-view-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.split-view-layout .config-side {
+    flex: 1;
+}
+
+.split-view-layout .chat-side {
+    width: 400px;
+    flex-shrink: 0;
+
+    /* Faz o chat "grudar" na tela enquanto rola a página de configurações */
+    position: sticky;
+    top: 80px;
+    /* Distância segura do topbar */
+    height: calc(100vh - 100px);
+    /* Altura restrita à tela para não cortar a digitação */
+    max-height: 800px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+    .split-view-layout {
+        flex-direction: column;
+        overflow: auto;
+        /* Let it scroll naturally on smaller screens */
+        max-height: none;
+    }
+
+    .split-view-layout .config-side {
+        overflow-y: visible;
+        padding-right: 0;
+    }
+
+    .split-view-layout .chat-side {
+        width: 100%;
+        height: 600px;
+        /* Fixed height for chat on mobile */
+        margin-top: 20px;
+    }
+}
