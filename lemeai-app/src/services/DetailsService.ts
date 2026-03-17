@@ -12,7 +12,18 @@ export const DetailsService = {
             },
         });
 
+        if (response.status === 404 || response.status === 400) {
+            return [];
+        }
+
         if (!response.ok) {
+            try {
+                const errData = await response.json();
+                if (errData.mensagem) {
+                    throw new Error(errData.mensagem);
+                }
+            } catch (e) {
+            }
             throw new Error(`Error fetching details: ${response.statusText}`);
         }
 

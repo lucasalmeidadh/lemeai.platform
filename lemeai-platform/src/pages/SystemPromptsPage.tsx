@@ -4,6 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaSave } from 'react-icons/fa';
 import './SystemPromptsPage.css';
 import { RegrasIAService, type IARule, type ConfigAgente } from '../services/RegrasIAService';
 import SystemPromptsSkeleton from '../components/SystemPromptsSkeleton';
+import { TestAgentChat } from '../components/TestAgentChat';
 
 const SystemPromptsPage = () => {
     const [configId, setConfigId] = useState<number | null>(null);
@@ -186,122 +187,132 @@ const SystemPromptsPage = () => {
                     <h1>Regras da IA</h1>
                     <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Configure o comportamento, regras e tom de voz da inteligência artificial.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    {configId && (
-                        <button
-                            className="secondary-button"
-                            onClick={handleDeleteConfig}
-                            title="Excluir Configuração"
-                            style={{ borderColor: '#dc3545', color: '#dc3545', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                            <FaTrash /> Excluir
-                        </button>
-                    )}
-                    <button
-                        className="primary-button"
-                        onClick={handleSaveConfig}
-                        disabled={isSavingConfig}
-                        style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                    >
-                        <FaSave /> {isSavingConfig ? 'Salvando...' : 'Salvar Configuração'}
-                    </button>
-                </div>
             </div>
 
-            {isLoading ? (
-                <SystemPromptsSkeleton />
-            ) : (
-                <div className="config-hamburger-layout">
+            <div className="split-view-layout">
+                <div className="config-side">
+                    {isLoading ? (
+                        <SystemPromptsSkeleton />
+                    ) : (
+                        <div className="config-hamburger-layout">
 
-                    {/* TOP - Cabeçalho */}
-                    <div className="dashboard-card section-cabecalho" style={{ marginBottom: '20px' }}>
-                        <h3>1. Personalidade e Objetivos (Cabeçalho)</h3>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '15px', fontSize: '13px' }}>
-                            Defina quem é o agente, seu tom de voz e como ele deve conduzir os primeiros contatos.
-                        </p>
-                        <textarea
-                            className="premium-textarea"
-                            value={headerText}
-                            onChange={(e) => setHeaderText(e.target.value)}
-                            placeholder="Exemplo: Você é o Téo, um assistente amigável. Seu objetivo principal é qualificar o lead."
-                            rows={8}
-                        />
-                    </div>
-
-                    {/* MIDDLE - Regras */}
-                    <div className="dashboard-card section-regras" style={{ marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                            <div>
-                                <h3>2. Regras de Conduta</h3>
-                                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
-                                    Diretrizes específicas passo a passo para o comportamento da IA.
+                            {/* TOP - Cabeçalho */}
+                            <div className="dashboard-card section-cabecalho" style={{ marginBottom: '20px' }}>
+                                <h3>1. Personalidade e Objetivos (Cabeçalho)</h3>
+                                <p style={{ color: 'var(--text-secondary)', marginBottom: '15px', fontSize: '13px' }}>
+                                    Defina quem é o agente, seu tom de voz e como ele deve conduzir os primeiros contatos.
                                 </p>
+                                <textarea
+                                    className="premium-textarea"
+                                    value={headerText}
+                                    onChange={(e) => setHeaderText(e.target.value)}
+                                    placeholder="Exemplo: Você é o Téo, um assistente amigável. Seu objetivo principal é qualificar o lead."
+                                    rows={8}
+                                />
                             </div>
-                            <button className="primary-button" onClick={() => handleOpenModal()} style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <FaPlus /> Adicionar Regra
-                            </button>
-                        </div>
 
-                        <div className="table-container">
-                            <table className="management-table">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: '60px' }}>Ordem</th>
-                                        <th>Descrição da Regra</th>
-                                        <th style={{ width: '100px' }}>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {rules.length > 0 ? (
-                                        rules.map((rule, index) => (
-                                            <tr key={rule.id}>
-                                                <td style={{ textAlign: 'center', width: '60px' }}>
-                                                    <span className="rule-number-badge">{index + 1}</span>
-                                                </td>
-                                                <td style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', color: 'var(--text-primary)', fontSize: '14.5px' }}>{rule.descricaoRegra}</td>
-                                                <td>
-                                                    <div className="actions-cell" style={{ justifyContent: 'flex-start' }}>
-                                                        <button className="action-icon-btn edit" onClick={() => handleOpenModal(rule)} title="Editar">
-                                                            <FaEdit size={14} />
-                                                        </button>
-                                                        <button className="action-icon-btn delete" onClick={() => handleDeleteRule(rule.id)} title="Remover">
-                                                            <FaTrash size={14} />
-                                                        </button>
-                                                    </div>
-                                                </td>
+                            {/* MIDDLE - Regras */}
+                            <div className="dashboard-card section-regras" style={{ marginBottom: '20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                    <div>
+                                        <h3>2. Regras de Conduta</h3>
+                                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '4px' }}>
+                                            Diretrizes específicas passo a passo para o comportamento da IA.
+                                        </p>
+                                    </div>
+                                    <button className="primary-button" onClick={() => handleOpenModal()} style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <FaPlus /> Adicionar Regra
+                                    </button>
+                                </div>
+
+                                <div className="table-container">
+                                    <table className="management-table">
+                                        <thead>
+                                            <tr>
+                                                <th style={{ width: '60px' }}>Ordem</th>
+                                                <th>Descrição da Regra</th>
+                                                <th style={{ width: '100px' }}>Ações</th>
                                             </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={3}>
-                                                <div className="rules-empty-state">
-                                                    <div className="rules-empty-icon">📝</div>
-                                                    <div>Nenhuma regra condicional definida ainda.</div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                        </thead>
+                                        <tbody>
+                                            {rules.length > 0 ? (
+                                                rules.map((rule, index) => (
+                                                    <tr key={rule.id}>
+                                                        <td style={{ textAlign: 'center', width: '60px' }}>
+                                                            <span className="rule-number-badge">{index + 1}</span>
+                                                        </td>
+                                                        <td style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', color: 'var(--text-primary)', fontSize: '14.5px' }}>{rule.descricaoRegra}</td>
+                                                        <td>
+                                                            <div className="actions-cell" style={{ justifyContent: 'flex-start' }}>
+                                                                <button className="action-icon-btn edit" onClick={() => handleOpenModal(rule)} title="Editar">
+                                                                    <FaEdit size={14} />
+                                                                </button>
+                                                                <button className="action-icon-btn delete" onClick={() => handleDeleteRule(rule.id)} title="Remover">
+                                                                    <FaTrash size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={3}>
+                                                        <div className="rules-empty-state">
+                                                            <div className="rules-empty-icon">📝</div>
+                                                            <div>Nenhuma regra condicional definida ainda.</div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
 
-                    {/* BOTTOM - Rodapé */}
-                    <div className="dashboard-card section-rodape" style={{ marginBottom: '20px' }}>
-                        <h3>3. Formatação e Segurança (Rodapé)</h3>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '15px', fontSize: '13px' }}>
-                            Regras rígidas para finalização, estilo do texto (negritos, listas) e tratamento de dados.
-                        </p>
-                        <textarea
-                            className="premium-textarea"
-                            value={footerText}
-                            onChange={(e) => setFooterText(e.target.value)}
-                            placeholder="Exemplo: Mantenha as respostas curtas e objetivas. Não use mais que um bloco de texto por mensagem."
-                            rows={8}
-                        />
-                    </div>
+                            {/* BOTTOM - Rodapé */}
+                            <div className="dashboard-card section-rodape" style={{ marginBottom: '20px' }}>
+                                <h3>3. Formatação e Segurança (Rodapé)</h3>
+                                <p style={{ color: 'var(--text-secondary)', marginBottom: '15px', fontSize: '13px' }}>
+                                    Regras rígidas para finalização, estilo do texto (negritos, listas) e tratamento de dados.
+                                </p>
+                                <textarea
+                                    className="premium-textarea"
+                                    value={footerText}
+                                    onChange={(e) => setFooterText(e.target.value)}
+                                    placeholder="Exemplo: Mantenha as respostas curtas e objetivas. Não use mais que um bloco de texto por mensagem."
+                                    rows={8}
+                                />
+
+                                {/* Action Buttons at the bottom of the form */}
+                                <div className="config-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
+                                    {configId && (
+                                        <button
+                                            className="secondary-button"
+                                            onClick={handleDeleteConfig}
+                                            title="Excluir Configuração"
+                                            style={{ borderColor: '#dc3545', color: '#dc3545', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 24px' }}
+                                        >
+                                            <FaTrash /> Excluir
+                                        </button>
+                                    )}
+                                    <button
+                                        className="primary-button"
+                                        onClick={handleSaveConfig}
+                                        disabled={isSavingConfig}
+                                        style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 32px' }}
+                                    >
+                                        <FaSave /> {isSavingConfig ? 'Salvando...' : 'Salvar Configurações'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
+
+                <div className="chat-side">
+                    <TestAgentChat />
+                </div>
+            </div>
 
             {isModalOpen && (
                 <div className="modal-overlay">
