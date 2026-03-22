@@ -124,6 +124,7 @@
   padding: 4px 6px;
   gap: 4px;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .date-filter-container:focus-within {
@@ -139,7 +140,7 @@
   font-size: 0.8rem !important;
   color: var(--text-primary);
   outline: none;
-  width: 100px;
+  width: 90px;
   text-align: center;
   cursor: pointer;
 }
@@ -421,3 +422,118 @@
   padding: 40px;
   color: var(--text-secondary);
 }
+
+/* Responsiveness Utilities */
+.hide-mobile {
+  display: table-cell;
+}
+
+.show-mobile {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header-main {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .filters-inline {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-input-compact {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 600px) {
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .show-mobile {
+    display: block;
+  }
+
+  .filters-inline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .date-filter-wrapper {
+    display: none !important;
+  }
+
+  .hide-on-mobile-req {
+    display: none !important;
+  }
+
+  .filter-input-compact {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .custom-select-container {
+    width: 100%;
+  }
+
+  .date-filter-container {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .date-input-clean {
+    flex: 1;
+  }
+
+  .filter-input-compact {
+    width: 100%;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .dashboard-card {
+    padding: 16px;
+  }
+
+  .deals-table th, 
+  .deals-table td {
+    padding: 10px 8px;
+    font-size: 0.8rem;
+  }
+
+  .detail-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ai-summary-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    font-size: 0.65rem;
+  }
+}

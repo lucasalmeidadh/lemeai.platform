@@ -266,4 +266,10 @@
   .topbar-menu-btn:hover {
     background-color: var(--bg-tertiary);
   }
+
+  .topbar-brand {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
