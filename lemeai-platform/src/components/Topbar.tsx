@@ -67,7 +67,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                         alt="Leme AI Logo"
                         className="brand-logo"
                     />
-                    Leme AI
+                    <span className="desktop-only">Leme AI</span>
                 </div>
             </div>
 
@@ -119,7 +119,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                 </div>
             </nav>
 
-            <div className="topbar-right">
+            <div className="topbar-right desktop-only">
                 <div className="topbar-actions">
                     <ThemeToggle collapsed={true} />
                 </div>

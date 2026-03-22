@@ -263,7 +263,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onSendMedia,
         <div className="input-wrapper">
           <textarea
             ref={textareaRef}
-            placeholder="Digite sua mensagem..."
+            placeholder="Mensagem..."
             value={text}
             onChange={(e) => setText(e.target.value)}
             onPaste={handlePaste}

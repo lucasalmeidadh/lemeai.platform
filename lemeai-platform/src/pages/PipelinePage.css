@@ -8,6 +8,14 @@
     flex-direction: column;
     padding-right: 0 !important;
     /* Allow the inner board to stretch to edge for scrolling */
+    width: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 768px) {
+    .pipeline-page-wrapper {
+        padding: 40px 15px 15px 15px !important; /* Retain top padding for header, adjust sides */
+    }
 }
 
 .pipeline-filter-input {
@@ -23,6 +31,7 @@
     transition: all 0.2s;
     background-color: var(--bg-secondary);
     /* Added for dark mode */
+    box-sizing: border-box;
 }
 
 .pipeline-filter-input:focus {

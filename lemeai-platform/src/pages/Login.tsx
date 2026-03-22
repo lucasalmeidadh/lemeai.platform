@@ -44,7 +44,7 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(data));
 
       if (window.innerWidth <= 768) {
-        navigate('/chat');
+        navigate('/pipeline');
       } else {
         navigate('/dashboard');
       }

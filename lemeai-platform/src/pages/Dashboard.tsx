@@ -292,7 +292,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          <div className="dashboard-charts-area">
+          <div className="dashboard-charts-area hide-on-mobile-req">
             <div className="dashboard-card chart-card">
               <h3>Conversas nos últimos 30 dias</h3>
               <p className="chart-subtitle">
@@ -310,7 +310,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="dashboard-card">
+          <div className="dashboard-card hide-on-mobile-req">
             <div className="dashboard-header-row">
               <h3>Atividades Recentes</h3>
             </div>
@@ -320,8 +320,8 @@ const Dashboard = () => {
                 <thead>
                   <tr>
                     <th>Cliente</th>
-                    <th>Whatsapp</th>
-                    <th>Data Início</th>
+                    <th className="hide-mobile">Whatsapp</th>
+                    <th className="hide-mobile">Data Início</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
@@ -332,8 +332,8 @@ const Dashboard = () => {
                       <React.Fragment key={deal.idConversa}>
                         <tr>
                           <td>{deal.nomeContato}</td>
-                          <td>{deal.numeroWhatsapp}</td>
-                          <td>{new Date(deal.dataConversaCriada).toLocaleDateString()}</td>
+                          <td className="hide-mobile">{deal.numeroWhatsapp}</td>
+                          <td className="hide-mobile">{new Date(deal.dataConversaCriada).toLocaleDateString()}</td>
                           <td>
                             <span className={`status-badge status-${deal.descricaoStatus?.toLowerCase().replace(/\s/g, '-')}`}>
                               {deal.descricaoStatus}

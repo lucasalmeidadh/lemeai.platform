@@ -134,23 +134,44 @@
   }
 
   .conversation-area {
-    /* On mobile, when active, it takes full space */
-    position: fixed;
-    top: 80px;
-    height: calc(100dvh - 80px);
-    left: 0;
-    right: 0;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--bg-secondary);
-    /* Was #fff */
-    /* Ensure background is white */
+    display: none; /* Hide when not active in a robust setup, though React conditionally renders it */
   }
 
-  /* Reset relative positioning if using conditional rendering approach */
   .conversation-area.mobile-active {
     position: fixed;
-    /* Keep fixed to ensure it stays in viewport */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 9999;
+    background-color: var(--bg-secondary);
+    border-radius: 0;
+    border: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+
+  .details-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 10000;
+    background-color: var(--bg-secondary);
+    border-radius: 0;
+    border: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: none;
+    box-sizing: border-box;
   }
 }

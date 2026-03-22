@@ -12,6 +12,7 @@ import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { FaMagic } from 'react-icons/fa';
+import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -74,6 +75,36 @@ const PipelinePage = () => {
     const [dealToSummarize, setDealToSummarize] = useState<number | null>(null);
 
     const isDraggingRef = useRef(false);
+
+    // Responsive Mobile State
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [currentUser, setCurrentUser] = useState<{ id: number, nome: string } | null>(null);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const fetchCurrentUser = async () => {
+            try {
+                const response = await apiFetch(`${apiUrl}/api/Auth/me`);
+                if (!response.ok) return;
+                const result = await response.json();
+                if (result.sucesso && result.dados) {
+                    const userId = result.dados.id || result.dados.userId || 0;
+                    setCurrentUser({ id: userId, nome: result.dados.userName || result.dados.nome });
+                } else if (result.id) {
+                    const userId = Number(result.id) || 0;
+                    setCurrentUser({ id: userId, nome: result.userName || result.nome });
+                }
+            } catch (err) {
+                console.error("Erro ao buscar usuário logado:", err);
+            }
+        };
+        fetchCurrentUser();
+    }, []);
 
     const fetchOpportunities = useCallback(async (isBackground = false) => {
         if (!isBackground) setIsLoading(true);
@@ -302,21 +333,29 @@ const PipelinePage = () => {
     }));
 
     return (
-        <div className="page-container pipeline-page-wrapper">
+        <div className="page-container pipeline-page-wrapper" style={isMobile ? { paddingTop: '30px' } : {}}>
 
             {isLoading ? (
                 <PipelineSkeleton />
             ) : (
                 <>
-                    <div className="page-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                            <h1>Oportunidade de Vendas</h1>
-                            <div className="pipeline-actions">
-
-                            </div>
+                    <div className="page-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px', paddingTop: isMobile ? '10px' : '0' }}>
+                        <div style={{ display: 'flex', justifyContent: isMobile ? 'center' : 'space-between', width: '100%', alignItems: 'center' }}>
+                            <h1 style={{ textAlign: isMobile ? 'center' : 'left', width: '100%', lineHeight: 1.4, paddingBottom: isMobile ? '5px' : '0' }}>Oportunidade de Vendas</h1>
+                            {!isMobile && (
+                                <div className="pipeline-actions">
+                                </div>
+                            )}
                         </div>
 
-                        <div className="pipeline-filters" style={{ display: 'flex', gap: '15px', width: '100%', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <div className="pipeline-filters" style={{ 
+                            display: 'flex', 
+                            gap: '15px', 
+                            width: '100%', 
+                            flexDirection: isMobile ? 'column' : 'row',
+                            alignItems: isMobile ? 'stretch' : 'center',
+                            flexWrap: 'wrap' 
+                        }}>
                             <input
                                 type="text"
                                 placeholder="Buscar por nome..."
@@ -324,7 +363,7 @@ const PipelinePage = () => {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pipeline-filter-input"
                                 style={{
-                                    width: '300px'
+                                    width: isMobile ? '100%' : '300px'
                                 }}
                             />
 
@@ -335,7 +374,7 @@ const PipelinePage = () => {
                                 onChangeEndDate={setEndDate}
                             />
 
-                            <div style={{ minWidth: '200px' }}>
+                            <div style={{ width: isMobile ? '100%' : '200px', minWidth: isMobile ? '0' : '200px' }}>
                                 <CustomSelect
                                     value={selectedOwner}
                                     onChange={(val) => setSelectedOwner(val)}
@@ -348,87 +387,103 @@ const PipelinePage = () => {
                         </div>
                     </div>
 
-                    <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-                        <div className="pipeline-board">
-                            {filteredColumns.map(column => (
-                                <div key={column.id} className={`pipeline-column ${column.id === 'lost' ? 'column-lost' : ''} ${['ai_service', 'ai_service_finished'].includes(column.id) ? 'column-ai' : ''}`}>
-                                    <div className="column-header">
-                                        <div className="column-header-top">
-                                            <span>{column.title}</span>
-                                            <span className="column-count">{column.deals.length}</span>
+                    {isMobile ? (
+                        <div style={{ padding: '0 0 20px 0', flex: 1, overflowY: 'auto' }}>
+                            <MobilePipelineAccordion 
+                                columns={filteredColumns} 
+                                isLoading={isLoading} 
+                                onUpdate={fetchOpportunities}
+                                onSummarize={(id) => {
+                                    setDealToSummarize(id);
+                                    setIsSummaryConfirmOpen(true);
+                                }}
+                                summarizingDealId={summarizingDealId}
+                                currentUser={currentUser}
+                            />
+                        </div>
+                    ) : (
+                        <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
+                            <div className="pipeline-board">
+                                {filteredColumns.map(column => (
+                                    <div key={column.id} className={`pipeline-column ${column.id === 'lost' ? 'column-lost' : ''} ${['ai_service', 'ai_service_finished'].includes(column.id) ? 'column-ai' : ''}`}>
+                                        <div className="column-header">
+                                            <div className="column-header-top">
+                                                <span>{column.title}</span>
+                                                <span className="column-count">{column.deals.length}</span>
+                                            </div>
+                                            <div className="column-total">
+                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                                    column.deals.reduce((acc, deal) => acc + (deal.rawValue || 0), 0)
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="column-total">
-                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                                                column.deals.reduce((acc, deal) => acc + (deal.rawValue || 0), 0)
-                                            )}
-                                        </div>
-                                    </div>
-                                    <Droppable droppableId={column.id}>
-                                        {(provided) => (
-                                            <div
-                                                className="column-body"
-                                                ref={provided.innerRef}
-                                                {...provided.droppableProps}
-                                            >
-                                                {column.deals.map((deal, index) => (
-                                                    <Draggable key={deal.id} draggableId={deal.id.toString()} index={index}>
-                                                        {(provided, snapshot) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                {...provided.dragHandleProps}
-                                                                className={`kanban-card ${snapshot.isDragging ? 'is-dragging' : ''}`}
-                                                                style={{ ...provided.draggableProps.style }}
-                                                                onClick={() => setSelectedDeal(deal)}
-                                                            >
-                                                                <div className="card-top-row">
-                                                                    <div className="card-title">{deal.title}</div>
-                                                                    {column.id === 'ai_service' && (
-                                                                        <span className={`card-tag tag-${deal.tag}`}>
-                                                                            {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <div className="card-value">{deal.value}</div>
-                                                                <div className="card-footer">
-                                                                    <div className="card-footer-left">
-                                                                        <button
-                                                                            className="summarize-btn"
-                                                                            onClick={(e) => handleAiSummaryClick(e, deal.id)}
-                                                                            title="Resumir com IA"
-                                                                            disabled={summarizingDealId === deal.id}
-                                                                        >
-                                                                            <FaMagic size={10} className={summarizingDealId === deal.id ? 'spin' : ''} />
-                                                                            <span>{summarizingDealId === deal.id ? 'Gerando...' : 'Resumo IA'}</span>
-                                                                        </button>
+                                        <Droppable droppableId={column.id}>
+                                            {(provided) => (
+                                                <div
+                                                    className="column-body"
+                                                    ref={provided.innerRef}
+                                                    {...provided.droppableProps}
+                                                >
+                                                    {column.deals.map((deal, index) => (
+                                                        <Draggable key={deal.id} draggableId={deal.id.toString()} index={index}>
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    className={`kanban-card ${snapshot.isDragging ? 'is-dragging' : ''}`}
+                                                                    style={{ ...provided.draggableProps.style }}
+                                                                    onClick={() => setSelectedDeal(deal)}
+                                                                >
+                                                                    <div className="card-top-row">
+                                                                        <div className="card-title">{deal.title}</div>
+                                                                        {column.id === 'ai_service' && (
+                                                                            <span className={`card-tag tag-${deal.tag}`}>
+                                                                                {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
+                                                                    <div className="card-value">{deal.value}</div>
+                                                                    <div className="card-footer">
+                                                                        <div className="card-footer-left">
+                                                                            <button
+                                                                                className="summarize-btn"
+                                                                                onClick={(e) => handleAiSummaryClick(e, deal.id)}
+                                                                                title="Resumir com IA"
+                                                                                disabled={summarizingDealId === deal.id}
+                                                                            >
+                                                                                <FaMagic size={10} className={summarizingDealId === deal.id ? 'spin' : ''} />
+                                                                                <span>{summarizingDealId === deal.id ? 'Gerando...' : 'Resumo IA'}</span>
+                                                                            </button>
+                                                                        </div>
 
-                                                                    <div className="card-footer-right">
-                                                                        <span className="card-date">{deal.date}</span>
-                                                                        <div className="card-avatar" title={`Responsável: ${deal.owner}`}>
-                                                                            {deal.owner.split(' ').length > 1
-                                                                                ? (deal.owner.split(' ')[0][0] + deal.owner.split(' ')[deal.owner.split(' ').length - 1][0]).toUpperCase()
-                                                                                : deal.owner.substring(0, 2).toUpperCase()}
+                                                                        <div className="card-footer-right">
+                                                                            <span className="card-date">{deal.date}</span>
+                                                                            <div className="card-avatar" title={`Responsável: ${deal.owner}`}>
+                                                                                {deal.owner.split(' ').length > 1
+                                                                                    ? (deal.owner.split(' ')[0][0] + deal.owner.split(' ')[deal.owner.split(' ').length - 1][0]).toUpperCase()
+                                                                                    : deal.owner.substring(0, 2).toUpperCase()}
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
-                                                    </Draggable>
-                                                ))}
-                                                {provided.placeholder}
-                                                {column.deals.length === 0 && !isLoading && (
-                                                    <div style={{ textAlign: 'center', color: '#adb5bd', fontSize: '13px', padding: '20px', display: 'none' }}>
-                                                        Nenhuma oportunidade.
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </Droppable>
-                                </div>
-                            ))}
-                        </div>
-                    </DragDropContext>
+                                                            )}
+                                                        </Draggable>
+                                                    ))}
+                                                    {provided.placeholder}
+                                                    {column.deals.length === 0 && !isLoading && (
+                                                        <div style={{ textAlign: 'center', color: '#adb5bd', fontSize: '13px', padding: '20px', display: 'none' }}>
+                                                            Nenhuma oportunidade.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                    </div>
+                                ))}
+                            </div>
+                        </DragDropContext>
+                    )}
 
                     {selectedDeal && (
                         <DealDetailsModal

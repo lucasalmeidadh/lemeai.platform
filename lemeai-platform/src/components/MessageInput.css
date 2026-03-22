@@ -306,14 +306,24 @@
 /* Mobile Adjustments */
 @media (max-width: 768px) {
   .message-input-wrapper {
-    padding: 12px;
+    padding: 8px;
   }
 
   .message-input-container {
-    padding: 6px 12px;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+
+  .icon-button {
+    padding: 6px;
+    font-size: 1.1rem;
+  }
+
+  .message-input-container textarea {
+    font-size: 0.9rem;
   }
 
   .message-input-wrapper.disabled-wrapper {
-    padding: 16px;
+    padding: 12px;
   }
 }
