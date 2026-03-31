@@ -13,6 +13,7 @@ import UserManagementPage from './pages/UserManagementPage.tsx';
 // import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
 import SystemPromptsPage from './pages/SystemPromptsPage.tsx';
 import ProductsPage from './pages/ProductsPage.tsx';
+import WhatsAppConnectionPage from './pages/WhatsAppConnectionPage.tsx';
 import './index.css';
 import NotFoundPage from './pages/NotFoundPage.tsx';
 const router = createBrowserRouter([
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
           // { path: "profiles", element: <ProfileManagementPage /> },
           { path: "chat-rules", element: <SystemPromptsPage /> },
           { path: "products", element: <ProductsPage /> },
+          { path: "whatsapp-connection", element: <WhatsAppConnectionPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }
