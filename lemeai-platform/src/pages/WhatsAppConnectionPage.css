@@ -1,0 +1,308 @@
+/* ========== WhatsApp Connection Page ========== */
+
+.whatsapp-connection-page {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+/* ---------- Status Card ---------- */
+.whatsapp-status-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 48px 32px;
+    gap: 20px;
+}
+
+.whatsapp-status-icon {
+    font-size: 56px;
+    line-height: 1;
+}
+
+.whatsapp-status-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.whatsapp-status-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    max-width: 440px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ---------- Badges ---------- */
+.whatsapp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.whatsapp-badge.connected {
+    background-color: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+}
+
+.whatsapp-badge.disconnected {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.whatsapp-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+.whatsapp-badge.connected .whatsapp-badge-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* ---------- QR Code Area ---------- */
+.qr-code-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 40px 32px;
+}
+
+.qr-code-container {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.04),
+        0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.qr-code-container img {
+    display: block;
+    width: 260px;
+    height: 260px;
+    border-radius: 12px;
+}
+
+.qr-code-pulse-ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 24px;
+    border: 2px solid rgba(37, 211, 102, 0.35);
+    animation: qr-pulse 2.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes qr-pulse {
+    0%, 100% { opacity: 0; transform: scale(0.98); }
+    50% { opacity: 1; transform: scale(1.02); }
+}
+
+.qr-instructions {
+    text-align: center;
+    max-width: 360px;
+}
+
+.qr-instructions h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.qr-instructions p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.qr-refresh-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+/* ---------- Connected Info ---------- */
+.connected-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 48px 32px;
+}
+
+.connected-icon-wrapper {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3);
+}
+
+.connected-details {
+    text-align: center;
+}
+
+.connected-details h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
+}
+
+.connected-details p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* ---------- Action Buttons ---------- */
+.whatsapp-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.whatsapp-actions .danger-button {
+    background-color: transparent;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 10px 24px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.88rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.whatsapp-actions .danger-button:hover {
+    background-color: #ef4444;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.whatsapp-actions .danger-button:disabled,
+.whatsapp-actions .primary-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ---------- Loading Skeleton ---------- */
+.whatsapp-skeleton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 48px 32px;
+}
+
+.whatsapp-skeleton-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+}
+
+.whatsapp-skeleton-line {
+    height: 16px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+}
+
+.whatsapp-skeleton-line.w60 { width: 60%; }
+.whatsapp-skeleton-line.w40 { width: 40%; }
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ---------- Create Instance Button ---------- */
+.create-instance-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 36px;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+}
+
+.create-instance-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+}
+
+.create-instance-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+    .whatsapp-status-card,
+    .qr-code-section,
+    .connected-info {
+        padding: 32px 20px;
+    }
+
+    .qr-code-container img {
+        width: 220px;
+        height: 220px;
+    }
+
+    .whatsapp-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .whatsapp-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+}

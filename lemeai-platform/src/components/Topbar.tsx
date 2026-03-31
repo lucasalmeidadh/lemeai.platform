@@ -13,7 +13,8 @@ import {
     FaCog,
     FaChevronDown,
     FaUsersCog,
-    FaBox
+    FaBox,
+    FaWhatsapp
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import './Topbar.css';
@@ -92,7 +93,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
                 <div className="nav-dropdown" ref={settingsRef}>
                     <button
-                        className={`nav-link dropdown-toggle ${(location.pathname === '/users' || location.pathname === '/chat-rules' || location.pathname === '/products') ? 'active-parent' : ''}`}
+                        className={`nav-link dropdown-toggle ${(location.pathname === '/users' || location.pathname === '/chat-rules' || location.pathname === '/products' || location.pathname === '/whatsapp-connection') ? 'active-parent' : ''}`}
                         onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                     >
                         <FaCog />
@@ -113,6 +114,10 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                             <Link to="/products" className={`dropdown-item ${location.pathname === '/products' ? 'active' : ''}`} onClick={closeSettings}>
                                 <FaBox />
                                 <span>Produtos</span>
+                            </Link>
+                            <Link to="/whatsapp-connection" className={`dropdown-item ${location.pathname === '/whatsapp-connection' ? 'active' : ''}`} onClick={closeSettings}>
+                                <FaWhatsapp />
+                                <span>Conexão WhatsApp</span>
                             </Link>
                         </div>
                     )}
