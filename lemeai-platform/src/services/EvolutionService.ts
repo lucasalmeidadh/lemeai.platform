@@ -26,10 +26,12 @@ export const EvolutionService = {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         });
-        if (!response.ok) {
+        
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao verificar status da Evolution API');
         }
-        return response.json();
+        return data;
     },
 
     /**
@@ -40,10 +42,12 @@ export const EvolutionService = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
-        if (!response.ok) {
+        
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao criar instância');
         }
-        return response.json();
+        return data;
     },
 
     /**
@@ -54,10 +58,12 @@ export const EvolutionService = {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         });
-        if (!response.ok) {
+        
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao obter QR Code');
         }
-        return response.json();
+        return data;
     },
 
     /**
@@ -68,10 +74,12 @@ export const EvolutionService = {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         });
-        if (!response.ok) {
+        
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao verificar status da instância');
         }
-        return response.json();
+        return data;
     },
 
     /**
@@ -82,10 +90,12 @@ export const EvolutionService = {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
         });
-        if (!response.ok) {
+        
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao fazer logout');
         }
-        return response.json();
+        return data;
     },
 
     /**
@@ -96,9 +106,11 @@ export const EvolutionService = {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
         });
-        if (!response.ok) {
+        
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao remover instância');
         }
-        return response.json();
+        return data;
     },
 };

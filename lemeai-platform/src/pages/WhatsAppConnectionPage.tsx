@@ -34,9 +34,13 @@ const WhatsAppConnectionPage = () => {
                 } else {
                     setPageState('qr-code');
                 }
+            } else if (!statusRes.sucesso && statusRes.mensagem?.includes('Instância não encontrada')) {
+                setPageState('no-instance');
+                stopPolling();
             }
-        } catch {
-            // Status check failed silently during polling
+        } catch (error) {
+            console.error('Erro ao verificar status:', error);
+            // On error, let's not force qr-code. Just keep current state or go to no-instance if error is persistent
         }
     }, [stopPolling]);
 
@@ -48,11 +52,14 @@ const WhatsAppConnectionPage = () => {
                 if (typeof qr === 'string') {
                     setQrCodeBase64(qr);
                 }
+            } else if (!qrRes.sucesso && qrRes.mensagem?.includes('Instância não encontrada')) {
+                setPageState('no-instance');
+                stopPolling();
             }
-        } catch {
-            // QR Code fetch failed silently
+        } catch (error) {
+            console.error('Erro ao carregar QR Code:', error);
         }
-    }, []);
+    }, [stopPolling]);
 
     const startQRPolling = useCallback(() => {
         stopPolling();
@@ -83,11 +90,15 @@ const WhatsAppConnectionPage = () => {
                                 // Load QR and start polling
                                 startQRPolling();
                             }
+                        } else if (!statusRes.sucesso && statusRes.mensagem?.includes('Instância não encontrada')) {
+                            setPageState('no-instance');
                         } else {
+                            // Outro erro, tenta QR code por precaução
                             setPageState('qr-code');
                             startQRPolling();
                         }
-                    } catch {
+                    } catch (error) {
+                        console.error('Erro ao buscar status na inicialização:', error);
                         setPageState('qr-code');
                         startQRPolling();
                     }
