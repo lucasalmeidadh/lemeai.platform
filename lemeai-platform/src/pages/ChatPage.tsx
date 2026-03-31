@@ -96,7 +96,7 @@ const ChatPage = () => {
   const [isCreatingInstance, setIsCreatingInstance] = useState(false);
   const qrPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const isWhatsappDisabled = whatsappStatus === 'disconnected' || whatsappStatus === 'no-instance';
+  const isWhatsappDisabled = whatsappStatus === 'disconnected';
 
 
   // Funções de busca de dados (sem alteração na lógica interna, exceto a remoção do setupChat)
@@ -341,7 +341,7 @@ const ChatPage = () => {
       if (res.sucesso && res.dados) {
         if (!res.dados.isEvolutionAPI) {
           setWhatsappStatus('no-instance');
-          setShowDisconnectedModal(true);
+          // Don't show disconnected modal for non-evolution companies
           return;
         }
         // Has instance, check status
@@ -355,6 +355,9 @@ const ChatPage = () => {
               setWhatsappStatus('disconnected');
               setShowDisconnectedModal(true);
             }
+          } else if (!statusRes.sucesso && statusRes.mensagem?.includes('Instância não encontrada')) {
+            setWhatsappStatus('no-instance');
+            // Instance doesn't exist on manager - no-instance state, no modal
           } else {
             setWhatsappStatus('disconnected');
             setShowDisconnectedModal(true);
@@ -739,7 +742,7 @@ const ChatPage = () => {
     );
   };
 
-  const showBanner = whatsappStatus && whatsappStatus !== 'checking';
+  const showBanner = whatsappStatus && whatsappStatus !== 'checking' && whatsappStatus !== 'no-instance';
 
   return (
     <div style={{ '--whatsapp-banner-height': showBanner ? '36px' : '0px' } as React.CSSProperties}>
@@ -751,7 +754,6 @@ const ChatPage = () => {
             <span>
               {whatsappStatus === 'connected' && 'WhatsApp conectado'}
               {whatsappStatus === 'disconnected' && 'WhatsApp desconectado'}
-              {whatsappStatus === 'no-instance' && 'WhatsApp não configurado'}
             </span>
             {whatsappStatus === 'connected' && <span className="whatsapp-status-dot connected" />}
             {isWhatsappDisabled && (
