@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import './Login.css';
-import { FaUser, FaLock, FaArrowRight, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
+import { FaLock, FaEnvelope, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import logoDark from '../assets/logo-dark.png';
 
 const Login = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -59,16 +58,10 @@ const Login = () => {
 
   return (
     <div className="login-centered-page">
-      {/* Background Animated Lights */}
-      <div className="bg-glow bg-glow-1"></div>
-      <div className="bg-glow bg-glow-2"></div>
-
-      {/* Centered Glass Card */}
       <div className="login-glass-card">
         <div className="card-header-new">
-          <img src={logoDark} alt="Leme AI Logo" className="login-logo" style={{ maxHeight: '60px', marginBottom: '20px' }} />
-          <h2>Leme AI está de cara nova.</h2>
-          <p className="subtitle">Bem-vindo de volta! Acesse seu CRM.</p>
+          <h2>Acesse sua conta</h2>
+          <p className="subtitle">Digite suas credenciais para entrar no sistema.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form-stack">
@@ -79,13 +72,12 @@ const Login = () => {
           )}
 
           <div className="input-container">
-            <label className="input-label">Email</label>
             <div className="modern-input-wrapper">
-              <FaUser className="input-icon-left" />
+              <FaEnvelope className="input-icon-left" />
               <input
                 type="email"
                 className="modern-input"
-                placeholder="nome@empresa.com"
+                placeholder="E-mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -94,17 +86,19 @@ const Login = () => {
           </div>
 
           <div className="input-container">
-            <label className="input-label">Senha</label>
             <div className="modern-input-wrapper">
               <FaLock className="input-icon-left" />
               <input
                 type="password"
                 className="modern-input"
-                placeholder="••••••••"
+                placeholder="Senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+            </div>
+            <div className="forgot-password-link">
+              <a href="#">Esqueci minha senha</a>
             </div>
           </div>
 
@@ -114,15 +108,13 @@ const Login = () => {
                 <FaSpinner className="fa-spin" /> Verificando...
               </>
             ) : (
-              <>
-                ACESSAR SISTEMA <FaArrowRight />
-              </>
+              "Entrar agora"
             )}
           </button>
         </form>
 
         <div className="page-footer">
-          <p>Powered by <a href="https://gbcode.com.br/" target="_blank" rel="noopener noreferrer">GbCode</a></p>
+          <p className="powered-by">Powered by <a href="https://gbcode.com.br/" target="_blank" rel="noopener noreferrer"><strong>GBCode</strong></a></p>
         </div>
       </div>
     </div>
