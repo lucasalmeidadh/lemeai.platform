@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import Topbar from './Topbar';
+import Sidebar from './Sidebar';
 import UserProfileModal from './UserProfileModal';
 import { GlobalNotificationProvider } from '../contexts/GlobalNotificationContext';
 import {
@@ -40,8 +40,7 @@ const MainLayout = () => {
     return (
         <GlobalNotificationProvider>
             <div className="app-layout">
-                <Topbar
-                    onToggleMobileMenu={toggleMobileMenu}
+                <Sidebar
                     onViewProfile={handleViewProfile}
                     onLogout={handleLogout}
                 />

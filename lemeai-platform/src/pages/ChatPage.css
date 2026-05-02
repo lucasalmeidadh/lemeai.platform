@@ -1,11 +1,14 @@
 .chat-layout {
   display: flex;
-  height: calc(100vh - 64px - var(--whatsapp-banner-height, 0px));
+  flex-grow: 1;
+  height: auto;
   width: 100%;
-  padding: 20px;
-  gap: 20px;
+  padding: 10px;
+  gap: 12px;
   box-sizing: border-box;
   overflow: hidden;
+  margin: 0;
+  min-height: 0;
 }
 
 .contact-list {

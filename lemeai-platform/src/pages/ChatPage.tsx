@@ -73,7 +73,7 @@ interface MessagesByDate {
 const ChatPage = () => {
   const navigate = useNavigate();
   // Estados da UI (sem alteração)
-  const [isDetailsPanelOpen, setDetailsPanelOpen] = useState(false);
+  const [isDetailsPanelOpen, setDetailsPanelOpen] = useState(true);
 
 
   // Estados de dados (sem alteração)
@@ -456,7 +456,9 @@ const ChatPage = () => {
     if (id !== selectedContactId) {
       setActiveConversationMessages({});
       setSelectedContactId(id);
-      setSelectedContactId(id);
+      if (!isMobile) {
+        setDetailsPanelOpen(true);
+      }
     }
   };
 
@@ -745,7 +747,7 @@ const ChatPage = () => {
   const showBanner = whatsappStatus && whatsappStatus !== 'checking' && whatsappStatus !== 'no-instance';
 
   return (
-    <div style={{ '--whatsapp-banner-height': showBanner ? '36px' : '0px' } as React.CSSProperties}>
+    <div className="chat-page-container" style={{ height: '100%', display: 'flex', flexDirection: 'column', '--whatsapp-banner-height': showBanner ? '36px' : '0px' } as React.CSSProperties}>
       {/* WhatsApp Status Banner */}
       {showBanner && (
         <div className={`whatsapp-status-bar ${whatsappStatus === 'connected' ? 'status-connected' : 'status-disconnected'}`}>

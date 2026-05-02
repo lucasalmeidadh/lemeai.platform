@@ -77,36 +77,45 @@
 
 .filter-tabs {
   display: flex;
-  gap: 0;
-  padding: 4px;
-  margin: 15px 25px;
   background-color: var(--bg-tertiary);
-  border-radius: 999px;
-  /* Pill container */
-  border: 1px solid var(--border-color-soft);
+  padding: 3px;
+  margin: 15px 25px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  gap: 2px;
 }
 
 .filter-button {
   flex: 1;
-  padding: 8px 16px;
+  padding: 7px 12px;
   border: none;
-  background-color: transparent;
-  border-radius: 999px;
+  background: none;
+  border-radius: 9px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
-.filter-button:hover {
+.filter-button:hover:not(.active) {
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
 }
 
 .filter-button.active {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--brand-official) !important;
+  color: var(--cyan-accent) !important;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+[data-theme='light'] .filter-button.active {
+  color: #ffffff;
 }
 
 .contacts-ul {
@@ -215,7 +224,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: var(--petroleum-blue);
+  background-color: #00275e;
   /* Was #005f73 */
   color: white;
   display: flex;

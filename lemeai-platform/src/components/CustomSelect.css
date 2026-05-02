@@ -30,9 +30,9 @@
 }
 
 .custom-select-trigger.open {
-    border-color: var(--petroleum-blue);
+    border-color: #00275e;
     background-color: var(--bg-secondary);
-    box-shadow: 0 0 0 3px var(--petroleum-light);
+    box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.1);
 }
 
 .custom-select-value {
@@ -118,7 +118,7 @@
 }
 
 .custom-select-option.selected {
-    color: var(--petroleum-blue);
-    background-color: var(--petroleum-light);
+    color: white;
+    background-color: #00275e;
     font-weight: 600;
 }
