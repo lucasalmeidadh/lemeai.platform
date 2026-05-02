@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import './ContactsPage.css';
-import { FaPlus, FaWhatsapp, FaTrash, FaEdit, FaEnvelope, FaRegAddressBook } from 'react-icons/fa';
+import { FaPlus, FaWhatsapp, FaTrash, FaEdit, FaEnvelope, FaRegAddressBook, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { ContactService, type Contact, type CreateContactDTO, type UpdateContactDTO } from '../services/ContactService';
 import ContactModal from '../components/ContactModal';
 
@@ -9,6 +9,8 @@ const ContactsPage = () => {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
 
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,6 +37,10 @@ const ContactsPage = () => {
     useEffect(() => {
         loadContacts();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
 
     const handleAddContact = () => {
         setContactToEdit(null);
@@ -90,13 +96,18 @@ const ContactsPage = () => {
         }
     };
 
-    // Filter Logic
     const filteredContacts = contacts.filter(contact => {
         const term = searchTerm.toLowerCase();
         return contact.nome.toLowerCase().includes(term) ||
             contact.telefone.includes(searchTerm) ||
             (contact.email && contact.email.toLowerCase().includes(term));
     });
+    
+    const totalPages = Math.ceil(filteredContacts.length / itemsPerPage);
+    const paginatedContacts = filteredContacts.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="page-container">
@@ -128,11 +139,10 @@ const ContactsPage = () => {
                                     <div className="skeleton-text-box" style={{ maxWidth: '150px' }}></div>
                                     <div className="skeleton-text-box" style={{ maxWidth: '150px' }}></div>
                                     <div className="skeleton-text-box" style={{ maxWidth: '100px' }}></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '80px' }}></div>
                                 </div>
                             ))}
                         </div>
-                    ) : filteredContacts.length > 0 ? (
+                    ) : paginatedContacts.length > 0 ? (
                         <table className="management-table">
                             <thead>
                                 <tr>
@@ -144,7 +154,7 @@ const ContactsPage = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredContacts.map(contact => (
+                                {paginatedContacts.map(contact => (
                                     <tr key={contact.contatoId}>
                                         <td>
                                             <div className="contact-name-cell">
@@ -196,6 +206,43 @@ const ContactsPage = () => {
                         </div>
                     )}
                 </div>
+
+                {filteredContacts.length > itemsPerPage && (
+                    <div className="pagination-container">
+                        <div className="pagination-info">
+                            Mostrando <strong>{Math.min(filteredContacts.length, (currentPage - 1) * itemsPerPage + 1)}</strong> a <strong>{Math.min(filteredContacts.length, currentPage * itemsPerPage)}</strong> de <strong>{filteredContacts.length}</strong> contatos
+                        </div>
+                        <div className="pagination-controls">
+                            <button 
+                                className="pagination-btn" 
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <FaChevronLeft size={12} /> Anterior
+                            </button>
+                            
+                            <div className="pagination-pages">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <button
+                                        key={page}
+                                        className={`pagination-page-btn ${currentPage === page ? 'active' : ''}`}
+                                        onClick={() => setCurrentPage(page)}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button 
+                                className="pagination-btn" 
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Próximo <FaChevronRight size={12} />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <ContactModal
