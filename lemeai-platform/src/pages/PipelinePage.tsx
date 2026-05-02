@@ -75,6 +75,8 @@ const PipelinePage = () => {
     const [dealToSummarize, setDealToSummarize] = useState<number | null>(null);
 
     const isDraggingRef = useRef(false);
+    const boardRef = useRef<HTMLDivElement>(null);
+    const scrollAnimationFrameRef = useRef<number | null>(null);
 
     // Responsive Mobile State
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -196,12 +198,62 @@ const PipelinePage = () => {
         }
     };
 
+    const stopAutoScroll = () => {
+        if (scrollAnimationFrameRef.current !== null) {
+            cancelAnimationFrame(scrollAnimationFrameRef.current);
+            scrollAnimationFrameRef.current = null;
+        }
+    };
+
+    const startAutoScroll = (direction: 'left' | 'right', speed: number) => {
+        // Only start if not already scrolling or if direction/speed changed significantly
+        // For simplicity, we'll just update a local variable that the scroll loop uses
+        const scroll = () => {
+            if (boardRef.current) {
+                boardRef.current.scrollLeft += direction === 'right' ? speed : -speed;
+                scrollAnimationFrameRef.current = requestAnimationFrame(scroll);
+            }
+        };
+        
+        stopAutoScroll();
+        scrollAnimationFrameRef.current = requestAnimationFrame(scroll);
+    };
+
+    const handleMouseMoveWhileDragging = (e: MouseEvent) => {
+        if (!isDraggingRef.current || !boardRef.current) {
+            stopAutoScroll();
+            return;
+        }
+
+        const { clientX } = e;
+        const rect = boardRef.current.getBoundingClientRect();
+        const { left, right } = rect;
+        
+        const scrollZone = 120; // Ativação a 120px da borda
+        const maxSpeed = 12;
+
+        if (clientX > right - scrollZone) {
+            const intensity = (clientX - (right - scrollZone)) / scrollZone;
+            const speed = Math.max(2, intensity * maxSpeed);
+            startAutoScroll('right', speed);
+        } else if (clientX < left + scrollZone) {
+            const intensity = ((left + scrollZone) - clientX) / scrollZone;
+            const speed = Math.max(2, intensity * maxSpeed);
+            startAutoScroll('left', speed);
+        } else {
+            stopAutoScroll();
+        }
+    };
+
     const onDragStart = () => {
         isDraggingRef.current = true;
+        window.addEventListener('mousemove', handleMouseMoveWhileDragging);
     };
 
     const onDragEnd = async (result: DropResult) => {
         isDraggingRef.current = false;
+        window.removeEventListener('mousemove', handleMouseMoveWhileDragging);
+        stopAutoScroll();
         const { source, destination } = result;
 
         if (!destination) return;
@@ -403,7 +455,7 @@ const PipelinePage = () => {
                         </div>
                     ) : (
                         <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-                            <div className="pipeline-board">
+                            <div className="pipeline-board" ref={boardRef}>
                                 {filteredColumns.map(column => (
                                     <div key={column.id} className={`pipeline-column ${column.id === 'lost' ? 'column-lost' : ''} ${['ai_service', 'ai_service_finished'].includes(column.id) ? 'column-ai' : ''}`}>
                                         <div className="column-header">

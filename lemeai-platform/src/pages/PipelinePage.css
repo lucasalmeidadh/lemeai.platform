@@ -63,6 +63,7 @@ select.pipeline-filter-input {
     display: flex;
     gap: 20px;
     overflow-x: auto;
+    scroll-behavior: auto !important;
     padding-bottom: 20px;
     padding-right: 40px;
     /* Force extra space on the right scroll edge */

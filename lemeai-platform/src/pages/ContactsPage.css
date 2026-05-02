@@ -292,3 +292,101 @@
     animation: shimmer 1.5s infinite;
     flex-grow: 1;
 }
+
+/* Pagination Controls */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border-color-soft);
+    margin-top: 10px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.pagination-info {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+}
+
+.pagination-info strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: var(--petroleum-light);
+    border-color: var(--petroleum-blue);
+    color: var(--petroleum-blue);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagination-page-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-page-btn:hover:not(.active) {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color-soft);
+}
+
+.pagination-page-btn.active {
+    background-color: var(--petroleum-blue);
+    border-color: var(--petroleum-blue);
+    color: white;
+}
+
+@media (max-width: 600px) {
+    .pagination-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
