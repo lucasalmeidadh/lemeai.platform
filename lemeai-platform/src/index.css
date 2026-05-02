@@ -18,13 +18,23 @@
   --skeleton-highlight: #f8fafc;
 
   /* Brand Colors - Modernized */
-  --petroleum-blue: #0ea5e9;
-  /* Vibrant Sky Blue */
-  --petroleum-blue-hover: #0284c7;
-  --petroleum-light: #e0f2fe;
+  --petroleum-blue: #00275e;
+  --petroleum-blue-hover: #001a40;
+  --petroleum-light: rgba(0, 39, 94, 0.08);
+  --cyan-accent: #00f0ff;
+  --brand-official: #00275e;
 
-  --dark-yellow: #f59e0b;
+  /* Semantic Colors */
+  --success-color: #059669;
+  --success-bg: rgba(16, 185, 129, 0.15);
+  --warning-color: #d97706;
+  --warning-bg: rgba(217, 119, 6, 0.15);
   --danger-color: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.15);
+  --info-color: #1d4ed8;
+  --info-bg: #f0f9ff;
+  
+  --dark-yellow: var(--warning-color);
   --white: #ffffff;
 
   /* Glassmorphism Surface Base */
@@ -41,12 +51,12 @@
 }
 
 [data-theme='dark'] {
-  /* DARK MODE VARIABLES - Deep Slate Aesthetics */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
+  /* DARK MODE VARIABLES - Anthracite Custom */
+  --bg-primary: #09090b;
+  --bg-secondary: #1e2128;
+  --bg-tertiary: #2a2e38;
 
-  --text-primary: #f8fafc;
+  --text-primary: #ffffff;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
 
@@ -58,10 +68,11 @@
   --skeleton-highlight: #475569;
 
   /* Brand Colors Setup */
-  --petroleum-blue: #38bdf8;
-  --petroleum-blue-hover: #7dd3fc;
-  --petroleum-light: rgba(56, 189, 248, 0.15);
-  /* Tint for dark surface */
+  --petroleum-blue: #3b82f6;
+  --petroleum-blue-hover: #60a5fa;
+  --petroleum-light: rgba(59, 130, 246, 0.15);
+  --cyan-accent: #00f0ff;
+  --brand-official: #00275e;
 
   /* Glassmorphism Surface Base Dark */
   --surface-color: rgba(30, 41, 59, 0.85);
@@ -88,7 +99,7 @@ html {
 
 .app-layout {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
   width: 100%;
   overflow: hidden;
@@ -98,7 +109,7 @@ html {
   display: flex;
   width: 100%;
   flex-grow: 1;
-  height: calc(100vh - 64px);
+  height: 100vh;
   overflow: hidden;
   min-width: 0;
 }

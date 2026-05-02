@@ -67,9 +67,9 @@
 }
 
 .filter-button.active {
-  background-color: var(--petroleum-blue);
+  background-color: var(--brand-official);
   color: white;
-  border-color: var(--petroleum-blue);
+  border-color: var(--brand-official);
   font-weight: 600;
 }
 

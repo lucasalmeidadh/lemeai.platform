@@ -110,9 +110,9 @@
 }
 
 .filter-input-compact:focus {
-  border-color: var(--petroleum-blue) !important;
+  border-color: #00275e !important;
   background-color: var(--bg-secondary);
-  box-shadow: 0 0 0 3px var(--petroleum-light);
+  box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.1);
 }
 
 .date-filter-container {
@@ -128,9 +128,9 @@
 }
 
 .date-filter-container:focus-within {
-  border-color: var(--petroleum-blue);
+  border-color: #00275e;
   background: var(--bg-secondary);
-  box-shadow: 0 0 0 3px var(--petroleum-light);
+  box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.1);
 }
 
 .date-input-clean {

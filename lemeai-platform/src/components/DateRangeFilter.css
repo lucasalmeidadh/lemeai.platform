@@ -60,7 +60,7 @@
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-    background-color: var(--petroleum-blue) !important;
+    background-color: #00275e !important;
     color: white !important;
     font-weight: 600 !important;
 }
@@ -129,8 +129,8 @@
 }
 
 .preset-btn.active {
-    background-color: var(--petroleum-blue);
-    border-color: var(--petroleum-blue);
+    background-color: #00275e;
+    border-color: #00275e;
     color: white;
 }
 
@@ -154,3 +154,14 @@
         padding: 8px 4px;
     }
 }
+
+/* Custom styling for the DatePicker clear icons to match the brand Cyan */
+.react-datepicker__close-icon::after {
+    background-color: #00275e !important;
+    color: white !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 800 !important;
+}

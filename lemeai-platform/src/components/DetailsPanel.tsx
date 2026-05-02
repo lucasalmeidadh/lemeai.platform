@@ -6,6 +6,7 @@ import type { Contact } from '../types';
 import type { Detail } from '../types/Details';
 import { DetailsService } from '../services/DetailsService';
 import SummaryModal from './SummaryModal';
+import CustomSelect from './CustomSelect';
 
 interface DetailsPanelProps {
   contact: Contact;
@@ -56,6 +57,16 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
   // Summary Modal State
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [selectedSummary, setSelectedSummary] = useState('');
+
+  const statusOptions = [
+    { value: '1', label: 'Atendimento IA' },
+    { value: '8', label: 'Atendimento IA Finalizado' },
+    { value: '2', label: 'Não Iniciado' },
+    { value: '5', label: 'Em Negociação' },
+    { value: '4', label: 'Proposta Enviada' },
+    { value: '3', label: 'Venda Fechada' },
+    { value: '6', label: 'Venda Perdida' },
+  ];
 
   useEffect(() => {
     if (contact) {
@@ -185,15 +196,11 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
             <div className="form-section">
               <div className="form-group">
                 <label htmlFor="deal-status"><FaTag className="label-icon" /> Status da Negociação</label>
-                <select id="deal-status" className="status-select" value={status} onChange={(e) => { setStatus(e.target.value); setIsDirty(true); }}>
-                  <option value="1">Atendimento IA</option>
-                  <option value="8">Atendimento IA Finalizado</option>
-                  <option value="2">Não Iniciado</option>
-                  <option value="5">Em Negociação</option>
-                  <option value="4">Proposta Enviada</option>
-                  <option value="3">Venda Fechada</option>
-                  <option value="6">Venda Perdida</option>
-                </select>
+                <CustomSelect
+                  options={statusOptions}
+                  value={status}
+                  onChange={(val) => { setStatus(val); setIsDirty(true); }}
+                />
               </div>
 
               <div className="form-group">
