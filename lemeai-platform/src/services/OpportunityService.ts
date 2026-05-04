@@ -32,8 +32,6 @@ export interface OpportunityResponse {
 
 export const OpportunityService = {
     getAllOpportunities: async (): Promise<Opportunity[]> => {
-
-
         try {
             const response = await apiFetch(`${apiUrl}/api/OportunidadeVenda/BuscarTodas`, {
                 headers: {
@@ -57,7 +55,7 @@ export const OpportunityService = {
                 return [];
             }
         } catch (error) {
-            console.error('Erro no serviço de oportunidades:', error);
+            console.error('Erro no servico de oportunidades:', error);
             throw error;
         }
     },

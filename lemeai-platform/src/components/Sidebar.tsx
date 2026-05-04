@@ -2,18 +2,17 @@ import { useState, useRef, useEffect, type FC } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
 import {
-    FaUser,
-    FaSignOutAlt,
     FaTachometerAlt,
-    FaChartPie,
+    FaStream,
     FaAddressBook,
     FaComments,
     FaCog,
     FaUsersCog,
     FaBox,
-    FaWhatsapp
+    FaWhatsapp,
+    FaCalendarAlt,
+    FaDesktop
 } from 'react-icons/fa';
-import ThemeToggle from './ThemeToggle';
 import './Sidebar.css';
 
 // Import logos (Using the light logo for contrast against dark blue)
@@ -24,7 +23,7 @@ interface SidebarProps {
     onLogout: () => void;
 }
 
-const Sidebar: FC<SidebarProps> = ({ onViewProfile, onLogout }) => {
+const Sidebar: FC<SidebarProps> = () => {
     const location = useLocation();
     const { unreadCount, clearUnreadCount } = useGlobalNotification();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -64,18 +63,32 @@ const Sidebar: FC<SidebarProps> = ({ onViewProfile, onLogout }) => {
                     <FaTachometerAlt />
                     <span>Painel</span>
                 </Link>
-                <Link to="/pipeline" className={`sidebar-link ${location.pathname === '/pipeline' ? 'active' : ''}`}>
-                    <FaChartPie />
-                    <span>Pipeline</span>
-                </Link>
-                <Link to="/contacts" className={`sidebar-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
-                    <FaAddressBook />
-                    <span>Contatos</span>
+                <Link to="/monitoramento" className={`sidebar-link ${location.pathname === '/monitoramento' ? 'active' : ''}`}>
+                    <FaDesktop />
+                    <span>Monitoramento</span>
                 </Link>
                 <Link to="/chat" className={`sidebar-link ${location.pathname === '/chat' ? 'active' : ''}`}>
                     <FaComments />
                     <span>Chat</span>
                     {unreadCount > 0 && <span className="sidebar-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                </Link>
+                <Link to="/pipeline" className={`sidebar-link ${location.pathname === '/pipeline' ? 'active' : ''}`}>
+                    <FaStream />
+                    <span>Fluxo de Vendas</span>
+                </Link>
+                <Link to="/agenda" className={`sidebar-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
+                    <FaCalendarAlt />
+                    <span>Agenda</span>
+                </Link>
+                {/* 
+                <Link to="/analytics" className={`sidebar-link ${location.pathname === '/analytics' ? 'active' : ''}`}>
+                    <FaChartLine />
+                    <span>Analytics</span>
+                </Link>
+                */}
+                <Link to="/contacts" className={`sidebar-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
+                    <FaAddressBook />
+                    <span>Contatos</span>
                 </Link>
 
                 <button 
@@ -109,20 +122,6 @@ const Sidebar: FC<SidebarProps> = ({ onViewProfile, onLogout }) => {
                 )}
             </nav>
 
-            <div className="sidebar-bottom">
-                <div className="sidebar-theme-toggle">
-                    <ThemeToggle collapsed={true} />
-                </div>
-
-                <button onClick={onViewProfile} className="sidebar-btn" title="Perfil">
-                    <FaUser />
-                    <span>Perfil</span>
-                </button>
-                <button onClick={onLogout} className="sidebar-btn" title="Sair" style={{ color: '#ef4444' }}>
-                    <FaSignOutAlt />
-                    <span>Sair</span>
-                </button>
-            </div>
         </aside>
     );
 };

@@ -156,6 +156,14 @@
 }
 
 /* Custom styling for the DatePicker clear icons to match the brand Cyan */
+.react-datepicker__close-icon {
+    padding: 0 !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    right: 0 !important;
+}
+
 .react-datepicker__close-icon::after {
     background-color: #00275e !important;
     color: white !important;
@@ -164,4 +172,8 @@
     align-items: center !important;
     justify-content: center !important;
     font-weight: 800 !important;
-}
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 10px !important;
+    content: "×" !important;
+}

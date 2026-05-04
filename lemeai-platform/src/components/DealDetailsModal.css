@@ -560,3 +560,108 @@
         background-position: -200% 0;
     }
 }
+
+/* Attachment Styles for DealDetailsModal */
+.modal-upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    background-color: var(--bg-primary);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.modal-upload-label:hover {
+    border-color: var(--petroleum-blue);
+    background-color: var(--petroleum-light);
+    color: var(--petroleum-blue);
+}
+
+.modal-upload-label.uploading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.modal-attachments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.modal-attachment-card {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s;
+}
+
+.modal-attachment-card:hover {
+    border-color: var(--petroleum-blue);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.modal-attachment-icon {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.modal-attachment-icon.tipo-image { background-color: rgba(0, 191, 166, 0.1); color: #00bfa6; }
+.modal-attachment-icon.tipo-audio { background-color: rgba(255, 133, 27, 0.1); color: #ff851b; }
+.modal-attachment-icon.tipo-video { background-color: rgba(255, 65, 54, 0.1); color: #ff4136; }
+.modal-attachment-icon.tipo-document,
+.modal-attachment-icon.tipo-documento { background-color: rgba(0, 116, 217, 0.1); color: #0074d9; }
+
+.modal-attachment-info {
+    padding: 10px;
+}
+
+.modal-attachment-name {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 8px;
+}
+
+.modal-attachment-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.modal-attachment-actions button {
+    flex: 1;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 5px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-attachment-actions button:hover {
+    background-color: var(--petroleum-blue);
+    color: white;
+    border-color: var(--petroleum-blue);
+}

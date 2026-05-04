@@ -1,5 +1,9 @@
 /* Reuse variables and styles from other pages where possible, or define local ones */
 
+.page-system-prompts {
+    height: 100%;
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;

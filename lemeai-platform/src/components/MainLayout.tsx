@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import Topbar from './Topbar';
 import UserProfileModal from './UserProfileModal';
 import { GlobalNotificationProvider } from '../contexts/GlobalNotificationContext';
 import {
     FaChartPie,
     FaUser,
     FaSignOutAlt,
-    FaComments
+    FaComments,
+    FaCalendarAlt
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 
@@ -63,6 +65,9 @@ const MainLayout = () => {
                         <Link to="/chat" className={`drawer-link ${location.pathname === '/chat' ? 'active' : ''}`}>
                             <FaComments /> Chat
                         </Link>
+                        <Link to="/agenda" className={`drawer-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
+                            <FaCalendarAlt /> Agenda
+                        </Link>
                         
                         <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                             <div style={{ padding: '10px 16px' }}>
@@ -87,6 +92,11 @@ const MainLayout = () => {
                 </div>
 
                 <div className="dashboard-layout">
+                    <Topbar 
+                        onToggleMobileMenu={toggleMobileMenu}
+                        onViewProfile={handleViewProfile}
+                        onLogout={handleLogout}
+                    />
                     <UserProfileModal
                         isOpen={isProfileOpen}
                         onClose={() => setIsProfileOpen(false)}
