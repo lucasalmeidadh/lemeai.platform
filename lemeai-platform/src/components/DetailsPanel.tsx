@@ -253,13 +253,13 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
     
     setIsSavingApp(true);
     try {
-      const dateStr = format(newAppDate, 'yyyy-MM-dd');
-      const startDateTime = `${dateStr}T${newAppTime}:00`;
+      const [year, month, day] = format(newAppDate, 'yyyy-MM-dd').split('-').map(Number);
+      const [hours, minutes] = newAppTime.split(':').map(Number);
+      const startDate = new Date(year, month - 1, day, hours, minutes);
       
-      // End time +1h
-      const startDate = new Date(startDateTime);
+      const startDateTime = startDate.toISOString();
       const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-      const endDateTime = format(endDate, "yyyy-MM-dd'T'HH:mm:ss");
+      const endDateTime = endDate.toISOString();
 
       const result = await AgendaService.createEventByConversation(contact.id, {
         descricao: newAppTitle,

@@ -280,11 +280,16 @@ const AgendaPage: React.FC = () => {
     const handleAddAppointment = async (newApp: any) => {
         setIsLoading(true);
         try {
-            const startDateTime = `${newApp.date}T${newApp.time}:00`;
-            // Calculate end time (default to +1h)
-            const startDate = new Date(startDateTime);
+            // Criar objeto Date a partir da data e hora local para garantir o fuso horário correto
+            const [year, month, day] = newApp.date.split('-').map(Number);
+            const [hours, minutes] = newApp.time.split(':').map(Number);
+            const startDate = new Date(year, month - 1, day, hours, minutes);
+            
+            const startDateTime = startDate.toISOString();
+            
+            // Calcular horário de término (+1h por padrão)
             const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-            const endDateTime = format(endDate, "yyyy-MM-dd'T'HH:mm:ss");
+            const endDateTime = endDate.toISOString();
 
             let result;
             if (newApp.id) {
