@@ -188,3 +188,168 @@
     pointer-events: none;
     opacity: 0.7;
 }
+
+/* Contact Modal Tabs */
+.contact-modal-tabs {
+    display: flex;
+    padding: 10px 30px 0;
+    border-bottom: 1px solid var(--border-color);
+    gap: 15px;
+    background-color: var(--bg-primary);
+}
+
+.modal-tab-btn {
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.modal-tab-btn:hover {
+    color: var(--petroleum-blue);
+}
+
+.modal-tab-btn.active {
+    color: var(--petroleum-blue);
+    border-bottom-color: var(--petroleum-blue);
+}
+
+/* Modal Attachments Content */
+.modal-attachments-content {
+    padding: 30px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.contact-attachments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.contact-attachment-card {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s;
+}
+
+.contact-attachment-card:hover {
+    border-color: var(--petroleum-blue);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.attachment-icon {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    background-color: var(--bg-tertiary);
+}
+
+.attachment-icon.tipo-image { background-color: rgba(0, 191, 166, 0.1); color: #00bfa6; }
+.attachment-icon.tipo-audio { background-color: rgba(255, 133, 27, 0.1); color: #ff851b; }
+.attachment-icon.tipo-video { background-color: rgba(255, 65, 54, 0.1); color: #ff4136; }
+.attachment-icon.tipo-document,
+.attachment-icon.tipo-documento { background-color: rgba(0, 116, 217, 0.1); color: #0074d9; }
+
+.attachment-info {
+    padding: 10px;
+}
+
+.attachment-name {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 8px;
+}
+
+.attachment-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.attachment-actions button {
+    flex: 1;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 5px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attachment-actions button:hover {
+    background-color: var(--petroleum-blue);
+    color: white;
+    border-color: var(--petroleum-blue);
+}
+
+.empty-attachments {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: var(--text-tertiary);
+}
+
+.attachment-footer-hint {
+    margin-top: 20px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-align: center;
+    font-style: italic;
+}
+
+.modal-upload-section {
+    padding: 20px 30px 10px;
+    background-color: var(--bg-primary);
+}
+
+.modal-upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.modal-upload-label:hover {
+    border-color: var(--petroleum-blue);
+    background-color: rgba(0, 39, 94, 0.05);
+    color: var(--petroleum-blue);
+}
+
+.modal-upload-label.uploading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.modal-upload-label svg {
+    font-size: 18px;
+}

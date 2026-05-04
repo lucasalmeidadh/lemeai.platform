@@ -16,6 +16,9 @@ import ProductsPage from './pages/ProductsPage.tsx';
 import WhatsAppConnectionPage from './pages/WhatsAppConnectionPage.tsx';
 import './index.css';
 import NotFoundPage from './pages/NotFoundPage.tsx';
+import AgendaPage from './pages/AgendaPage.tsx';
+import AnalyticsPage from './pages/AnalyticsPage.tsx';
+import ChatDashboard from './pages/ChatDashboard.tsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -28,8 +31,11 @@ const router = createBrowserRouter([
         children: [
           { path: "chat", element: <ChatPage /> },
           { path: "dashboard", element: <Dashboard /> },
+          { path: "monitoramento", element: <ChatDashboard /> },
           { path: "pipeline", element: <PipelinePage /> },
+          { path: "analytics", element: <AnalyticsPage /> },
           { path: "contacts", element: <ContactsPage /> },
+          { path: "agenda", element: <AgendaPage /> },
           { path: "users", element: <UserManagementPage /> },
           // { path: "profiles", element: <ProfileManagementPage /> },
           { path: "chat-rules", element: <SystemPromptsPage /> },

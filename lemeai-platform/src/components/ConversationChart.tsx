@@ -24,7 +24,7 @@ const ConversationChart: React.FC<ConversationChartProps> = ({ data }) => {
     const tooltipBorder = isDark ? '1px solid #343a40' : 'none';
 
     return (
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={350}>
             <BarChart
                 data={data}
                 margin={{

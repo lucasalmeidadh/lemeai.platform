@@ -1,7 +1,6 @@
 .chat-layout {
   display: flex;
-  flex-grow: 1;
-  height: auto;
+  flex: 1;
   width: 100%;
   padding: 10px;
   gap: 12px;

@@ -72,10 +72,10 @@
   --petroleum-blue-hover: #60a5fa;
   --petroleum-light: rgba(59, 130, 246, 0.15);
   --cyan-accent: #00f0ff;
-  --brand-official: #00275e;
+  --brand-official: #020d1c;
 
   /* Glassmorphism Surface Base Dark */
-  --surface-color: rgba(30, 41, 59, 0.85);
+  --surface-color: rgba(2, 13, 28, 0.95);
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
@@ -107,7 +107,8 @@ html {
 
 .dashboard-layout {
   display: flex;
-  width: 100%;
+  flex-direction: column;
+  flex: 1;
   flex-grow: 1;
   height: 100vh;
   overflow: hidden;
@@ -115,10 +116,10 @@ html {
 }
 
 .main-content {
-  flex-grow: 1;
-  height: 100%;
+  display: block;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  overflow-x: hidden;
   padding: 40px;
   box-sizing: border-box;
   min-width: 0;
@@ -158,12 +159,10 @@ html {
 /* Global Layout */
 .page-container {
   padding: 40px;
-  height: 100%;
+  padding-bottom: 80px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  /* Prevent double scrollbars if nested content scrolls */
 }
 
 /* Allow scrolling within page container if needed, but usually main-content handles it. 
@@ -336,6 +335,7 @@ html {
 
 /* For Firefox compatibility */
 * {
+  box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) var(--bg-primary);
 }

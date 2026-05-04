@@ -11,8 +11,8 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
-  min-height: 100px;
-  gap: 12px;
+  min-height: 80px;
+  gap: 8px;
 }
 
 .kpi-card.clickable {
@@ -63,7 +63,7 @@
 
 .kpi-value {
   color: var(--text-primary);
-  font-size: 2rem;
+  font-size: 1.7rem;
   font-weight: 800;
   margin: 0;
   line-height: 1;

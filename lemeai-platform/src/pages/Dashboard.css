@@ -1,11 +1,6 @@
 /* :root block removed to use global index.css variables */
 
-.main-content {
-  background-color: var(--bg-primary);
-  min-height: 100vh;
-  padding: 2rem 3rem;
-  font-family: inherit;
-}
+
 
 .page-header {
   margin-bottom: 2rem;
@@ -66,9 +61,9 @@
 .dashboard-charts-area {
   margin-top: 2rem;
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
-  margin-bottom: 2rem;
+  margin-bottom: 40px;
 }
 
 @media (max-width: 1024px) {
@@ -136,11 +131,11 @@
 .date-input-clean {
   background: transparent;
   border: none;
-  padding: 6px 12px !important;
-  font-size: 0.8rem !important;
+  padding: 6px 20px 6px 12px !important;
+  font-size: 0.85rem !important;
   color: var(--text-primary);
   outline: none;
-  width: 90px;
+  width: 120px;
   text-align: center;
   cursor: pointer;
 }

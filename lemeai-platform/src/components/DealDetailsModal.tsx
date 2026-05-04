@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../services/api';
-import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt, FaTrash, FaBoxOpen } from 'react-icons/fa';
+import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt, FaTrash, FaBoxOpen, FaPaperclip, FaUpload, FaImage, FaFilePdf, FaMusic, FaVideo, FaEye, FaDownload, FaClock, FaCalendarAlt } from 'react-icons/fa';
 import SummaryModal from './SummaryModal';
 import ConfirmationModal from './ConfirmationModal';
 import './DealDetailsModal.css';
@@ -10,6 +10,13 @@ import { type Message } from '../data/mockData';
 import toast from 'react-hot-toast';
 import { OpportunityService, type DetalheConversa } from '../services/OpportunityService';
 import { ContactService } from '../services/ContactService';
+import { AttachmentService } from '../services/AttachmentService';
+import { AgendaService } from '../services/AgendaService';
+import type { ContatoAnexoResponseDTO, TipoAnexo } from '../types/Attachment';
+import { format } from 'date-fns';
+import DatePicker from 'react-datepicker';
+import { ptBR } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
 import CustomSelect from './CustomSelect';
 
 interface Deal {
@@ -46,10 +53,10 @@ interface ApiMessage {
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUpdate }) => {
-    const [activeTab, setActiveTab] = useState<'notes' | 'chat'>('notes');
-    const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
-    const [isLoadingChat, setIsLoadingChat] = useState(false);
     const [chatError, setChatError] = useState<string | null>(null);
+    const [isLoadingChat, setIsLoadingChat] = useState(false);
+    const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
+    const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda'>('notes');
 
     // Summary Modal State
     const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
@@ -68,6 +75,32 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
 
     // Current User State
     const [currentUser, setCurrentUser] = useState<{ id: number, nome: string } | null>(null);
+
+    // Attachment state
+    const [attachments, setAttachments] = useState<ContatoAnexoResponseDTO[]>([]);
+    const [isLoadingAttachments, setIsLoadingAttachments] = useState(false);
+    const [attachmentError, setAttachmentError] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+
+    // Agenda state
+    const [appointments, setAppointments] = useState<any[]>([]);
+    const [isLoadingAgenda, setIsLoadingAgenda] = useState(false);
+    const [newAppTitle, setNewAppTitle] = useState('');
+    const [newAppDate, setNewAppDate] = useState<Date | null>(new Date());
+    const [newAppTime, setNewAppTime] = useState('09:00');
+    const [isSavingApp, setIsSavingApp] = useState(false);
+
+    // Notes state
+    const [observations, setObservations] = useState<any[]>([]);
+    const [isLoadingNotes, setIsLoadingNotes] = useState(false);
+    const [notesError, setNotesError] = useState<string | null>(null);
+
+    // Add Details State
+    const [showAddDetails, setShowAddDetails] = useState(false);
+    const [detailsDescription, setDetailsDescription] = useState('');
+    const [detailsStatusId, setDetailsStatusId] = useState(deal.statusId || 1);
+    const [detailsValue, setDetailsValue] = useState(deal.rawValue || 0);
+    const [isSavingDetails, setIsSavingDetails] = useState(false);
 
     // Fetch Current User
     useEffect(() => {
@@ -139,34 +172,64 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
             setIsLoadingChat(false);
         }
     }, [deal.contactId, deal.id]);
-
-    useEffect(() => {
-        if (activeTab === 'chat' && deal.contactId) {
-            fetchMessages();
+  
+    const fetchObservations = useCallback(async () => {
+        // Prefer explicit details passed in the deal object from the opportunity list
+        if (deal.details && deal.details.length > 0) {
+            const mappedDetails = deal.details.map(d => ({
+                id: d.idDetalhe || Math.random(),
+                content: d.descricaoDetalhe,
+                userId: d.idUsuarioCriador,
+                userName: d.nomeUsuarioCriador, // Store for display
+                createdAt: d.dataDetalheCriado
+            }));
+            setObservations(mappedDetails);
+            return;
         }
-    }, [activeTab, deal.contactId, fetchMessages]);
 
-    // Fetch email
-    useEffect(() => {
-        const fetchEmail = async () => {
-            if (deal.contactId) {
-                try {
-                    const response = await ContactService.getById(deal.contactId);
-                    if (response.sucesso && response.dados.email) {
-                        setContactEmail(response.dados.email);
-                    } else {
-                        setContactEmail('Email não cadastrado');
-                    }
-                } catch (error) {
-                    console.error("Error fetching email:", error);
-                    setContactEmail('Email não cadastrado');
-                }
+        if (!deal.contactId) return;
+        setIsLoadingNotes(true);
+        setNotesError(null);
+
+        try {
+            const response = await fetch(`${apiUrl}/api/Detalhes/PorConversa/${deal.id}`, {
+                credentials: 'include',
+            });
+
+            if (!response.ok) throw new Error('Falha ao carregar o histórico.');
+
+            const result = await response.json();
+            if (result.sucesso) {
+                const mapped = result.dados.map((d: any) => ({
+                    ...d,
+                    userName: `Usuário ${d.userId}` // Fallback if name not provided in this endpoint
+                }));
+                setObservations(mapped);
             } else {
-                setContactEmail('Email não cadastrado');
+                setObservations([]); // Empty if success false or no data
             }
-        };
-        fetchEmail();
-    }, [deal.contactId]);
+        } catch (err: any) {
+            setNotesError("Não há anotações para esta conversa.");
+        } finally {
+            setIsLoadingNotes(false);
+        }
+    }, [deal.contactId, deal.details, deal.id]);
+
+    const fetchAttachments = useCallback(async () => {
+        setIsLoadingAttachments(true);
+        setAttachmentError(null);
+        try {
+            const data = await AttachmentService.getAttachmentsByConversation(deal.id);
+            setAttachments(data);
+        } catch (err: any) {
+            setAttachmentError(err.message);
+        } finally {
+            setIsLoadingAttachments(false);
+        }
+    }, [deal.id]);
+
+
+    // handleSendMessage placeholder (moved up for reference)
 
     const handleSendMessage = async (text: string) => {
         if (!text.trim() || !deal.contactId) return;
@@ -259,17 +322,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         }
     };
 
-    // Notes state
-    const [observations, setObservations] = useState<any[]>([]);
-    const [isLoadingNotes, setIsLoadingNotes] = useState(false);
-    const [notesError, setNotesError] = useState<string | null>(null);
-
-    // Add Details State
-    const [showAddDetails, setShowAddDetails] = useState(false);
-    const [detailsDescription, setDetailsDescription] = useState('');
-    const [detailsStatusId, setDetailsStatusId] = useState(deal.statusId || 1);
-    const [detailsValue, setDetailsValue] = useState(deal.rawValue || 0);
-    const [isSavingDetails, setIsSavingDetails] = useState(false);
+    // Notes handled above
 
     // Update form defaults when deal changes
     useEffect(() => {
@@ -334,47 +387,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         }
     };
 
-    const fetchObservations = useCallback(async () => {
-        // Prefer explicit details passed in the deal object from the opportunity list
-        if (deal.details && deal.details.length > 0) {
-            const mappedDetails = deal.details.map(d => ({
-                id: d.idDetalhe || Math.random(),
-                content: d.descricaoDetalhe,
-                userId: d.idUsuarioCriador,
-                userName: d.nomeUsuarioCriador, // Store for display
-                createdAt: d.dataDetalheCriado
-            }));
-            setObservations(mappedDetails);
-            return;
-        }
 
-        if (!deal.contactId) return;
-        setIsLoadingNotes(true);
-        setNotesError(null);
-
-        try {
-            const response = await fetch(`${apiUrl}/api/Detalhes/PorConversa/${deal.id}`, {
-                credentials: 'include',
-            });
-
-            if (!response.ok) throw new Error('Falha ao carregar o histórico.');
-
-            const result = await response.json();
-            if (result.sucesso) {
-                const mapped = result.dados.map((d: any) => ({
-                    ...d,
-                    userName: `Usuário ${d.userId}` // Fallback if name not provided in this endpoint
-                }));
-                setObservations(mapped);
-            } else {
-                setObservations([]); // Empty if success false or no data
-            }
-        } catch (err: any) {
-            setNotesError("Não há anotações para esta conversa.");
-        } finally {
-            setIsLoadingNotes(false);
-        }
-    }, [deal.contactId, deal.details, deal.id]);
 
     useEffect(() => {
         if (activeTab === 'notes') {
@@ -387,10 +400,170 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         return `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     }
 
+
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            let tipo: TipoAnexo = 'outros';
+            if (file.type.startsWith('image/')) tipo = 'image';
+            else if (file.type.startsWith('audio/')) tipo = 'audio';
+            else if (file.type.startsWith('video/')) tipo = 'video';
+            else if (file.type === 'application/pdf' || file.type.includes('msword') || file.type.includes('officedocument')) tipo = 'documento';
+
+            await AttachmentService.addAttachmentByConversation(deal.id, file, tipo);
+            toast.success('Arquivo enviado!');
+            fetchAttachments();
+        } catch (error: any) {
+            toast.error(`Erro: ${error.message}`);
+        } finally {
+            setIsUploading(false);
+            if (e.target) e.target.value = '';
+        }
+    };
+
+    const handleDownloadAttachment = async (id: number, filename: string) => {
+        try {
+            const url = await AttachmentService.getAttachmentFileUrl(id);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename.split('/').pop() || 'anexo';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (error: any) {
+            toast.error('Erro ao baixar');
+        }
+    };
+
+    const handleViewAttachment = async (id: number) => {
+        try {
+            const url = await AttachmentService.getAttachmentFileUrl(id);
+            window.open(url, '_blank');
+        } catch (error: any) {
+            toast.error('Erro ao abrir');
+        }
+    };
+
+    const getAttachmentIcon = (tipo: string) => {
+        switch (tipo) {
+            case 'image': return <FaImage />;
+            case 'audio': return <FaMusic />;
+            case 'video': return <FaVideo />;
+            case 'documento': return <FaFilePdf />;
+            default: return <FaPaperclip />;
+        }
+    };
+
     const handleOpenSummary = (content: string) => {
         setSelectedSummary(content);
         setIsSummaryModalOpen(true);
     };
+
+    const handleRemoveAttachment = async (id: number) => {
+        if (!window.confirm('Deseja realmente remover este anexo?')) return;
+        try {
+            await AttachmentService.removeAttachment(id);
+            toast.success('Anexo removido!');
+            fetchAttachments();
+        } catch (error: any) {
+            toast.error('Erro ao remover anexo');
+        }
+    };
+
+    const fetchAppointments = useCallback(async () => {
+        setIsLoadingAgenda(true);
+        try {
+            const data = await AgendaService.getEventsByConversation(deal.id);
+            setAppointments(data);
+        } catch (err) {
+            console.error("Error fetching agenda:", err);
+        } finally {
+            setIsLoadingAgenda(false);
+        }
+    }, [deal.id]);
+
+    useEffect(() => {
+        if (activeTab === 'chat' && deal.contactId) {
+            fetchMessages();
+        } else if (activeTab === 'attachments') {
+            fetchAttachments();
+        } else if (activeTab === 'agenda') {
+            fetchAppointments();
+        }
+    }, [activeTab, deal.contactId, fetchMessages, fetchAttachments, fetchAppointments]);
+
+    // Fetch email
+    useEffect(() => {
+        const fetchEmail = async () => {
+            if (deal.contactId) {
+                try {
+                    const response = await ContactService.getById(deal.contactId);
+                    if (response.sucesso && response.dados.email) {
+                        setContactEmail(response.dados.email);
+                    } else {
+                        setContactEmail('Email não cadastrado');
+                    }
+                } catch (error) {
+                    console.error("Error fetching email:", error);
+                    setContactEmail('Email não cadastrado');
+                }
+            } else {
+                setContactEmail('Email não cadastrado');
+            }
+        };
+        fetchEmail();
+    }, [deal.contactId]);
+
+    const handleCreateAppointment = async () => {
+        if (!newAppTitle || !newAppDate) return;
+
+        setIsSavingApp(true);
+        try {
+            const dateStr = format(newAppDate, 'yyyy-MM-dd');
+            const startDateTime = `${dateStr}T${newAppTime}:00`;
+            const startDate = new Date(startDateTime);
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+            const endDateTime = format(endDate, "yyyy-MM-dd'T'HH:mm:ss");
+
+            const result = await AgendaService.createEventByConversation(deal.id, {
+                descricao: newAppTitle,
+                dataInicio: startDateTime,
+                dataFim: endDateTime,
+                detalhes: `Agendado via pipeline`
+            });
+
+            if (result.sucesso) {
+                toast.success('Agendamento criado!');
+                setNewAppTitle('');
+                setNewAppDate(new Date());
+                setNewAppTime('09:00');
+                fetchAppointments();
+            } else {
+                toast.error(result.mensagem || 'Erro ao criar agendamento.');
+            }
+        } catch (error) {
+            toast.error('Erro ao salvar agendamento.');
+        } finally {
+            setIsSavingApp(false);
+        }
+    };
+
+    const handleRemoveAppointment = async (id: number) => {
+        if (!window.confirm('Remover este agendamento?')) return;
+        try {
+            await AgendaService.remove(id);
+            toast.success('Agendamento removido.');
+            fetchAppointments();
+        } catch (error) {
+            toast.error('Erro ao remover agendamento.');
+        }
+    };
+
 
     return (
         <div className="deal-modal-overlay" onClick={onClose}>
@@ -488,6 +661,18 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                 onClick={() => setActiveTab('chat')}
                             >
                                 Chat <FaComments style={{ marginLeft: '5px', fontSize: '12px' }} />
+                            </button>
+                            <button
+                                className={`deal-tab ${activeTab === 'attachments' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('attachments')}
+                            >
+                                Anexos <FaPaperclip style={{ marginLeft: '5px', fontSize: '12px' }} />
+                            </button>
+                            <button
+                                className={`deal-tab ${activeTab === 'agenda' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('agenda')}
+                            >
+                                Agenda <FaCalendarAlt style={{ marginLeft: '5px', fontSize: '12px' }} />
                             </button>
                         </div>
 
@@ -667,6 +852,128 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                             <span className="empty-notes-text">Não há anotações para esta conversa.</span>
                                         </div>
                                     )}
+                                </div>
+                            )}
+                            {activeTab === 'attachments' && (
+                                <div className="attachments-tab-content" style={{ padding: '20px' }}>
+                                    <div className="upload-section" style={{ marginBottom: '20px' }}>
+                                        <label className={`modal-upload-label ${isUploading ? 'uploading' : ''}`}>
+                                            <input type="file" onChange={handleFileUpload} disabled={isUploading} style={{ display: 'none' }} />
+                                            <FaUpload /> {isUploading ? 'Enviando...' : 'Enviar Anexo'}
+                                        </label>
+                                    </div>
+
+                                    {isLoadingAttachments ? (
+                                        <div className="modal-skeleton-wrapper" style={{ paddingTop: 0 }}>
+                                            <div className="note-skeleton-line full"></div>
+                                            <div className="note-skeleton-line half"></div>
+                                        </div>
+                                    ) : attachmentError ? (
+                                        <div style={{ color: 'red', textAlign: 'center' }}>{attachmentError}</div>
+                                    ) : (
+                                        <div className="modal-attachments-grid">
+                                            {attachments.length > 0 ? (
+                                                attachments.map(att => (
+                                                    <div key={att.id} className="modal-attachment-card">
+                                                        <div className={`modal-attachment-icon tipo-${att.tipoAnexo}`}>
+                                                            {getAttachmentIcon(att.tipoAnexo)}
+                                                        </div>
+                                                        <div className="modal-attachment-info">
+                                                            <span className="modal-attachment-name" title={att.caminhoAnexo}>
+                                                                {att.caminhoAnexo.split('/').pop()}
+                                                            </span>
+                                                            <div className="modal-attachment-actions">
+                                                                <button onClick={() => handleViewAttachment(att.id)} title="Ver"><FaEye /></button>
+                                                                <button onClick={() => handleDownloadAttachment(att.id, att.caminhoAnexo)} title="Baixar"><FaDownload /></button>
+                                                                <button onClick={() => handleRemoveAttachment(att.id)} title="Remover"><FaTrash /></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="empty-notes-state">
+                                                    <FaPaperclip className="empty-notes-icon" />
+                                                    <span className="empty-notes-text">Nenhum anexo encontrado.</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'agenda' && (
+                                <div className="notes-list" style={{ padding: '20px' }}>
+                                    <div className="add-note-form" style={{ marginBottom: '20px' }}>
+                                        <h4 className="add-note-title">Novo Agendamento</h4>
+                                        <div className="note-input-group">
+                                            <label className="note-label">Título</label>
+                                            <input
+                                                type="text"
+                                                className="note-input"
+                                                placeholder="Ex: Reunião de alinhamento"
+                                                value={newAppTitle}
+                                                onChange={(e) => setNewAppTitle(e.target.value)}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '15px' }}>
+                                            <div className="note-input-group" style={{ flex: 2 }}>
+                                                <label className="note-label">Data</label>
+                                                <DatePicker
+                                                    selected={newAppDate}
+                                                    onChange={(d: Date | null) => setNewAppDate(d)}
+                                                    dateFormat="dd/MM/yyyy"
+                                                    className="note-input"
+                                                    locale={ptBR}
+                                                />
+                                            </div>
+                                            <div className="note-input-group" style={{ flex: 1 }}>
+                                                <label className="note-label">Hora</label>
+                                                <input
+                                                    type="time"
+                                                    className="note-input"
+                                                    value={newAppTime}
+                                                    onChange={(e) => setNewAppTime(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                        <button 
+                                            className="note-save-btn" 
+                                            onClick={handleCreateAppointment}
+                                            disabled={!newAppTitle || isSavingApp}
+                                            style={{ marginTop: '10px' }}
+                                        >
+                                            {isSavingApp ? 'Agendando...' : 'Criar Agendamento'}
+                                        </button>
+                                    </div>
+
+                                    <div className="agenda-items-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                        <h4 style={{ marginBottom: '15px', color: 'var(--text-primary)' }}>Eventos Vinculados</h4>
+                                        {isLoadingAgenda ? (
+                                            <p>Carregando eventos...</p>
+                                        ) : appointments.length > 0 ? (
+                                            appointments.map(app => (
+                                                <div key={app.agendaId} className="activity-item">
+                                                    <div className="activity-icon" style={{ background: 'var(--petroleum-blue)', color: 'white' }}>
+                                                        <FaClock />
+                                                    </div>
+                                                    <div className="activity-details">
+                                                        <div className="activity-text" style={{ fontWeight: 600 }}>{app.descricao}</div>
+                                                        <div className="activity-date">
+                                                            {format(new Date(app.dataInicio), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                                                        </div>
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => handleRemoveAppointment(app.agendaId)}
+                                                        style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', padding: '5px' }}
+                                                    >
+                                                        <FaTrash size={12} />
+                                                    </button>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p style={{ textAlign: 'center', color: '#6c757d', padding: '20px' }}>Nenhum evento agendado para esta oportunidade.</p>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
