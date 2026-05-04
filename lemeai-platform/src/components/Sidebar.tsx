@@ -2,11 +2,8 @@ import { useState, useRef, useEffect, type FC } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
 import {
-    FaUser,
-    FaSignOutAlt,
     FaTachometerAlt,
     FaStream,
-    FaChartLine,
     FaAddressBook,
     FaComments,
     FaCog,
@@ -16,7 +13,6 @@ import {
     FaCalendarAlt,
     FaDesktop
 } from 'react-icons/fa';
-import ThemeToggle from './ThemeToggle';
 import './Sidebar.css';
 
 // Import logos (Using the light logo for contrast against dark blue)
@@ -27,7 +23,7 @@ interface SidebarProps {
     onLogout: () => void;
 }
 
-const Sidebar: FC<SidebarProps> = ({ onViewProfile, onLogout }) => {
+const Sidebar: FC<SidebarProps> = () => {
     const location = useLocation();
     const { unreadCount, clearUnreadCount } = useGlobalNotification();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);

@@ -6,7 +6,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './DateRangeFilter.css'; // Reusing the global datepicker styles
 import toast from 'react-hot-toast';
 import './DetailsPanel.css';
-import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote, FaDollarSign, FaFileAlt, FaTasks, FaCalendarPlus, FaPaperclip, FaUpload, FaImage, FaFilePdf, FaMusic, FaVideo, FaEye, FaDownload, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote, FaDollarSign, FaFileAlt, FaCalendarPlus, FaPaperclip, FaUpload, FaImage, FaFilePdf, FaMusic, FaVideo, FaEye, FaDownload, FaTrash } from 'react-icons/fa';
 import type { Contact } from '../types';
 import type { Detail } from '../types/Details';
 import { DetailsService } from '../services/DetailsService';
