@@ -80,17 +80,19 @@ const Sidebar: FC<SidebarProps> = ({ onViewProfile, onLogout }) => {
                     <FaStream />
                     <span>Fluxo de Vendas</span>
                 </Link>
+                <Link to="/agenda" className={`sidebar-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
+                    <FaCalendarAlt />
+                    <span>Agenda</span>
+                </Link>
+                {/* 
                 <Link to="/analytics" className={`sidebar-link ${location.pathname === '/analytics' ? 'active' : ''}`}>
                     <FaChartLine />
                     <span>Analytics</span>
                 </Link>
+                */}
                 <Link to="/contacts" className={`sidebar-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
                     <FaAddressBook />
                     <span>Contatos</span>
-                </Link>
-                <Link to="/agenda" className={`sidebar-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
-                    <FaCalendarAlt />
-                    <span>Agenda</span>
                 </Link>
 
                 <button 

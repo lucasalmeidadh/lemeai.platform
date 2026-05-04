@@ -1,7 +1,9 @@
 .agenda-container {
     display: flex;
     gap: 30px;
-    height: calc(100vh - 150px);
+    height: auto;
+    min-height: calc(100vh - 220px);
+    padding-bottom: 50px;
     animation: fadeIn 0.4s ease-out;
 }
 
@@ -18,7 +20,7 @@
     box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
 }
 
