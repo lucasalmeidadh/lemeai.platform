@@ -16,6 +16,7 @@ import hubService from '../hub/HubConnectionService';
 import { ChatService } from '../services/ChatService';
 import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
 import { EvolutionService } from '../services/EvolutionService';
+import { MetaService, type MetaConfig } from '../services/MetaService';
 import { FaComments, FaWhatsapp, FaSync, FaExclamationTriangle, FaPlug } from 'react-icons/fa';
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -94,9 +95,12 @@ const ChatPage = () => {
   const [showQRCodeModal, setShowQRCodeModal] = useState(false);
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [isCreatingInstance, setIsCreatingInstance] = useState(false);
+  const [metaConfig, setMetaConfig] = useState<MetaConfig | null>(null);
+  const [isConnectingMeta, setIsConnectingMeta] = useState(false);
   const qrPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const metaDataRef = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
 
-  const isWhatsappDisabled = whatsappStatus === 'disconnected';
+  const isWhatsappDisabled = whatsappStatus === 'disconnected' || whatsappStatus === 'no-instance';
 
 
   // Funções de busca de dados (sem alteração na lógica interna, exceto a remoção do setupChat)
@@ -337,41 +341,47 @@ const ChatPage = () => {
   const checkWhatsappConnection = useCallback(async () => {
     setWhatsappStatus('checking');
     try {
-      const res = await EvolutionService.checkEvolution();
-      if (res.sucesso && res.dados) {
-        if (!res.dados.isEvolutionAPI) {
-          setWhatsappStatus('no-instance');
-          // Don't show disconnected modal for non-evolution companies
+      // Verifica qual API está sendo usada através do status central
+      const metaStatus = await MetaService.checkStatus();
+      
+      if (metaStatus.sucesso) {
+        // 1. Se usar Meta, está conectado
+        if (metaStatus.usaAPIMeta) {
+          setWhatsappStatus('connected');
           return;
         }
-        // Has instance, check status
-        try {
-          const statusRes = await EvolutionService.getStatus();
-          if (statusRes.sucesso && statusRes.dados) {
-            const state = statusRes.dados.state || statusRes.dados.status || '';
-            if (state === 'open' || state === 'connected') {
-              setWhatsappStatus('connected');
+
+        // 2. Se usar Evolution, verifica o status da instância
+        if (metaStatus.usaAPIEvolution) {
+          try {
+            const statusRes = await EvolutionService.getStatus();
+            if (statusRes.sucesso && statusRes.dados) {
+              const state = statusRes.dados.state || statusRes.dados.status || '';
+              if (state === 'open' || state === 'connected') {
+                setWhatsappStatus('connected');
+              } else {
+                setWhatsappStatus('disconnected');
+                setShowDisconnectedModal(true);
+              }
+            } else if (!statusRes.sucesso && statusRes.mensagem?.includes('Instância não encontrada')) {
+              setWhatsappStatus('no-instance');
             } else {
               setWhatsappStatus('disconnected');
               setShowDisconnectedModal(true);
             }
-          } else if (!statusRes.sucesso && statusRes.mensagem?.includes('Instância não encontrada')) {
-            setWhatsappStatus('no-instance');
-            // Instance doesn't exist on manager - no-instance state, no modal
-          } else {
+          } catch {
             setWhatsappStatus('disconnected');
             setShowDisconnectedModal(true);
           }
-        } catch {
-          setWhatsappStatus('disconnected');
-          setShowDisconnectedModal(true);
+          return;
         }
-      } else {
-        // API call succeeded but no data - treat as no check needed
-        setWhatsappStatus('connected');
       }
-    } catch {
-      // If the API itself fails, don't block the chat
+
+      // 3. Se nada estiver ativo, no-instance
+      setWhatsappStatus('no-instance');
+    } catch (err) {
+      console.error("Erro ao verificar conexão:", err);
+      // Em caso de erro na API de status, não bloqueia o chat por segurança
       setWhatsappStatus('connected');
     }
   }, []);
@@ -381,32 +391,30 @@ const ChatPage = () => {
     return () => stopQRPolling();
   }, [checkWhatsappConnection, stopQRPolling]);
 
-  const handleOpenQRCodeModal = async () => {
+  const handleOpenQRCodeModal = () => {
     setShowDisconnectedModal(false);
     setShowQRCodeModal(true);
     setQrCodeBase64(null);
+    stopQRPolling();
+  };
 
+  const handleStartEvolution = async () => {
     if (whatsappStatus === 'no-instance') {
-      // Need to create instance first
       setIsCreatingInstance(true);
       try {
         const res = await EvolutionService.criarInstancia();
         if (res.sucesso) {
           toast.success('Instância criada com sucesso!');
-          // Now load QR code
           loadQRCodeAndPoll();
         } else {
           toast.error(res.mensagem || 'Erro ao criar instância.');
-          setShowQRCodeModal(false);
         }
       } catch {
         toast.error('Erro ao criar instância.');
-        setShowQRCodeModal(false);
       } finally {
         setIsCreatingInstance(false);
       }
     } else {
-      // Instance exists but disconnected, just load QR
       loadQRCodeAndPoll();
     }
   };
@@ -448,6 +456,100 @@ const ChatPage = () => {
     setShowQRCodeModal(false);
     stopQRPolling();
   };
+
+  const enviarParaBackendMeta = useCallback(async (code: string, phoneNumberId: string, wabaId: string) => {
+    setIsConnectingMeta(true);
+    try {
+      const res = await MetaService.configurarCoexistencia({ code, phoneNumberId, wabaId });
+      if (res.sucesso) {
+        toast.success('WhatsApp (Meta) conectado com sucesso!');
+        setWhatsappStatus('connected');
+        setShowQRCodeModal(false);
+      } else {
+        toast.error(res.mensagem || 'Erro ao conectar com a Meta.');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao conectar com a Meta.');
+    } finally {
+      setIsConnectingMeta(false);
+    }
+  }, []);
+
+  const handleMetaLogin = useCallback(() => {
+    if (!metaConfig?.appId || !metaConfig?.configurationId) {
+      toast.error('Configurações da Meta não carregadas.');
+      return;
+    }
+
+    if (!(window as any).FB) {
+      toast.error('SDK do Facebook não carregado.');
+      return;
+    }
+
+    (window as any).FB.login(
+      (response: any) => {
+        if (response.status === 'connected' && response.authResponse?.code) {
+          const code = response.authResponse.code;
+          metaDataRef.current.code = code;
+
+          // Se o postMessage já chegou, envia para o backend
+          if (metaDataRef.current.phoneNumberId && metaDataRef.current.wabaId) {
+            enviarParaBackendMeta(code, metaDataRef.current.phoneNumberId, metaDataRef.current.wabaId);
+          }
+        }
+      },
+      {
+        config_id: metaConfig.configurationId,
+        response_type: 'code',
+        override_default_response_type: true,
+      }
+    );
+  }, [metaConfig, enviarParaBackendMeta]);
+
+  useEffect(() => {
+    // Carregar Facebook SDK se não existir
+    if (!(window as any).FB) {
+      const script = document.createElement('script');
+      script.src = "https://connect.facebook.net/en_US/sdk.js";
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        if (metaConfig?.appId) {
+          (window as any).fbAsyncInit = function () {
+            (window as any).FB.init({
+              appId: metaConfig.appId,
+              version: 'v22.0'
+            });
+          };
+        }
+      };
+      document.body.appendChild(script);
+    }
+
+    // Listener para postMessage da Meta
+    const handleMessage = (event: MessageEvent) => {
+      if (
+        event.origin === 'https://www.facebook.com' &&
+        event.data?.type === 'WA_EMBEDDED_SIGNUP' &&
+        event.data?.event === 'FINISH'
+      ) {
+        const phoneNumberId = event.data.data.phone_number_id;
+        const wabaId = event.data.data.waba_id;
+
+        metaDataRef.current.phoneNumberId = phoneNumberId;
+        metaDataRef.current.wabaId = wabaId;
+
+        // Se já temos o code, envia para o backend
+        if (metaDataRef.current.code) {
+          enviarParaBackendMeta(metaDataRef.current.code, phoneNumberId, wabaId);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [metaConfig, enviarParaBackendMeta]);
 
   // Lógica de manipulação de eventos e renderização (sem alteração)
   const selectedContact = contacts.find(c => c.id === selectedContactId);
@@ -744,7 +846,7 @@ const ChatPage = () => {
     );
   };
 
-  const showBanner = whatsappStatus && whatsappStatus !== 'checking' && whatsappStatus !== 'no-instance';
+  const showBanner = whatsappStatus && whatsappStatus !== 'checking';
 
   return (
     <div className="chat-page-container" style={{ height: '100%', display: 'flex', flexDirection: 'column', '--whatsapp-banner-height': showBanner ? '36px' : '0px' } as React.CSSProperties}>
@@ -756,6 +858,7 @@ const ChatPage = () => {
             <span>
               {whatsappStatus === 'connected' && 'WhatsApp conectado'}
               {whatsappStatus === 'disconnected' && 'WhatsApp desconectado'}
+              {whatsappStatus === 'no-instance' && 'WhatsApp não configurado'}
             </span>
             {whatsappStatus === 'connected' && <span className="whatsapp-status-dot connected" />}
             {isWhatsappDisabled && (
@@ -809,13 +912,47 @@ const ChatPage = () => {
       {/* Modal: QR Code para conexão */}
       {showQRCodeModal && (
         <div className="modal-overlay" style={{ zIndex: 2000 }}>
-          <div className="modal-content" style={{ maxWidth: '440px' }}>
+          <div className="modal-content" style={{ maxWidth: whatsappStatus === 'no-instance' && !qrCodeBase64 ? '650px' : '440px' }}>
             <div className="modal-header">
               <h2><FaWhatsapp style={{ color: '#25d366', marginRight: '8px' }} /> Conectar WhatsApp</h2>
               <button className="close-button" onClick={handleCloseQRCodeModal}>&times;</button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '32px 24px' }}>
-              {isCreatingInstance ? (
+              {whatsappStatus === 'no-instance' && !qrCodeBase64 && !isCreatingInstance ? (
+                /* Opções de Conexão */
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', width: '100%' }}>
+                  <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(var(--primary-color-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--primary-color)' }}>
+                      <FaSync />
+                    </div>
+                    <h3 style={{ fontSize: '1rem', margin: 0 }}>QR Code</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', minHeight: '40px' }}>Conexão via Evolution API usando QR Code.</p>
+                    <button
+                      className="primary-button"
+                      style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                      onClick={handleStartEvolution}
+                    >
+                      Usar QR Code
+                    </button>
+                  </div>
+
+                  <div style={{ border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '12px', padding: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(37, 211, 102, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: '#25d366' }}>
+                      <FaWhatsapp />
+                    </div>
+                    <h3 style={{ fontSize: '1rem', margin: 0 }}>Meta Oficial</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', minHeight: '40px' }}>API Oficial com suporte a coexistência.</p>
+                    <button
+                      className="primary-button"
+                      style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#25d366' }}
+                      onClick={handleMetaLogin}
+                      disabled={isConnectingMeta}
+                    >
+                      {isConnectingMeta ? 'Conectando...' : 'Conectar Meta'}
+                    </button>
+                  </div>
+                </div>
+              ) : isCreatingInstance ? (
                 <div style={{ padding: '40px', textAlign: 'center' }}>
                   <FaSync className="spin-animation" size={32} style={{ color: 'var(--text-secondary)', marginBottom: '16px' }} />
                   <p style={{ color: 'var(--text-secondary)' }}>Criando instância...</p>
@@ -842,7 +979,7 @@ const ChatPage = () => {
               ) : (
                 <div style={{ padding: '40px', textAlign: 'center' }}>
                   <FaSync className="spin-animation" size={32} style={{ color: 'var(--text-secondary)', marginBottom: '16px' }} />
-                  <p style={{ color: 'var(--text-secondary)' }}>Carregando QR Code...</p>
+                  <p style={{ color: 'var(--text-secondary)' }}>Carregando...</p>
                 </div>
               )}
             </div>

@@ -36,6 +36,10 @@ const Sidebar: FC<SidebarProps> = () => {
     }, [location.pathname, clearUnreadCount]);
 
     useEffect(() => {
+        setIsSettingsOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
                 setIsSettingsOpen(false);
