@@ -19,6 +19,9 @@ import NotFoundPage from './pages/NotFoundPage.tsx';
 import AgendaPage from './pages/AgendaPage.tsx';
 import AnalyticsPage from './pages/AnalyticsPage.tsx';
 import ChatDashboard from './pages/ChatDashboard.tsx';
+import MarketingDashboard from './pages/marketing/MarketingDashboard.tsx';
+import CampaignsPage from './pages/marketing/CampaignsPage.tsx';
+import TemplatesPage from './pages/marketing/TemplatesPage.tsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -41,6 +44,9 @@ const router = createBrowserRouter([
           { path: "chat-rules", element: <SystemPromptsPage /> },
           { path: "products", element: <ProductsPage /> },
           { path: "whatsapp-connection", element: <WhatsAppConnectionPage /> },
+          { path: "marketing", element: <MarketingDashboard /> },
+          { path: "marketing/campaigns", element: <CampaignsPage /> },
+          { path: "marketing/templates", element: <TemplatesPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }

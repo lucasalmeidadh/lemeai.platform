@@ -1,0 +1,197 @@
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin-top: 10px;
+}
+
+.template-card {
+    background-color: var(--bg-secondary);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.template-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.template-card-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.template-category {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.template-category svg {
+    color: #25D366;
+    font-size: 14px;
+}
+
+.template-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.template-status.approved {
+    background-color: rgba(37, 211, 102, 0.1);
+    color: #25D366;
+}
+
+.template-status.pending {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    animation: statusPulse 2s infinite;
+}
+
+@keyframes statusPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+.template-status.rejected {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.template-body {
+    padding: 20px;
+    flex: 1;
+}
+
+.template-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.template-lang {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    display: block;
+}
+
+.template-preview-box {
+    margin-top: 15px;
+    background-color: #e5ddd5; /* WhatsApp background color */
+    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* WhatsApp pattern */
+    padding: 15px;
+    border-radius: 12px;
+    min-height: 100px;
+    position: relative;
+}
+
+[data-theme='dark'] .template-preview-box {
+    background-color: #0b141a;
+    background-blend-mode: overlay;
+}
+
+.template-preview-box p {
+    margin: 0;
+    background-color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 0 12px 12px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #111b21;
+    position: relative;
+    max-width: 90%;
+    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+}
+
+[data-theme='dark'] .template-preview-box p {
+    background-color: #202c33;
+    color: #e9edef;
+}
+
+/* WhatsApp bubble tail */
+.template-preview-box p::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -10px;
+    width: 0;
+    height: 0;
+    border-top: 10px solid #ffffff;
+    border-left: 10px solid transparent;
+}
+
+[data-theme='dark'] .template-preview-box p::before {
+    border-top-color: #202c33;
+}
+
+.template-footer-actions {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-color-soft);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.loading-templates {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 100px 0;
+    color: var(--text-tertiary);
+    font-size: 1.1rem;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    border: 1px dashed var(--border-color);
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn.edit {
+    color: var(--text-secondary);
+    background-color: var(--bg-primary);
+}
+
+.icon-btn.edit:hover {
+    color: var(--petroleum-blue);
+    background-color: var(--petroleum-light);
+}
+
+.icon-btn.delete {
+    color: var(--text-secondary);
+    background-color: var(--bg-primary);
+}
+
+.icon-btn.delete:hover {
+    color: var(--danger-color);
+    background-color: var(--danger-bg);
+}

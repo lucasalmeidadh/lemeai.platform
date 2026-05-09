@@ -9,7 +9,8 @@ import {
     FaUser,
     FaSignOutAlt,
     FaComments,
-    FaCalendarAlt
+    FaCalendarAlt,
+    FaRocket
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 
@@ -67,6 +68,9 @@ const MainLayout = () => {
                         </Link>
                         <Link to="/agenda" className={`drawer-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
                             <FaCalendarAlt /> Agenda
+                        </Link>
+                        <Link to="/marketing" className={`drawer-link ${location.pathname.startsWith('/marketing') ? 'active' : ''}`}>
+                            <FaRocket /> Marketing
                         </Link>
                         
                         <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>

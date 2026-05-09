@@ -1,0 +1,414 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+[data-theme='dark'] .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.template-editor-container {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    width: 90%;
+    max-width: 1000px;
+    height: 90vh;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease-out;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.editor-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.header-title h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.header-title p {
+    margin: 4px 0 0;
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+.editor-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    overflow: hidden;
+}
+
+.editor-form {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.form-section {
+    margin-bottom: 32px;
+}
+
+.form-section h3 {
+    font-size: 1rem;
+    margin-bottom: 16px;
+    color: var(--primary-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input, 
+.form-group select, 
+.form-section textarea {
+    width: 100%;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.form-group input:focus, 
+.form-section textarea:focus {
+    outline: none;
+    border-color: var(--petroleum-blue);
+    background: var(--bg-secondary);
+}
+
+.form-group small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-top: 4px;
+    display: block;
+}
+
+.header-type-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.header-type-selector button {
+    flex: 1;
+    padding: 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.header-type-selector button:hover {
+    background: var(--bg-secondary);
+    border-color: var(--petroleum-blue);
+    color: var(--text-primary);
+}
+
+.header-type-selector button.active {
+    background: var(--petroleum-blue);
+    color: #fff;
+    border-color: var(--petroleum-blue);
+}
+
+.media-info-box {
+    padding: 16px;
+    background: rgba(0, 168, 132, 0.1);
+    border: 1px dashed rgba(0, 168, 132, 0.3);
+    border-radius: 8px;
+    color: #00a884;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.variable-tip {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.add-btn-small {
+    background: var(--petroleum-blue);
+    border: none;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.add-btn-small:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.add-btn-small:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-primary);
+    color: var(--text-tertiary);
+}
+
+.button-item-form {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    background: var(--bg-primary);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.button-item-form select {
+    width: 160px;
+}
+
+.button-item-form input {
+    flex: 1;
+}
+
+.delete-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* Preview Styles */
+.editor-preview {
+    background: #e5ddd5; /* Cor padrão do WhatsApp (modo claro) */
+    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    padding: 24px;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+[data-theme='dark'] .editor-preview {
+    background: #0b141a;
+    background-blend-mode: overlay;
+}
+
+.wa-preview-container {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.wa-message-bubble {
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+    position: relative;
+    color: #111b21;
+}
+
+[data-theme='dark'] .wa-message-bubble {
+    background: #202c33;
+    color: #e9edef;
+}
+
+.wa-preview-header-media {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #2a3942;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #54656f;
+    margin-bottom: 8px;
+}
+
+.wa-preview-header-text {
+    font-weight: 700;
+    color: #111b21;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+[data-theme='dark'] .wa-preview-header-text {
+    color: #e9edef;
+}
+
+.wa-preview-body {
+    color: #111b21;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+}
+
+[data-theme='dark'] .wa-preview-body {
+    color: #e9edef;
+}
+
+.wa-preview-footer {
+    color: #667781;
+    font-size: 0.8rem;
+    margin-top: 6px;
+}
+
+[data-theme='dark'] .wa-preview-footer {
+    color: #8696a0;
+}
+
+.wa-preview-buttons {
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    margin: 8px -10px -10px -10px;
+    display: flex;
+    flex-direction: column;
+}
+
+[data-theme='dark'] .wa-preview-buttons {
+    border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+.wa-preview-button {
+    padding: 12px;
+    text-align: center;
+    color: #00a884; /* Cor oficial do WhatsApp para botões */
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+[data-theme='dark'] .wa-preview-button {
+    color: #3991f7;
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.wa-preview-button:last-child {
+    border-bottom: none;
+}
+
+.editor-footer {
+    padding: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+}
+
+.btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.btn-save {
+    background: var(--primary-color);
+    border: none;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-save:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.btn-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}

@@ -1,0 +1,194 @@
+.marketing-dashboard-container {
+    padding: 40px;
+    padding-bottom: 80px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100%;
+}
+
+.marketing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.campaign-filter {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-tertiary);
+    transition: all 0.2s;
+}
+
+.campaign-filter:focus-within {
+    border-color: var(--primary-color);
+}
+
+.campaign-filter select {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    min-width: 180px;
+}
+
+.marketing-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.marketing-header p {
+    color: var(--text-secondary);
+    margin: 5px 0 0 0;
+    font-size: 15px;
+}
+
+.marketing-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.marketing-charts-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.marketing-card {
+    background-color: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.marketing-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.marketing-card.full-width {
+    width: 100%;
+}
+
+.marketing-card h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.marketing-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.marketing-card .card-header p {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.chart-wrapper {
+    width: 100%;
+    min-height: 300px;
+}
+
+.text-button {
+    background: none;
+    border: none;
+    color: var(--petroleum-blue);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.text-button:hover {
+    background-color: var(--petroleum-light);
+}
+
+.engagement-mini {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.engagement-mini span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.engagement-mini span svg {
+    color: var(--petroleum-blue);
+    font-size: 12px;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.active {
+    background-color: rgba(37, 211, 102, 0.1);
+    color: #25D366;
+}
+
+.status-badge.pending {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.status-badge.failed {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+@media (max-width: 1200px) {
+    .marketing-charts-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .marketing-dashboard-container {
+        padding: 20px;
+    }
+    
+    .marketing-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+}
