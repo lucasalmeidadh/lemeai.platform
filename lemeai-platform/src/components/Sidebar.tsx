@@ -11,7 +11,8 @@ import {
     FaBox,
     FaWhatsapp,
     FaCalendarAlt,
-    FaDesktop
+    FaDesktop,
+    FaQuestionCircle
 } from 'react-icons/fa';
 import './Sidebar.css';
 

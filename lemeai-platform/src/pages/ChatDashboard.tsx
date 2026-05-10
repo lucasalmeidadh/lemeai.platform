@@ -7,9 +7,7 @@ import { AgendaService, type AgendaEvent } from '../services/AgendaService';
 import { apiFetch } from '../services/api';
 import SummaryModal from '../components/SummaryModal';
 import DealDetailsModal from '../components/DealDetailsModal';
-import CustomSelect from '../components/CustomSelect';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { FaComments, FaFire, FaHeadset, FaCalendarCheck, FaSearch, FaFilter, FaSyncAlt, FaRegCalendarAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import './ChatDashboard.css';
 
@@ -21,15 +19,15 @@ const ChatDashboard = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [humanWaitingCount, setHumanWaitingCount] = useState(0);
     const [hotLeadsCount, setHotLeadsCount] = useState(0);
-    
+
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('Pendente Movimentação');
     const [unreadMap, setUnreadMap] = useState<{ [key: number]: number }>({});
     const [lastOriginMap, setLastOriginMap] = useState<{ [key: number]: number }>({});
-    
-    const statusTabs = ['Pendente Movimentação', 'Atendimento IA', 'Atendimento Humano', 'Todos'];
-    
+
+    const statusTabs = ['Pendente Movimentação', 'Atendimento IA', 'Em Qualificação', 'Todos'];
+
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
@@ -103,11 +101,11 @@ const ChatDashboard = () => {
                 const aiCount = (opps || []).filter(deal => {
                     const sId = Number(deal.idStauts);
                     return sId === 1;
-                }).length; 
-                
+                }).length;
+
                 // KPI: Hot
-                const hot = chatRes.dados.filter((c: any) => c.tipoLeadId === 2).length; 
-                
+                const hot = chatRes.dados.filter((c: any) => c.tipoLeadId === 2).length;
+
                 setUnreadCount(pendingCount);
                 setHumanWaitingCount(aiCount);
                 setHotLeadsCount(hot);
@@ -129,12 +127,12 @@ const ChatDashboard = () => {
 
     const filteredDeals = useMemo(() => {
         const filtered = deals.filter(deal => {
-            const searchMatch = !searchTerm || 
-                               deal.nomeContato?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                               deal.numeroWhatsapp?.includes(searchTerm);
-            
+            const searchMatch = !searchTerm ||
+                deal.nomeContato?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                deal.numeroWhatsapp?.includes(searchTerm);
+
             let statusMatch = false;
-            
+
             if (statusFilter === 'Todos') {
                 statusMatch = true;
             } else {
@@ -148,7 +146,7 @@ const ChatDashboard = () => {
                     // Show if status is Human AND (last message is NOT from Agent OR unread > 0)
                     const unread = unreadMap[deal.idConversa] || 0;
                     statusMatch = sId === 2 && (lastOrigin !== 1 || unread > 0);
-                } else if (statusFilter === 'Atendimento Humano') {
+                } else if (statusFilter === 'Em Qualificação') {
                     // Show if status is Human AND last message IS from Agent AND no unread
                     const unread = unreadMap[deal.idConversa] || 0;
                     statusMatch = (sId === 2 || desc.includes('humano')) && lastOrigin === 1 && unread === 0;
@@ -156,7 +154,7 @@ const ChatDashboard = () => {
                     statusMatch = desc === statusFilter.toLowerCase();
                 }
             }
-            
+
             return searchMatch && statusMatch;
         });
         return filtered;
@@ -202,28 +200,28 @@ const ChatDashboard = () => {
             </div>
 
             <div className="kpi-grid">
-                <KPICard 
-                    title="Conversas Pendentes" 
-                    value={unreadCount.toString()} 
-                    icon={<FaComments />} 
+                <KPICard
+                    title="Conversas Pendentes"
+                    value={unreadCount.toString()}
+                    icon={<FaComments />}
                     variant="danger"
                 />
-                <KPICard 
-                    title="Atendimento IA" 
-                    value={humanWaitingCount.toString()} 
-                    icon={<FaHeadset />} 
+                <KPICard
+                    title="Atendimento IA"
+                    value={humanWaitingCount.toString()}
+                    icon={<FaHeadset />}
                     variant="warning"
                 />
-                <KPICard 
-                    title="Leads Quentes" 
-                    value={hotLeadsCount.toString()} 
-                    icon={<FaFire />} 
+                <KPICard
+                    title="Leads Quentes"
+                    value={hotLeadsCount.toString()}
+                    icon={<FaFire />}
                     variant="success"
                 />
-                <KPICard 
-                    title="Tarefas para Hoje" 
-                    value={nextEvents.length.toString()} 
-                    icon={<FaCalendarCheck />} 
+                <KPICard
+                    title="Tarefas para Hoje"
+                    value={nextEvents.length.toString()}
+                    icon={<FaCalendarCheck />}
                 />
             </div>
 
@@ -246,9 +244,9 @@ const ChatDashboard = () => {
                                 </div>
                                 <div className="search-input-wrapper">
                                     <FaSearch className="search-icon" />
-                                    <input 
-                                        type="text" 
-                                        placeholder="Buscar contato..." 
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar contato..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
@@ -285,22 +283,22 @@ const ChatDashboard = () => {
                                                     </td>
                                                     <td>
                                                         <div className="action-cell">
-                                                            <button 
-                                                                 className="btn-icon" 
-                                                                 onClick={() => openDealModal(deal)}
-                                                                 title="Abrir Card Completo"
-                                                                 style={{ color: 'var(--petroleum-blue)' }}
-                                                             >
-                                                                 <FaExternalLinkAlt />
-                                                             </button>
-                                                             <button 
-                                                                 className="btn-icon" 
-                                                                 onClick={() => setExpandedDeals(prev => ({ ...prev, [deal.idConversa]: !prev[deal.idConversa] }))}
-                                                                 title="Ver Notas"
-                                                             >
-                                                                 <FaFilter />
-                                                             </button>
-                                                            <button 
+                                                            <button
+                                                                className="btn-icon"
+                                                                onClick={() => openDealModal(deal)}
+                                                                title="Abrir Card Completo"
+                                                                style={{ color: 'var(--petroleum-blue)' }}
+                                                            >
+                                                                <FaExternalLinkAlt />
+                                                            </button>
+                                                            <button
+                                                                className="btn-icon"
+                                                                onClick={() => setExpandedDeals(prev => ({ ...prev, [deal.idConversa]: !prev[deal.idConversa] }))}
+                                                                title="Ver Notas"
+                                                            >
+                                                                <FaFilter />
+                                                            </button>
+                                                            <button
                                                                 className="btn-ai"
                                                                 onClick={() => handleSummarize(deal.idConversa)}
                                                                 title="Resumo IA"
@@ -340,7 +338,7 @@ const ChatDashboard = () => {
 
                         {totalPages > 1 && (
                             <div className="pagination">
-                                <button 
+                                <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
                                     className="page-btn"
@@ -350,7 +348,7 @@ const ChatDashboard = () => {
                                 <span className="page-info">
                                     Página <strong>{currentPage}</strong> de {totalPages}
                                 </span>
-                                <button 
+                                <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages}
                                     className="page-btn"
@@ -387,22 +385,22 @@ const ChatDashboard = () => {
                                 </div>
                             )}
                         </div>
-                        <button className="view-agenda-btn" onClick={() => window.location.href='/agenda'}>
+                        <button className="view-agenda-btn" onClick={() => window.location.href = '/agenda'}>
                             Ver Agenda Completa
                         </button>
                     </div>
                 </div>
             </div>
 
-            <SummaryModal 
-                isOpen={isSummaryModalOpen} 
-                onClose={() => setIsSummaryModalOpen(false)} 
-                summary={selectedSummary} 
+            <SummaryModal
+                isOpen={isSummaryModalOpen}
+                onClose={() => setIsSummaryModalOpen(false)}
+                summary={selectedSummary}
             />
             {selectedDeal && (
-                <DealDetailsModal 
-                    deal={selectedDeal} 
-                    onClose={() => setSelectedDeal(null)} 
+                <DealDetailsModal
+                    deal={selectedDeal}
+                    onClose={() => setSelectedDeal(null)}
                     onUpdate={fetchData}
                 />
             )}

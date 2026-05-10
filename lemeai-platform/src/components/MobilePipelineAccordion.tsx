@@ -19,6 +19,7 @@ interface Deal {
     date: string;
     contactId?: number;
     statusId?: number;
+    tipoLeadId?: number;
     rawValue?: number;
     phone?: string;
 }
@@ -169,12 +170,15 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                         {getInitials(deal.title)}
                     </div>
                     <span className="mobile-opp-name">{deal.title}</span>
+                    <span className={`card-tag tag-${deal.tag}`} style={{ fontSize: '0.6rem', padding: '2px 5px', marginLeft: '8px' }}>
+                        {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
+                    </span>
                 </div>
                 <div className="mobile-opp-chevron">
                     {isExpanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                 </div>
             </div>
-            
+
             <div className="mobile-opp-card-body" onClick={() => !isExpanded && setIsExpanded(true)}>
                 <div className="mobile-opp-row">
                     <FaDollarSign className="mobile-opp-icon" />
@@ -184,10 +188,10 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                     <FaUser className="mobile-opp-icon" />
                     <span className="mobile-opp-owner">{deal.owner || 'Sem responsável'}</span>
                 </div>
-                
+
                 {(!isExpanded) && (
                     <div className="mobile-opp-card-footer">
-                        <button 
+                        <button
                             className="mobile-opp-btn outline"
                             onClick={(e) => { e.stopPropagation(); onSummarize(deal.id); }}
                             disabled={summarizingDealId === deal.id}
@@ -195,7 +199,7 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                             <FaMagic size={10} className={summarizingDealId === deal.id ? 'spin' : ''} />
                             {summarizingDealId === deal.id ? 'Gerando...' : 'Resumo IA'}
                         </button>
-                        <button 
+                        <button
                             className="mobile-opp-btn primary"
                             onClick={(e) => { e.stopPropagation(); setIsExpanded(true); }}
                         >
@@ -227,7 +231,7 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                                     options={[
                                         { value: '1', label: 'Atendimento IA' },
                                         { value: '8', label: 'Atendimento IA Finalizado' },
-                                        { value: '2', label: 'Atendimento Humano' },
+                                        { value: '2', label: 'Em Qualificação' },
                                         { value: '5', label: 'Em Negociação' },
                                         { value: '4', label: 'Proposta Enviada' },
                                         { value: '3', label: 'Venda Fechada' },
@@ -237,7 +241,7 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                             </div>
                             <div className="mobile-opp-chat-container modal-chat-container">
                                 {isLoadingChat ? (
-                                   <div className="mobile-opp-chat-loading">Carregando mensagens...</div>
+                                    <div className="mobile-opp-chat-loading">Carregando mensagens...</div>
                                 ) : chatError ? (
                                     <div className="mobile-opp-chat-error">{chatError}</div>
                                 ) : deal.contactId ? (
@@ -276,7 +280,7 @@ const MobilePipelineAccordion: React.FC<MobilePipelineAccordionProps> = ({ colum
     const [expandedColumns, setExpandedColumns] = useState<string[]>([]);
 
     const toggleColumn = (id: string) => {
-        setExpandedColumns(prev => 
+        setExpandedColumns(prev =>
             prev.includes(id) ? prev.filter(colId => colId !== id) : [...prev, id]
         );
     };
@@ -292,7 +296,7 @@ const MobilePipelineAccordion: React.FC<MobilePipelineAccordionProps> = ({ colum
                 const totalValue = column.deals.reduce((acc, deal) => acc + (deal.rawValue || 0), 0);
                 const isLost = column.id === 'lost';
                 const isAi = ['ai_service', 'ai_service_finished'].includes(column.id);
-                
+
                 let headerClass = "mobile-accordion-header";
                 if (isLost) headerClass += " header-lost";
                 else if (isAi) headerClass += " header-ai";
@@ -318,9 +322,9 @@ const MobilePipelineAccordion: React.FC<MobilePipelineAccordionProps> = ({ colum
                                     <div className="mobile-accordion-empty">Nenhuma oportunidade.</div>
                                 ) : (
                                     column.deals.map(deal => (
-                                        <MobileOpportunityCard 
-                                            key={deal.id} 
-                                            deal={deal} 
+                                        <MobileOpportunityCard
+                                            key={deal.id}
+                                            deal={deal}
                                             columnStatusId={column.statusId}
                                             currentUser={currentUser}
                                             onUpdate={onUpdate}
