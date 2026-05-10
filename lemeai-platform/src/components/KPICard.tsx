@@ -7,12 +7,13 @@ interface KPICardProps {
   icon: React.ReactNode;
   isActive?: boolean;
   onClick?: () => void;
+  variant?: 'danger' | 'warning' | 'success' | 'info';
 }
 
-const KPICard: React.FC<KPICardProps> = ({ title, value, icon, isActive, onClick }) => {
+const KPICard: React.FC<KPICardProps> = ({ title, value, icon, isActive, onClick, variant }) => {
   return (
     <div
-      className={`kpi-card ${isActive ? 'active' : ''} ${onClick ? 'clickable' : ''}`}
+      className={`kpi-card ${isActive ? 'active' : ''} ${onClick ? 'clickable' : ''} ${variant ? `variant-${variant}` : ''}`}
       onClick={onClick}
     >
       <div className="kpi-header">

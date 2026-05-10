@@ -11,7 +11,8 @@ import {
     FaBox,
     FaWhatsapp,
     FaCalendarAlt,
-    FaDesktop
+    FaDesktop,
+    FaQuestionCircle
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -34,6 +35,10 @@ const Sidebar: FC<SidebarProps> = () => {
             clearUnreadCount();
         }
     }, [location.pathname, clearUnreadCount]);
+
+    useEffect(() => {
+        setIsSettingsOpen(false);
+    }, [location.pathname]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

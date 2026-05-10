@@ -19,6 +19,8 @@ import NotFoundPage from './pages/NotFoundPage.tsx';
 import AgendaPage from './pages/AgendaPage.tsx';
 import AnalyticsPage from './pages/AnalyticsPage.tsx';
 import ChatDashboard from './pages/ChatDashboard.tsx';
+import HelpPage from './pages/HelpPage.tsx';
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -41,6 +43,7 @@ const router = createBrowserRouter([
           { path: "chat-rules", element: <SystemPromptsPage /> },
           { path: "products", element: <ProductsPage /> },
           { path: "whatsapp-connection", element: <WhatsAppConnectionPage /> },
+          { path: "help", element: <HelpPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }

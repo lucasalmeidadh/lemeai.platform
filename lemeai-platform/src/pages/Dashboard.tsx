@@ -3,6 +3,7 @@ import KPICard from '../components/KPICard';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import ConversationChart from '../components/ConversationChart';
 import FunnelChart from '../components/FunnelChart';
+import HourlyActivityChart from '../components/HourlyActivityChart';
 import type { FunnelData } from '../components/FunnelChart';
 import './Dashboard.css';
 import { FaUserPlus, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
@@ -114,6 +115,26 @@ const Dashboard = () => {
     return Object.entries(dailyCounts).map(([date, count]) => ({ date, conversations: count }));
   }, [deals]);
 
+  const hourlyData = useMemo(() => {
+    const hours: { [key: string]: number } = {};
+    // Inicializa as 24 horas do dia
+    for (let i = 0; i < 24; i++) {
+      const hourStr = `${i.toString().padStart(2, '0')}:00`;
+      hours[hourStr] = 0;
+    }
+
+    deals.forEach(op => {
+      if (!op.dataConversaCriada) return;
+      const date = new Date(op.dataConversaCriada);
+      const hourStr = `${date.getHours().toString().padStart(2, '0')}:00`;
+      if (hours.hasOwnProperty(hourStr)) {
+        hours[hourStr]++;
+      }
+    });
+
+    return Object.entries(hours).map(([hour, count]) => ({ hour, count }));
+  }, [deals]);
+
   return (
     <div className="page-container">
       <div className="page-header dashboard-header-main">
@@ -162,6 +183,12 @@ const Dashboard = () => {
           </div>
 
           <div className="dashboard-charts-area">
+            <div className="dashboard-card chart-card full-width-chart">
+              <h3>Volume por Horário</h3>
+              <p className="chart-subtitle">Distribuição de conversas iniciadas ao longo do dia (24h).</p>
+              <HourlyActivityChart data={hourlyData} />
+            </div>
+
             <div className="dashboard-card chart-card">
               <h3>Conversas nos últimos 30 dias</h3>
               <p className="chart-subtitle">Volume de conversas iniciadas diariamente.</p>

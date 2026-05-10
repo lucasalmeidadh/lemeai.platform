@@ -172,7 +172,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
             setIsLoadingChat(false);
         }
     }, [deal.contactId, deal.id]);
-  
+
     const fetchObservations = useCallback(async () => {
         // Prefer explicit details passed in the deal object from the opportunity list
         if (deal.details && deal.details.length > 0) {
@@ -527,7 +527,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
             const [year, month, day] = format(newAppDate, 'yyyy-MM-dd').split('-').map(Number);
             const [hours, minutes] = newAppTime.split(':').map(Number);
             const startDate = new Date(year, month - 1, day, hours, minutes);
-            
+
             const startDateTime = startDate.toISOString();
             const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
             const endDateTime = endDate.toISOString();
@@ -621,7 +621,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                     options={[
                                         { value: '1', label: 'Atendimento IA' },
                                         { value: '8', label: 'Atendimento IA Finalizado' },
-                                        { value: '2', label: 'Atendimento Humano' },
+                                        { value: '2', label: 'Em Qualificação' },
                                         { value: '5', label: 'Em Negociação' },
                                         { value: '4', label: 'Proposta Enviada' },
                                         { value: '3', label: 'Venda Fechada' },
@@ -938,8 +938,8 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                                 />
                                             </div>
                                         </div>
-                                        <button 
-                                            className="note-save-btn" 
+                                        <button
+                                            className="note-save-btn"
                                             onClick={handleCreateAppointment}
                                             disabled={!newAppTitle || isSavingApp}
                                             style={{ marginTop: '10px' }}
@@ -964,7 +964,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                                             {format(new Date(app.dataInicio), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                                                         </div>
                                                     </div>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleRemoveAppointment(app.agendaId)}
                                                         style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', padding: '5px' }}
                                                     >

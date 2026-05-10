@@ -23,11 +23,16 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
     onChangeEndDate
 }) => {
     const handlePresetClick = (daysBack: number) => {
-        const today = new Date();
-        const pastDate = new Date();
-        pastDate.setDate(today.getDate() - daysBack);
-        onChangeStartDate(pastDate);
-        onChangeEndDate(today);
+        if (isPresetActive(daysBack)) {
+            onChangeStartDate(null);
+            onChangeEndDate(null);
+        } else {
+            const today = new Date();
+            const pastDate = new Date();
+            pastDate.setDate(today.getDate() - daysBack);
+            onChangeStartDate(pastDate);
+            onChangeEndDate(today);
+        }
     };
 
     const isPresetActive = (daysBack: number) => {
