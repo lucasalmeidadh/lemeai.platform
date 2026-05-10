@@ -1,15 +1,21 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaBox, FaConciergeBell } from 'react-icons/fa';
 import './ProductsPage.css';
 import { ProductService, type Product, type CreateProductDTO } from '../services/ProductService';
+
+type ItemType = 'produto' | 'servico';
 
 const ProductsPage = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [itemType, setItemType] = useState<ItemType | null>(null);
+
+    // Generate a random code for the API
+    const generateRandomCode = () => String(Math.floor(Math.random() * 900000) + 100000);
 
     // Form state
     const [formData, setFormData] = useState<CreateProductDTO>({
@@ -28,7 +34,20 @@ const ProductsPage = () => {
 
     // Temporary state for currency inputs to handle masking
     const [priceInput, setPriceInput] = useState('');
-    const [costPriceInput, setCostPriceInput] = useState('');
+
+    // Auto-resize textarea
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const autoResize = useCallback((el: HTMLTextAreaElement) => {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    }, []);
+
+    // Resize on value change (e.g. when opening edit modal with existing text)
+    useEffect(() => {
+        if (textareaRef.current) {
+            autoResize(textareaRef.current);
+        }
+    }, [formData.descricaoDetalhada, itemType, autoResize]);
 
     useEffect(() => {
         loadProducts();
@@ -71,6 +90,9 @@ const ProductsPage = () => {
     const handleOpenModal = (product?: Product) => {
         if (product) {
             setCurrentProduct(product);
+            // Infer type: if it has marca or peso > 0, it's a product
+            const isProduct = !!(product.marca && product.marca.trim());
+            setItemType(isProduct ? 'produto' : 'servico');
             setFormData({
                 codigo: product.codigo,
                 codigoReferencia: product.codigoReferencia || '',
@@ -85,11 +107,11 @@ const ProductsPage = () => {
                 descricaoDetalhada: product.descricaoDetalhada || ''
             });
             setPriceInput(product.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
-            setCostPriceInput((product.precoDeCusto || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
         } else {
             setCurrentProduct(null);
+            setItemType(null); // Show type selection first
             setFormData({
-                codigo: '',
+                codigo: generateRandomCode(),
                 codigoReferencia: '',
                 nome: '',
                 codigoBarra: '',
@@ -102,7 +124,6 @@ const ProductsPage = () => {
                 descricaoDetalhada: ''
             });
             setPriceInput('');
-            setCostPriceInput('');
         }
         setIsModalOpen(true);
     };
@@ -110,8 +131,12 @@ const ProductsPage = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setCurrentProduct(null);
+        setItemType(null);
         setPriceInput('');
-        setCostPriceInput('');
+    };
+
+    const handleSelectType = (type: ItemType) => {
+        setItemType(type);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,12 +144,8 @@ const ProductsPage = () => {
 
         if (name === 'preco') {
             const numericValue = parseCurrencyInput(value);
-            setPriceInput(formatCurrencyInput(value)); // Update display with mask
-            setFormData(prev => ({ ...prev, preco: numericValue })); // Update actual number
-        } else if (name === 'precoDeCusto') {
-            const numericValue = parseCurrencyInput(value);
-            setCostPriceInput(formatCurrencyInput(value)); // Update display with mask
-            setFormData(prev => ({ ...prev, precoDeCusto: numericValue })); // Update actual number
+            setPriceInput(formatCurrencyInput(value));
+            setFormData(prev => ({ ...prev, preco: numericValue }));
         } else {
             setFormData(prev => ({
                 ...prev,
@@ -134,34 +155,40 @@ const ProductsPage = () => {
     };
 
     const handleSaveProduct = async () => {
-        if (!formData.codigo || !formData.nome) {
-            toast.error('Código e Nome são obrigatórios.');
+        if (!formData.nome) {
+            toast.error(`O nome do ${itemType === 'servico' ? 'serviço' : 'produto'} é obrigatório.`);
             return;
         }
+
+        // Ensure codigo is always set
+        const dataToSend = {
+            ...formData,
+            codigo: formData.codigo || generateRandomCode()
+        };
 
         try {
             if (currentProduct) {
                 // Edit
                 const response = await ProductService.update({
                     produtoId: currentProduct.produtoId,
-                    ...formData
+                    ...dataToSend
                 });
                 if (response.sucesso) {
-                    toast.success('Produto atualizado com sucesso!');
+                    toast.success(`${itemType === 'servico' ? 'Serviço' : 'Produto'} atualizado com sucesso!`);
                     loadProducts();
                     handleCloseModal();
                 } else {
-                    toast.error(response.mensagem || 'Erro ao atualizar produto.');
+                    toast.error(response.mensagem || 'Erro ao atualizar.');
                 }
             } else {
                 // Create
-                const response = await ProductService.create(formData);
+                const response = await ProductService.create(dataToSend);
                 if (response.sucesso) {
-                    toast.success('Produto criado com sucesso!');
+                    toast.success(`${itemType === 'servico' ? 'Serviço' : 'Produto'} criado com sucesso!`);
                     loadProducts();
                     handleCloseModal();
                 } else {
-                    toast.error(response.mensagem || 'Erro ao criar produto.');
+                    toast.error(response.mensagem || 'Erro ao criar.');
                 }
             }
         } catch (error) {
@@ -190,9 +217,9 @@ const ProductsPage = () => {
     return (
         <div className="page-container products-page">
             <div className="page-header">
-                <h1>Produtos</h1>
+                <h1>Produtos e Serviços</h1>
                 <button className="add-button" onClick={() => handleOpenModal()}>
-                    <FaPlus /> Novo Produto
+                    <FaPlus /> Novo
                 </button>
             </div>
 
@@ -250,152 +277,150 @@ const ProductsPage = () => {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h2>{currentProduct ? 'Editar Produto' : 'Novo Produto'}</h2>
+                            <h2>
+                                {currentProduct
+                                    ? `Editar ${itemType === 'servico' ? 'Serviço' : 'Produto'}`
+                                    : itemType
+                                        ? `Novo ${itemType === 'servico' ? 'Serviço' : 'Produto'}`
+                                        : 'Novo Cadastro'}
+                            </h2>
                             <button className="close-button" onClick={handleCloseModal}>&times;</button>
                         </div>
                         <div className="modal-body">
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="codigo">Código *</label>
-                                    <input
-                                        type="text"
-                                        id="codigo"
-                                        name="codigo"
-                                        value={formData.codigo}
-                                        onChange={handleInputChange}
-                                        placeholder="Ex: 001"
-                                    />
+                            {/* Type selection step — only for new items */}
+                            {!currentProduct && !itemType && (
+                                <div className="type-selection">
+                                    <p className="type-selection-label">O que você deseja cadastrar?</p>
+                                    <div className="type-selection-cards">
+                                        <button
+                                            className="type-card"
+                                            onClick={() => handleSelectType('produto')}
+                                        >
+                                            <FaBox className="type-card-icon" />
+                                            <span className="type-card-title">Produto</span>
+                                            <span className="type-card-desc">Item físico com marca, peso e preço</span>
+                                        </button>
+                                        <button
+                                            className="type-card"
+                                            onClick={() => handleSelectType('servico')}
+                                        >
+                                            <FaConciergeBell className="type-card-icon" />
+                                            <span className="type-card-title">Serviço</span>
+                                            <span className="type-card-desc">Serviço prestado com preço definido</span>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="form-group">
-                                    <label htmlFor="codigoReferencia">Cód. Referência</label>
-                                    <input
-                                        type="text"
-                                        id="codigoReferencia"
-                                        name="codigoReferencia"
-                                        value={formData.codigoReferencia}
-                                        onChange={handleInputChange}
-                                        placeholder="Ex: REF-001"
-                                    />
-                                </div>
-                            </div>
+                            )}
 
-                            <div className="form-group">
-                                <label htmlFor="nome">Nome *</label>
-                                <input
-                                    type="text"
-                                    id="nome"
-                                    name="nome"
-                                    value={formData.nome}
-                                    onChange={handleInputChange}
-                                    placeholder="Nome do produto"
-                                />
-                            </div>
+                            {/* Form fields — shown after type is selected or when editing */}
+                            {itemType && (
+                                <>
+                                    <div className="form-group">
+                                        <label htmlFor="nome">
+                                            {itemType === 'servico' ? 'Nome do Serviço' : 'Nome do Produto'} *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="nome"
+                                            name="nome"
+                                            value={formData.nome}
+                                            onChange={handleInputChange}
+                                            placeholder={itemType === 'servico' ? 'Ex: Consultoria, Manutenção...' : 'Nome do produto'}
+                                        />
+                                    </div>
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="codigoBarra">Código de Barras</label>
-                                    <input
-                                        type="text"
-                                        id="codigoBarra"
-                                        name="codigoBarra"
-                                        value={formData.codigoBarra}
-                                        onChange={handleInputChange}
-                                        placeholder="Ex: 789..."
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="marca">Marca</label>
-                                    <input
-                                        type="text"
-                                        id="marca"
-                                        name="marca"
-                                        value={formData.marca}
-                                        onChange={handleInputChange}
-                                        placeholder="Marca do produto"
-                                    />
-                                </div>
-                            </div>
+                                    {itemType === 'produto' && (
+                                        <>
+                                            <div className="form-group">
+                                                <label htmlFor="marca">Marca</label>
+                                                <input
+                                                    type="text"
+                                                    id="marca"
+                                                    name="marca"
+                                                    value={formData.marca}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Marca do produto"
+                                                />
+                                            </div>
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="secao">Seção</label>
-                                    <input
-                                        type="text"
-                                        id="secao"
-                                        name="secao"
-                                        value={formData.secao}
-                                        onChange={handleInputChange}
-                                        placeholder="Seção na loja"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="peso">Peso (kg)</label>
-                                    <input
-                                        type="number"
-                                        id="peso"
-                                        name="peso"
-                                        value={formData.peso}
-                                        onChange={handleInputChange}
-                                        placeholder="0.00"
-                                        step="0.01"
-                                    />
-                                </div>
-                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group">
+                                                    <label htmlFor="peso">Peso (kg)</label>
+                                                    <input
+                                                        type="number"
+                                                        id="peso"
+                                                        name="peso"
+                                                        value={formData.peso}
+                                                        onChange={handleInputChange}
+                                                        placeholder="0.00"
+                                                        step="0.01"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label htmlFor="preco">Preço de Venda (R$)</label>
+                                                    <input
+                                                        type="text"
+                                                        id="preco"
+                                                        name="preco"
+                                                        value={priceInput}
+                                                        onChange={handleInputChange}
+                                                        placeholder="R$ 0,00"
+                                                    />
+                                                </div>
+                                            </div>
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="preco">Preço de Venda (R$)</label>
-                                    <input
-                                        type="text"
-                                        id="preco"
-                                        name="preco"
-                                        value={priceInput}
-                                        onChange={handleInputChange}
-                                        placeholder="R$ 0,00"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="precoDeCusto">Preço de Custo (R$)</label>
-                                    <input
-                                        type="text"
-                                        id="precoDeCusto"
-                                        name="precoDeCusto"
-                                        value={costPriceInput}
-                                        onChange={handleInputChange}
-                                        placeholder="R$ 0,00"
-                                    />
-                                </div>
-                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="link">Link</label>
+                                                <input
+                                                    type="text"
+                                                    id="link"
+                                                    name="link"
+                                                    value={formData.link}
+                                                    onChange={handleInputChange}
+                                                    placeholder="https://..."
+                                                />
+                                            </div>
+                                        </>
+                                    )}
 
-                            <div className="form-group">
-                                <label htmlFor="link">Link</label>
-                                <input
-                                    type="text"
-                                    id="link"
-                                    name="link"
-                                    value={formData.link}
-                                    onChange={handleInputChange}
-                                    placeholder="https://..."
-                                />
-                            </div>
+                                    {itemType === 'servico' && (
+                                        <div className="form-group">
+                                            <label htmlFor="preco">Preço (R$)</label>
+                                            <input
+                                                type="text"
+                                                id="preco"
+                                                name="preco"
+                                                value={priceInput}
+                                                onChange={handleInputChange}
+                                                placeholder="R$ 0,00"
+                                            />
+                                        </div>
+                                    )}
 
-                            <div className="form-group">
-                                <label htmlFor="descricaoDetalhada">Descrição Detalhada</label>
-                                <textarea
-                                    id="descricaoDetalhada"
-                                    name="descricaoDetalhada"
-                                    value={formData.descricaoDetalhada}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, descricaoDetalhada: e.target.value }))}
-                                    placeholder="Descrição completa do produto..."
-                                    rows={4}
-                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
-                                />
-                            </div>
+                                    <div className="form-group">
+                                        <label htmlFor="descricaoDetalhada">Descrição Detalhada</label>
+                                        <textarea
+                                            ref={textareaRef}
+                                            id="descricaoDetalhada"
+                                            name="descricaoDetalhada"
+                                            value={formData.descricaoDetalhada}
+                                            onChange={(e) => {
+                                                setFormData(prev => ({ ...prev, descricaoDetalhada: e.target.value }));
+                                                autoResize(e.target);
+                                            }}
+                                            placeholder={itemType === 'servico' ? 'Descreva mais sobre o serviço...' : 'Descrição completa do produto...'}
+                                            rows={4}
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
-                        <div className="modal-footer">
-                            <button className="secondary-button" onClick={handleCloseModal}>Cancelar</button>
-                            <button className="primary-button" onClick={handleSaveProduct}>Salvar</button>
-                        </div>
+                        {itemType && (
+                            <div className="modal-footer">
+                                <button className="secondary-button" onClick={handleCloseModal}>Cancelar</button>
+                                <button className="primary-button" onClick={handleSaveProduct}>Salvar</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

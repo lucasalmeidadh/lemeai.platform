@@ -117,7 +117,7 @@ const Sidebar: FC<SidebarProps> = () => {
                         </Link>
                         <Link to="/products" className={`submenu-link ${location.pathname === '/products' ? 'active' : ''}`} onClick={closeSettings}>
                             <FaBox />
-                            <span>Produtos</span>
+                            <span>Produtos e Serviços</span>
                         </Link>
                         <Link to="/whatsapp-connection" className={`submenu-link ${location.pathname === '/whatsapp-connection' ? 'active' : ''}`} onClick={closeSettings}>
                             <FaWhatsapp />
