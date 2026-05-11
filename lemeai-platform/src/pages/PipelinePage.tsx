@@ -26,6 +26,7 @@ interface Deal {
     rawDate: Date; // Added for filtering
     contactId: number;
     statusId: number;
+    tipoLeadId?: number; // New field
     rawValue?: number;
     phone?: string;
     details?: DetalheConversa[];
@@ -46,7 +47,7 @@ interface Column {
 const INITIAL_COLUMNS: Column[] = [
     { id: 'ai_service', title: 'Atendimento IA', statusId: 1, deals: [] },
     { id: 'ai_service_finished', title: 'IA Encerrada', statusId: 8, deals: [] },
-    { id: 'intro', title: 'Atendimento Humano', statusId: 2, deals: [] },
+    { id: 'intro', title: 'Em Qualificação', statusId: 2, deals: [] },
     { id: 'qualified', title: 'Em Negociação', statusId: 5, deals: [] },
     { id: 'proposal', title: 'Proposta Enviada', statusId: 4, deals: [] },
     { id: 'closed', title: 'Venda Fechada', statusId: 3, deals: [] },
@@ -60,6 +61,7 @@ const PipelinePage = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOwner, setSelectedOwner] = useState('all');
+    const [selectedTemperature, setSelectedTemperature] = useState('all');
 
     // Date Filter State
     const [startDate, setStartDate] = useState<Date | null>(null);
@@ -111,7 +113,18 @@ const PipelinePage = () => {
     const fetchOpportunities = useCallback(async (isBackground = false) => {
         if (!isBackground) setIsLoading(true);
         try {
-            const opportunities = await OpportunityService.getAllOpportunities();
+            const [opportunities, chatRes] = await Promise.all([
+                OpportunityService.getAllOpportunities(),
+                apiFetch(`${apiUrl}/api/Chat/ConversasPorVendedor`).then(r => r.json())
+            ]);
+
+            // Map idConversa -> tipoLeadId
+            const leadTypeMap: { [key: number]: number } = {};
+            if (chatRes.sucesso && Array.isArray(chatRes.dados)) {
+                chatRes.dados.forEach((c: any) => {
+                    leadTypeMap[c.idConversa] = c.tipoLeadId;
+                });
+            }
 
             // Map opportunities to deals
             const newColumns = INITIAL_COLUMNS.map(col => ({ ...col, deals: [] as Deal[] }));
@@ -134,9 +147,20 @@ const PipelinePage = () => {
                     rawDate: createdDate,
                     contactId: opp.idContato,
                     statusId: statusId,
+                    tipoLeadId: leadTypeMap[opp.idConversa], // Map from chat data
                     phone: opp.numeroWhatsapp,
                     details: opp.detalhesConversa
                 };
+
+                // Map tag based on status and tipoLeadId
+                if (statusId === 1) {
+                    deal.tag = 'new'; // Always "Novo" for AI service
+                } else {
+                    if (deal.tipoLeadId === 1) deal.tag = 'hot';
+                    else if (deal.tipoLeadId === 2) deal.tag = 'warm';
+                    else if (deal.tipoLeadId === 3) deal.tag = 'cold';
+                    else deal.tag = 'new';
+                }
 
                 const columnIndex = newColumns.findIndex(c => c.statusId === statusId);
                 if (columnIndex !== -1) {
@@ -214,7 +238,7 @@ const PipelinePage = () => {
                 scrollAnimationFrameRef.current = requestAnimationFrame(scroll);
             }
         };
-        
+
         stopAutoScroll();
         scrollAnimationFrameRef.current = requestAnimationFrame(scroll);
     };
@@ -228,7 +252,7 @@ const PipelinePage = () => {
         const { clientX } = e;
         const rect = boardRef.current.getBoundingClientRect();
         const { left, right } = rect;
-        
+
         const scrollZone = 120; // Ativação a 120px da borda
         const maxSpeed = 12;
 
@@ -357,6 +381,12 @@ const PipelinePage = () => {
         deals: col.deals.filter(deal => {
             const matchesSearch = deal.title.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesOwner = selectedOwner === 'all' || deal.owner === selectedOwner;
+            
+            let matchesTemperature = true;
+            if (selectedTemperature !== 'all') {
+                const tempId = parseInt(selectedTemperature);
+                matchesTemperature = deal.tipoLeadId === tempId;
+            }
 
             let matchesDate = true;
             if (startDate && endDate) {
@@ -380,7 +410,7 @@ const PipelinePage = () => {
                 matchesDate = dealDate <= end;
             }
 
-            return matchesSearch && matchesOwner && matchesDate;
+            return matchesSearch && matchesOwner && matchesDate && matchesTemperature;
         })
     }));
 
@@ -400,13 +430,13 @@ const PipelinePage = () => {
                             )}
                         </div>
 
-                        <div className="pipeline-filters" style={{ 
-                            display: 'flex', 
-                            gap: '15px', 
-                            width: '100%', 
+                        <div className="pipeline-filters" style={{
+                            display: 'flex',
+                            gap: '15px',
+                            width: '100%',
                             flexDirection: isMobile ? 'column' : 'row',
                             alignItems: isMobile ? 'stretch' : 'center',
-                            flexWrap: 'wrap' 
+                            flexWrap: 'wrap'
                         }}>
                             <input
                                 type="text"
@@ -426,7 +456,7 @@ const PipelinePage = () => {
                                 onChangeEndDate={setEndDate}
                             />
 
-                            <div style={{ width: isMobile ? '100%' : '200px', minWidth: isMobile ? '0' : '200px' }}>
+                            <div style={{ width: isMobile ? '100%' : '250px', minWidth: isMobile ? '0' : '250px' }}>
                                 <CustomSelect
                                     value={selectedOwner}
                                     onChange={(val) => setSelectedOwner(val)}
@@ -436,14 +466,27 @@ const PipelinePage = () => {
                                     ]}
                                 />
                             </div>
+
+                            <div style={{ width: isMobile ? '100%' : '250px', minWidth: isMobile ? '0' : '250px' }}>
+                                <CustomSelect
+                                    value={selectedTemperature}
+                                    onChange={(val) => setSelectedTemperature(val)}
+                                    options={[
+                                        { value: 'all', label: 'Todas as Temperaturas' },
+                                        { value: '1', label: 'Quente' },
+                                        { value: '2', label: 'Morno' },
+                                        { value: '3', label: 'Frio' }
+                                    ]}
+                                />
+                            </div>
                         </div>
                     </div>
 
                     {isMobile ? (
                         <div style={{ padding: '0 0 20px 0', flex: 1, overflowY: 'auto' }}>
-                            <MobilePipelineAccordion 
-                                columns={filteredColumns} 
-                                isLoading={isLoading} 
+                            <MobilePipelineAccordion
+                                columns={filteredColumns}
+                                isLoading={isLoading}
                                 onUpdate={fetchOpportunities}
                                 onSummarize={(id) => {
                                     setDealToSummarize(id);
@@ -489,11 +532,9 @@ const PipelinePage = () => {
                                                                 >
                                                                     <div className="card-top-row">
                                                                         <div className="card-title">{deal.title}</div>
-                                                                        {column.id === 'ai_service' && (
-                                                                            <span className={`card-tag tag-${deal.tag}`}>
-                                                                                {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
-                                                                            </span>
-                                                                        )}
+                                                                        <span className={`card-tag tag-${deal.tag}`}>
+                                                                            {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
+                                                                        </span>
                                                                     </div>
                                                                     <div className="card-value">{deal.value}</div>
                                                                     <div className="card-footer">

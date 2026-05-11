@@ -9,7 +9,8 @@ import {
     FaUser,
     FaSignOutAlt,
     FaComments,
-    FaCalendarAlt
+    FaCalendarAlt,
+    FaQuestionCircle
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 

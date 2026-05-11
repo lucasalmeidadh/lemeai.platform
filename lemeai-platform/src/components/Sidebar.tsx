@@ -11,7 +11,8 @@ import {
     FaBox,
     FaWhatsapp,
     FaCalendarAlt,
-    FaDesktop
+    FaDesktop,
+    FaQuestionCircle
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -34,6 +35,10 @@ const Sidebar: FC<SidebarProps> = () => {
             clearUnreadCount();
         }
     }, [location.pathname, clearUnreadCount]);
+
+    useEffect(() => {
+        setIsSettingsOpen(false);
+    }, [location.pathname]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -112,7 +117,7 @@ const Sidebar: FC<SidebarProps> = () => {
                         </Link>
                         <Link to="/products" className={`submenu-link ${location.pathname === '/products' ? 'active' : ''}`} onClick={closeSettings}>
                             <FaBox />
-                            <span>Produtos</span>
+                            <span>Produtos e Serviços</span>
                         </Link>
                         <Link to="/whatsapp-connection" className={`submenu-link ${location.pathname === '/whatsapp-connection' ? 'active' : ''}`} onClick={closeSettings}>
                             <FaWhatsapp />

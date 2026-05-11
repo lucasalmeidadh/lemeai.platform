@@ -1,8 +1,7 @@
 /* ========== WhatsApp Connection Page ========== */
 
 .whatsapp-connection-page {
-    max-width: 720px;
-    margin: 0 auto;
+    width: 100%;
 }
 
 /* ---------- Status Card ---------- */
@@ -283,26 +282,108 @@
     box-shadow: none;
 }
 
+/* ---------- WhatsApp Connection Options (Full Width Layout) ---------- */
+.whatsapp-options-layout {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 32px;
+    margin-top: 32px;
+    width: 100%;
+    max-width: 100%; /* Removido limite fixo para ocupar tudo */
+    align-items: stretch;
+}
+
+.whatsapp-main-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 48px; /* Aumentado para dar mais ar */
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    height: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.whatsapp-secondary-column {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    height: 100%;
+}
+
+.whatsapp-card-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.whatsapp-card-header h2 {
+    font-size: 1.75rem; /* Aumentado */
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.whatsapp-benefits-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.benefit-item {
+    display: flex;
+    gap: 16px;
+    padding: 24px;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(0,0,0,0.02);
+    border-radius: 16px;
+    transition: transform 0.2s;
+}
+
+.benefit-item:hover {
+    transform: translateY(-2px);
+    background: white;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.whatsapp-side-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 32px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-box-tip {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+}
+
+.full-btn {
+    width: 100%;
+    padding: 16px; /* Botões mais robustos */
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
 /* ---------- Responsive ---------- */
-@media (max-width: 640px) {
-    .whatsapp-status-card,
-    .qr-code-section,
-    .connected-info {
-        padding: 32px 20px;
-    }
-
-    .qr-code-container img {
-        width: 220px;
-        height: 220px;
-    }
-
-    .whatsapp-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .whatsapp-actions button {
-        width: 100%;
-        justify-content: center;
+@media (max-width: 1100px) {
+    .whatsapp-options-layout {
+        grid-template-columns: 1fr;
+        max-width: 800px;
     }
 }

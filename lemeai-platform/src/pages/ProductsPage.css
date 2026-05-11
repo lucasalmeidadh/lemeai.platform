@@ -46,8 +46,8 @@
     gap: 10px;
 }
 
-/* Modal Styles */
-.modal-overlay {
+/* Modal Styles — scoped to .products-page to avoid global collisions */
+.products-page .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -58,92 +58,103 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
 }
 
-.modal-content {
+.products-page .modal-content {
     background: var(--bg-secondary);
-    /* Was white */
     padding: 0;
     border-radius: 8px;
     width: 500px;
     max-width: 90%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
     box-shadow: var(--shadow-md);
-    /* Was 0 4px 6px rgba(0, 0, 0, 0.1) */
+    flex-shrink: 0;
 }
 
-.modal-header {
+.products-page .modal-header {
     padding: 20px;
     border-bottom: 1px solid var(--border-color);
-    /* Was #eee */
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
-.modal-header h2 {
+.products-page .modal-header h2 {
     margin: 0;
     font-size: 18px;
     color: var(--text-primary);
 }
 
-.close-button {
+.products-page .close-button {
     background: none;
     border: none;
     font-size: 24px;
     cursor: pointer;
     color: var(--text-primary);
-    /* Was var(--text-secondary) */
     opacity: 0.8;
     transition: opacity 0.2s;
 }
 
-.close-button:hover {
+.products-page .close-button:hover {
     opacity: 1;
 }
 
-.modal-body {
+.products-page .modal-body {
     padding: 20px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
-.form-group {
+.products-page .form-group {
     margin-bottom: 15px;
 }
 
-.form-group label {
+.products-page .form-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
     color: var(--text-secondary);
-    /* Was #555 */
 }
 
-.form-group input,
-.form-group textarea {
+.products-page .form-group input,
+.products-page .form-group textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--border-color);
-    /* Was #ddd */
     border-radius: 4px;
     font-size: 14px;
     background-color: var(--bg-primary);
-    /* Added for dark mode inputs */
     color: var(--text-primary);
+    box-sizing: border-box;
 }
 
-.form-group input:focus,
-.form-group textarea:focus {
+.products-page .form-group input:focus,
+.products-page .form-group textarea:focus {
     border-color: var(--petroleum-blue);
-    /* Was #007bff */
     outline: none;
 }
 
-.modal-footer {
+.products-page .form-group textarea {
+    resize: none;
+    overflow: hidden;
+    min-height: 100px;
+    line-height: 1.5;
+    font-family: inherit;
+}
+
+.products-page .modal-footer {
     padding: 20px;
     border-top: 1px solid var(--border-color);
-    /* Was #eee */
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .primary-button {
@@ -176,5 +187,73 @@
 
 .secondary-button:hover {
     background-color: var(--border-color);
-    /* Was #5a6268 */
+}
+
+/* Type Selection Cards */
+.products-page .type-selection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.products-page .type-selection-label {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin: 0 0 20px 0;
+    font-weight: 500;
+}
+
+.products-page .type-selection-cards {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+}
+
+.products-page .type-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.products-page .type-card:hover {
+    border-color: var(--petroleum-blue);
+    background: var(--petroleum-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.products-page .type-card-icon {
+    font-size: 28px;
+    color: var(--petroleum-blue);
+}
+
+.products-page .type-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.products-page .type-card-desc {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+}
+
+.products-page .form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.products-page .form-row .form-group {
+    flex: 1;
 }

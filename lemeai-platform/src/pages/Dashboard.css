@@ -66,6 +66,16 @@
   margin-bottom: 40px;
 }
 
+.full-width-chart {
+  grid-column: span 2;
+}
+
+@media (max-width: 1024px) {
+  .full-width-chart {
+    grid-column: span 1;
+  }
+}
+
 @media (max-width: 1024px) {
   .dashboard-charts-area {
     grid-template-columns: 1fr;

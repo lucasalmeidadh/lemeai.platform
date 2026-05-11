@@ -18,7 +18,7 @@ const ConversationChart: React.FC<ConversationChartProps> = ({ data }) => {
     // Chart colors based on theme
     const axisColor = isDark ? '#adb5bd' : '#6c757d';
     const gridColor = isDark ? '#343a40' : '#e9ecef';
-    const barColor = '#005f73'; // Brand color, works on both but could be lighter on dark
+    const barColor = 'var(--petroleum-blue)';
     const tooltipBg = isDark ? '#1e1e1e' : '#fff';
     const tooltipColor = isDark ? '#e9ecef' : '#000';
     const tooltipBorder = isDark ? '1px solid #343a40' : 'none';

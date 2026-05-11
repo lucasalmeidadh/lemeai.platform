@@ -1,5 +1,5 @@
 import { useState, useEffect, type FC, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
 import { useTheme } from '../contexts/ThemeContext'; // Assuming ThemeContext provides the theme
 import {
@@ -22,21 +22,6 @@ interface TopbarProps {
 const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }) => {
     const location = useLocation();
     
-    const getPageTitle = () => {
-        switch(location.pathname) {
-            case '/dashboard': return 'Painel Geral';
-            case '/pipeline': return 'Oportunidades';
-            case '/contacts': return 'Contatos';
-            case '/chat': return 'Chat de Atendimento';
-            case '/agenda': return 'Agenda';
-            case '/users': return 'Gestão de Usuários';
-            case '/chat-rules': return 'Regras do Chat';
-            case '/products': return 'Produtos';
-            case '/whatsapp-connection': return 'Conexão WhatsApp';
-            default: return 'Leme AI';
-        }
-    };
-
     return (
         <header className="topbar">
             <div className="topbar-left">
@@ -47,12 +32,19 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
             <div className="topbar-right">
                 <div className="topbar-nav-items">
-                    <button className="topbar-item" title="Ajuda">
+                    {/* 
+                    <Link 
+                        to="/help" 
+                        className={`topbar-item ${location.pathname === '/help' ? 'active' : ''}`} 
+                        title="Ajuda"
+                        style={{ textDecoration: 'none' }}
+                    >
                         <FaQuestionCircle />
                         <span>Ajuda</span>
-                    </button>
+                    </Link>
                     
                     <div className="topbar-divider"></div>
+                    */}
                     
                     <button className="topbar-item" onClick={onViewProfile}>
                         <FaUser />

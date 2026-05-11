@@ -95,6 +95,50 @@
   background-color: #ffffff;
 }
 
+.kpi-card.variant-danger {
+  border-left: 4px solid #ef4444;
+}
+.kpi-card.variant-danger .kpi-value {
+  color: #ef4444;
+}
+.kpi-card.variant-danger .kpi-icon-wrapper {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.kpi-card.variant-warning {
+  border-left: 4px solid #f59e0b;
+}
+.kpi-card.variant-warning .kpi-value {
+  color: #f59e0b;
+}
+.kpi-card.variant-warning .kpi-icon-wrapper {
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.kpi-card.variant-success {
+  border-left: 4px solid #10b981;
+}
+.kpi-card.variant-success .kpi-value {
+  color: #10b981;
+}
+.kpi-card.variant-success .kpi-icon-wrapper {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.kpi-card.variant-info {
+  border-left: 4px solid #3b82f6;
+}
+.kpi-card.variant-info .kpi-value {
+  color: #3b82f6;
+}
+.kpi-card.variant-info .kpi-icon-wrapper {
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .kpi-value {
