@@ -46,7 +46,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     <div className="topbar-divider"></div>
                     */}
                     
-                    <button className="topbar-item" onClick={onViewProfile}>
+                    <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
                         <FaUser />
                         <span>Minha conta</span>
                     </button>

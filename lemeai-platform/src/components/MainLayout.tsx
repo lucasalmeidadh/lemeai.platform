@@ -13,6 +13,9 @@ import {
     FaQuestionCircle
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
+import OnboardingModal from './Onboarding/OnboardingModal';
+import OnboardingTooltip from './Onboarding/OnboardingTooltip';
+import { useOnboarding } from '../contexts/OnboardingContext';
 
 const MainLayout = () => {
     // Mobile menu state
@@ -20,11 +23,36 @@ const MainLayout = () => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const { setSteps } = useOnboarding();
 
     // Close mobile menu on route change
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [location.pathname]);
+
+    // Define onboarding steps
+    useEffect(() => {
+        setSteps([
+            {
+                targetId: 'sidebar-pipeline',
+                title: 'Oportunidades',
+                content: 'Gerencie seu funil de vendas e acompanhe cada lead de perto.',
+                position: 'right'
+            },
+            {
+                targetId: 'sidebar-chat',
+                title: 'Chat em Tempo Real',
+                content: 'Atenda seus clientes de diversos canais em uma única interface.',
+                position: 'right'
+            },
+            {
+                targetId: 'topbar-user-profile',
+                title: 'Seu Perfil',
+                content: 'Acesse as configurações da sua conta e altere sua senha por aqui.',
+                position: 'bottom'
+            }
+        ]);
+    }, [setSteps]);
 
     // Handlers
     const handleLogout = () => {
@@ -106,6 +134,10 @@ const MainLayout = () => {
                         <Outlet />
                     </main>
                 </div>
+
+                {/* Onboarding Components */}
+                <OnboardingModal />
+                <OnboardingTooltip />
             </div>
         </GlobalNotificationProvider>
     );

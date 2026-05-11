@@ -64,8 +64,12 @@ const PipelinePage = () => {
     const [selectedTemperature, setSelectedTemperature] = useState('all');
 
     // Date Filter State
-    const [startDate, setStartDate] = useState<Date | null>(null);
-    const [endDate, setEndDate] = useState<Date | null>(null);
+    const [startDate, setStartDate] = useState<Date | null>(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        return d;
+    });
+    const [endDate, setEndDate] = useState<Date | null>(new Date());
 
     // Summary State
     const [isSummaryModalOpen, setSummaryModalOpen] = useState(false);

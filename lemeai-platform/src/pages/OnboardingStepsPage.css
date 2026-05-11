@@ -1,0 +1,168 @@
+.onboarding-page {
+    padding: 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.onboarding-header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--petroleum-light);
+    color: var(--petroleum-blue);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.onboarding-header h1 {
+    font-size: 2.5rem;
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 800;
+}
+
+.onboarding-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 600px;
+}
+
+.steps-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.step-card {
+    background: var(--bg-secondary);
+    border-radius: 24px;
+    padding: 35px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color-soft);
+    position: relative;
+    overflow: hidden;
+}
+
+.step-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: var(--petroleum-blue);
+}
+
+.step-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--petroleum-light);
+    color: var(--petroleum-blue);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.step-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+    color: var(--petroleum-blue);
+    font-size: 28px;
+    transition: all 0.3s ease;
+}
+
+.step-card:hover .step-icon {
+    background: var(--petroleum-blue);
+    color: white;
+    transform: scale(1.1) rotate(5deg);
+}
+
+.step-card h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.step-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 35px;
+    flex-grow: 1;
+    font-size: 0.95rem;
+}
+
+.step-button {
+    width: 100%;
+    padding: 14px 24px;
+    background: var(--petroleum-blue);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.step-button:hover {
+    background: var(--petroleum-blue-hover);
+    gap: 16px;
+}
+
+.onboarding-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding: 20px;
+    background: var(--petroleum-light);
+    border-radius: 16px;
+    color: var(--text-secondary);
+}
+
+.onboarding-footer strong {
+    color: var(--petroleum-blue);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .onboarding-page {
+        padding: 20px;
+    }
+    
+    .onboarding-header h1 {
+        font-size: 2rem;
+    }
+}

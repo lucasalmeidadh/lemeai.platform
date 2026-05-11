@@ -13,13 +13,14 @@ import UserManagementPage from './pages/UserManagementPage.tsx';
 // import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
 import SystemPromptsPage from './pages/SystemPromptsPage.tsx';
 import ProductsPage from './pages/ProductsPage.tsx';
-import WhatsAppConnectionPage from './pages/WhatsAppConnectionPage.tsx';
+import ConnectionsPage from './pages/ConnectionsPage.tsx';
 import './index.css';
 import NotFoundPage from './pages/NotFoundPage.tsx';
 import AgendaPage from './pages/AgendaPage.tsx';
 import AnalyticsPage from './pages/AnalyticsPage.tsx';
 import ChatDashboard from './pages/ChatDashboard.tsx';
 import HelpPage from './pages/HelpPage.tsx';
+import OnboardingStepsPage from './pages/OnboardingStepsPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       {
         element: <MainLayout />,
         children: [
+          { path: "primeiros-passos", element: <OnboardingStepsPage /> },
           { path: "chat", element: <ChatPage /> },
           { path: "dashboard", element: <Dashboard /> },
           { path: "monitoramento", element: <ChatDashboard /> },
@@ -42,7 +44,7 @@ const router = createBrowserRouter([
           // { path: "profiles", element: <ProfileManagementPage /> },
           { path: "chat-rules", element: <SystemPromptsPage /> },
           { path: "products", element: <ProductsPage /> },
-          { path: "whatsapp-connection", element: <WhatsAppConnectionPage /> },
+          { path: "connections", element: <ConnectionsPage /> },
           { path: "help", element: <HelpPage /> },
         ]
       },
@@ -52,9 +54,12 @@ const router = createBrowserRouter([
 ]);
 
 import { ThemeProvider } from './contexts/ThemeContext.tsx';
+import { OnboardingProvider } from './contexts/OnboardingContext.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <ThemeProvider>
-    <RouterProvider router={router} />
+    <OnboardingProvider>
+      <RouterProvider router={router} />
+    </OnboardingProvider>
   </ThemeProvider>
 );

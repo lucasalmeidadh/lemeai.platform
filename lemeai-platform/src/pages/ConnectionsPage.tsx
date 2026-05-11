@@ -1,13 +1,28 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { FaWhatsapp, FaSignOutAlt, FaTrash, FaSync, FaPlug, FaCheckCircle, FaLayerGroup, FaLock, FaExclamationTriangle } from 'react-icons/fa';
+import { 
+    FaWhatsapp, 
+    FaSignOutAlt, 
+    FaTrash, 
+    FaSync, 
+    FaPlug, 
+    FaCheckCircle, 
+    FaLayerGroup, 
+    FaLock, 
+    FaExclamationTriangle,
+    FaInstagram,
+    FaFacebook
+} from 'react-icons/fa';
 import { EvolutionService } from '../services/EvolutionService';
 import { MetaService, type MetaConfig } from '../services/MetaService';
-import './WhatsAppConnectionPage.css';
+import { InstagramService, type InstagramAccount } from '../services/InstagramService';
+import './ConnectionsPage.css';
 
 type PageState = 'loading' | 'no-instance' | 'qr-code' | 'connected-meta' | 'connected-evolution';
+type ActiveTab = 'whatsapp' | 'instagram';
 
-const WhatsAppConnectionPage = () => {
+const ConnectionsPage = () => {
+    const [activeTab, setActiveTab] = useState<ActiveTab>('whatsapp');
     const [pageState, setPageState] = useState<PageState>('loading');
     const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
@@ -16,8 +31,14 @@ const WhatsAppConnectionPage = () => {
     const [statusInfo, setStatusInfo] = useState<string>('');
     const [metaConfig, setMetaConfig] = useState<MetaConfig | null>(null);
     const [isConnectingMeta, setIsConnectingMeta] = useState(false);
-    const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    
+    // Instagram States
+    const [instagramAccounts, setInstagramAccounts] = useState<InstagramAccount[]>([]);
+    const [isInstagramConnected, setIsInstagramConnected] = useState(false);
+    const [isConnectingInstagram, setIsConnectingInstagram] = useState(false);
+    const [isLoadingInstagram, setIsLoadingInstagram] = useState(false);
 
+    const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const metaDataRef = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
 
     const stopPolling = useCallback(() => {
@@ -45,7 +66,6 @@ const WhatsAppConnectionPage = () => {
             }
         } catch (error) {
             console.error('Erro ao verificar status:', error);
-            // On error, let's not force qr-code. Just keep current state or go to no-instance if error is persistent
         }
     }, [stopPolling]);
 
@@ -108,13 +128,9 @@ const WhatsAppConnectionPage = () => {
                 if (response.authResponse) {
                     const code = response.authResponse.code;
                     metaDataRef.current.code = code;
-
-                    // Se o postMessage já chegou, envia para o backend
                     if (metaDataRef.current.phoneNumberId && metaDataRef.current.wabaId) {
                         enviarParaBackendMeta(code, metaDataRef.current.phoneNumberId, metaDataRef.current.wabaId);
                     }
-                } else {
-                    console.log('Login Meta cancelado ou sem resposta:', response);
                 }
             },
             {
@@ -130,10 +146,102 @@ const WhatsAppConnectionPage = () => {
         );
     }, [metaConfig, enviarParaBackendMeta]);
 
+    // Instagram Methods
+    const loadInstagramStatus = useCallback(async () => {
+        setIsLoadingInstagram(true);
+        try {
+            const res = await InstagramService.getStatus();
+            if (res.sucesso) {
+                setIsInstagramConnected(res.dados.conectado);
+                setInstagramAccounts(res.dados.contas || []);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar status Instagram:', error);
+        } finally {
+            setIsLoadingInstagram(false);
+        }
+    }, []);
+
+    const handleInstagramLogin = useCallback(() => {
+        console.log('Iniciando handleInstagramLogin...');
+        
+        if (!metaConfig?.appId) {
+            console.error('AppId não encontrado nas configurações.');
+            toast.error('Configurações da Meta não carregadas.');
+            return;
+        }
+
+        if (!(window as any).FB) {
+            console.error('Objeto FB não encontrado no window.');
+            toast.error('SDK do Facebook ainda não carregou. Aguarde um instante e tente novamente.');
+            return;
+        }
+
+        setIsConnectingInstagram(true);
+        console.log('Chamando FB.login com AppId:', metaConfig.appId);
+
+        (window as any).FB.login(
+            (response: any) => {
+                console.log('Resposta do FB.login:', response);
+                
+                if (response.authResponse?.accessToken) {
+                    // Usamos uma função anônima async interna para não quebrar o SDK da Meta
+                    (async () => {
+                        try {
+                            const res = await InstagramService.conectar(response.authResponse.accessToken);
+                            if (res.sucesso) {
+                                toast.success('Instagram conectado com sucesso!');
+                                loadInstagramStatus();
+                            } else {
+                                toast.error(res.mensagem || 'Erro ao conectar Instagram.');
+                            }
+                        } catch (error) {
+                            console.error('Erro no processamento do token:', error);
+                            toast.error('Erro ao processar conexão.');
+                        } finally {
+                            setIsConnectingInstagram(false);
+                        }
+                    })();
+                } else {
+                    console.warn('Login cancelado ou sem authResponse.');
+                    setIsConnectingInstagram(false);
+                    toast.error('Conexão cancelada ou não autorizada no Facebook.');
+                }
+            },
+            {
+                scope: [
+                    'instagram_basic',
+                    'instagram_manage_messages',
+                    'instagram_manage_comments',
+                    'pages_messaging',
+                    'pages_manage_metadata',
+                    'pages_show_list',
+                    'leads_retrieval',
+                    'ads_management'
+                ].join(','),
+                return_scopes: true
+            }
+        );
+    }, [metaConfig, loadInstagramStatus]);
+
+    const handleDisconnectInstagram = async (paginaId: string) => {
+        if (!confirm('Tem certeza que deseja desconectar esta conta?')) return;
+        try {
+            const res = await InstagramService.desconectar(paginaId);
+            if (res.sucesso) {
+                toast.success('Conta desconectada com sucesso.');
+                loadInstagramStatus();
+            } else {
+                toast.error(res.mensagem || 'Erro ao desconectar.');
+            }
+        } catch (error) {
+            toast.error('Erro ao desconectar.');
+        }
+    };
+
     useEffect(() => {
         if (!metaConfig?.appId) return;
 
-        // Função que inicializa o SDK com nosso appId
         const initFB = () => {
             (window as any).FB.init({
                 appId: metaConfig.appId,
@@ -144,48 +252,35 @@ const WhatsAppConnectionPage = () => {
         };
 
         if ((window as any).FB) {
-            // SDK já carregado (cache do browser ou re-render) — só inicializar
             initFB();
         } else {
-            // SDK não carregado: definir fbAsyncInit ANTES e depois carregar o script
             (window as any).fbAsyncInit = initFB;
-
             const script = document.createElement('script');
-            script.src = "https://connect.facebook.net/en_US/sdk.js";
+            script.src = "https://connect.facebook.net/pt_BR/sdk.js";
             script.async = true;
             script.defer = true;
             script.crossOrigin = "anonymous";
             document.body.appendChild(script);
         }
 
-        // Listener para postMessage da Meta (com JSON.parse conforme documentação)
         const handleMessage = (event: MessageEvent) => {
             if (!event.origin.endsWith('facebook.com')) return;
-
             try {
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-
                 if (data.type === 'WA_EMBEDDED_SIGNUP') {
                     if (data.event === 'FINISH' || data.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING') {
                         const phoneNumberId = data.data?.phone_number_id;
                         const wabaId = data.data?.waba_id;
-
                         if (phoneNumberId && wabaId) {
                             metaDataRef.current.phoneNumberId = phoneNumberId;
                             metaDataRef.current.wabaId = wabaId;
-
-                            // Se já temos o code, envia para o backend
                             if (metaDataRef.current.code) {
                                 enviarParaBackendMeta(metaDataRef.current.code, phoneNumberId, wabaId);
                             }
                         }
-                    } else if (data.event === 'CANCEL') {
-                        console.log('Embedded Signup cancelado na tela:', data.data?.current_step);
                     }
                 }
-            } catch {
-                // Dados não são JSON válido, ignorar
-            }
+            } catch {}
         };
 
         window.addEventListener('message', handleMessage);
@@ -195,30 +290,23 @@ const WhatsAppConnectionPage = () => {
     const initializePage = useCallback(async () => {
         setPageState('loading');
         try {
-            // Busca configurações da Meta
             const metaRes = await MetaService.getMetaConfig();
             if (metaRes.sucesso) {
                 setMetaConfig(metaRes.dados);
             }
 
-            // Verifica qual API está sendo usada através do status central
             const metaStatus = await MetaService.checkStatus();
-            
             if (metaStatus.sucesso) {
                 if (metaStatus.usaAPIMeta) {
                     setPageState('connected-meta');
-                    return;
-                }
-
-                if (metaStatus.usaAPIEvolution) {
-                    // Se usa Evolution, buscamos o status da instância para saber se mostra QR ou "Conectado"
+                } else if (metaStatus.usaAPIEvolution) {
                     try {
                         const statusRes = await EvolutionService.getStatus();
                         if (statusRes.sucesso && statusRes.dados) {
                             const state = statusRes.dados.state || statusRes.dados.status || '';
                             setStatusInfo(state);
                             if (state === 'open' || state === 'connected') {
-                                setPageState('connected-evolution'); // Usando o estado específico para evolução
+                                setPageState('connected-evolution');
                             } else {
                                 setPageState('qr-code');
                                 startQRPolling();
@@ -229,18 +317,18 @@ const WhatsAppConnectionPage = () => {
                     } catch (e) {
                         setPageState('no-instance');
                     }
-                    return;
+                } else {
+                    setPageState('no-instance');
                 }
             }
-
-            // Se nada estiver ativo no status, mostra as opções de conexão
-            setPageState('no-instance');
+            
+            // Carrega Instagram independentemente
+            loadInstagramStatus();
         } catch (error) {
             console.error('Erro ao inicializar página:', error);
-            toast.error('Erro ao verificar conexão com WhatsApp.');
             setPageState('no-instance');
         }
-    }, [startQRPolling]);
+    }, [startQRPolling, loadInstagramStatus]);
 
     useEffect(() => {
         initializePage();
@@ -253,14 +341,12 @@ const WhatsAppConnectionPage = () => {
             const res = await EvolutionService.criarInstancia();
             if (res.sucesso) {
                 toast.success('Instância criada com sucesso!');
-                // After creating, go to QR code state
                 setPageState('qr-code');
                 startQRPolling();
             } else {
                 toast.error(res.mensagem || 'Erro ao criar instância.');
             }
         } catch (error) {
-            console.error(error);
             toast.error('Erro ao criar instância.');
         } finally {
             setIsCreating(false);
@@ -281,7 +367,6 @@ const WhatsAppConnectionPage = () => {
                 toast.error(res.mensagem || 'Erro ao desconectar.');
             }
         } catch (error) {
-            console.error(error);
             toast.error('Erro ao desconectar.');
         } finally {
             setIsLoggingOut(false);
@@ -302,14 +387,117 @@ const WhatsAppConnectionPage = () => {
                 toast.error(res.mensagem || 'Erro ao remover instância.');
             }
         } catch (error) {
-            console.error(error);
             toast.error('Erro ao remover instância.');
         } finally {
             setIsRemoving(false);
         }
     };
 
-    const renderLoading = () => (
+    // Renders
+    const renderWhatsAppTab = () => {
+        if (pageState === 'loading') return renderSkeleton();
+        
+        switch (pageState) {
+            case 'no-instance': return renderNoInstance();
+            case 'qr-code': return renderQRCode();
+            case 'connected-evolution': return renderConnectedEvolution();
+            case 'connected-meta': return renderConnectedMeta();
+            default: return renderSkeleton();
+        }
+    };
+
+    const renderInstagramTab = () => {
+        if (isLoadingInstagram) return renderSkeleton();
+
+        return (
+            <div className="instagram-connection-layout">
+                {!isInstagramConnected ? (
+                    <div className="whatsapp-main-card instagram-card">
+                        <div className="whatsapp-card-header">
+                            <div className="whatsapp-status-icon instagram-icon">
+                                <FaInstagram />
+                            </div>
+                            <div>
+                                <h2>Conectar Instagram</h2>
+                                <span className="whatsapp-badge-official">Meta Business</span>
+                            </div>
+                        </div>
+
+                        <p className="whatsapp-status-desc">
+                            Conecte sua conta Instagram Business para receber e responder DMs, comentários e gerenciar leads automaticamente com nossa IA.
+                        </p>
+
+                        <div className="whatsapp-benefits-grid">
+                            <div className="benefit-item">
+                                <FaCheckCircle className="benefit-icon" />
+                                <div className="benefit-text">
+                                    <h4>DMs & Stories</h4>
+                                    <p>Responda mensagens diretas e interações de stories em tempo real.</p>
+                                </div>
+                            </div>
+                            <div className="benefit-item">
+                                <FaLayerGroup className="benefit-icon" />
+                                <div className="benefit-text">
+                                    <h4>Comentários</h4>
+                                    <p>Converta comentários em posts em oportunidades de venda no CRM.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            className="full-btn btn-instagram"
+                            onClick={handleInstagramLogin}
+                            disabled={isConnectingInstagram}
+                        >
+                            <FaFacebook />
+                            {isConnectingInstagram ? 'Conectando...' : 'Conectar com Facebook'}
+                        </button>
+                    </div>
+                ) : (
+                    <div className="instagram-accounts-grid">
+                        {instagramAccounts.map(account => (
+                            <div key={account.paginaId} className="dashboard-card instagram-account-card">
+                                <div className="connected-info">
+                                    <div className="connected-icon-wrapper instagram">
+                                        <FaInstagram />
+                                    </div>
+                                    <div className="whatsapp-badge connected">
+                                        <span className="whatsapp-badge-dot" />
+                                        Ativo
+                                    </div>
+                                    <div className="connected-details">
+                                        <h3>@{account.instagramUsername || account.paginaNome}</h3>
+                                        <p>Conectado via Página: {account.paginaNome}</p>
+                                        <div className="meta-info-tags">
+                                            <span className="tag">DMs Ativas</span>
+                                            {account.webhooksAtivos && <span className="tag">Webhooks OK</span>}
+                                        </div>
+                                    </div>
+                                    <div className="whatsapp-actions">
+                                        <button
+                                            className="danger-button"
+                                            onClick={() => handleDisconnectInstagram(account.paginaId)}
+                                        >
+                                            <FaSignOutAlt size={14} />
+                                            Desconectar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {/* Botão para adicionar mais contas se necessário */}
+                        <div className="add-account-card" onClick={handleInstagramLogin}>
+                            <FaPlug />
+                            <span>Conectar outra conta</span>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderSkeleton = () => (
         <div className="dashboard-card">
             <div className="whatsapp-skeleton">
                 <div className="whatsapp-skeleton-circle" />
@@ -321,10 +509,9 @@ const WhatsAppConnectionPage = () => {
 
     const renderNoInstance = () => (
         <div className="whatsapp-options-layout">
-            {/* Coluna Principal: API Oficial */}
             <div className="whatsapp-main-card">
                 <div className="whatsapp-card-header">
-                    <div className="whatsapp-status-icon meta" style={{ marginBottom: 0, width: 48, height: 48, fontSize: 24 }}>
+                    <div className="whatsapp-status-icon meta">
                         <FaWhatsapp />
                     </div>
                     <div>
@@ -332,110 +519,41 @@ const WhatsAppConnectionPage = () => {
                         <span className="whatsapp-badge-official">Recomendado</span>
                     </div>
                 </div>
-
-                <p className="whatsapp-status-desc" style={{ minHeight: 'auto' }}>
-                    Conexão direta em nuvem, homologada pelo WhatsApp. Feita para empresas que não podem parar e precisam de máxima escala e confiabilidade.
+                <p className="whatsapp-status-desc">
+                    Conexão direta em nuvem, homologada pelo WhatsApp. Máxima escala e confiabilidade.
                 </p>
-
                 <div className="whatsapp-benefits-grid">
                     <div className="benefit-item">
                         <FaCheckCircle className="benefit-icon" />
                         <div className="benefit-text">
                             <h4>Estabilidade 99.9%</h4>
-                            <p>Não depende do seu celular estar ligado ou com internet.</p>
-                        </div>
-                    </div>
-                    <div className="benefit-item">
-                        <FaLayerGroup className="benefit-icon" />
-                        <div className="benefit-text">
-                            <h4>Múltiplos Dispositivos</h4>
-                            <p>Use no celular e no CRM simultaneamente sem desconectar.</p>
+                            <p>Independente de celular ligado ou com internet.</p>
                         </div>
                     </div>
                     <div className="benefit-item">
                         <FaLock className="benefit-icon" />
                         <div className="benefit-text">
                             <h4>Segurança Oficial</h4>
-                            <p>Integrado diretamente com os servidores da Meta (Facebook).</p>
-                        </div>
-                    </div>
-                    <div className="benefit-item">
-                        <FaSync className="benefit-icon" />
-                        <div className="benefit-text">
-                            <h4>Sem Quedas</h4>
-                            <p>Evite desconexões comuns em APIs de leitura de QR Code.</p>
+                            <p>Integrado diretamente com os servidores da Meta.</p>
                         </div>
                     </div>
                 </div>
-
-                <button
-                    className="full-btn btn-primary"
-                    onClick={handleMetaLogin}
-                    disabled={isConnectingMeta}
-                >
+                <button className="full-btn btn-primary" onClick={handleMetaLogin} disabled={isConnectingMeta}>
                     <FaWhatsapp />
                     {isConnectingMeta ? 'Conectando...' : 'Configurar API Oficial'}
                 </button>
             </div>
-
-            {/* Coluna Secundária: QR Code e Info */}
             <div className="whatsapp-secondary-column">
                 <div className="whatsapp-side-card">
-                    <div className="whatsapp-status-icon evolution" style={{ width: 40, height: 40, fontSize: 20, marginBottom: 12 }}>
+                    <div className="whatsapp-status-icon evolution">
                         <FaSync />
                     </div>
-                    <h3>Conexão via QR Code</h3>
-                    <p>
-                        Utiliza a Evolution API. Uma alternativa mais simples, porém requer que um aparelho celular físico mantenha a conexão ativa.
-                    </p>
-                    <button
-                        className="full-btn btn-outline"
-                        onClick={handleCreateInstance}
-                        disabled={isCreating}
-                    >
+                    <h3>QR Code (Evolution)</h3>
+                    <p>Alternativa simples, requer aparelho físico conectado.</p>
+                    <button className="full-btn btn-outline" onClick={handleCreateInstance} disabled={isCreating}>
                         <FaPlug />
                         {isCreating ? 'Iniciando...' : 'Escanear QR Code'}
                     </button>
-                </div>
-
-                <div className="info-box-tip">
-                    <FaExclamationTriangle />
-                    <div>
-                        <h4>Por que escolher a API Oficial?</h4>
-                        <p>
-                            A conexão via QR Code Evolution NÃO É OFICIAL META e pode ser bloqueada a qualquer momento pela Meta. Recomendamos o uso da API Oficial para evitar interrupções no serviço.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderConnectedMeta = () => (
-        <div className="dashboard-card">
-            <div className="connected-info">
-                <div className="connected-icon-wrapper meta">
-                    <FaWhatsapp />
-                </div>
-
-                <div className="whatsapp-badge connected">
-                    <span className="whatsapp-badge-dot" />
-                    Coexistência Ativa
-                </div>
-
-                <div className="connected-details">
-                    <h3>WhatsApp (Meta Oficial)</h3>
-                    <p>Sua empresa está conectada via API Oficial com suporte a coexistência.</p>
-                    <div className="meta-info-tags">
-                        <span className="tag">Cloud API</span>
-                        <span className="tag">20 mps</span>
-                    </div>
-                </div>
-
-                <div className="whatsapp-actions">
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', textAlign: 'center', marginBottom: '15px' }}>
-                        Para desconectar ou alterar o número, utilize o Gerenciador de Negócios da Meta.
-                    </p>
                 </div>
             </div>
         </div>
@@ -448,109 +566,100 @@ const WhatsAppConnectionPage = () => {
                     <span className="whatsapp-badge-dot" />
                     Desconectado
                 </div>
-
                 {qrCodeBase64 ? (
                     <div className="qr-code-container">
-                        <div className="qr-code-pulse-ring" />
-                        <img
-                            src={qrCodeBase64.startsWith('data:') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`}
-                            alt="QR Code WhatsApp"
-                        />
+                        <img src={qrCodeBase64.startsWith('data:') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`} alt="QR Code" />
                     </div>
-                ) : (
-                    <div className="whatsapp-skeleton">
-                        <div className="whatsapp-skeleton-line w60" style={{ height: '260px', width: '260px', borderRadius: '20px' }} />
-                    </div>
-                )}
-
+                ) : <div className="whatsapp-skeleton-line" style={{ height: '260px', width: '260px' }} />}
                 <div className="qr-instructions">
                     <h3>Escaneie o QR Code</h3>
-                    <p>
-                        Abra o WhatsApp no seu celular, vá em <strong>Dispositivos Conectados</strong> e
-                        escaneie o código acima para conectar.
-                    </p>
-                    <div className="qr-refresh-hint">
-                        <FaSync size={11} />
-                        Verificando conexão automaticamente...
-                    </div>
+                    <p>Abra o WhatsApp no celular e escaneie o código acima.</p>
                 </div>
-
                 <div className="whatsapp-actions">
-                    <button
-                        className="danger-button"
-                        onClick={handleRemoveInstance}
-                        disabled={isRemoving}
-                    >
+                    <button className="danger-button" onClick={handleRemoveInstance} disabled={isRemoving}>
                         <FaTrash size={14} />
-                        {isRemoving ? 'Removendo...' : 'Remover Instância'}
+                        Remover Instância
                     </button>
                 </div>
             </div>
         </div>
     );
 
-    const renderConnected = () => (
+    const renderConnectedEvolution = () => (
         <div className="dashboard-card">
             <div className="connected-info">
                 <div className="connected-icon-wrapper">
                     <FaWhatsapp />
                 </div>
-
                 <div className="whatsapp-badge connected">
                     <span className="whatsapp-badge-dot" />
                     Conectado
                 </div>
-
                 <div className="connected-details">
-                    <h3>WhatsApp Conectado</h3>
-                    <p>Sua instância está ativa e pronta para enviar e receber mensagens.</p>
-                    {statusInfo && (
-                        <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', marginTop: '8px' }}>
-                            Status: {statusInfo}
-                        </p>
-                    )}
+                    <h3>WhatsApp Conectado (QR Code)</h3>
+                    <p>Sua instância está ativa e pronta.</p>
                 </div>
-
                 <div className="whatsapp-actions">
-                    <button
-                        className="danger-button"
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                    >
+                    <button className="danger-button" onClick={handleLogout} disabled={isLoggingOut}>
                         <FaSignOutAlt size={14} />
-                        {isLoggingOut ? 'Desconectando...' : 'Desconectar'}
+                        Desconectar
                     </button>
-                    <button
-                        className="danger-button"
-                        onClick={handleRemoveInstance}
-                        disabled={isRemoving}
-                    >
-                        <FaTrash size={14} />
-                        {isRemoving ? 'Removendo...' : 'Remover Instância'}
-                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderConnectedMeta = () => (
+        <div className="dashboard-card">
+            <div className="connected-info">
+                <div className="connected-icon-wrapper meta">
+                    <FaWhatsapp />
+                </div>
+                <div className="whatsapp-badge connected">
+                    <span className="whatsapp-badge-dot" />
+                    API Oficial Ativa
+                </div>
+                <div className="connected-details">
+                    <h3>WhatsApp (Meta Oficial)</h3>
+                    <p>Conexão via API Cloud com suporte a coexistência.</p>
                 </div>
             </div>
         </div>
     );
 
     return (
-        <div className="page-container whatsapp-connection-page">
+        <div className="page-container connections-page">
             <div className="page-header">
                 <div>
-                    <h1>Conexão WhatsApp</h1>
+                    <h1>Canais de Conexão</h1>
                     <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>
-                        Gerencie a integração da sua empresa com o WhatsApp (Meta Cloud API ou Evolution API).
+                        Gerencie as integrações da sua empresa com WhatsApp e Instagram.
                     </p>
                 </div>
             </div>
 
-            {pageState === 'loading' && renderLoading()}
-            {pageState === 'no-instance' && renderNoInstance()}
-            {pageState === 'qr-code' && renderQRCode()}
-            {pageState === 'connected-evolution' && renderConnected()}
-            {pageState === 'connected-meta' && renderConnectedMeta()}
+            <div className="connections-tabs">
+                <button 
+                    className={`tab-btn ${activeTab === 'whatsapp' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('whatsapp')}
+                >
+                    <FaWhatsapp />
+                    WhatsApp
+                </button>
+                <button 
+                    className={`tab-btn ${activeTab === 'instagram' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('instagram')}
+                >
+                    <FaInstagram />
+                    Instagram
+                </button>
+            </div>
+
+            <div className="tab-content">
+                {activeTab === 'whatsapp' ? renderWhatsAppTab() : renderInstagramTab()}
+            </div>
         </div>
     );
 };
 
-export default WhatsAppConnectionPage;
+export default ConnectionsPage;

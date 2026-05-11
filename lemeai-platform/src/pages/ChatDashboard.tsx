@@ -204,19 +204,16 @@ const ChatDashboard = () => {
                     title="Conversas Pendentes"
                     value={unreadCount.toString()}
                     icon={<FaComments />}
-                    variant="danger"
                 />
                 <KPICard
                     title="Atendimento IA"
                     value={humanWaitingCount.toString()}
                     icon={<FaHeadset />}
-                    variant="warning"
                 />
                 <KPICard
                     title="Leads Quentes"
                     value={hotLeadsCount.toString()}
                     icon={<FaFire />}
-                    variant="success"
                 />
                 <KPICard
                     title="Tarefas para Hoje"

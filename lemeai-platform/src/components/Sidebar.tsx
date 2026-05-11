@@ -12,7 +12,9 @@ import {
     FaWhatsapp,
     FaCalendarAlt,
     FaDesktop,
-    FaQuestionCircle
+    FaQuestionCircle,
+    FaRocket,
+    FaPlug
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -52,7 +54,7 @@ const Sidebar: FC<SidebarProps> = () => {
         };
     }, []);
 
-    const isConfigActive = ['/users', '/chat-rules', '/products', '/whatsapp-connection'].includes(location.pathname);
+    const isConfigActive = ['/users', '/chat-rules', '/products', '/connections'].includes(location.pathname);
 
     const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
     const closeSettings = () => setIsSettingsOpen(false);
@@ -64,6 +66,10 @@ const Sidebar: FC<SidebarProps> = () => {
             </div>
 
             <nav className="sidebar-nav">
+                <Link to="/primeiros-passos" className={`sidebar-link ${location.pathname === '/primeiros-passos' ? 'active' : ''}`}>
+                    <FaRocket />
+                    <span>Primeiros passos</span>
+                </Link>
                 <Link to="/dashboard" className={`sidebar-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
                     <FaTachometerAlt />
                     <span>Painel</span>
@@ -72,12 +78,12 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaDesktop />
                     <span>Monitoramento</span>
                 </Link>
-                <Link to="/chat" className={`sidebar-link ${location.pathname === '/chat' ? 'active' : ''}`}>
+                <Link id="sidebar-chat" to="/chat" className={`sidebar-link ${location.pathname === '/chat' ? 'active' : ''}`}>
                     <FaComments />
                     <span>Chat</span>
                     {unreadCount > 0 && <span className="sidebar-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
                 </Link>
-                <Link to="/pipeline" className={`sidebar-link ${location.pathname === '/pipeline' ? 'active' : ''}`}>
+                <Link id="sidebar-pipeline" to="/pipeline" className={`sidebar-link ${location.pathname === '/pipeline' ? 'active' : ''}`}>
                     <FaStream />
                     <span>Fluxo de Vendas</span>
                 </Link>
@@ -91,12 +97,13 @@ const Sidebar: FC<SidebarProps> = () => {
                     <span>Analytics</span>
                 </Link>
                 */}
-                <Link to="/contacts" className={`sidebar-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
+                <Link id="sidebar-contacts" to="/contacts" className={`sidebar-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
                     <FaAddressBook />
                     <span>Contatos</span>
                 </Link>
 
                 <button 
+                    id="sidebar-settings"
                     className={`sidebar-btn ${isConfigActive || isSettingsOpen ? 'active' : ''}`}
                     onClick={toggleSettings}
                 >
@@ -107,7 +114,7 @@ const Sidebar: FC<SidebarProps> = () => {
                 {isSettingsOpen && (
                     <div className="sidebar-submenu">
                         <div className="submenu-header">Ajustes</div>
-                        <Link to="/users" className={`submenu-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
+                        <Link id="sidebar-users" to="/users" className={`submenu-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
                             <FaUsersCog />
                             <span>Usuários</span>
                         </Link>
@@ -119,9 +126,9 @@ const Sidebar: FC<SidebarProps> = () => {
                             <FaBox />
                             <span>Produtos e Serviços</span>
                         </Link>
-                        <Link to="/whatsapp-connection" className={`submenu-link ${location.pathname === '/whatsapp-connection' ? 'active' : ''}`} onClick={closeSettings}>
-                            <FaWhatsapp />
-                            <span>Conexão WhatsApp</span>
+                        <Link to="/connections" className={`submenu-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
+                            <FaPlug />
+                            <span>Conexões</span>
                         </Link>
                     </div>
                 )}
