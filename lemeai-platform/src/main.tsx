@@ -21,6 +21,8 @@ import AnalyticsPage from './pages/AnalyticsPage.tsx';
 import ChatDashboard from './pages/ChatDashboard.tsx';
 import HelpPage from './pages/HelpPage.tsx';
 import OnboardingStepsPage from './pages/OnboardingStepsPage.tsx';
+import CampaignTemplatesPage from './pages/CampaignTemplatesPage.tsx';
+import CampaignPage from './pages/CampaignPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -45,6 +47,8 @@ const router = createBrowserRouter([
           { path: "chat-rules", element: <SystemPromptsPage /> },
           { path: "products", element: <ProductsPage /> },
           { path: "connections", element: <ConnectionsPage /> },
+          { path: "campaign-templates", element: <CampaignTemplatesPage /> },
+          { path: "campanhas", element: <CampaignPage /> },
           { path: "help", element: <HelpPage /> },
         ]
       },

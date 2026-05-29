@@ -14,7 +14,9 @@ import {
     FaDesktop,
     FaQuestionCircle,
     FaRocket,
-    FaPlug
+    FaPlug,
+    FaBullhorn,
+    FaPaperPlane
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -54,7 +56,7 @@ const Sidebar: FC<SidebarProps> = () => {
         };
     }, []);
 
-    const isConfigActive = ['/users', '/chat-rules', '/products', '/connections'].includes(location.pathname);
+    const isConfigActive = ['/users', '/chat-rules', '/products', '/connections', '/campaign-templates'].includes(location.pathname);
 
     const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
     const closeSettings = () => setIsSettingsOpen(false);
@@ -101,6 +103,10 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaAddressBook />
                     <span>Contatos</span>
                 </Link>
+                <Link to="/campanhas" className={`sidebar-link ${location.pathname === '/campanhas' ? 'active' : ''}`}>
+                    <FaPaperPlane />
+                    <span>Campanhas</span>
+                </Link>
 
                 <button 
                     id="sidebar-settings"
@@ -129,6 +135,10 @@ const Sidebar: FC<SidebarProps> = () => {
                         <Link to="/connections" className={`submenu-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
                             <FaPlug />
                             <span>Conexões</span>
+                        </Link>
+                        <Link to="/campaign-templates" className={`submenu-link ${location.pathname === '/campaign-templates' ? 'active' : ''}`} onClick={closeSettings}>
+                            <FaBullhorn />
+                            <span>Templates de Campanha</span>
                         </Link>
                     </div>
                 )}
