@@ -109,13 +109,9 @@
 
 .filter-button.active {
   background-color: var(--brand-official) !important;
-  color: var(--cyan-accent) !important;
+  color: #ffffff !important;
   font-weight: 700;
   box-shadow: none;
-}
-
-[data-theme='light'] .filter-button.active {
-  color: #ffffff;
 }
 
 .contacts-ul {
@@ -256,4 +252,47 @@
 
 .status-indicator.offline {
   background-color: #adb5bd;
+}
+
+/* Chat Advanced Filters */
+.chat-advanced-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 25px 15px 25px;
+  border-bottom: 1px solid var(--border-color-soft);
+}
+
+.chat-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-filter-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  min-width: 60px;
+}
+
+.chat-filter-row .custom-select-container {
+  flex-grow: 1;
+}
+
+.secondary-filter {
+  animation: chatFilterSlideIn 0.2s ease-out;
+}
+
+@keyframes chatFilterSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

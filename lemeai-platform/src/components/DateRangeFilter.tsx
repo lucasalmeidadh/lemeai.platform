@@ -14,13 +14,15 @@ interface DateRangeFilterProps {
     endDate: Date | null;
     onChangeStartDate: (date: Date | null) => void;
     onChangeEndDate: (date: Date | null) => void;
+    hidePresets?: boolean;
 }
 
 const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
     startDate,
     endDate,
     onChangeStartDate,
-    onChangeEndDate
+    onChangeEndDate,
+    hidePresets = false
 }) => {
     const handlePresetClick = (daysBack: number) => {
         if (isPresetActive(daysBack)) {
@@ -49,26 +51,28 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
 
     return (
         <div className="date-filter-wrapper">
-            <div className="date-presets">
-                <button
-                    className={`preset-btn ${isPresetActive(7) ? 'active' : ''}`}
-                    onClick={() => handlePresetClick(7)}
-                >
-                    7 dias
-                </button>
-                <button
-                    className={`preset-btn ${isPresetActive(15) ? 'active' : ''}`}
-                    onClick={() => handlePresetClick(15)}
-                >
-                    15 dias
-                </button>
-                <button
-                    className={`preset-btn ${isPresetActive(30) ? 'active' : ''}`}
-                    onClick={() => handlePresetClick(30)}
-                >
-                    30 dias
-                </button>
-            </div>
+            {!hidePresets && (
+                <div className="date-presets">
+                    <button
+                        className={`preset-btn ${isPresetActive(7) ? 'active' : ''}`}
+                        onClick={() => handlePresetClick(7)}
+                    >
+                        7 dias
+                    </button>
+                    <button
+                        className={`preset-btn ${isPresetActive(15) ? 'active' : ''}`}
+                        onClick={() => handlePresetClick(15)}
+                    >
+                        15 dias
+                    </button>
+                    <button
+                        className={`preset-btn ${isPresetActive(30) ? 'active' : ''}`}
+                        onClick={() => handlePresetClick(30)}
+                    >
+                        30 dias
+                    </button>
+                </div>
+            )}
             <div className="date-filter-container">
                 <DatePicker
                     selected={startDate}

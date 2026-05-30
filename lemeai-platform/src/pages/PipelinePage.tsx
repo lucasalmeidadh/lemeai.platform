@@ -11,8 +11,9 @@ import { OpportunityService, type Opportunity, type DetalheConversa } from '../s
 import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { FaMagic } from 'react-icons/fa';
+import { FaMagic, FaFilter } from 'react-icons/fa';
 import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
+import { CampaignService, type Campaign } from '../services/CampaignService';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -30,6 +31,8 @@ interface Deal {
     rawValue?: number;
     phone?: string;
     details?: DetalheConversa[];
+    source?: string;
+    campaignId?: string;
 }
 
 interface Column {
@@ -62,6 +65,24 @@ const PipelinePage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOwner, setSelectedOwner] = useState('all');
     const [selectedTemperature, setSelectedTemperature] = useState('all');
+    const [selectedSource, setSelectedSource] = useState('all');
+    const [selectedCampaign, setSelectedCampaign] = useState('all');
+    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+    const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+
+    useEffect(() => {
+        const loadCampaigns = async () => {
+            try {
+                const res = await CampaignService.getAll();
+                if (res.sucesso && Array.isArray(res.dados)) {
+                    setCampaigns(res.dados);
+                }
+            } catch (err) {
+                console.error("Erro ao buscar campanhas no Pipeline:", err);
+            }
+        };
+        loadCampaigns();
+    }, []);
 
     // Date Filter State
     const [startDate, setStartDate] = useState<Date | null>(() => {
@@ -70,6 +91,50 @@ const PipelinePage = () => {
         return d;
     });
     const [endDate, setEndDate] = useState<Date | null>(new Date());
+
+    const isPresetActive = (daysBack: number) => {
+        if (!startDate || !endDate) return false;
+        const today = new Date();
+        const pastDate = new Date();
+        pastDate.setDate(today.getDate() - daysBack);
+        return startDate.toDateString() === pastDate.toDateString() &&
+            endDate.toDateString() === today.toDateString();
+    };
+
+    const handlePresetClick = (daysBack: number) => {
+        if (isPresetActive(daysBack)) {
+            setStartDate(null);
+            setEndDate(null);
+        } else {
+            const today = new Date();
+            const pastDate = new Date();
+            pastDate.setDate(today.getDate() - daysBack);
+            setStartDate(pastDate);
+            setEndDate(today);
+        }
+    };
+
+    const getActiveFiltersCount = () => {
+        let count = 0;
+        if (startDate || endDate) {
+            const presetActive = isPresetActive(7) || isPresetActive(15) || isPresetActive(30);
+            if (!presetActive) count += 1;
+        }
+        if (selectedOwner !== 'all') count += 1;
+        if (selectedTemperature !== 'all') count += 1;
+        if (selectedSource !== 'all') count += 1;
+        if (selectedSource === 'marketing' && selectedCampaign !== 'all') count += 1;
+        return count;
+    };
+
+    const handleClearFilters = () => {
+        setStartDate(null);
+        setEndDate(null);
+        setSelectedOwner('all');
+        setSelectedTemperature('all');
+        setSelectedSource('all');
+        setSelectedCampaign('all');
+    };
 
     // Summary State
     const [isSummaryModalOpen, setSummaryModalOpen] = useState(false);
@@ -392,6 +457,22 @@ const PipelinePage = () => {
                 matchesTemperature = deal.tipoLeadId === tempId;
             }
 
+            let matchesSource = true;
+            if (selectedSource !== 'all') {
+                const dealSource = (deal as any).source || (deal as any).origem;
+                if (dealSource) {
+                    matchesSource = dealSource === selectedSource;
+                }
+            }
+
+            let matchesCampaign = true;
+            if (selectedSource === 'marketing' && selectedCampaign !== 'all') {
+                const dealCampaignId = (deal as any).campaignId || (deal as any).idCampanha || (deal as any).campanhaId;
+                if (dealCampaignId) {
+                    matchesCampaign = dealCampaignId.toString() === selectedCampaign;
+                }
+            }
+
             let matchesDate = true;
             if (startDate && endDate) {
                 // Set start date to 00:00:00 and end date to 23:59:59 for inclusive comparison
@@ -414,7 +495,7 @@ const PipelinePage = () => {
                 matchesDate = dealDate <= end;
             }
 
-            return matchesSearch && matchesOwner && matchesDate && matchesTemperature;
+            return matchesSearch && matchesOwner && matchesDate && matchesTemperature && matchesSource && matchesCampaign;
         })
     }));
 
@@ -434,54 +515,54 @@ const PipelinePage = () => {
                             )}
                         </div>
 
-                        <div className="pipeline-filters" style={{
-                            display: 'flex',
-                            gap: '15px',
-                            width: '100%',
-                            flexDirection: isMobile ? 'column' : 'row',
-                            alignItems: isMobile ? 'stretch' : 'center',
-                            flexWrap: 'wrap'
-                        }}>
-                            <input
-                                type="text"
-                                placeholder="Buscar por nome..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pipeline-filter-input"
-                                style={{
-                                    width: isMobile ? '100%' : '300px'
-                                }}
-                            />
-
-                            <DateRangeFilter
-                                startDate={startDate}
-                                endDate={endDate}
-                                onChangeStartDate={setStartDate}
-                                onChangeEndDate={setEndDate}
-                            />
-
-                            <div style={{ width: isMobile ? '100%' : '250px', minWidth: isMobile ? '0' : '250px' }}>
-                                <CustomSelect
-                                    value={selectedOwner}
-                                    onChange={(val) => setSelectedOwner(val)}
-                                    options={[
-                                        { value: 'all', label: 'Todos os Responsáveis' },
-                                        ...getUniqueOwners().map(owner => ({ value: owner, label: owner }))
-                                    ]}
+                        <div className="pipeline-filters-container">
+                            <div className="pipeline-filters-main">
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por nome..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pipeline-filter-input search-input"
+                                    style={{
+                                        width: isMobile ? '100%' : '300px'
+                                    }}
                                 />
-                            </div>
 
-                            <div style={{ width: isMobile ? '100%' : '250px', minWidth: isMobile ? '0' : '250px' }}>
-                                <CustomSelect
-                                    value={selectedTemperature}
-                                    onChange={(val) => setSelectedTemperature(val)}
-                                    options={[
-                                        { value: 'all', label: 'Todas as Temperaturas' },
-                                        { value: '1', label: 'Quente' },
-                                        { value: '2', label: 'Morno' },
-                                        { value: '3', label: 'Frio' }
-                                    ]}
-                                />
+                                <div className="pipeline-presets">
+                                    <button
+                                        type="button"
+                                        className={`preset-btn ${isPresetActive(7) ? 'active' : ''}`}
+                                        onClick={() => handlePresetClick(7)}
+                                    >
+                                        7 dias
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`preset-btn ${isPresetActive(15) ? 'active' : ''}`}
+                                        onClick={() => handlePresetClick(15)}
+                                    >
+                                        15 dias
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`preset-btn ${isPresetActive(30) ? 'active' : ''}`}
+                                        onClick={() => handlePresetClick(30)}
+                                    >
+                                        30 dias
+                                    </button>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className={`pipeline-btn-filters ${isFiltersModalOpen ? 'active' : ''}`}
+                                    onClick={() => setIsFiltersModalOpen(!isFiltersModalOpen)}
+                                >
+                                    <FaFilter size={12} />
+                                    <span>Filtros</span>
+                                    {getActiveFiltersCount() > 0 && (
+                                        <span className="filters-badge">{getActiveFiltersCount()}</span>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -608,6 +689,93 @@ const PipelinePage = () => {
                         confirmText="Gerar Resumo"
                         cancelText="Cancelar"
                     />
+
+                    {isFiltersModalOpen && (
+                        <div className="pipeline-filters-modal-overlay" onClick={() => setIsFiltersModalOpen(false)}>
+                            <div className="pipeline-filters-modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="pipeline-filters-modal-header">
+                                    <h3>Filtros Avançados</h3>
+                                    <button className="close-filters-modal-btn" onClick={() => setIsFiltersModalOpen(false)}>&times;</button>
+                                </div>
+                                <div className="pipeline-filters-modal-body">
+                                    <div className="filter-group date-picker-group">
+                                        <label className="filter-label">Intervalo de datas customizado</label>
+                                        <DateRangeFilter
+                                            startDate={startDate}
+                                            endDate={endDate}
+                                            onChangeStartDate={setStartDate}
+                                            onChangeEndDate={setEndDate}
+                                            hidePresets={true}
+                                        />
+                                    </div>
+
+                                    <div className="filter-group">
+                                        <label className="filter-label">Responsável</label>
+                                        <CustomSelect
+                                            value={selectedOwner}
+                                            onChange={(val) => setSelectedOwner(val)}
+                                            options={[
+                                                { value: 'all', label: 'Todos os Responsáveis' },
+                                                ...getUniqueOwners().map(owner => ({ value: owner, label: owner }))
+                                            ]}
+                                        />
+                                    </div>
+
+                                    <div className="filter-group">
+                                        <label className="filter-label">Temperatura</label>
+                                        <CustomSelect
+                                            value={selectedTemperature}
+                                            onChange={(val) => setSelectedTemperature(val)}
+                                            options={[
+                                                { value: 'all', label: 'Todas as Temperaturas' },
+                                                { value: '1', label: 'Quente' },
+                                                { value: '2', label: 'Morno' },
+                                                { value: '3', label: 'Frio' }
+                                            ]}
+                                        />
+                                    </div>
+
+                                    <div className="filter-group">
+                                        <label className="filter-label">Origem</label>
+                                        <CustomSelect
+                                            value={selectedSource}
+                                            onChange={(val) => {
+                                                setSelectedSource(val);
+                                                setSelectedCampaign('all');
+                                            }}
+                                            options={[
+                                                { value: 'all', label: 'Todas as Origens' },
+                                                { value: 'organic', label: 'Entrada Orgânica' },
+                                                { value: 'marketing', label: 'Campanha de Marketing' }
+                                            ]}
+                                        />
+                                    </div>
+
+                                    {selectedSource === 'marketing' && (
+                                        <div className="filter-group">
+                                            <label className="filter-label">Campanha</label>
+                                            <CustomSelect
+                                                value={selectedCampaign}
+                                                onChange={(val) => setSelectedCampaign(val)}
+                                                options={[
+                                                    { value: 'all', label: 'Todas as Campanhas' },
+                                                    ...campaigns.map(c => ({ value: c.campanhaId.toString(), label: c.campanhaNome }))
+                                                ]}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="pipeline-filters-modal-footer">
+                                    <button className="pipeline-filters-clear-btn" onClick={() => { handleClearFilters(); setIsFiltersModalOpen(false); }}>
+                                        Limpar Filtros
+                                    </button>
+                                    <button className="pipeline-filters-apply-btn" onClick={() => setIsFiltersModalOpen(false)}>
+                                        Aplicar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </>
             )}
         </div>
