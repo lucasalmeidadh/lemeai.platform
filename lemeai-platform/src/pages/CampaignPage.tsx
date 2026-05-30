@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ReactElement } from 'react';
 import toast from 'react-hot-toast';
 import {
     FaPlus,
@@ -10,19 +10,23 @@ import {
     FaCheckCircle,
     FaClock,
     FaSpinner,
-    FaWhatsapp,
+    FaChevronLeft,
+    FaChevronRight,
+    FaChevronUp,
+    FaUsers,
+    FaUserPlus,
+    FaClipboardList,
 } from 'react-icons/fa';
 import {
     CampaignService,
     type Campaign,
     type CampaignMetrics,
-    type CreateCampaignDTO,
-    type UpdateCampaignDTO,
     type CampanhaStatus,
     type CampanhaCategoria,
 } from '../services/CampaignService';
 import { ContactService, type Contact } from '../services/ContactService';
 import { MetaTemplateService, type MetaTemplate } from '../services/MetaTemplateService';
+import CustomSelect from '../components/CustomSelect';
 import './CampaignPage.css';
 
 // ---- Badges ----
@@ -39,8 +43,20 @@ const CATEGORIA_LABEL: Record<CampanhaCategoria, string> = {
     AUTHENTICATION: 'Autenticação',
 };
 
+const STATUS_FILTER_OPTIONS = [
+    { value: 'TODOS', label: 'Todos os status' },
+    ...Object.entries(STATUS_LABEL).map(([v, l]) => ({ value: v, label: l }))
+];
+
+const CATEGORIA_FILTER_OPTIONS = [
+    { value: 'TODOS', label: 'Todas as categorias' },
+    ...Object.entries(CATEGORIA_LABEL).map(([v, l]) => ({ value: v, label: l }))
+];
+
+const CUSTO_UNITARIO_BRL = 0.31; // R$ 0,31 por envio (equivalente a $0.0625 da Meta)
+
 function StatusBadge({ status }: { status: CampanhaStatus }) {
-    const icons: Record<CampanhaStatus, JSX.Element> = {
+    const icons: Record<CampanhaStatus, ReactElement> = {
         Rascunho: <FaClock size={10} />,
         Enviando: <FaSpinner size={10} />,
         Finalizada: <FaCheckCircle size={10} />,
@@ -63,242 +79,10 @@ function CategoriaBadge({ categoria }: { categoria: CampanhaCategoria }) {
 
 // ---- Create / Edit Modal ----
 
-interface CampaignFormModalProps {
+interface CampaignWizardModalProps {
     campaign: Campaign | null;
     onClose: () => void;
     onSaved: () => void;
-}
-
-function CampaignFormModal({ campaign, onClose, onSaved }: CampaignFormModalProps) {
-    const isEdit = campaign !== null;
-    const [form, setForm] = useState({
-        nome: campaign?.campanhaNome ?? '',
-        templateNome: campaign?.campanhaTemplateNome ?? '',
-        templateIdioma: campaign?.campanhaTemplateIdioma ?? 'pt_BR',
-        categoria: (campaign?.campanhaCategoria ?? 'MARKETING') as CampanhaCategoria,
-        status: (campaign?.campanhaStatus ?? 'Rascunho') as CampanhaStatus,
-        agendadaEm: campaign?.campanhaAgendadaEm
-            ? campaign.campanhaAgendadaEm.substring(0, 16)
-            : '',
-    });
-    const [isSaving, setIsSaving] = useState(false);
-    const [templates, setTemplates] = useState<MetaTemplate[]>([]);
-    const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
-
-    useEffect(() => {
-        const load = async () => {
-            setIsLoadingTemplates(true);
-            try {
-                const res = await MetaTemplateService.getAll();
-                if (res.sucesso) {
-                    setTemplates((res.dados || []).filter((t) => t.status === 'APPROVED'));
-                }
-            } catch {
-                // silencioso — campo continua editável manualmente
-            } finally {
-                setIsLoadingTemplates(false);
-            }
-        };
-        load();
-    }, []);
-
-    const handleTemplateSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selected = templates.find((t) => t.nome === e.target.value);
-        if (selected) {
-            setForm((prev) => ({
-                ...prev,
-                templateNome: selected.nome,
-                templateIdioma: selected.idioma,
-                categoria: selected.categoria,
-            }));
-        } else {
-            setForm((prev) => ({ ...prev, templateNome: '' }));
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSaving(true);
-        try {
-            const agendadaEm = form.agendadaEm ? new Date(form.agendadaEm).toISOString() : undefined;
-
-            if (isEdit) {
-                const dto: UpdateCampaignDTO = {
-                    campanhaId: campaign.campanhaId,
-                    nome: form.nome.trim(),
-                    templateNome: form.templateNome.trim(),
-                    templateIdioma: form.templateIdioma,
-                    categoria: form.categoria,
-                    status: form.status,
-                    agendadaEm,
-                };
-                const res = await CampaignService.update(dto);
-                if (res.sucesso) {
-                    toast.success('Campanha atualizada!');
-                    onSaved();
-                    onClose();
-                } else {
-                    toast.error(res.mensagem || 'Erro ao atualizar campanha.');
-                }
-            } else {
-                const dto: CreateCampaignDTO = {
-                    nome: form.nome.trim(),
-                    templateNome: form.templateNome.trim(),
-                    templateIdioma: form.templateIdioma,
-                    categoria: form.categoria,
-                    agendadaEm,
-                };
-                const res = await CampaignService.create(dto);
-                if (res.sucesso) {
-                    toast.success('Campanha criada!');
-                    onSaved();
-                    onClose();
-                } else {
-                    toast.error(res.mensagem || 'Erro ao criar campanha.');
-                }
-            }
-        } catch {
-            toast.error('Erro ao conectar com o servidor.');
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    return (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-            <div className="camp-modal">
-                <div className="camp-modal-header">
-                    <h2>{isEdit ? 'Editar Campanha' : 'Nova Campanha'}</h2>
-                    <button className="close-modal-button" onClick={onClose}>
-                        <FaTimes />
-                    </button>
-                </div>
-                <form className="camp-modal-body" onSubmit={handleSubmit}>
-                    <div className="camp-form-grid">
-                        <div className="camp-form-group camp-span-2">
-                            <label>Nome da campanha <span className="camp-required">*</span></label>
-                            <input
-                                type="text"
-                                value={form.nome}
-                                onChange={(e) => setForm({ ...form, nome: e.target.value })}
-                                placeholder="ex: Black Friday 2026"
-                                required
-                            />
-                        </div>
-
-                        <div className="camp-form-group camp-span-2">
-                            <label>Template <span className="camp-required">*</span></label>
-                            {isLoadingTemplates ? (
-                                <select disabled>
-                                    <option>Carregando templates...</option>
-                                </select>
-                            ) : templates.length > 0 ? (
-                                <select
-                                    value={form.templateNome}
-                                    onChange={handleTemplateSelect}
-                                    required
-                                >
-                                    <option value="">Selecione um template aprovado</option>
-                                    {templates.map((t) => (
-                                        <option key={t.metaTemplateId} value={t.nome}>
-                                            {t.nome} · {t.idioma} · {t.categoria}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <>
-                                    <input
-                                        type="text"
-                                        value={form.templateNome}
-                                        onChange={(e) => setForm({ ...form, templateNome: e.target.value })}
-                                        placeholder="ex: promocao_black_friday"
-                                        required
-                                    />
-                                    <span className="camp-hint">Nenhum template aprovado encontrado. Sincronize em Ajustes → Templates de Campanha.</span>
-                                </>
-                            )}
-                        </div>
-
-                        <div className="camp-form-group">
-                            <label>Categoria <span className="camp-required">*</span></label>
-                            <select
-                                value={form.categoria}
-                                onChange={(e) => setForm({ ...form, categoria: e.target.value as CampanhaCategoria })}
-                                required
-                                disabled={templates.length > 0 && !!form.templateNome}
-                            >
-                                <option value="MARKETING">Marketing</option>
-                                <option value="UTILITY">Utilidade</option>
-                                <option value="AUTHENTICATION">Autenticação</option>
-                            </select>
-                            {templates.length > 0 && !!form.templateNome && (
-                                <span className="camp-hint">Preenchido automaticamente pelo template.</span>
-                            )}
-                        </div>
-
-                        <div className="camp-form-group">
-                            <label>Idioma <span className="camp-required">*</span></label>
-                            <select
-                                value={form.templateIdioma}
-                                onChange={(e) => setForm({ ...form, templateIdioma: e.target.value })}
-                                required
-                                disabled={templates.length > 0 && !!form.templateNome}
-                            >
-                                <option value="pt_BR">Português (Brasil)</option>
-                                <option value="en_US">English (US)</option>
-                                <option value="es_ES">Español</option>
-                                <option value="es_AR">Español (Argentina)</option>
-                            </select>
-                            {templates.length > 0 && !!form.templateNome && (
-                                <span className="camp-hint">Preenchido automaticamente pelo template.</span>
-                            )}
-                        </div>
-
-                        {isEdit && (
-                            <div className="camp-form-group">
-                                <label>Status</label>
-                                <select
-                                    value={form.status}
-                                    onChange={(e) => setForm({ ...form, status: e.target.value as CampanhaStatus })}
-                                >
-                                    <option value="Rascunho">Rascunho</option>
-                                    <option value="Enviando">Enviando</option>
-                                    <option value="Finalizada">Finalizada</option>
-                                </select>
-                            </div>
-                        )}
-
-                        <div className={`camp-form-group ${isEdit ? '' : 'camp-span-2'}`}>
-                            <label>Data de agendamento</label>
-                            <input
-                                type="datetime-local"
-                                value={form.agendadaEm}
-                                onChange={(e) => setForm({ ...form, agendadaEm: e.target.value })}
-                            />
-                            <span className="camp-hint">Informativo — o disparo é feito manualmente.</span>
-                        </div>
-                    </div>
-
-                    <div className="camp-modal-footer">
-                        <button type="button" className="camp-btn-secondary" onClick={onClose} disabled={isSaving}>
-                            Cancelar
-                        </button>
-                        <button type="submit" className="camp-btn-primary" disabled={isSaving}>
-                            {isSaving ? 'Salvando...' : isEdit ? 'Salvar alterações' : 'Criar campanha'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
-// ---- Dispatch Modal ----
-
-interface DispatchModalProps {
-    campaign: Campaign;
-    onClose: () => void;
-    onDispatched: () => void;
 }
 
 type VarSource = 'contact_name' | 'contact_phone' | 'fixed';
@@ -331,90 +115,109 @@ function detectBodyVars(componentesJson: string | null): { count: number; bodyTe
     }
 }
 
-function resolveVar(contact: Contact, mapping: VarMapping): string {
+function resolveVar(contact: { nome: string; telefone: string }, mapping: VarMapping): string {
     if (mapping.source === 'contact_name') return contact.nome;
     if (mapping.source === 'contact_phone') return contact.telefone;
     return mapping.fixedValue;
 }
 
-function DispatchModal({ campaign, onClose, onDispatched }: DispatchModalProps) {
-    const [contacts, setContacts] = useState<Contact[]>([]);
-    const [isLoadingContacts, setIsLoadingContacts] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selected, setSelected] = useState<Set<number>>(new Set());
-    const [isDispatching, setIsDispatching] = useState(false);
-    const [result, setResult] = useState<{ totalEnviados: number; totalFalhas: number } | null>(null);
+function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModalProps) {
+    const isEdit = campaign !== null;
+    const [step, setStep] = useState(campaign ? 2 : 1);
 
-    const [bodyText, setBodyText] = useState('');
-    const [varMappings, setVarMappings] = useState<VarMapping[]>([]);
-    const [templateLoaded, setTemplateLoaded] = useState(false);
+    const [nome, setNome] = useState(campaign?.campanhaNome ?? '');
+    const [agendadaEm] = useState(campaign?.campanhaAgendadaEm ? campaign.campanhaAgendadaEm.substring(0, 16) : '');
 
-    useEffect(() => {
-        const loadAll = async () => {
-            setIsLoadingContacts(true);
-            try {
-                const [contactsRes, templatesRes] = await Promise.all([
-                    ContactService.getAll(),
-                    MetaTemplateService.getAll(),
-                ]);
-                if (contactsRes.sucesso) setContacts(contactsRes.dados);
+    // Passo 2: Público
+    const [publicoTipo, setPublicoTipo] = useState<'BASE' | 'MANUAL' | 'COLA'>('BASE');
+    const [baseContacts, setBaseContacts] = useState<Contact[]>([]);
+    const [selectedBaseContacts, setSelectedBaseContacts] = useState<Set<number>>(new Set());
+    const [contactSearch, setContactSearch] = useState('');
 
-                if (templatesRes.sucesso) {
-                    const found = (templatesRes.dados || []).find(
-                        (t) => t.nome === campaign.campanhaTemplateNome && t.idioma === campaign.campanhaTemplateIdioma
-                    );
-                    if (found) {
-                        const { count, bodyText: bt } = detectBodyVars(found.componentesJson);
-                        setBodyText(bt);
-                        if (count > 0) {
-                            setVarMappings(Array.from({ length: count }, () => ({ source: 'fixed' as VarSource, fixedValue: '' })));
-                        }
-                        setTemplateLoaded(true);
-                    }
+    // Contatos Manuais
+    const [newManualName, setNewManualName] = useState('');
+    const [newManualPhone, setNewManualPhone] = useState('');
+
+    // Contatos Colados
+    const [coladosRaw, setColadosRaw] = useState('');
+
+    // Lista acumulada final de contatos
+    const [finalContacts, setFinalContacts] = useState<{ nome: string; telefone: string }[]>([]);
+    const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+    const [addedSearchTerm, setAddedSearchTerm] = useState('');
+
+    const filteredAddedContacts = finalContacts.filter(c => 
+        c.nome.toLowerCase().includes(addedSearchTerm.toLowerCase()) || 
+        c.telefone.includes(addedSearchTerm)
+    );
+
+    const handleAddBaseSelected = () => {
+        const toAdd = baseContacts
+            .filter(c => selectedBaseContacts.has(c.contatoId))
+            .map(c => ({ nome: c.nome, telefone: c.telefone }));
+        
+        setFinalContacts(prev => {
+            const existingPhones = new Set(prev.map(p => p.telefone));
+            const filteredToAdd = toAdd.filter(c => !existingPhones.has(c.telefone));
+            return [...prev, ...filteredToAdd];
+        });
+        setSelectedBaseContacts(new Set());
+        toast.success(`${toAdd.length} contatos adicionados da base!`);
+    };
+
+    const handleAddManual = () => {
+        const cleanPhone = newManualPhone.replace(/\D/g, '');
+        if (!newManualName.trim() || cleanPhone.length < 8) {
+            toast.error('Informe nome e telefone válidos.');
+            return;
+        }
+        if (finalContacts.some(c => c.telefone === cleanPhone)) {
+            toast.error('Este contato já foi adicionado.');
+            return;
+        }
+        setFinalContacts(prev => [...prev, { nome: newManualName.trim(), telefone: cleanPhone }]);
+        setNewManualName('');
+        setNewManualPhone('');
+        toast.success('Contato manual adicionado!');
+    };
+
+    const handleAddColados = () => {
+        const parsed = coladosRaw.split('\n')
+            .map(line => {
+                if (!line.trim()) return null;
+                const parts = line.split(/[,;\t]/);
+                if (parts.length >= 2) {
+                    return { nome: parts[0].trim(), telefone: parts[1].replace(/\D/g, '').trim() };
                 }
-            } catch {
-                toast.error('Erro ao carregar dados.');
-            } finally {
-                setIsLoadingContacts(false);
-            }
-        };
-        loadAll();
-    }, [campaign.campanhaTemplateNome, campaign.campanhaTemplateIdioma]);
+                const tel = line.replace(/\D/g, '').trim();
+                return { nome: `Contato ${tel}`, telefone: tel };
+            })
+            .filter((c): c is { nome: string; telefone: string } => c !== null && c.telefone.length >= 8);
 
-    const updateMapping = (index: number, patch: Partial<VarMapping>) => {
-        setVarMappings((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
+        if (parsed.length === 0) {
+             toast.error('Nenhum contato válido detectado.');
+             return;
+        }
+
+        setFinalContacts(prev => {
+            const existingPhones = new Set(prev.map(p => p.telefone));
+            const filteredToAdd = parsed.filter(c => !existingPhones.has(c.telefone));
+            return [...prev, ...filteredToAdd];
+        });
+        setColadosRaw('');
+        toast.success(`${parsed.length} contatos colados adicionados!`);
     };
 
-    const addVar = () => {
-        setVarMappings((prev) => [...prev, { source: 'fixed', fixedValue: '' }]);
-    };
-
-    const removeVar = (index: number) => {
-        setVarMappings((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    // Prévia com o primeiro contato selecionado como exemplo
-    const previewContact = contacts.find((c) => selected.has(c.contatoId)) ?? contacts[0];
-    const previewText = bodyText
-        ? varMappings.reduce((text, mapping, i) => {
-              const val = mapping.source === 'fixed'
-                  ? mapping.fixedValue || `{{${i + 1}}}`
-                  : mapping.source === 'contact_name'
-                  ? previewContact?.nome ?? '[nome do contato]'
-                  : previewContact?.telefone ?? '[telefone do contato]';
-              return text.replace(`{{${i + 1}}}`, val);
-          }, bodyText)
-        : '';
-
-    const filtered = contacts.filter((c) => {
-        const term = searchTerm.toLowerCase();
-        return c.nome.toLowerCase().includes(term) || c.telefone.includes(searchTerm);
+    // Contatos filtrados na busca do Passo 2 (Público da Base)
+    const filteredBaseContacts = baseContacts.filter((c) => {
+        const term = contactSearch.toLowerCase();
+        return c.nome.toLowerCase().includes(term) || c.telefone.includes(contactSearch);
     });
 
-    const allSelected = filtered.length > 0 && filtered.every((c) => selected.has(c.contatoId));
+    const isAllBaseSelected = filteredBaseContacts.length > 0 && filteredBaseContacts.every(c => selectedBaseContacts.has(c.contatoId));
 
-    const toggleContact = (id: number) => {
-        setSelected((prev) => {
+    const toggleBaseContact = (id: number) => {
+        setSelectedBaseContacts(prev => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
             else next.add(id);
@@ -422,18 +225,148 @@ function DispatchModal({ campaign, onClose, onDispatched }: DispatchModalProps) 
         });
     };
 
-    const toggleAll = () => {
-        setSelected((prev) => {
+    const toggleAllBase = () => {
+        setSelectedBaseContacts(prev => {
             const next = new Set(prev);
-            if (allSelected) filtered.forEach((c) => next.delete(c.contatoId));
-            else filtered.forEach((c) => next.add(c.contatoId));
+            if (isAllBaseSelected) {
+                filteredBaseContacts.forEach(c => next.delete(c.contatoId));
+            } else {
+                filteredBaseContacts.forEach(c => next.add(c.contatoId));
+            }
             return next;
         });
     };
 
-    const handleDisparar = async () => {
-        if (selected.size === 0) {
-            toast.error('Selecione pelo menos um contato.');
+    // Passo 3: Conteúdo (Template)
+    const [templates, setTemplates] = useState<MetaTemplate[]>([]);
+    const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+    const [selectedTemplateName, setSelectedTemplateName] = useState(campaign?.campanhaTemplateNome ?? '');
+    const [selectedTemplateIdioma, setSelectedTemplateIdioma] = useState(campaign?.campanhaTemplateIdioma ?? 'pt_BR');
+    const [selectedTemplateCategoria, setSelectedTemplateCategoria] = useState<CampanhaCategoria>((campaign?.campanhaCategoria ?? 'MARKETING') as CampanhaCategoria);
+    const [bodyText, setBodyText] = useState('');
+    const [varMappings, setVarMappings] = useState<VarMapping[]>([]);
+
+    // Passo 4: Submissão e Resultados
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [result, setResult] = useState<{ totalEnviados: number; totalFalhas: number } | null>(null);
+
+    // Carregar dados iniciais
+    useEffect(() => {
+        const loadInitialData = async () => {
+            setIsLoadingTemplates(true);
+            try {
+                const [templatesRes, contactsRes] = await Promise.all([
+                    MetaTemplateService.getAll(),
+                    ContactService.getAll()
+                ]);
+                if (templatesRes.sucesso) {
+                    const approved = (templatesRes.dados || []).filter((t) => t.status === 'APPROVED');
+                    setTemplates(approved);
+
+                    // Se estiver editando ou se já houver um template selecionado, carregar as variáveis dele
+                    const currentTemplate = approved.find(t => t.nome === selectedTemplateName);
+                    if (currentTemplate) {
+                        const { count, bodyText: bt } = detectBodyVars(currentTemplate.componentesJson);
+                        setBodyText(bt);
+                        setVarMappings(Array.from({ length: count }, () => ({ source: 'fixed', fixedValue: '' })));
+                    }
+                }
+                if (contactsRes.sucesso) {
+                    setBaseContacts(contactsRes.dados || []);
+                }
+            } catch (error) {
+                toast.error('Erro ao carregar dados do wizard.');
+            } finally {
+                setIsLoadingTemplates(false);
+            }
+        };
+        loadInitialData();
+    }, []);
+
+    // Atualiza mapeamento ao selecionar um template
+    const handleTemplateChange = (templateName: string) => {
+        const selected = templates.find((t) => t.nome === templateName);
+        if (selected) {
+            setSelectedTemplateName(selected.nome);
+            setSelectedTemplateIdioma(selected.idioma);
+            setSelectedTemplateCategoria(selected.categoria);
+            const { count, bodyText: bt } = detectBodyVars(selected.componentesJson);
+            setBodyText(bt);
+            setVarMappings(Array.from({ length: count }, () => ({ source: 'fixed', fixedValue: '' })));
+        } else {
+            setSelectedTemplateName('');
+            setBodyText('');
+            setVarMappings([]);
+        }
+    };
+
+    const updateMapping = (index: number, patch: Partial<VarMapping>) => {
+        setVarMappings((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
+    };
+
+    // Pré-visualização do conteúdo usando o primeiro contato da lista final
+    const previewContact = finalContacts[0] ?? { nome: '[Nome Exemplo]', telefone: '5511999999999' };
+    const previewText = bodyText
+        ? varMappings.reduce((text, mapping, i) => {
+            const val = mapping.source === 'fixed'
+                ? mapping.fixedValue || `{{${i + 1}}}`
+                : mapping.source === 'contact_name'
+                    ? previewContact.nome
+                    : previewContact.telefone;
+            return text.replace(`{{${i + 1}}}`, val);
+        }, bodyText)
+        : '';
+
+    // Salvar Campanha como Rascunho
+    const handleSaveAsDraft = async () => {
+        setIsSubmitting(true);
+        try {
+            const finalAgendadaEm = agendadaEm ? new Date(agendadaEm).toISOString() : undefined;
+
+            if (!isEdit) {
+                const res = await CampaignService.create({
+                    nome: nome.trim(),
+                    templateNome: selectedTemplateName,
+                    templateIdioma: selectedTemplateIdioma,
+                    categoria: selectedTemplateCategoria,
+                    agendadaEm: finalAgendadaEm
+                });
+                if (res.sucesso) {
+                    toast.success('Campanha salva como rascunho!');
+                    onSaved();
+                    onClose();
+                } else {
+                    toast.error(res.mensagem || 'Erro ao salvar rascunho.');
+                }
+            } else {
+                const res = await CampaignService.update({
+                    campanhaId: campaign.campanhaId,
+                    nome: nome.trim(),
+                    templateNome: selectedTemplateName,
+                    templateIdioma: selectedTemplateIdioma,
+                    categoria: selectedTemplateCategoria,
+                    status: 'Rascunho',
+                    agendadaEm: finalAgendadaEm
+                });
+                if (res.sucesso) {
+                    toast.success('Campanha atualizada como rascunho!');
+                    onSaved();
+                    onClose();
+                } else {
+                    toast.error(res.mensagem || 'Erro ao atualizar rascunho.');
+                }
+            }
+        } catch (error) {
+            toast.error('Erro ao conectar com o servidor.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Ação Final de Criar + Disparar
+    const handleConfirmAndDispatch = async () => {
+        if (finalContacts.length === 0) {
+            toast.error('Nenhum contato selecionado.');
             return;
         }
         const fixedEmpty = varMappings.some((m) => m.source === 'fixed' && !m.fixedValue.trim());
@@ -442,224 +375,673 @@ function DispatchModal({ campaign, onClose, onDispatched }: DispatchModalProps) 
             return;
         }
 
-        setIsDispatching(true);
+        setIsSubmitting(true);
         try {
-            const selectedContacts = contacts.filter((c) => selected.has(c.contatoId));
+            const finalAgendadaEm = agendadaEm ? new Date(agendadaEm).toISOString() : undefined;
+            let currentCampaignId = campaign?.campanhaId;
 
-            const destinatarios = selectedContacts.map((c) => ({
+            if (!isEdit) {
+                // 1. Criar a campanha no banco
+                const createRes = await CampaignService.create({
+                    nome: nome.trim(),
+                    templateNome: selectedTemplateName,
+                    templateIdioma: selectedTemplateIdioma,
+                    categoria: selectedTemplateCategoria,
+                    agendadaEm: finalAgendadaEm
+                });
+                if (!createRes.sucesso || !createRes.dados) {
+                    toast.error(createRes.mensagem || 'Erro ao registrar a campanha.');
+                    setIsSubmitting(false);
+                    return;
+                }
+                currentCampaignId = createRes.dados.campanhaId;
+            } else {
+                // Se for edição de rascunho, atualizar antes de disparar
+                const updateRes = await CampaignService.update({
+                    campanhaId: campaign.campanhaId,
+                    nome: nome.trim(),
+                    templateNome: selectedTemplateName,
+                    templateIdioma: selectedTemplateIdioma,
+                    categoria: selectedTemplateCategoria,
+                    status: 'Enviando',
+                    agendadaEm: finalAgendadaEm
+                });
+                if (!updateRes.sucesso) {
+                    toast.error(updateRes.mensagem || 'Erro ao atualizar a campanha.');
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
+            if (!currentCampaignId) return;
+
+            // 2. Montar destinatários e disparar
+            const destinatarios = finalContacts.map((c) => ({
                 numero: c.telefone,
-                ...(varMappings.length > 0 && {
-                    variaveis: varMappings.map((m) => resolveVar(c, m)),
-                }),
+                variaveis: varMappings.map((m) => resolveVar(c, m))
             }));
 
-            const res = await CampaignService.disparar(campaign.campanhaId, {
+            const dispatchRes = await CampaignService.disparar(currentCampaignId, {
                 destinatarios,
-                componentes: [],
+                componentes: []
             });
 
-            if (res.sucesso) {
-                setResult({ totalEnviados: res.dados.totalEnviados, totalFalhas: res.dados.totalFalhas });
-                onDispatched();
+            if (dispatchRes.sucesso && dispatchRes.dados) {
+                setResult({
+                    totalEnviados: dispatchRes.dados.totalEnviados,
+                    totalFalhas: dispatchRes.dados.totalFalhas
+                });
+                toast.success('Processamento do disparo concluído!');
+                onSaved();
             } else {
-                toast.error(res.mensagem || 'Erro ao disparar campanha.');
+                toast.error(dispatchRes.mensagem || 'Erro ao realizar o disparo.');
             }
-        } catch {
+        } catch (error) {
             toast.error('Erro ao conectar com o servidor.');
         } finally {
-            setIsDispatching(false);
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && !isDispatching && onClose()}>
-            <div className="camp-modal camp-modal-lg">
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && !isSubmitting && onClose()}>
+            <div className={`camp-modal ${step === 2 ? 'camp-modal-xl' : 'camp-modal-lg'}`}>
                 <div className="camp-modal-header">
-                    <h2>Disparar Campanha</h2>
-                    <button className="close-modal-button" onClick={onClose} disabled={isDispatching}>
+                    <h2>{isEdit ? 'Editar e Enviar Campanha' : 'Criar Nova Campanha'}</h2>
+                    <button className="close-modal-button" onClick={onClose} disabled={isSubmitting}>
                         <FaTimes />
                     </button>
                 </div>
 
-                <div className="camp-modal-body">
-                    {/* Info da campanha */}
-                    <div className="camp-dispatch-info">
-                        <span className="camp-dispatch-info-label">Campanha</span>
-                        <span className="camp-dispatch-info-value">{campaign.campanhaNome}</span>
-                        <span className="camp-dispatch-info-label" style={{ marginTop: 6 }}>Template</span>
-                        <span className="camp-dispatch-info-value" style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                            {campaign.campanhaTemplateNome} · {campaign.campanhaTemplateIdioma}
-                        </span>
-                    </div>
-
-                    {/* Mapeamento de variáveis do BODY — sempre visível */}
-                    {!result && (
-                        <div className="camp-vars-section">
-                            <div className="camp-vars-section-header">
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                                    <span className="camp-contact-list-title">
-                                        Variáveis do template
-                                        {templateLoaded && varMappings.length > 0 && (
-                                            <span className="camp-vars-auto-badge">detectadas automaticamente</span>
-                                        )}
-                                    </span>
-                                    <button type="button" className="camp-btn-add-var" onClick={addVar}>
-                                        <FaPlus size={10} /> Adicionar variável
-                                    </button>
-                                </div>
-                                <span className="camp-hint">
-                                    {varMappings.length === 0
-                                        ? 'Se o template não tiver variáveis, deixe vazio e dispare.'
-                                        : 'Cada contato recebe sua própria mensagem personalizada.'}
-                                </span>
-                            </div>
-
-                            {varMappings.length === 0 && (
-                                <div className="camp-vars-empty">
-                                    Nenhuma variável configurada — template sem personalização.
-                                </div>
-                            )}
-
-                            {varMappings.map((mapping, i) => (
-                                <div key={i} className="camp-var-row">
-                                    <span className="camp-var-label">
-                                        <code>{`{{${i + 1}}}`}</code>
-                                    </span>
-                                    <select
-                                        className="camp-var-source-select"
-                                        value={mapping.source}
-                                        onChange={(e) => updateMapping(i, { source: e.target.value as VarSource, fixedValue: '' })}
-                                    >
-                                        {(Object.entries(VAR_SOURCE_LABEL) as [VarSource, string][]).map(([val, label]) => (
-                                            <option key={val} value={val}>{label}</option>
-                                        ))}
-                                    </select>
-                                    {mapping.source === 'fixed' && (
-                                        <input
-                                            type="text"
-                                            className="camp-var-fixed-input"
-                                            value={mapping.fixedValue}
-                                            onChange={(e) => updateMapping(i, { fixedValue: e.target.value })}
-                                            placeholder="Digite o valor fixo..."
-                                        />
-                                    )}
-                                    <button
-                                        type="button"
-                                        className="camp-var-remove-btn"
-                                        onClick={() => removeVar(i)}
-                                        title="Remover variável"
-                                    >
-                                        <FaTimes size={11} />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {previewText && varMappings.length > 0 && (
-                                <div className="camp-vars-preview">
-                                    <span className="camp-dispatch-info-label">
-                                        Prévia{previewContact ? ` — ${previewContact.nome}` : ''}
-                                    </span>
-                                    <p className="camp-vars-preview-text">{previewText}</p>
-                                </div>
-                            )}
+                {/* Barra de Progresso do Wizard */}
+                {!result && (
+                    <div className="camp-wizard-steps">
+                        <div className={`camp-wizard-step ${step >= 1 ? 'active' : ''} ${step === 1 ? 'current' : ''}`}>
+                            <span className="step-num">1</span>
+                            <span className="step-label">Identificação</span>
                         </div>
-                    )}
+                        <div className="step-line" />
+                        <div className={`camp-wizard-step ${step >= 2 ? 'active' : ''} ${step === 2 ? 'current' : ''}`}>
+                            <span className="step-num">2</span>
+                            <span className="step-label">Público</span>
+                        </div>
+                        <div className="step-line" />
+                        <div className={`camp-wizard-step ${step >= 3 ? 'active' : ''} ${step === 3 ? 'current' : ''}`}>
+                            <span className="step-num">3</span>
+                            <span className="step-label">Conteúdo</span>
+                        </div>
+                        <div className="step-line" />
+                        <div className={`camp-wizard-step ${step >= 4 ? 'active' : ''} ${step === 4 ? 'current' : ''}`}>
+                            <span className="step-num">4</span>
+                            <span className="step-label">Revisão</span>
+                        </div>
+                    </div>
+                )}
 
-                    {/* Resultado do disparo */}
+                <div className="camp-modal-body" style={{ minHeight: '500px' }}>
                     {result ? (
-                        <div className="camp-dispatch-result">
-                            <h4>Disparo concluído!</h4>
-                            <p>
-                                <strong>{result.totalEnviados}</strong> mensagens enviadas com sucesso.
-                                {result.totalFalhas > 0 && (
-                                    <> <strong>{result.totalFalhas}</strong> falha(s).</>
-                                )}
+                        /* Resultados do Envio */
+                        <div className="camp-dispatch-result" style={{ textAlign: 'center', padding: '40px 20px' }}>
+                            <div style={{ fontSize: '3rem', color: '#15803d', marginBottom: '16px' }}><FaCheckCircle /></div>
+                            <h3>Campanha Disparada!</h3>
+                            <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
+                                A campanha <strong>{nome}</strong> foi processada com os seguintes resultados:
                             </p>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '24px' }}>
+                                <div style={{ background: '#f0fdf4', padding: '16px 24px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+                                    <span style={{ display: 'block', fontSize: '0.8125rem', color: '#15803d', fontWeight: 'bold' }}>Sucessos</span>
+                                    <span style={{ fontSize: '2rem', fontWeight: 'bold', color: '#16a34a' }}>{result.totalEnviados}</span>
+                                </div>
+                                <div style={{ background: result.totalFalhas > 0 ? '#fef2f2' : '#f8f9fa', padding: '16px 24px', borderRadius: '12px', border: result.totalFalhas > 0 ? '1px solid #fecaca' : '1px solid #e2e8f0' }}>
+                                    <span style={{ display: 'block', fontSize: '0.8125rem', color: result.totalFalhas > 0 ? '#b91c1c' : '#64748b', fontWeight: 'bold' }}>Falhas</span>
+                                    <span style={{ fontSize: '2rem', fontWeight: 'bold', color: result.totalFalhas > 0 ? '#dc2626' : '#475569' }}>{result.totalFalhas}</span>
+                                </div>
+                            </div>
                         </div>
                     ) : (
+                        /* Passos do Wizard */
                         <>
-                            <div className="camp-contact-list-header">
-                                <span className="camp-contact-list-title">
-                                    Selecionar contatos{' '}
-                                    {selected.size > 0 && (
-                                        <span className="camp-selected-count">({selected.size} selecionado{selected.size !== 1 ? 's' : ''})</span>
-                                    )}
-                                </span>
-                                <label className="camp-select-all-label">
-                                    <input
-                                        type="checkbox"
-                                        checked={allSelected}
-                                        onChange={toggleAll}
-                                        disabled={isLoadingContacts || filtered.length === 0}
-                                    />
-                                    Selecionar todos
-                                </label>
-                            </div>
-
-                            <input
-                                type="text"
-                                className="camp-contact-search"
-                                placeholder="Buscar por nome ou telefone..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-
-                            <div className="camp-contact-scroll">
-                                {isLoadingContacts ? (
-                                    <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                        Carregando contatos...
-                                    </div>
-                                ) : filtered.length === 0 ? (
-                                    <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                        Nenhum contato encontrado.
-                                    </div>
-                                ) : (
-                                    filtered.map((c) => (
-                                        <div
-                                            key={c.contatoId}
-                                            className="camp-contact-item"
-                                            onClick={() => toggleContact(c.contatoId)}
-                                        >
+                            {step === 1 && (
+                                <div className="wizard-step-content animate-fade-in">
+                                    <h3 className="step-title">Passo 1: Como você quer chamar a campanha?</h3>
+                                    <div className="camp-form-grid" style={{ marginTop: '20px' }}>
+                                        <div className="camp-form-group camp-span-2">
+                                            <label>Nome da campanha <span className="camp-required">*</span></label>
                                             <input
-                                                type="checkbox"
-                                                checked={selected.has(c.contatoId)}
-                                                onChange={() => toggleContact(c.contatoId)}
-                                                onClick={(e) => e.stopPropagation()}
+                                                type="text"
+                                                value={nome}
+                                                onChange={(e) => setNome(e.target.value)}
+                                                placeholder="ex: Campanha Black Friday 2026"
+                                                required
                                             />
-                                            <div className="camp-contact-avatar">
-                                                {c.nome.charAt(0).toUpperCase()}
+                                        </div>
+                                        {/* 
+                                        <div className="camp-form-group camp-span-2">
+                                            <label>Data de agendamento (Informativo)</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={agendadaEm}
+                                                onChange={(e) => setAgendadaEm(e.target.value)}
+                                            />
+                                            <span className="camp-hint">Nota: Atualmente os disparos são processados imediatamente após a confirmação.</span>
+                                        </div>
+                                        */}
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 2 && (
+                                <div className="wizard-step-content animate-fade-in" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', alignItems: 'stretch' }}>
+                                    
+                                    {/* Lado Esquerdo: Abas de Seleção */}
+                                    <div className="publico-selector-left" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <h3 className="step-title" style={{ margin: 0 }}>Passo 2: Selecione o Público</h3>
+                                        
+                                        <div className="publico-tabs" style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                                            <button
+                                                type="button"
+                                                className={`publico-tab-btn ${publicoTipo === 'BASE' ? 'active' : ''}`}
+                                                onClick={() => setPublicoTipo('BASE')}
+                                                style={{ flex: 1, padding: '8px 12px', fontSize: '0.8125rem' }}
+                                            >
+                                                <FaUsers /> Base
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`publico-tab-btn ${publicoTipo === 'MANUAL' ? 'active' : ''}`}
+                                                onClick={() => setPublicoTipo('MANUAL')}
+                                                style={{ flex: 1, padding: '8px 12px', fontSize: '0.8125rem' }}
+                                            >
+                                                <FaUserPlus /> Manual
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`publico-tab-btn ${publicoTipo === 'COLA' ? 'active' : ''}`}
+                                                onClick={() => setPublicoTipo('COLA')}
+                                                style={{ flex: 1, padding: '8px 12px', fontSize: '0.8125rem' }}
+                                            >
+                                                <FaClipboardList /> Colar
+                                            </button>
+                                        </div>
+
+                                        {/* Conteúdo da Aba Ativa */}
+                                        <div className="tab-content-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                            {/* Opção A: Contatos da Base */}
+                                            {publicoTipo === 'BASE' && (
+                                                <div className="publico-base-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                    <input
+                                                        type="text"
+                                                        className="camp-contact-search"
+                                                        placeholder="Buscar contatos..."
+                                                        value={contactSearch}
+                                                        onChange={(e) => setContactSearch(e.target.value)}
+                                                        style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                                                    />
+                                                    
+                                                    <div className="camp-contact-list-header" style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                                                        <label className="camp-select-all-label">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isAllBaseSelected}
+                                                                onChange={toggleAllBase}
+                                                            />
+                                                            Selecionar todos filtrados ({filteredBaseContacts.length})
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <div className="camp-contact-scroll" style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                                                        {filteredBaseContacts.length === 0 ? (
+                                                            <div style={{ padding: '15px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>Nenhum contato encontrado.</div>
+                                                        ) : (
+                                                            filteredBaseContacts.map((c) => (
+                                                                <div
+                                                                    key={c.contatoId}
+                                                                    className={`camp-contact-item ${selectedBaseContacts.has(c.contatoId) ? 'selected' : ''}`}
+                                                                    onClick={() => toggleBaseContact(c.contatoId)}
+                                                                    style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedBaseContacts.has(c.contatoId)}
+                                                                        onChange={() => toggleBaseContact(c.contatoId)}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        style={{ marginRight: '10px' }}
+                                                                    />
+                                                                    <div style={{ minWidth: 0 }}>
+                                                                        <div style={{ fontWeight: '600', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nome}</div>
+                                                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{c.telefone}</div>
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        )}
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        className="camp-btn-primary"
+                                                        onClick={handleAddBaseSelected}
+                                                        disabled={selectedBaseContacts.size === 0}
+                                                        style={{ marginTop: '8px', padding: '8px 16px', fontSize: '0.8125rem', width: '100%', justifyContent: 'center' }}
+                                                    >
+                                                        Adicionar Selecionados ({selectedBaseContacts.size})
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Opção B: Digitação Manual */}
+                                            {publicoTipo === 'MANUAL' && (
+                                                <div className="publico-manual-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                    <div className="camp-form-group">
+                                                        <label style={{ fontSize: '0.75rem' }}>Nome do contato</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Nome..."
+                                                            value={newManualName}
+                                                            onChange={e => setNewManualName(e.target.value)}
+                                                            style={{ padding: '8px 12px' }}
+                                                        />
+                                                    </div>
+                                                    <div className="camp-form-group">
+                                                        <label style={{ fontSize: '0.75rem' }}>Telefone</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="ex: 5511999999999"
+                                                            value={newManualPhone}
+                                                            onChange={e => setNewManualPhone(e.target.value)}
+                                                            style={{ padding: '8px 12px' }}
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="camp-btn-primary"
+                                                        onClick={handleAddManual}
+                                                        style={{ marginTop: '4px', padding: '8px 16px', fontSize: '0.8125rem', justifyContent: 'center' }}
+                                                    >
+                                                        Adicionar Contato
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Opção C: Colar Lista */}
+                                            {publicoTipo === 'COLA' && (
+                                                <div className="publico-cola-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                    <textarea
+                                                        rows={5}
+                                                        placeholder="Exemplo:&#10;Lucas, 5511999999999&#10;Maria, 5511888888888&#10;Ou cole apenas números (um por linha)"
+                                                        value={coladosRaw}
+                                                        onChange={e => setColadosRaw(e.target.value)}
+                                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', fontFamily: 'monospace', fontSize: '12px', resize: 'vertical' }}
+                                                    />
+                                                    
+                                                    {(() => {
+                                                        const countColados = coladosRaw.split('\n')
+                                                            .map(line => {
+                                                                if (!line.trim()) return null;
+                                                                const parts = line.split(/[,;\t]/);
+                                                                if (parts.length >= 2) return parts[1].replace(/\D/g, '').trim();
+                                                                return line.replace(/\D/g, '').trim();
+                                                            })
+                                                            .filter(tel => tel && tel.length >= 8).length;
+                                                        
+                                                        return (
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                                    Detectados: <strong>{countColados}</strong>
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    className="camp-btn-primary"
+                                                                    onClick={handleAddColados}
+                                                                    disabled={countColados === 0}
+                                                                    style={{ padding: '6px 12px', fontSize: '0.8125rem' }}
+                                                                >
+                                                                    Adicionar Lista
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Lado Direito: Resumo do Público Adicionado */}
+                                    <div className="publico-summary-right" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                                Contatos Adicionados ({finalContacts.length})
+                                            </h4>
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                {finalContacts.length > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsSummaryExpanded(prev => !prev)}
+                                                        style={{ background: 'transparent', border: 'none', color: 'var(--petroleum-blue)', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
+                                                    >
+                                                        {isSummaryExpanded ? (
+                                                            <><FaChevronUp size={10} /> Ocultar</>
+                                                        ) : (
+                                                            <><FaChevronRight size={10} /> Ver lista</>
+                                                        )}
+                                                    </button>
+                                                )}
+                                                {finalContacts.length > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setFinalContacts([]);
+                                                            setIsSummaryExpanded(false);
+                                                        }}
+                                                        style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
+                                                    >
+                                                        Limpar todos
+                                                    </button>
+                                                )}
                                             </div>
-                                            <div className="camp-contact-info">
-                                                <span className="camp-contact-name">{c.nome}</span>
-                                                <span className="camp-contact-phone">
-                                                    <FaWhatsapp size={10} style={{ marginRight: 4 }} />
-                                                    {c.telefone}
+                                        </div>
+
+                                        {isSummaryExpanded && finalContacts.length > 0 ? (
+                                            <div className="summary-expanded-view animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+                                                {/* Filtro de Busca de Contatos Adicionados */}
+                                                <input
+                                                    type="text"
+                                                    placeholder="Filtrar por nome ou telefone..."
+                                                    value={addedSearchTerm}
+                                                    onChange={e => setAddedSearchTerm(e.target.value)}
+                                                    style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.8125rem', width: '100%', outline: 'none' }}
+                                                />
+                                                
+                                                <div style={{ flex: 1, maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fff' }}>
+                                                    {filteredAddedContacts.length === 0 ? (
+                                                        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
+                                                            Nenhum contato encontrado.
+                                                        </div>
+                                                    ) : (
+                                                        filteredAddedContacts.map((c) => {
+                                                            // Encontrar o índice no array original
+                                                            const originalIdx = finalContacts.findIndex(fc => fc.telefone === c.telefone);
+                                                            return (
+                                                                <div key={c.telefone} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #f1f5f9' }}>
+                                                                    <div style={{ minWidth: 0, marginRight: '8px' }}>
+                                                                        <div style={{ fontWeight: '600', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nome}</div>
+                                                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{c.telefone}</div>
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setFinalContacts(prev => prev.filter((_, i) => i !== originalIdx))}
+                                                                        style={{ background: 'transparent', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '4px' }}
+                                                                        title="Remover contato"
+                                                                    >
+                                                                        <FaTrash size={12} />
+                                                                    </button>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            /* Mensagem exibida quando não está expandido ou não tem contatos */
+                                            finalContacts.length > 0 && (
+                                                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8125rem', background: '#fff', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
+                                                    Clique em "Ver lista" para visualizar e filtrar os contatos selecionados.
+                                                </div>
+                                            )
+                                        )}
+
+                                        {finalContacts.length === 0 && (
+                                            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8125rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                                                Nenhum contato adicionado ainda. Escolha ao lado e adicione.
+                                            </div>
+                                        )}
+
+                                        {/* Informações Financeiras */}
+                                        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '10px 12px', marginTop: 'auto' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8125rem' }}>
+                                                <span style={{ color: '#166534', fontWeight: '500' }}>Gasto aproximado previsto:</span>
+                                                <span style={{ color: '#15803d', fontWeight: '700', fontSize: '0.9375rem' }}>
+                                                    {(finalContacts.length * CUSTO_UNITARIO_BRL).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                </span>
+                                            </div>
+                                            <span style={{ display: 'block', fontSize: '9px', color: '#166534', marginTop: '2px', opacity: 0.8 }}>
+                                                Com base em {CUSTO_UNITARIO_BRL.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} por envio.
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            )}
+
+                            {step === 3 && (
+                                <div className="wizard-step-content animate-fade-in">
+                                    <h3 className="step-title">Passo 3: Conteúdo da Mensagem</h3>
+
+                                    <div className="camp-form-group" style={{ marginTop: '16px', marginBottom: '16px' }}>
+                                        <label>Selecione o template <span className="camp-required">*</span></label>
+                                        {isLoadingTemplates ? (
+                                            <CustomSelect
+                                                disabled
+                                                options={[]}
+                                                value=""
+                                                onChange={() => { }}
+                                                placeholder="Carregando templates..."
+                                            />
+                                        ) : (
+                                            <CustomSelect
+                                                options={[
+                                                    { value: '', label: 'Selecione um template aprovado' },
+                                                    ...templates.map(t => ({
+                                                        value: t.nome,
+                                                        label: `${t.nome} (${t.idioma})`
+                                                    }))
+                                                ]}
+                                                value={selectedTemplateName}
+                                                onChange={handleTemplateChange}
+                                                placeholder="Selecione um template aprovado"
+                                            />
+                                        )}
+                                    </div>
+
+                                    {selectedTemplateName && (
+                                        <div className="content-template-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px' }}>
+                                            {/* Configurações de Variáveis */}
+                                            <div className="template-vars-setup">
+                                                <span className="setup-title" style={{ fontWeight: 'bold', fontSize: '13.5px', display: 'block', marginBottom: '12px' }}>
+                                                    Mapeamento de Variáveis
+                                                </span>
+                                                {varMappings.length === 0 ? (
+                                                    <div style={{ color: 'var(--text-secondary)', padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
+                                                        Este template não contém variáveis dinâmicas.
+                                                    </div>
+                                                ) : (
+                                                    varMappings.map((mapping, idx) => (
+                                                        <div key={idx} className="camp-var-row" style={{ marginBottom: '10px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                            <span style={{ fontWeight: 'bold', minWidth: '45px' }}><code>{`{{${idx + 1}}}`}</code></span>
+                                                            <CustomSelect
+                                                                options={Object.entries(VAR_SOURCE_LABEL).map(([val, lbl]) => ({
+                                                                    value: val,
+                                                                    label: lbl
+                                                                }))}
+                                                                value={mapping.source}
+                                                                onChange={val => updateMapping(idx, { source: val as VarSource, fixedValue: '' })}
+                                                            />
+                                                            {mapping.source === 'fixed' && (
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Valor fixo..."
+                                                                    value={mapping.fixedValue}
+                                                                    onChange={e => updateMapping(idx, { fixedValue: e.target.value })}
+                                                                    style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', flex: 1 }}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+
+                                            {/* WhatsApp Bubble Preview */}
+                                            <div className="template-preview-bubble">
+                                                <span style={{ fontWeight: 'bold', fontSize: '13.5px', display: 'block', marginBottom: '8px' }}>
+                                                    Prévia (Visualização)
+                                                </span>
+                                                <div className="ct-preview-chat-bg" style={{ minHeight: '180px', borderRadius: '12px', padding: '12px' }}>
+                                                    <div className="ct-preview-bubble-wrap">
+                                                        <div className="ct-preview-bubble" style={{ maxWidth: '240px' }}>
+                                                            <div className="ct-preview-body" style={{ fontSize: '12.5px', lineHeight: '1.4' }}>
+                                                                {previewText.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}
+                                                            </div>
+                                                            <div className="ct-preview-time" style={{ fontSize: '9px' }}>
+                                                                {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {step === 4 && (
+                                <div className="wizard-step-content animate-fade-in">
+                                    <h3 className="step-title">Passo 4: Revisar e Confirmar Disparo</h3>
+
+                                    <div className="review-box" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
+                                        <div className="review-details" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                            <div style={{ background: '#f8f9fa', padding: '14px', borderRadius: '10px' }}>
+                                                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Nome da Campanha</span>
+                                                <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{nome}</span>
+                                                {agendadaEm && (
+                                                    <span style={{ display: 'block', fontSize: '12px', marginTop: '4px', color: '#15803d' }}>
+                                                        Agendada: {new Date(agendadaEm).toLocaleString()}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div style={{ background: '#f8f9fa', padding: '14px', borderRadius: '10px' }}>
+                                                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Destinatários</span>
+                                                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--petroleum-blue)' }}>
+                                                    {finalContacts.length} contato{finalContacts.length !== 1 ? 's' : ''}
+                                                </span>
+                                                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                                    Origem: {publicoTipo === 'BASE' ? 'Contatos da Base' : publicoTipo === 'MANUAL' ? 'Inserção Manual' : 'Lista Colada'}
+                                                </span>
+                                            </div>
+
+                                            <div style={{ background: '#f8f9fa', padding: '14px', borderRadius: '10px' }}>
+                                                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Template Homologado</span>
+                                                <span style={{ fontWeight: '600' }}>{selectedTemplateName}</span>
+                                                <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)' }}>Categoria: {selectedTemplateCategoria} · Idioma: {selectedTemplateIdioma}</span>
+                                            </div>
+
+                                            <div style={{ background: '#fef3c7', padding: '14px', borderRadius: '10px', border: '1px solid #fde68a' }}>
+                                                <span style={{ display: 'block', fontSize: '11px', color: '#b45309', textTransform: 'uppercase', fontWeight: 'bold' }}>Custo Estimado (R$ 0,31 / envio)</span>
+                                                <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#d97706' }}>
+                                                    {(finalContacts.length * CUSTO_UNITARIO_BRL).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                </span>
+                                                <span style={{ display: 'block', fontSize: '11px', color: '#b45309', marginTop: '2px' }}>
+                                                    Cobrado pela Meta na API Cloud e impostos podem estar inclusos.
                                                 </span>
                                             </div>
                                         </div>
-                                    ))
-                                )}
-                            </div>
+
+                                        <div className="review-preview">
+                                            <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '8px' }}>Prévia Final da Mensagem</span>
+                                            <div className="ct-preview-chat-bg" style={{ minHeight: '220px', borderRadius: '12px', padding: '14px' }}>
+                                                <div className="ct-preview-bubble-wrap">
+                                                    <div className="ct-preview-bubble" style={{ maxWidth: '250px' }}>
+                                                        <div className="ct-preview-body" style={{ fontSize: '12.5px', lineHeight: '1.4' }}>
+                                                            {previewText.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}
+                                                        </div>
+                                                        <div className="ct-preview-time" style={{ fontSize: '9px' }}>
+                                                            {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
 
                 <div className="camp-modal-footer">
-                    <button className="camp-btn-secondary" onClick={onClose} disabled={isDispatching}>
-                        {result ? 'Fechar' : 'Cancelar'}
-                    </button>
-                    {!result && (
-                        <button
-                            className="camp-btn-primary"
-                            onClick={handleDisparar}
-                            disabled={isDispatching || selected.size === 0}
-                        >
-                            {isDispatching ? (
-                                <><FaSpinner className="ct-spin" /> Disparando...</>
-                            ) : (
-                                <><FaPaperPlane /> Disparar para {selected.size} contato{selected.size !== 1 ? 's' : ''}</>
-                            )}
+                    {result ? (
+                        /* Botão de Fechar após Disparo */
+                        <button type="button" className="camp-btn-primary" onClick={onClose}>
+                            Fechar
                         </button>
+                    ) : (
+                        /* Controles de Navegação do Wizard */
+                        <>
+                            <button
+                                type="button"
+                                className="camp-btn-secondary"
+                                onClick={onClose}
+                                disabled={isSubmitting}
+                            >
+                                Cancelar
+                            </button>
+
+                            <div style={{ display: 'flex', gap: '10px', marginLeft: 'auto' }}>
+                                {step > 1 && (
+                                    <button
+                                        type="button"
+                                        className="camp-btn-secondary"
+                                        onClick={() => setStep(prev => prev - 1)}
+                                        disabled={isSubmitting}
+                                    >
+                                        <FaChevronLeft /> Voltar
+                                    </button>
+                                )}
+
+                                {step < 4 ? (
+                                    <button
+                                        type="button"
+                                        className="camp-btn-primary"
+                                        onClick={() => setStep(prev => prev + 1)}
+                                        disabled={
+                                            (step === 1 && !nome.trim()) ||
+                                            (step === 2 && finalContacts.length === 0) ||
+                                            (step === 3 && !selectedTemplateName)
+                                        }
+                                    >
+                                        Avançar <FaChevronRight />
+                                    </button>
+                                ) : (
+                                    <>
+                                        <button
+                                            type="button"
+                                            className="camp-btn-secondary"
+                                            onClick={handleSaveAsDraft}
+                                            disabled={isSubmitting}
+                                            style={{ borderColor: 'var(--petroleum-blue)', color: 'var(--petroleum-blue)' }}
+                                        >
+                                            {isSubmitting ? (
+                                                <><FaSpinner className="ct-spin" /> Salvando...</>
+                                            ) : (
+                                                'Salvar como Rascunho'
+                                            )}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="camp-btn-primary"
+                                            onClick={handleConfirmAndDispatch}
+                                            disabled={isSubmitting || finalContacts.length === 0}
+                                            style={{ background: '#16a34a' }}
+                                        >
+                                            {isSubmitting ? (
+                                                <><FaSpinner className="ct-spin" /> Disparando...</>
+                                            ) : (
+                                                <><FaPaperPlane /> Confirmar e Disparar</>
+                                            )}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </>
                     )}
                 </div>
             </div>
@@ -708,7 +1090,6 @@ const CampaignPage = () => {
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [campaignToEdit, setCampaignToEdit] = useState<Campaign | null>(null);
-    const [dispatchTarget, setDispatchTarget] = useState<Campaign | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<{ id: number; nome: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -777,7 +1158,6 @@ const CampaignPage = () => {
         <div className="page-container">
             <div className="page-header">
                 <div className="camp-header-left">
-                    <FaBullhorn className="camp-page-icon" />
                     <div>
                         <h1>Campanhas</h1>
                         <p className="camp-page-subtitle">Gerencie e dispare campanhas de mensagens em massa via WhatsApp</p>
@@ -807,6 +1187,12 @@ const CampaignPage = () => {
                         <span className="camp-stat-label">Rascunhos / Finalizadas</span>
                         <span className="camp-stat-value">{totalRascunho} / {totalFinalizada}</span>
                     </div>
+                    <div className="camp-stat-card">
+                        <span className="camp-stat-label">Investimento Estimado</span>
+                        <span className="camp-stat-value accent">
+                            {(totalDisparado * CUSTO_UNITARIO_BRL).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </span>
+                    </div>
                 </div>
             )}
 
@@ -819,26 +1205,16 @@ const CampaignPage = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <select
-                    className="camp-filter-select"
+                <CustomSelect
+                    options={STATUS_FILTER_OPTIONS}
                     value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value as CampanhaStatus | 'TODOS')}
-                >
-                    <option value="TODOS">Todos os status</option>
-                    {Object.entries(STATUS_LABEL).map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
-                    ))}
-                </select>
-                <select
-                    className="camp-filter-select"
+                    onChange={(val) => setFilterStatus(val as CampanhaStatus | 'TODOS')}
+                />
+                <CustomSelect
+                    options={CATEGORIA_FILTER_OPTIONS}
                     value={filterCategoria}
-                    onChange={(e) => setFilterCategoria(e.target.value as CampanhaCategoria | 'TODOS')}
-                >
-                    <option value="TODOS">Todas as categorias</option>
-                    {Object.entries(CATEGORIA_LABEL).map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
-                    ))}
-                </select>
+                    onChange={(val) => setFilterCategoria(val as CampanhaCategoria | 'TODOS')}
+                />
             </div>
 
             {/* Table */}
@@ -878,6 +1254,7 @@ const CampaignPage = () => {
                                 <th>Categoria</th>
                                 <th>Status</th>
                                 <th>Interação</th>
+                                <th>Custo (Est.)</th>
                                 <th>Criada em</th>
                                 <th style={{ textAlign: 'right', paddingRight: '20px' }}>Ações</th>
                             </tr>
@@ -915,6 +1292,11 @@ const CampaignPage = () => {
                                         )}
                                     </td>
                                     <td>
+                                        <span style={{ fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                                            {(c.totalDisparado * CUSTO_UNITARIO_BRL).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                        </span>
+                                    </td>
+                                    <td>
                                         <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
                                             {new Date(c.campanhaCreatedat).toLocaleDateString('pt-BR')}
                                         </span>
@@ -924,7 +1306,10 @@ const CampaignPage = () => {
                                             <button
                                                 className="camp-action-btn dispatch"
                                                 title={c.campanhaStatus !== 'Rascunho' ? 'Só é possível disparar campanhas em Rascunho' : 'Disparar campanha'}
-                                                onClick={() => setDispatchTarget(c)}
+                                                onClick={() => {
+                                                    setCampaignToEdit(c);
+                                                    setIsFormOpen(true);
+                                                }}
                                                 disabled={c.campanhaStatus !== 'Rascunho'}
                                             >
                                                 <FaPaperPlane size={13} />
@@ -954,18 +1339,13 @@ const CampaignPage = () => {
 
             {/* Modals */}
             {isFormOpen && (
-                <CampaignFormModal
+                <CampaignWizardModal
                     campaign={campaignToEdit}
-                    onClose={() => setIsFormOpen(false)}
+                    onClose={() => {
+                        setIsFormOpen(false);
+                        setCampaignToEdit(null);
+                    }}
                     onSaved={loadMetrics}
-                />
-            )}
-
-            {dispatchTarget && (
-                <DispatchModal
-                    campaign={dispatchTarget}
-                    onClose={() => setDispatchTarget(null)}
-                    onDispatched={loadMetrics}
                 />
             )}
 

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import toast from 'react-hot-toast';
 import EmojiPicker, { type EmojiClickData, Theme } from 'emoji-picker-react';
+import CustomSelect from '../components/CustomSelect';
 import {
     FaPlus,
     FaTrash,
@@ -12,8 +13,6 @@ import {
     FaTimesCircle,
     FaExclamationTriangle,
     FaPauseCircle,
-    FaEye,
-    FaChevronUp,
     FaImage,
     FaVideo,
     FaFileAlt,
@@ -34,7 +33,6 @@ import {
     type MetaTemplate,
     type CreateTemplateDTO,
     type BotaoTemplate,
-    type ObterHandleExemploResult,
 } from '../services/MetaTemplateService';
 import './CampaignTemplatesPage.css';
 
@@ -59,25 +57,8 @@ const CATEGORIA_LABEL: Record<TemplateCategoria, string> = {
     AUTHENTICATION: 'Autenticação',
 };
 
-const REJEICAO_LABEL: Record<string, string> = {
-    ABUSIVE_CONTENT: 'Conteúdo abusivo',
-    INCORRECT_CATEGORY: 'Categoria incorreta',
-    INVALID_FORMAT: 'Formato inválido',
-    SCAM: 'Fraude detectada',
-    NONE: 'Sem motivo especificado',
-};
-
-const BOTAO_TIPO_LABEL: Record<TipoBotao, string> = {
-    URL: 'Link (URL)',
-    QUICK_REPLY: 'Resposta rápida',
-    PHONE_NUMBER: 'Telefone',
-    VOICE_CALL: 'Chamada de voz (WhatsApp)',
-    COPY_CODE: 'Copiar código',
-    FLOW: 'WhatsApp Flow',
-};
-
 function StatusBadge({ status }: { status: TemplateStatus }) {
-    const icons: Record<TemplateStatus, JSX.Element> = {
+    const icons: Record<TemplateStatus, ReactElement> = {
         APPROVED: <FaCheckCircle />,
         PENDING: <FaClock />,
         IN_REVIEW: <FaClock />,
@@ -123,7 +104,7 @@ function WhatsAppPreview({ textoHeader, formatoHeader, textoBody, textoFooter, b
     const hasContent = textoBody.trim() || textoHeader?.trim() || textoFooter?.trim() || botoes.length > 0
         || (formatoHeader && formatoHeader !== 'TEXT');
 
-    const mediaIcon: Record<string, JSX.Element> = {
+    const mediaIcon: Record<string, ReactElement> = {
         IMAGE:    <FaImage />,
         VIDEO:    <FaVideo />,
         DOCUMENT: <FaFileAlt />,
@@ -254,7 +235,7 @@ function CreateTemplateModal({ templateParaEditar, onClose, onCreated }: { templ
     const [localPreviewUrl, setLocalPreviewUrl] = useState<string | undefined>();
     const [uploadState, setUploadState] = useState<UploadState>('idle');
     const [uploadedFileName, setUploadedFileName] = useState<string>('');
-    const [handleResult, setHandleResult] = useState<ObterHandleExemploResult | null>(null);
+    const [, setHandleResult] = useState<any>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -575,16 +556,16 @@ function CreateTemplateModal({ templateParaEditar, onClose, onCreated }: { templ
 
                                 <div className="ct-form-group">
                                     <label>Idioma <span className="ct-required">*</span></label>
-                                    <select
+                                    <CustomSelect
+                                        options={[
+                                            { value: 'pt_BR', label: 'Português (Brasil)' },
+                                            { value: 'en_US', label: 'English (US)' },
+                                            { value: 'es_ES', label: 'Español' },
+                                            { value: 'es_AR', label: 'Español (Argentina)' }
+                                        ]}
                                         value={form.idioma}
-                                        onChange={(e) => setForm({ ...form, idioma: e.target.value })}
-                                        required
-                                    >
-                                        <option value="pt_BR">Português (Brasil)</option>
-                                        <option value="en_US">English (US)</option>
-                                        <option value="es_ES">Español</option>
-                                        <option value="es_AR">Español (Argentina)</option>
-                                    </select>
+                                        onChange={(v) => setForm({ ...form, idioma: v })}
+                                    />
                                 </div>
                             </div>
                         </section>
@@ -597,17 +578,18 @@ function CreateTemplateModal({ templateParaEditar, onClose, onCreated }: { templ
                                 {/* Cabeçalho */}
                                 <div className="ct-form-group">
                                     <label>Formato do cabeçalho</label>
-                                    <select
+                                    <CustomSelect
+                                        options={[
+                                            { value: '', label: 'Sem cabeçalho' },
+                                            { value: 'TEXT', label: 'Texto' },
+                                            { value: 'IMAGE', label: 'Imagem' },
+                                            { value: 'VIDEO', label: 'Vídeo' },
+                                            { value: 'DOCUMENT', label: 'Documento' },
+                                            { value: 'LOCATION', label: 'Localização' }
+                                        ]}
                                         value={form.formatoHeader || ''}
-                                        onChange={(e) => handleFormatoHeaderChange(e.target.value)}
-                                    >
-                                        <option value="">Sem cabeçalho</option>
-                                        <option value="TEXT">Texto</option>
-                                        <option value="IMAGE">Imagem</option>
-                                        <option value="VIDEO">Vídeo</option>
-                                        <option value="DOCUMENT">Documento</option>
-                                        <option value="LOCATION">Localização</option>
-                                    </select>
+                                        onChange={(v) => handleFormatoHeaderChange(v)}
+                                    />
                                 </div>
 
                                 {/* Texto do cabeçalho (formato TEXT) */}
@@ -785,17 +767,18 @@ function CreateTemplateModal({ templateParaEditar, onClose, onCreated }: { templ
                             </div>
                             {botoes.map((btn, i) => (
                                 <div key={i} className="ct-botao-row">
-                                    <select
+                                    <CustomSelect
+                                        options={[
+                                            { value: 'QUICK_REPLY', label: 'Resposta rápida' },
+                                            { value: 'URL', label: `Link (URL) ${urlCount >= 2 && btn.tipo !== 'URL' ? '(Máx. 2)' : ''}`, disabled: urlCount >= 2 && btn.tipo !== 'URL' },
+                                            { value: 'PHONE_NUMBER', label: `Telefone ${voiceCallCount >= 1 && btn.tipo !== 'PHONE_NUMBER' ? '(Conflita com Chamada de voz)' : phoneCount >= 1 && btn.tipo !== 'PHONE_NUMBER' ? '(Máx. 1)' : ''}`, disabled: (phoneCount >= 1 && btn.tipo !== 'PHONE_NUMBER') || (voiceCallCount >= 1 && btn.tipo !== 'PHONE_NUMBER') },
+                                            { value: 'VOICE_CALL', label: `Chamada de voz ${phoneCount >= 1 && btn.tipo !== 'VOICE_CALL' ? '(Conflita com Telefone)' : voiceCallCount >= 1 && btn.tipo !== 'VOICE_CALL' ? '(Máx. 1)' : ''}`, disabled: (voiceCallCount >= 1 && btn.tipo !== 'VOICE_CALL') || (phoneCount >= 1 && btn.tipo !== 'VOICE_CALL') },
+                                            { value: 'COPY_CODE', label: `Copiar código ${copyCodeCount >= 1 && btn.tipo !== 'COPY_CODE' ? '(Máx. 1)' : ''}`, disabled: copyCodeCount >= 1 && btn.tipo !== 'COPY_CODE' },
+                                            { value: 'FLOW', label: `WhatsApp Flow ${flowCount >= 1 && btn.tipo !== 'FLOW' ? '(Máx. 1)' : ''}`, disabled: flowCount >= 1 && btn.tipo !== 'FLOW' }
+                                        ]}
                                         value={btn.tipo}
-                                        onChange={(e) => updateBotao(i, 'tipo', e.target.value as TipoBotao)}
-                                    >
-                                        <option value="QUICK_REPLY">Resposta rápida</option>
-                                        <option value="URL" disabled={urlCount >= 2 && btn.tipo !== 'URL'}>Link (URL) {urlCount >= 2 && btn.tipo !== 'URL' ? '(Máx. 2)' : ''}</option>
-                                        <option value="PHONE_NUMBER" disabled={(phoneCount >= 1 && btn.tipo !== 'PHONE_NUMBER') || (voiceCallCount >= 1 && btn.tipo !== 'PHONE_NUMBER')}>Telefone {voiceCallCount >= 1 && btn.tipo !== 'PHONE_NUMBER' ? '(Conflita com Chamada de voz)' : phoneCount >= 1 && btn.tipo !== 'PHONE_NUMBER' ? '(Máx. 1)' : ''}</option>
-                                        <option value="VOICE_CALL" disabled={(voiceCallCount >= 1 && btn.tipo !== 'VOICE_CALL') || (phoneCount >= 1 && btn.tipo !== 'VOICE_CALL')}>Chamada de voz {phoneCount >= 1 && btn.tipo !== 'VOICE_CALL' ? '(Conflita com Telefone)' : voiceCallCount >= 1 && btn.tipo !== 'VOICE_CALL' ? '(Máx. 1)' : ''}</option>
-                                        <option value="COPY_CODE" disabled={copyCodeCount >= 1 && btn.tipo !== 'COPY_CODE'}>Copiar código {copyCodeCount >= 1 && btn.tipo !== 'COPY_CODE' ? '(Máx. 1)' : ''}</option>
-                                        <option value="FLOW" disabled={flowCount >= 1 && btn.tipo !== 'FLOW'}>WhatsApp Flow {flowCount >= 1 && btn.tipo !== 'FLOW' ? '(Máx. 1)' : ''}</option>
-                                    </select>
+                                        onChange={(v) => updateBotao(i, 'tipo', v as TipoBotao)}
+                                    />
                                     <input
                                         type="text"
                                         value={btn.texto}
@@ -1063,16 +1046,14 @@ const CampaignTemplatesPage = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <select
-                        className="ct-filter-select"
+                    <CustomSelect
+                        options={[
+                            { value: 'TODOS', label: 'Todos os status' },
+                            ...Object.entries(STATUS_LABEL).map(([v, l]) => ({ value: v, label: l }))
+                        ]}
                         value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value as TemplateStatus | 'TODOS')}
-                    >
-                        <option value="TODOS">Todos os status</option>
-                        {Object.entries(STATUS_LABEL).map(([v, l]) => (
-                            <option key={v} value={v}>{l}</option>
-                        ))}
-                    </select>
+                        onChange={(v) => setFilterStatus(v as TemplateStatus | 'TODOS')}
+                    />
                 </div>
 
                 <div className="table-container">

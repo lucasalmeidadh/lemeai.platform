@@ -9,10 +9,8 @@ import {
     FaCog,
     FaUsersCog,
     FaBox,
-    FaWhatsapp,
     FaCalendarAlt,
     FaDesktop,
-    FaQuestionCircle,
     FaRocket,
     FaPlug,
     FaBullhorn,
@@ -32,6 +30,7 @@ const Sidebar: FC<SidebarProps> = () => {
     const location = useLocation();
     const { unreadCount, clearUnreadCount } = useGlobalNotification();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isMarketingOpen, setIsMarketingOpen] = useState(false);
     const settingsRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -42,12 +41,14 @@ const Sidebar: FC<SidebarProps> = () => {
 
     useEffect(() => {
         setIsSettingsOpen(false);
+        setIsMarketingOpen(false);
     }, [location.pathname]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
                 setIsSettingsOpen(false);
+                setIsMarketingOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -56,10 +57,21 @@ const Sidebar: FC<SidebarProps> = () => {
         };
     }, []);
 
-    const isConfigActive = ['/users', '/chat-rules', '/products', '/connections', '/campaign-templates'].includes(location.pathname);
+    const isConfigActive = ['/users', '/chat-rules', '/products', '/connections'].includes(location.pathname);
+    const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
 
-    const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
-    const closeSettings = () => setIsSettingsOpen(false);
+    const toggleSettings = () => {
+        setIsSettingsOpen(!isSettingsOpen);
+        setIsMarketingOpen(false);
+    };
+    const closeSettings = () => {
+        setIsSettingsOpen(false);
+        setIsMarketingOpen(false);
+    };
+    const toggleMarketing = () => {
+        setIsMarketingOpen(!isMarketingOpen);
+        setIsSettingsOpen(false);
+    };
 
     return (
         <aside className="sidebar" ref={settingsRef}>
@@ -89,6 +101,14 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaStream />
                     <span>Fluxo de Vendas</span>
                 </Link>
+                <button 
+                    id="sidebar-marketing"
+                    className={`sidebar-btn ${isMarketingActive || isMarketingOpen ? 'active' : ''}`}
+                    onClick={toggleMarketing}
+                >
+                    <FaBullhorn />
+                    <span>Marketing</span>
+                </button>
                 <Link to="/agenda" className={`sidebar-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
                     <FaCalendarAlt />
                     <span>Agenda</span>
@@ -103,10 +123,6 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaAddressBook />
                     <span>Contatos</span>
                 </Link>
-                <Link to="/campanhas" className={`sidebar-link ${location.pathname === '/campanhas' ? 'active' : ''}`}>
-                    <FaPaperPlane />
-                    <span>Campanhas</span>
-                </Link>
 
                 <button 
                     id="sidebar-settings"
@@ -116,6 +132,20 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaCog />
                     <span>Ajustes</span>
                 </button>
+
+                {isMarketingOpen && (
+                    <div className="sidebar-submenu">
+                        <div className="submenu-header">Marketing</div>
+                        <Link to="/campanhas" className={`submenu-link ${location.pathname === '/campanhas' ? 'active' : ''}`} onClick={closeSettings}>
+                            <FaPaperPlane />
+                            <span>Disparador</span>
+                        </Link>
+                        <Link to="/campaign-templates" className={`submenu-link ${location.pathname === '/campaign-templates' ? 'active' : ''}`} onClick={closeSettings}>
+                            <FaBullhorn />
+                            <span>Templates</span>
+                        </Link>
+                    </div>
+                )}
 
                 {isSettingsOpen && (
                     <div className="sidebar-submenu">
@@ -135,10 +165,6 @@ const Sidebar: FC<SidebarProps> = () => {
                         <Link to="/connections" className={`submenu-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
                             <FaPlug />
                             <span>Conexões</span>
-                        </Link>
-                        <Link to="/campaign-templates" className={`submenu-link ${location.pathname === '/campaign-templates' ? 'active' : ''}`} onClick={closeSettings}>
-                            <FaBullhorn />
-                            <span>Templates de Campanha</span>
                         </Link>
                     </div>
                 )}
