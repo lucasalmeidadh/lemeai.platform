@@ -20,7 +20,6 @@ import {
     FaPhone,
     FaReply,
     FaWhatsapp,
-    FaInfoCircle,
     FaUpload,
 } from 'react-icons/fa';
 import {
@@ -28,6 +27,7 @@ import {
     type MetaTemplate,
     type CreateTemplateDTO,
     type BotaoTemplate,
+    type ObterHandleExemploResult,
 } from '../services/MetaTemplateService';
 import './CampaignTemplatesPage.css';
 
@@ -328,12 +328,17 @@ const MEDIA_ACCEPT: Record<string, string> = {
     DOCUMENT: 'application/pdf,application/msword,.docx,.pptx,.xlsx',
 };
 
+type UploadState = 'idle' | 'uploading' | 'done' | 'error';
+
 function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
     const [form, setForm] = useState<CreateTemplateDTO>({ ...emptyForm });
     const [exemplosRaw, setExemplosRaw] = useState('');
     const [botoes, setBotoes] = useState<BotaoTemplate[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [localPreviewUrl, setLocalPreviewUrl] = useState<string | undefined>();
+    const [uploadState, setUploadState] = useState<UploadState>('idle');
+    const [uploadedFileName, setUploadedFileName] = useState<string>('');
+    const [handleResult, setHandleResult] = useState<ObterHandleExemploResult | null>(null);
 
     const isMediaHeader = form.formatoHeader && form.formatoHeader !== 'TEXT';
     const isTextHeaderWithVar = form.formatoHeader === 'TEXT' && form.textoHeader?.includes('{{1}}');
@@ -351,9 +356,19 @@ function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCr
         setBotoes(updated);
     };
 
-    const handleMediaFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFormatoHeaderChange = (valor: string) => {
+        setForm({ ...form, formatoHeader: (valor as FormatoHeader) || undefined, textoHeader: '', exemploHeaderHandle: '', caminhoMidiaHeader: '', exemploHeaderTexto: '' });
+        setLocalPreviewUrl(undefined);
+        setUploadState('idle');
+        setHandleResult(null);
+        setUploadedFileName('');
+    };
+
+    const handleMediaFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Show local preview immediately for images
         if (form.formatoHeader === 'IMAGE') {
             const reader = new FileReader();
             reader.onload = (ev) => setLocalPreviewUrl(ev.target?.result as string);
@@ -361,24 +376,57 @@ function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCr
         } else {
             setLocalPreviewUrl(undefined);
         }
+
+        setUploadedFileName(file.name);
+        setUploadState('uploading');
+        setHandleResult(null);
+
+        try {
+            const res = await MetaTemplateService.obterHandleExemplo(file);
+            if (res.sucesso && res.dados) {
+                setHandleResult(res.dados);
+                setForm(prev => ({
+                    ...prev,
+                    exemploHeaderHandle: res.dados.handle,
+                    caminhoMidiaHeader: res.dados.caminhoLocal,
+                }));
+                setUploadState('done');
+            } else {
+                toast.error(res.mensagem || 'Erro ao obter handle de exemplo.');
+                setUploadState('error');
+                setLocalPreviewUrl(undefined);
+            }
+        } catch {
+            toast.error('Erro ao conectar com o servidor.');
+            setUploadState('error');
+            setLocalPreviewUrl(undefined);
+        }
     };
 
-    const handleFormatoHeaderChange = (valor: string) => {
-        setForm({ ...form, formatoHeader: (valor as FormatoHeader) || undefined, textoHeader: '', exemploHeaderHandle: '', exemploHeaderTexto: '' });
+    const clearMediaUpload = () => {
         setLocalPreviewUrl(undefined);
+        setUploadState('idle');
+        setHandleResult(null);
+        setUploadedFileName('');
+        setForm(prev => ({ ...prev, exemploHeaderHandle: '', caminhoMidiaHeader: '' }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const hasMediaHeader = form.formatoHeader && form.formatoHeader !== 'TEXT';
+        if (isMediaHeader && uploadState !== 'done') {
+            toast.error('Faça o upload da mídia de exemplo antes de criar o template.');
+            return;
+        }
+
         const payload: CreateTemplateDTO = {
             ...form,
             nome: form.nome.trim().toLowerCase().replace(/\s+/g, '_'),
             textoHeader: form.textoHeader?.trim() || undefined,
             textoFooter: form.textoFooter?.trim() || undefined,
-            formatoHeader: (form.formatoHeader || undefined),
-            exemploHeaderHandle: hasMediaHeader ? (form.exemploHeaderHandle?.trim() || undefined) : undefined,
+            formatoHeader: form.formatoHeader || undefined,
+            exemploHeaderHandle: isMediaHeader ? (form.exemploHeaderHandle || undefined) : undefined,
+            caminhoMidiaHeader: isMediaHeader ? (form.caminhoMidiaHeader || undefined) : undefined,
             exemploHeaderTexto: isTextHeaderWithVar ? (form.exemploHeaderTexto?.trim() || undefined) : undefined,
             botoes: botoes.length > 0 ? botoes : undefined,
             exemplosBody: exemplosRaw.trim()
@@ -499,17 +547,20 @@ function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCr
                                 </div>
                             )}
 
-                            {/* Campos para header de mídia */}
+                            {/* Upload de mídia para header (IMAGE/VIDEO/DOCUMENT) */}
                             {isMediaHeader && (
-                                <>
-                                    <div className="ct-form-group ct-span-2">
-                                        <label>
-                                            Prévia local da mídia
-                                            {form.formatoHeader === 'IMAGE' && <span className="ct-hint-inline"> (opcional, apenas para visualização)</span>}
-                                        </label>
-                                        <label className="ct-upload-area">
+                                <div className="ct-form-group ct-span-2">
+                                    <label>
+                                        Mídia do cabeçalho <span className="ct-required">*</span>
+                                    </label>
+
+                                    {uploadState === 'idle' || uploadState === 'error' ? (
+                                        <label className={`ct-upload-area ${uploadState === 'error' ? 'ct-upload-area-error' : ''}`}>
                                             <FaUpload />
-                                            <span>Clique para selecionar {form.formatoHeader === 'IMAGE' ? 'imagem' : form.formatoHeader === 'VIDEO' ? 'vídeo' : 'documento'}</span>
+                                            <span>
+                                                Clique para selecionar {form.formatoHeader === 'IMAGE' ? 'imagem (JPG/PNG)' : form.formatoHeader === 'VIDEO' ? 'vídeo (MP4)' : 'documento (PDF)'}
+                                            </span>
+                                            {uploadState === 'error' && <span className="ct-upload-error-msg">Erro no upload — tente novamente</span>}
                                             <input
                                                 type="file"
                                                 accept={MEDIA_ACCEPT[form.formatoHeader!] || ''}
@@ -517,36 +568,31 @@ function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCr
                                                 style={{ display: 'none' }}
                                             />
                                         </label>
-                                        {localPreviewUrl && form.formatoHeader === 'IMAGE' && (
-                                            <div className="ct-upload-preview">
-                                                <img src={localPreviewUrl} alt="prévia" />
-                                                <button type="button" className="ct-upload-remove" onClick={() => setLocalPreviewUrl(undefined)}>
-                                                    <FaTimes /> Remover
-                                                </button>
+                                    ) : uploadState === 'uploading' ? (
+                                        <div className="ct-upload-loading">
+                                            <div className="ct-upload-spinner" />
+                                            <span>Enviando <strong>{uploadedFileName}</strong> para a Meta...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="ct-upload-success">
+                                            {localPreviewUrl ? (
+                                                <img src={localPreviewUrl} alt="prévia" className="ct-upload-img-thumb" />
+                                            ) : (
+                                                <div className="ct-upload-file-icon">
+                                                    {form.formatoHeader === 'VIDEO' ? <FaVideo /> : <FaFileAlt />}
+                                                </div>
+                                            )}
+                                            <div className="ct-upload-success-info">
+                                                <FaCheckCircle className="ct-upload-check" />
+                                                <span className="ct-upload-filename">{uploadedFileName}</span>
+                                                <span className="ct-hint">Handle obtido. O arquivo será reutilizado automaticamente no disparo.</span>
                                             </div>
-                                        )}
-                                        {!localPreviewUrl && form.formatoHeader !== 'IMAGE' && (
-                                            <span className="ct-hint">A prévia de vídeo/documento não é exibida no preview.</span>
-                                        )}
-                                    </div>
-
-                                    <div className="ct-form-group ct-span-2">
-                                        <label>
-                                            Handle de exemplo da mídia
-                                            <span className="ct-required"> *</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={form.exemploHeaderHandle || ''}
-                                            onChange={(e) => setForm({ ...form, exemploHeaderHandle: e.target.value })}
-                                            placeholder="4::aW1hZ2UvanBlZw==:ARZGHmFkb..."
-                                        />
-                                        <span className="ct-hint ct-hint-info">
-                                            <FaInfoCircle />
-                                            Obrigatório pela Meta para aprovação do template. Obtido via <strong>Resumable Upload API da Meta</strong> — diferente do upload de disparo de campanha.
-                                        </span>
-                                    </div>
-                                </>
+                                            <button type="button" className="ct-upload-remove" onClick={clearMediaUpload}>
+                                                <FaTimes /> Trocar
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             )}
 
                             <div className="ct-form-group ct-span-2">

@@ -31,17 +31,18 @@ export interface CreateTemplateDTO {
     textoHeader?: string;
     formatoHeader?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
     exemploHeaderHandle?: string;
+    caminhoMidiaHeader?: string;
     exemploHeaderTexto?: string;
     textoFooter?: string;
     botoes?: BotaoTemplate[];
     exemplosBody?: string[];
 }
 
-export interface UploadMidiaResult {
-    mediaId: string;
+export interface ObterHandleExemploResult {
+    handle: string;
     caminhoLocal: string;
-    mimeType: string;
 }
+
 
 export interface SincronizarResult {
     criados: number;
@@ -107,14 +108,15 @@ export const MetaTemplateService = {
         return data;
     },
 
-    uploadMidia: async (arquivo: File): Promise<ApiResponse<UploadMidiaResult>> => {
+    obterHandleExemplo: async (arquivo: File): Promise<ApiResponse<ObterHandleExemploResult>> => {
         const formData = new FormData();
         formData.append('arquivo', arquivo);
-        const response = await apiFetch(`${API_URL}/api/meta/template/UploadMidia`, {
+        const response = await apiFetch(`${API_URL}/api/meta/template/ObterHandleExemplo`, {
             method: 'POST',
             body: formData,
         });
         const data = await response.json();
         return data;
     },
+
 };
