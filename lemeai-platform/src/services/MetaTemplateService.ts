@@ -17,10 +17,14 @@ export interface MetaTemplate {
 }
 
 export interface BotaoTemplate {
-    tipo: 'URL' | 'QUICK_REPLY' | 'PHONE_NUMBER';
+    tipo: 'URL' | 'QUICK_REPLY' | 'PHONE_NUMBER' | 'VOICE_CALL' | 'COPY_CODE' | 'FLOW';
     texto: string;
     url?: string;
     telefone?: string;
+    exemplo_codigo?: string;
+    flow_id?: string;
+    flow_action?: 'NAVIGATE' | 'DATA_EXCHANGE';
+    navigate_screen?: string;
 }
 
 export interface CreateTemplateDTO {
@@ -29,7 +33,7 @@ export interface CreateTemplateDTO {
     idioma: string;
     textoBody: string;
     textoHeader?: string;
-    formatoHeader?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+    formatoHeader?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'LOCATION';
     exemploHeaderHandle?: string;
     caminhoMidiaHeader?: string;
     exemploHeaderTexto?: string;
@@ -41,6 +45,21 @@ export interface CreateTemplateDTO {
 export interface ObterHandleExemploResult {
     handle: string;
     caminhoLocal: string;
+}
+
+export interface UpdateTemplateDTO {
+    metaTemplateId: number;
+    categoria?: 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
+    permitirMudancaCategoria?: boolean;
+    textoBody?: string;
+    textoHeader?: string;
+    formatoHeader?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'LOCATION';
+    exemploHeaderHandle?: string;
+    exemploHeaderTexto?: string;
+    caminhoMidiaHeader?: string;
+    textoFooter?: string;
+    botoes?: BotaoTemplate[];
+    exemplosBody?: string[];
 }
 
 
@@ -94,6 +113,16 @@ export const MetaTemplateService = {
         const response = await apiFetch(`${API_URL}/api/meta/template/Remover/${id}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        return data;
+    },
+
+    update: async (dto: UpdateTemplateDTO): Promise<ApiResponse<MetaTemplate>> => {
+        const response = await apiFetch(`${API_URL}/api/meta/template/Atualizar`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dto),
         });
         const data = await response.json();
         return data;
