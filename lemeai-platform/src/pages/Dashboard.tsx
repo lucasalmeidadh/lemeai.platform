@@ -21,12 +21,8 @@ interface Kpi {
 
 const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState('Todos');
-  const [startDate, setStartDate] = useState<Date | null>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    return d;
-  });
-  const [endDate, setEndDate] = useState<Date | null>(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
   const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>([]);
   const [chatDataMap, setChatDataMap] = useState<Record<number, number>>({});
