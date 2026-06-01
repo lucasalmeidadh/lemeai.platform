@@ -6,6 +6,8 @@ import {
     FaLock,
     FaChevronDown,
     FaExclamationTriangle,
+    FaMobileAlt,
+    FaAward,
 } from 'react-icons/fa';
 import { MetaService, type MetaConfig } from '../services/MetaService';
 import './ConnectionsPage.css';
@@ -168,6 +170,19 @@ const ConnectionsPage = () => {
             ],
         },
         {
+            title: 'Instalar e configurar o WhatsApp Business no celular',
+            warning: 'Necessário apenas se você ainda não tem o WhatsApp Business ativo no seu número. Já tem? Pule direto para o Passo 4.',
+            steps: [
+                'Acesse a App Store (iPhone) ou Google Play Store (Android)',
+                'Pesquise por "WhatsApp Business" e instale o aplicativo oficial',
+                'Abra o app, aceite os Termos de Serviço e toque em "Concordar e continuar"',
+                'Insira o número de telefone que será conectado ao CRM',
+                'Confirme o número via SMS ou chamada de voz',
+                'Preencha o perfil da empresa: nome, categoria e descrição',
+                'Tudo pronto! Agora avance para o Passo 4 e finalize a conexão.',
+            ],
+        },
+        {
             title: 'Configurar forma de pagamento no Meta Business',
             warning: 'Sem pagamento configurado, o envio de mensagens fica bloqueado (erro 131042).',
             steps: [
@@ -186,13 +201,46 @@ const ConnectionsPage = () => {
         },
     ];
 
+    const renderMetaPartnerBanner = () => (
+        <div className="meta-partner-banner">
+            <div className="meta-partner-banner-icon">
+                <FaAward />
+            </div>
+            <div className="meta-partner-banner-body">
+                <div className="meta-partner-banner-header">
+                    <span className="meta-partner-badge">Parceiro Oficial Meta</span>
+                    <h3>Use o WhatsApp Business no celular conectado ao CRM</h3>
+                </div>
+                <p>
+                    Somos parceiros oficiais da Meta — isso significa que você pode continuar usando o seu
+                    WhatsApp Business normalmente no celular enquanto toda a sua equipe atende e vende pelo CRM,
+                    sem perder nenhuma conversa e sem precisar trocar de número.
+                </p>
+                <div className="meta-partner-features">
+                    <div className="meta-partner-feature">
+                        <FaMobileAlt />
+                        <span>Celular e CRM funcionando ao mesmo tempo</span>
+                    </div>
+                    <div className="meta-partner-feature">
+                        <FaCheckCircle />
+                        <span>Mesmo número, zero interrupção</span>
+                    </div>
+                    <div className="meta-partner-feature">
+                        <FaLock />
+                        <span>Integração homologada pelo WhatsApp</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
     const renderPrerequisites = () => (
         <div className="prereq-section">
             <p className="prereq-label">Pré-requisitos</p>
             <h3 className="prereq-title">Antes de conectar, verifique os itens abaixo</h3>
             <div className="prereq-tip">
                 <FaCheckCircle className="prereq-tip-icon" />
-                <span>Já tem portfólio e faturamento configurados na Meta? Pule direto para o passo 3.</span>
+                <span>Já tem portfólio e faturamento configurados na Meta? Pule direto para o Passo 4.</span>
             </div>
             <div className="prereq-list">
                 {prereqs.map((prereq, i) => (
@@ -233,6 +281,7 @@ const ConnectionsPage = () => {
 
     const renderNoInstance = () => (
         <>
+        {renderMetaPartnerBanner()}
         {renderPrerequisites()}
         <div className="whatsapp-main-card">
             <div className="whatsapp-card-header">
