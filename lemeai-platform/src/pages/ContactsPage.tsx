@@ -4,6 +4,7 @@ import './ContactsPage.css';
 import { FaPlus, FaWhatsapp, FaTrash, FaEdit, FaEnvelope, FaRegAddressBook, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { ContactService, type Contact, type CreateContactDTO, type UpdateContactDTO } from '../services/ContactService';
 import ContactModal from '../components/ContactModal';
+import Pagination from '../components/Pagination';
 
 const ContactsPage = () => {
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -207,42 +208,13 @@ const ContactsPage = () => {
                     )}
                 </div>
 
-                {filteredContacts.length > itemsPerPage && (
-                    <div className="pagination-container">
-                        <div className="pagination-info">
-                            Mostrando <strong>{Math.min(filteredContacts.length, (currentPage - 1) * itemsPerPage + 1)}</strong> a <strong>{Math.min(filteredContacts.length, currentPage * itemsPerPage)}</strong> de <strong>{filteredContacts.length}</strong> contatos
-                        </div>
-                        <div className="pagination-controls">
-                            <button 
-                                className="pagination-btn" 
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                            >
-                                <FaChevronLeft size={12} /> Anterior
-                            </button>
-                            
-                            <div className="pagination-pages">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                    <button
-                                        key={page}
-                                        className={`pagination-page-btn ${currentPage === page ? 'active' : ''}`}
-                                        onClick={() => setCurrentPage(page)}
-                                    >
-                                        {page}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <button 
-                                className="pagination-btn" 
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages}
-                            >
-                                Próximo <FaChevronRight size={12} />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <Pagination 
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    totalItems={filteredContacts.length}
+                    itemsPerPage={itemsPerPage}
+                />
             </div>
 
             <ContactModal
