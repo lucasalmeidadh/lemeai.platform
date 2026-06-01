@@ -262,17 +262,9 @@
 }
 
 .split-view-layout .chat-side {
-    width: 400px;
-    flex-shrink: 0;
-
-    /* Faz o chat "grudar" na tela enquanto rola a página de configurações */
-    position: sticky;
-    top: 80px;
-    /* Distância segura do topbar */
-    height: calc(100vh - 100px);
-    /* Altura restrita à tela para não cortar a digitação */
-    max-height: 800px;
-
+    width: clamp(300px, 30%, 400px);
+    flex-shrink: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
 }
@@ -443,6 +435,12 @@
     .step-connector {
         margin: 0 5px;
         margin-top: -22px;
+    }
+}
+
+@media (min-width: 1025px) and (max-width: 1300px) {
+    .split-view-layout .chat-side {
+        width: clamp(260px, 28%, 340px);
     }
 }
 
