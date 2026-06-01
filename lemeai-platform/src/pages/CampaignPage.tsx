@@ -160,9 +160,9 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
     const [addedSearchTerm, setAddedSearchTerm] = useState('');
 
-    const filteredAddedContacts = finalContacts.filter(c => 
-        c.nome.toLowerCase().includes(addedSearchTerm.toLowerCase()) || 
-        c.telefone.includes(addedSearchTerm)
+    const filteredAddedContacts = finalContacts.filter(c =>
+        (c.nome?.toLowerCase() ?? '').includes(addedSearchTerm.toLowerCase()) ||
+        (c.telefone ?? '').includes(addedSearchTerm)
     );
 
     const handleAddBaseSelected = () => {
@@ -225,7 +225,7 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
     // Contatos filtrados na busca do Passo 2 (Público da Base)
     const filteredBaseContacts = baseContacts.filter((c) => {
         const term = contactSearch.toLowerCase();
-        return c.nome.toLowerCase().includes(term) || c.telefone.includes(contactSearch);
+        return (c.nome?.toLowerCase() ?? '').includes(term) || (c.telefone ?? '').includes(contactSearch);
     });
 
     const isAllBaseSelected = filteredBaseContacts.length > 0 && filteredBaseContacts.every(c => selectedBaseContacts.has(c.contatoId));
@@ -1704,7 +1704,7 @@ const CampaignPage = () => {
     const filtered = metrics.filter((c) => {
         const matchStatus = filterStatus === 'TODOS' || c.campanhaStatus === filterStatus;
         const matchCat = filterCategoria === 'TODOS' || c.campanhaCategoria === filterCategoria;
-        const matchSearch = !searchTerm || c.campanhaNome.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchSearch = !searchTerm || (c.campanhaNome?.toLowerCase() ?? '').includes(searchTerm.toLowerCase());
         return matchStatus && matchCat && matchSearch;
     });
 
