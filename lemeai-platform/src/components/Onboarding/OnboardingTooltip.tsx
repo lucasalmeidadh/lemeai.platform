@@ -11,28 +11,22 @@ const OnboardingTooltip: React.FC = () => {
   useEffect(() => {
     if (!isActive || !step) return;
 
+    const target = document.getElementById(step.targetId);
+
     const updatePosition = () => {
-      const target = document.getElementById(step.targetId);
       if (target) {
         const rect = target.getBoundingClientRect();
-        const tooltipWidth = 300; // Estimação inicial
-        
-        // Lógica simplificada de posicionamento (melhorar futuramente com bibliotecas como Popper)
+        const tooltipWidth = 300;
+
         let top = rect.bottom + 15 + window.scrollY;
         let left = rect.left + rect.width / 2 - tooltipWidth / 2;
 
-        // Ajuste básico para não sair da tela
         if (left < 10) left = 10;
         if (left + tooltipWidth > window.innerWidth) left = window.innerWidth - tooltipWidth - 10;
 
         setCoords({ top, left });
-        
-        // Scroll até o elemento
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Highlight temporário
         target.classList.add('onboarding-highlight');
-        return () => target.classList.remove('onboarding-highlight');
       } else {
         setCoords(null);
       }
@@ -40,7 +34,10 @@ const OnboardingTooltip: React.FC = () => {
 
     updatePosition();
     window.addEventListener('resize', updatePosition);
-    return () => window.removeEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      if (target) target.classList.remove('onboarding-highlight');
+    };
   }, [isActive, currentStep, steps, step]);
 
   if (!isActive || !step || !coords) return null;

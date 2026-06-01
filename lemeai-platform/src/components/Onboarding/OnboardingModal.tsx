@@ -20,9 +20,9 @@ const OnboardingModal: React.FC = () => {
             <img src={logoLight} alt="LemeAI Logo" style={{ height: '100%', width: 'auto' }} />
           </div>
 
-          <h1>Bem-vindo à LemeAI!</h1>
+          <h1>Bem-vindo!</h1>
           <p>
-            Estamos muito felizes em ter você aqui. A LemeAI é sua plataforma definitiva
+            Estamos muito felizes em ter você aqui. Este é o seu CRM definitivo
             para gestão de atendimento e vendas. Quer que a gente te mostre o caminho?
           </p>
 
