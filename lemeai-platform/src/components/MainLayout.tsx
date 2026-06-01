@@ -10,7 +10,8 @@ import {
     FaSignOutAlt,
     FaComments,
     FaCalendarAlt,
-    FaQuestionCircle
+    FaQuestionCircle,
+    FaBullseye
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import OnboardingModal from './Onboarding/OnboardingModal';
@@ -96,6 +97,9 @@ const MainLayout = () => {
                         </Link>
                         <Link to="/agenda" className={`drawer-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
                             <FaCalendarAlt /> Agenda
+                        </Link>
+                        <Link to="/metas" className={`drawer-link ${location.pathname === '/metas' ? 'active' : ''}`}>
+                            <FaBullseye /> Metas
                         </Link>
                         
                         <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>

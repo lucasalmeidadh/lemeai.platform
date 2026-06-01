@@ -6,12 +6,13 @@ import 'react-datepicker/dist/react-datepicker.css';
 import './DateRangeFilter.css'; // Reusing the global datepicker styles
 import toast from 'react-hot-toast';
 import './DetailsPanel.css';
-import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote, FaDollarSign, FaFileAlt, FaCalendarPlus, FaPaperclip, FaUpload, FaImage, FaFilePdf, FaMusic, FaVideo, FaEye, FaDownload, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaSave, FaPhoneAlt, FaTag, FaRegStickyNote, FaDollarSign, FaFileAlt, FaCalendarPlus, FaPaperclip, FaUpload, FaImage, FaFilePdf, FaMusic, FaVideo, FaEye, FaDownload, FaTrash, FaMagic } from 'react-icons/fa';
 import type { Contact } from '../types';
 import type { Detail } from '../types/Details';
 import { DetailsService } from '../services/DetailsService';
 import { AttachmentService } from '../services/AttachmentService';
 import { AgendaService } from '../services/AgendaService';
+import { ChatService } from '../services/ChatService';
 import type { ContatoAnexoResponseDTO, TipoAnexo } from '../types/Attachment';
 import SummaryModal from './SummaryModal';
 import CustomSelect from './CustomSelect';
@@ -65,6 +66,31 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
   // Summary Modal State
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [selectedSummary, setSelectedSummary] = useState('');
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+
+  const handleAiSummary = async () => {
+    if (isSummaryLoading) return;
+
+    setIsSummaryLoading(true);
+    const toastId = toast.loading('Gerando resumo da conversa com IA...');
+
+    try {
+      const response = await ChatService.getConversationSummary(contact.id);
+
+      if (response.sucesso) {
+        setSelectedSummary(response.dados);
+        setIsSummaryModalOpen(true);
+        toast.success('Resumo gerado com sucesso!', { id: toastId });
+      } else {
+        toast.error(response.mensagem || 'Erro ao gerar resumo.', { id: toastId });
+      }
+    } catch (error) {
+      console.error('Erro ao gerar resumo:', error);
+      toast.error('Erro ao conectar com o serviço de IA.', { id: toastId });
+    } finally {
+      setIsSummaryLoading(false);
+    }
+  };
 
   // Agenda state
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -84,8 +110,8 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
     { value: '1', label: 'Atendimento IA' },
     { value: '8', label: 'Atendimento IA Finalizado' },
     { value: '2', label: 'Não Iniciado' },
-    { value: '5', label: 'Em Negociação' },
     { value: '4', label: 'Proposta Enviada' },
+    { value: '5', label: 'Em Negociação' },
     { value: '3', label: 'Venda Fechada' },
     { value: '6', label: 'Venda Perdida' },
   ];
@@ -342,10 +368,23 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
 
   return (
     <aside className="details-panel">
-      <header className="details-header">
-        <h3>Detalhes do Contato</h3>
-        <button onClick={onClose} className="close-button"><FaTimes /></button>
-      </header>
+      <div className="details-header-wrapper">
+        <header className="details-header">
+          <h3>Detalhes do Contato</h3>
+          <button onClick={onClose} className="close-button"><FaTimes /></button>
+        </header>
+        <div className="details-header-actions">
+          <button
+            className="summary-sidebar-btn"
+            onClick={handleAiSummary}
+            disabled={isSummaryLoading}
+            style={{ opacity: isSummaryLoading ? 0.7 : 1 }}
+          >
+            <FaMagic style={{ marginRight: '8px' }} />
+            <span>Resumir com IA</span>
+          </button>
+        </div>
+      </div>
 
       <div className="panel-tabs">
         <button className={`panel-tab-button ${activeTab === 'details' ? 'active' : ''}`} onClick={() => setActiveTab('details')}>

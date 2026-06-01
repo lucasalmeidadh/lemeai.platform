@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ReactElement } from 'react';
+import { useState, useEffect, useCallback, useMemo, type ReactElement } from 'react';
 import toast from 'react-hot-toast';
 import {
     FaPlus,
@@ -8,6 +8,7 @@ import {
     FaBullhorn,
     FaTimes,
     FaCheckCircle,
+    FaTimesCircle,
     FaClock,
     FaSpinner,
     FaChevronLeft,
@@ -16,6 +17,8 @@ import {
     FaUsers,
     FaUserPlus,
     FaClipboardList,
+    FaEye,
+    FaMapMarkerAlt,
 } from 'react-icons/fa';
 import {
     CampaignService,
@@ -23,10 +26,14 @@ import {
     type CampaignMetrics,
     type CampanhaStatus,
     type CampanhaCategoria,
+    type Destinatario,
+    type Disparo,
 } from '../services/CampaignService';
 import { ContactService, type Contact } from '../services/ContactService';
 import { MetaTemplateService, type MetaTemplate } from '../services/MetaTemplateService';
 import CustomSelect from '../components/CustomSelect';
+import WhatsAppConnectionGuard from '../components/WhatsAppConnectionGuard';
+import { apiFetch } from '../services/api';
 import './CampaignPage.css';
 
 // ---- Badges ----
@@ -98,6 +105,12 @@ const VAR_SOURCE_LABEL: Record<VarSource, string> = {
     fixed: 'Valor fixo (igual para todos)',
 };
 
+interface FinalContact {
+    nome: string;
+    telefone: string;
+    destinatarioId?: number;
+}
+
 function detectBodyVars(componentesJson: string | null): { count: number; bodyText: string } {
     if (!componentesJson) return { count: 0, bodyText: '' };
     try {
@@ -142,7 +155,8 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
     const [coladosRaw, setColadosRaw] = useState('');
 
     // Lista acumulada final de contatos
-    const [finalContacts, setFinalContacts] = useState<{ nome: string; telefone: string }[]>([]);
+    const [finalContacts, setFinalContacts] = useState<FinalContact[]>([]);
+    const [removedDestinatarioIds, setRemovedDestinatarioIds] = useState<number[]>([]);
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
     const [addedSearchTerm, setAddedSearchTerm] = useState('');
 
@@ -192,7 +206,7 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                 const tel = line.replace(/\D/g, '').trim();
                 return { nome: `Contato ${tel}`, telefone: tel };
             })
-            .filter((c): c is { nome: string; telefone: string } => c !== null && c.telefone.length >= 8);
+            .filter((c): c is FinalContact => c !== null && c.telefone.length >= 8);
 
         if (parsed.length === 0) {
              toast.error('Nenhum contato válido detectado.');
@@ -245,6 +259,14 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
     const [selectedTemplateCategoria, setSelectedTemplateCategoria] = useState<CampanhaCategoria>((campaign?.campanhaCategoria ?? 'MARKETING') as CampanhaCategoria);
     const [bodyText, setBodyText] = useState('');
     const [varMappings, setVarMappings] = useState<VarMapping[]>([]);
+    const [couponCode, setCouponCode] = useState('');
+    const [urlVariable, setUrlVariable] = useState('');
+
+    const [locationName, setLocationName] = useState('');
+    const [locationAddress, setLocationAddress] = useState('');
+    const [locationLatitude, setLocationLatitude] = useState('');
+    const [locationLongitude, setLocationLongitude] = useState('');
+    const [isSearchingCoords, setIsSearchingCoords] = useState(false);
 
     // Passo 4: Submissão e Resultados
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -255,15 +277,20 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
         const loadInitialData = async () => {
             setIsLoadingTemplates(true);
             try {
-                const [templatesRes, contactsRes] = await Promise.all([
+                const promises: Promise<any>[] = [
                     MetaTemplateService.getAll(),
-                    ContactService.getAll()
-                ]);
+                    ContactService.getAll(),
+                ];
+                if (isEdit && campaign?.campanhaId && campaign.campanhaStatus === 'Rascunho') {
+                    promises.push(CampaignService.getDestinatarios(campaign.campanhaId));
+                }
+
+                const [templatesRes, contactsRes, destRes] = await Promise.all(promises);
+
                 if (templatesRes.sucesso) {
                     const approved = (templatesRes.dados || []).filter((t) => t.status === 'APPROVED');
                     setTemplates(approved);
 
-                    // Se estiver editando ou se já houver um template selecionado, carregar as variáveis dele
                     const currentTemplate = approved.find(t => t.nome === selectedTemplateName);
                     if (currentTemplate) {
                         const { count, bodyText: bt } = detectBodyVars(currentTemplate.componentesJson);
@@ -274,7 +301,15 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                 if (contactsRes.sucesso) {
                     setBaseContacts(contactsRes.dados || []);
                 }
-            } catch (error) {
+                if (destRes?.sucesso && destRes.dados) {
+                    const loaded: FinalContact[] = (destRes.dados as Destinatario[]).map((d: Destinatario) => ({
+                        nome: d.numero || d.bsuid || `Destinatário ${d.destinatarioId}`,
+                        telefone: d.numero || d.bsuid || '',
+                        destinatarioId: d.destinatarioId,
+                    }));
+                    setFinalContacts(loaded);
+                }
+            } catch {
                 toast.error('Erro ao carregar dados do wizard.');
             } finally {
                 setIsLoadingTemplates(false);
@@ -304,6 +339,112 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
         setVarMappings((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
     };
 
+    const selectedTemplate = templates.find((t) => t.nome === selectedTemplateName);
+    let templateButtons: any[] = [];
+    let isLocationHeader = false;
+    if (selectedTemplate?.componentesJson) {
+        try {
+            const comps = JSON.parse(selectedTemplate.componentesJson);
+            const buttonsComp = comps.find((c: any) => c.type === 'BUTTONS');
+            if (buttonsComp && Array.isArray(buttonsComp.buttons)) {
+                templateButtons = buttonsComp.buttons;
+            }
+            const headerComp = comps.find((c: any) => c.type === 'HEADER');
+            if (headerComp && headerComp.format === 'LOCATION') {
+                isLocationHeader = true;
+            }
+        } catch (e) {
+            console.error('Erro ao analisar componentesJson do template:', e);
+        }
+    }
+    const copyCodeButtonIndex = templateButtons.findIndex(btn => btn.type === 'COPY_CODE');
+    const urlVarButtonIndex = templateButtons.findIndex(btn => btn.type === 'URL' && btn.url && btn.url.includes('{{1}}'));
+
+    const handleSearchCoordinates = async () => {
+        if (!locationAddress.trim()) {
+            toast.error('Digite um endereço para buscar as coordenadas.');
+            return;
+        }
+        setIsSearchingCoords(true);
+        try {
+            // Tenta primeiro o ArcGIS Geocoding (altamente confiável no Brasil, sem problemas de CORS/User-Agent no localhost)
+            const queryArcGIS = async (queryStr: string) => {
+                try {
+                    const response = await fetch(
+                        `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&singleLine=${encodeURIComponent(queryStr)}&maxLocations=1`
+                    );
+                    if (!response.ok) return null;
+                    const data = await response.json();
+                    if (data?.candidates && data.candidates.length > 0) {
+                        return {
+                            lat: data.candidates[0].location.y.toString(),
+                            lon: data.candidates[0].location.x.toString()
+                        };
+                    }
+                } catch (e) {
+                    console.error('Erro na requisição do ArcGIS:', e);
+                }
+                return null;
+            };
+
+            // Tenta o Nominatim (OpenStreetMap) como fallback
+            const queryNominatim = async (queryStr: string) => {
+                try {
+                    const response = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(queryStr)}`
+                    );
+                    if (!response.ok) return null;
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        return {
+                            lat: data[0].lat,
+                            lon: data[0].lon
+                        };
+                    }
+                } catch (e) {
+                    console.error('Erro na requisição do Nominatim:', e);
+                }
+                return null;
+            };
+
+            // 1. Tentar buscar endereço completo no ArcGIS
+            let result = await queryArcGIS(locationAddress);
+
+            // 2. Se falhar, tentar buscar no Nominatim
+            if (!result) {
+                result = await queryNominatim(locationAddress);
+            }
+
+            // 3. Se falhar, tentar simplificar o endereço (remover número)
+            if (!result && locationAddress.includes(',')) {
+                const parts = locationAddress.split(',');
+                const cleanAddress = parts.filter((_, idx) => idx !== 1).join(',').trim();
+                result = await queryArcGIS(cleanAddress) || await queryNominatim(cleanAddress);
+            }
+
+            // 4. Se ainda falhar, tentar buscar apenas pela primeira parte
+            if (!result) {
+                const firstPart = locationAddress.split(',')[0].trim();
+                if (firstPart && firstPart !== locationAddress.trim()) {
+                    result = await queryArcGIS(firstPart) || await queryNominatim(firstPart);
+                }
+            }
+
+            if (result) {
+                setLocationLatitude(result.lat);
+                setLocationLongitude(result.lon);
+                toast.success('Coordenadas encontradas e preenchidas!');
+            } else {
+                toast.error('Nenhuma coordenada encontrada para o endereço informado. Tente simplificar ou digite manualmente.');
+            }
+        } catch (error) {
+            console.error('Erro geral ao buscar coordenadas:', error);
+            toast.error('Erro ao conectar com os serviços de busca. Tente digitar manualmente.');
+        } finally {
+            setIsSearchingCoords(false);
+        }
+    };
+
     // Pré-visualização do conteúdo usando o primeiro contato da lista final
     const previewContact = finalContacts[0] ?? { nome: '[Nome Exemplo]', telefone: '5511999999999' };
     const previewText = bodyText
@@ -322,6 +463,7 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
         setIsSubmitting(true);
         try {
             const finalAgendadaEm = agendadaEm ? new Date(agendadaEm).toISOString() : undefined;
+            let currentCampaignId = campaign?.campanhaId;
 
             if (!isEdit) {
                 const res = await CampaignService.create({
@@ -331,13 +473,11 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                     categoria: selectedTemplateCategoria,
                     agendadaEm: finalAgendadaEm
                 });
-                if (res.sucesso) {
-                    toast.success('Campanha salva como rascunho!');
-                    onSaved();
-                    onClose();
-                } else {
+                if (!res.sucesso || !res.dados) {
                     toast.error(res.mensagem || 'Erro ao salvar rascunho.');
+                    return;
                 }
+                currentCampaignId = res.dados.campanhaId;
             } else {
                 const res = await CampaignService.update({
                     campanhaId: campaign.campanhaId,
@@ -348,15 +488,32 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                     status: 'Rascunho',
                     agendadaEm: finalAgendadaEm
                 });
-                if (res.sucesso) {
-                    toast.success('Campanha atualizada como rascunho!');
-                    onSaved();
-                    onClose();
-                } else {
+                if (!res.sucesso) {
                     toast.error(res.mensagem || 'Erro ao atualizar rascunho.');
+                    return;
                 }
             }
-        } catch (error) {
+
+            if (!currentCampaignId) return;
+
+            // Remover destinatários excluídos nesta sessão
+            for (const destId of removedDestinatarioIds) {
+                await CampaignService.removeDestinatario(currentCampaignId, destId);
+            }
+
+            // Adicionar novos destinatários (sem destinatarioId = ainda não salvos)
+            const newContacts = finalContacts.filter(c => !c.destinatarioId);
+            if (newContacts.length > 0) {
+                await CampaignService.addDestinatarios(currentCampaignId, newContacts.map(c => ({
+                    numero: c.telefone,
+                    variaveis: varMappings.map(m => resolveVar(c, m))
+                })));
+            }
+
+            toast.success(isEdit ? 'Campanha atualizada como rascunho!' : 'Campanha salva como rascunho!');
+            onSaved();
+            onClose();
+        } catch {
             toast.error('Erro ao conectar com o servidor.');
         } finally {
             setIsSubmitting(false);
@@ -365,14 +522,22 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
 
     // Ação Final de Criar + Disparar
     const handleConfirmAndDispatch = async () => {
+        const newContacts = finalContacts.filter(c => !c.destinatarioId);
+
         if (finalContacts.length === 0) {
             toast.error('Nenhum contato selecionado.');
             return;
         }
-        const fixedEmpty = varMappings.some((m) => m.source === 'fixed' && !m.fixedValue.trim());
+        const fixedEmpty = newContacts.length > 0 && varMappings.some((m) => m.source === 'fixed' && !m.fixedValue.trim());
         if (fixedEmpty) {
             toast.error('Preencha o valor fixo de todas as variáveis antes de disparar.');
             return;
+        }
+        if (isLocationHeader) {
+            if (!locationName.trim() || !locationAddress.trim() || !locationLatitude.trim() || !locationLongitude.trim()) {
+                toast.error('Preencha todas as informações de localização no passo 3 antes de disparar.');
+                return;
+            }
         }
 
         setIsSubmitting(true);
@@ -381,7 +546,6 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
             let currentCampaignId = campaign?.campanhaId;
 
             if (!isEdit) {
-                // 1. Criar a campanha no banco
                 const createRes = await CampaignService.create({
                     nome: nome.trim(),
                     templateNome: selectedTemplateName,
@@ -391,52 +555,121 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                 });
                 if (!createRes.sucesso || !createRes.dados) {
                     toast.error(createRes.mensagem || 'Erro ao registrar a campanha.');
-                    setIsSubmitting(false);
                     return;
                 }
                 currentCampaignId = createRes.dados.campanhaId;
             } else {
-                // Se for edição de rascunho, atualizar antes de disparar
+                // Mantém 'Rascunho' — o endpoint disparar cuida da transição de status
                 const updateRes = await CampaignService.update({
                     campanhaId: campaign.campanhaId,
                     nome: nome.trim(),
                     templateNome: selectedTemplateName,
                     templateIdioma: selectedTemplateIdioma,
                     categoria: selectedTemplateCategoria,
-                    status: 'Enviando',
+                    status: 'Rascunho',
                     agendadaEm: finalAgendadaEm
                 });
                 if (!updateRes.sucesso) {
                     toast.error(updateRes.mensagem || 'Erro ao atualizar a campanha.');
-                    setIsSubmitting(false);
                     return;
                 }
             }
 
             if (!currentCampaignId) return;
 
-            // 2. Montar destinatários e disparar
-            const destinatarios = finalContacts.map((c) => ({
-                numero: c.telefone,
-                variaveis: varMappings.map((m) => resolveVar(c, m))
-            }));
+            // Remover destinatários excluídos nesta sessão
+            for (const destId of removedDestinatarioIds) {
+                await CampaignService.removeDestinatario(currentCampaignId, destId);
+            }
 
-            const dispatchRes = await CampaignService.disparar(currentCampaignId, {
-                destinatarios,
-                componentes: []
-            });
+            // Adicionar novos destinatários ao rascunho
+            if (newContacts.length > 0) {
+                const addRes = await CampaignService.addDestinatarios(currentCampaignId, newContacts.map(c => ({
+                    numero: c.telefone,
+                    variaveis: varMappings.map(m => resolveVar(c, m))
+                })));
+                if (!addRes.sucesso) {
+                    toast.error(addRes.mensagem || 'Erro ao adicionar destinatários.');
+                    return;
+                }
+            }
+
+            // Construir componentes com base nos botões especiais do template
+            const componentesPayload: any[] = [];
+            if (isLocationHeader) {
+                componentesPayload.push({
+                    tipo: 'HEADER',
+                    parametros: [
+                        {
+                            tipo: 'location',
+                            localizacao: {
+                                latitude: locationLatitude.trim(),
+                                longitude: locationLongitude.trim(),
+                                nome: locationName.trim(),
+                                endereco: locationAddress.trim()
+                            }
+                        }
+                    ]
+                });
+            }
+            if (copyCodeButtonIndex !== -1) {
+                componentesPayload.push({
+                    tipo: 'BUTTON',
+                    subTipo: 'COPY_CODE',
+                    indicesBotao: copyCodeButtonIndex,
+                    parametros: [
+                        {
+                            tipo: 'coupon_code',
+                            codigoCupom: couponCode.trim()
+                        }
+                    ]
+                });
+            }
+            if (urlVarButtonIndex !== -1) {
+                componentesPayload.push({
+                    tipo: 'BUTTON',
+                    subTipo: 'URL',
+                    indicesBotao: urlVarButtonIndex,
+                    parametros: [
+                        {
+                            tipo: 'text',
+                            texto: urlVariable.trim()
+                        }
+                    ]
+                });
+            }
+
+            // Disparar usando o rascunho salvo (Forma 1 — recomendada)
+            const dispatchRes = await CampaignService.disparar(currentCampaignId, { componentes: componentesPayload });
 
             if (dispatchRes.sucesso && dispatchRes.dados) {
+                const { totalEnviados, totalFalhas } = dispatchRes.dados;
+                
+                // Se todos os envios falharam e houve tentativas de envio (ou simplesmente totalEnviados === 0 e totalFalhas > 0)
+                if (totalEnviados === 0 && totalFalhas > 0) {
+                    await CampaignService.update({
+                        campanhaId: currentCampaignId,
+                        nome: nome.trim(),
+                        templateNome: selectedTemplateName,
+                        templateIdioma: selectedTemplateIdioma,
+                        categoria: selectedTemplateCategoria,
+                        status: 'Rascunho',
+                        agendadaEm: finalAgendadaEm
+                    });
+                    toast.error('Todos os envios falharam. A campanha retornou para o status de Rascunho.');
+                } else {
+                    toast.success('Processamento do disparo concluído!');
+                }
+
                 setResult({
-                    totalEnviados: dispatchRes.dados.totalEnviados,
-                    totalFalhas: dispatchRes.dados.totalFalhas
+                    totalEnviados,
+                    totalFalhas
                 });
-                toast.success('Processamento do disparo concluído!');
                 onSaved();
             } else {
                 toast.error(dispatchRes.mensagem || 'Erro ao realizar o disparo.');
             }
-        } catch (error) {
+        } catch {
             toast.error('Erro ao conectar com o servidor.');
         } finally {
             setIsSubmitting(false);
@@ -729,6 +962,12 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                                     <button
                                                         type="button"
                                                         onClick={() => {
+                                                            const idsToRemove = finalContacts
+                                                                .filter(c => c.destinatarioId)
+                                                                .map(c => c.destinatarioId!);
+                                                            if (idsToRemove.length > 0) {
+                                                                setRemovedDestinatarioIds(prev => [...prev, ...idsToRemove]);
+                                                            }
                                                             setFinalContacts([]);
                                                             setIsSummaryExpanded(false);
                                                         }}
@@ -768,7 +1007,13 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                                                     </div>
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => setFinalContacts(prev => prev.filter((_, i) => i !== originalIdx))}
+                                                                        onClick={() => {
+                                                                            const contact = finalContacts[originalIdx];
+                                                                            if (contact?.destinatarioId) {
+                                                                                setRemovedDestinatarioIds(prev => [...prev, contact.destinatarioId!]);
+                                                                            }
+                                                                            setFinalContacts(prev => prev.filter((_, i) => i !== originalIdx));
+                                                                        }}
                                                                         style={{ background: 'transparent', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '4px' }}
                                                                         title="Remover contato"
                                                                     >
@@ -877,6 +1122,106 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                                         </div>
                                                     ))
                                                 )}
+                                                {(copyCodeButtonIndex !== -1 || urlVarButtonIndex !== -1) && (
+                                                    <div className="template-buttons-setup" style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                                                        <span className="setup-title" style={{ fontWeight: 'bold', fontSize: '13.5px', display: 'block', marginBottom: '12px' }}>
+                                                            Configurações dos Botões
+                                                        </span>
+                                                        {copyCodeButtonIndex !== -1 && (
+                                                            <div className="camp-var-row" style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <label style={{ fontSize: '12px', fontWeight: '600' }}>Código do Cupom (Botão Copiar Código) <span className="camp-required">*</span></label>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ex: BLACK30"
+                                                                    value={couponCode}
+                                                                    onChange={e => setCouponCode(e.target.value)}
+                                                                    style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', width: '100%', border: '1px solid #cbd5e1' }}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        {urlVarButtonIndex !== -1 && (
+                                                            <div className="camp-var-row" style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <label style={{ fontSize: '12px', fontWeight: '600' }}>Variável do Link/URL ({"{{1}}"}) <span className="camp-required">*</span></label>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ex: cupom-natal"
+                                                                    value={urlVariable}
+                                                                    onChange={e => setUrlVariable(e.target.value)}
+                                                                    style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', width: '100%', border: '1px solid #cbd5e1' }}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {isLocationHeader && (
+                                                    <div className="template-location-setup" style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                                                        <span className="setup-title" style={{ fontWeight: 'bold', fontSize: '13.5px', display: 'block', marginBottom: '12px' }}>
+                                                            Configurações de Localização <span className="camp-required">*</span>
+                                                        </span>
+                                                        <div className="camp-var-row" style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                            <label style={{ fontSize: '12px', fontWeight: '600' }}>Nome do Local</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Ex: Loja Centro SP"
+                                                                value={locationName}
+                                                                onChange={e => setLocationName(e.target.value)}
+                                                                style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', width: '100%', border: '1px solid #cbd5e1' }}
+                                                            />
+                                                        </div>
+                                                        <div className="camp-var-row" style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                            <label style={{ fontSize: '12px', fontWeight: '600' }}>Endereço</label>
+                                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ex: Av. Paulista, 1000, São Paulo - SP"
+                                                                    value={locationAddress}
+                                                                    onChange={e => setLocationAddress(e.target.value)}
+                                                                    style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', flex: 1, border: '1px solid #cbd5e1' }}
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleSearchCoordinates}
+                                                                    disabled={isSearchingCoords}
+                                                                    style={{
+                                                                        padding: '8px 12px',
+                                                                        borderRadius: '6px',
+                                                                        fontSize: '13px',
+                                                                        background: 'var(--petroleum-blue)',
+                                                                        color: '#fff',
+                                                                        border: 'none',
+                                                                        cursor: 'pointer',
+                                                                        fontWeight: '600'
+                                                                    }}
+                                                                >
+                                                                    {isSearchingCoords ? 'Buscando...' : 'Buscar Coordenadas'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                                            <div className="camp-var-row" style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <label style={{ fontSize: '12px', fontWeight: '600' }}>Latitude</label>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ex: -23.5505"
+                                                                    value={locationLatitude}
+                                                                    onChange={e => setLocationLatitude(e.target.value)}
+                                                                    style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', width: '100%', border: '1px solid #cbd5e1' }}
+                                                                />
+                                                            </div>
+                                                            <div className="camp-var-row" style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <label style={{ fontSize: '12px', fontWeight: '600' }}>Longitude</label>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ex: -46.6333"
+                                                                    value={locationLongitude}
+                                                                    onChange={e => setLocationLongitude(e.target.value)}
+                                                                    style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', width: '100%', border: '1px solid #cbd5e1' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* WhatsApp Bubble Preview */}
@@ -887,6 +1232,21 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                                 <div className="ct-preview-chat-bg" style={{ minHeight: '180px', borderRadius: '12px', padding: '12px' }}>
                                                     <div className="ct-preview-bubble-wrap">
                                                         <div className="ct-preview-bubble" style={{ maxWidth: '240px' }}>
+                                                            {isLocationHeader && (
+                                                                <div className="ct-preview-header" style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '8px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '8px', borderRadius: '6px' }}>
+                                                                        <FaMapMarkerAlt style={{ color: 'var(--petroleum-blue)' }} />
+                                                                        <div style={{ minWidth: 0, textAlign: 'left' }}>
+                                                                            <strong style={{ display: 'block', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                {locationName || 'Nome do Local'}
+                                                                            </strong>
+                                                                            <span style={{ display: 'block', fontSize: '9px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                {locationAddress || 'Endereço'}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                             <div className="ct-preview-body" style={{ fontSize: '12.5px', lineHeight: '1.4' }}>
                                                                 {previewText.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}
                                                             </div>
@@ -932,7 +1292,26 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                                 <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Template Homologado</span>
                                                 <span style={{ fontWeight: '600' }}>{selectedTemplateName}</span>
                                                 <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)' }}>Categoria: {selectedTemplateCategoria} · Idioma: {selectedTemplateIdioma}</span>
+                                                {copyCodeButtonIndex !== -1 && (
+                                                    <span style={{ display: 'block', fontSize: '12px', marginTop: '6px', color: '#166534' }}>
+                                                        <strong>Código Cupom:</strong> {couponCode}
+                                                    </span>
+                                                )}
+                                                {urlVarButtonIndex !== -1 && (
+                                                    <span style={{ display: 'block', fontSize: '12px', marginTop: '4px', color: '#166534' }}>
+                                                        <strong>Variável do Link:</strong> {urlVariable}
+                                                    </span>
+                                                )}
                                             </div>
+
+                                            {isLocationHeader && (
+                                                <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1' }}>
+                                                    <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Localização Configurada</span>
+                                                    <span style={{ fontWeight: '600', display: 'block', fontSize: '13px', marginTop: '4px' }}>{locationName}</span>
+                                                    <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)' }}>{locationAddress}</span>
+                                                    <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '4px' }}>Lat: {locationLatitude} / Long: {locationLongitude}</span>
+                                                </div>
+                                            )}
 
                                             <div style={{ background: '#fef3c7', padding: '14px', borderRadius: '10px', border: '1px solid #fde68a' }}>
                                                 <span style={{ display: 'block', fontSize: '11px', color: '#b45309', textTransform: 'uppercase', fontWeight: 'bold' }}>Custo Estimado (R$ 0,31 / envio)</span>
@@ -950,6 +1329,21 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                             <div className="ct-preview-chat-bg" style={{ minHeight: '220px', borderRadius: '12px', padding: '14px' }}>
                                                 <div className="ct-preview-bubble-wrap">
                                                     <div className="ct-preview-bubble" style={{ maxWidth: '250px' }}>
+                                                        {isLocationHeader && (
+                                                            <div className="ct-preview-header" style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '8px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '8px', borderRadius: '6px' }}>
+                                                                    <FaMapMarkerAlt style={{ color: 'var(--petroleum-blue)' }} />
+                                                                    <div style={{ minWidth: 0, textAlign: 'left' }}>
+                                                                        <strong style={{ display: 'block', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                            {locationName || 'Nome do Local'}
+                                                                        </strong>
+                                                                        <span style={{ display: 'block', fontSize: '9px', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                            {locationAddress || 'Endereço'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                         <div className="ct-preview-body" style={{ fontSize: '12.5px', lineHeight: '1.4' }}>
                                                             {previewText.split('\n').map((line, i) => <span key={i}>{line}<br /></span>)}
                                                         </div>
@@ -1005,7 +1399,11 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                         disabled={
                                             (step === 1 && !nome.trim()) ||
                                             (step === 2 && finalContacts.length === 0) ||
-                                            (step === 3 && !selectedTemplateName)
+                                            (step === 3 && (
+                                                !selectedTemplateName ||
+                                                (copyCodeButtonIndex !== -1 && !couponCode.trim()) ||
+                                                (urlVarButtonIndex !== -1 && !urlVariable.trim())
+                                            ))
                                         }
                                     >
                                         Avançar <FaChevronRight />
@@ -1079,10 +1477,157 @@ function DeleteConfirmModal({
     );
 }
 
+// ---- Conversas Modal ----
+
+const DISPARO_STATUS: Record<string, { label: string; cls: string }> = {
+    enviado:  { label: 'Enviado',  cls: 'enviado'  },
+    entregue: { label: 'Entregue', cls: 'entregue' },
+    lido:     { label: 'Lido',     cls: 'lido'     },
+    falha:    { label: 'Falha',    cls: 'falha'    },
+};
+
+function ConversasModal({ campanhaId, campanhaNome, onClose }: {
+    campanhaId: number;
+    campanhaNome: string;
+    onClose: () => void;
+}) {
+    const [conversas, setConversas] = useState<Disparo[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [pagina, setPagina] = useState(1);
+    const [total, setTotal] = useState(0);
+    const POR_PAGINA = 20;
+
+    useEffect(() => {
+        const load = async () => {
+            setIsLoading(true);
+            try {
+                const res = await CampaignService.getConversas(campanhaId, pagina, POR_PAGINA);
+                if (res.sucesso && res.dados) {
+                    setConversas(res.dados.itens);
+                    setTotal(res.dados.total);
+                } else {
+                    toast.error(res.mensagem || 'Erro ao carregar disparos.');
+                }
+            } catch {
+                toast.error('Erro ao conectar com o servidor.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        load();
+    }, [campanhaId, pagina]);
+
+    const totalPaginas = Math.ceil(total / POR_PAGINA);
+    const fmt = (dt: string | null) =>
+        dt ? new Date(dt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+
+    return (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+            <div className="camp-modal camp-modal-xl">
+                <div className="camp-modal-header">
+                    <div>
+                        <h2>Disparos — {campanhaNome}</h2>
+                        {total > 0 && (
+                            <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                                {total} disparo{total !== 1 ? 's' : ''} no total
+                            </span>
+                        )}
+                    </div>
+                    <button className="close-modal-button" onClick={onClose}><FaTimes /></button>
+                </div>
+
+                <div className="camp-modal-body" style={{ padding: 0, gap: 0 }}>
+                    {isLoading ? (
+                        <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="camp-skeleton-row">
+                                    <div className="camp-skeleton-box" style={{ width: '22%' }} />
+                                    <div className="camp-skeleton-box" style={{ width: '12%' }} />
+                                    <div className="camp-skeleton-box" style={{ width: '10%' }} />
+                                    <div className="camp-skeleton-box" style={{ width: '18%' }} />
+                                    <div className="camp-skeleton-box" style={{ width: '18%' }} />
+                                </div>
+                            ))}
+                        </div>
+                    ) : conversas.length === 0 ? (
+                        <div className="camp-empty">
+                            <FaBullhorn className="camp-empty-icon" />
+                            <h3>Nenhum disparo encontrado</h3>
+                            <p>Esta campanha ainda não possui disparos registrados.</p>
+                        </div>
+                    ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table className="camp-table">
+                                <thead>
+                                    <tr>
+                                        <th>Número</th>
+                                        <th>Status</th>
+                                        <th style={{ textAlign: 'center' }}>Interação</th>
+                                        <th>Enviado em</th>
+                                        <th>Entregue em</th>
+                                        <th>Lido em</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {conversas.map(d => {
+                                        const s = DISPARO_STATUS[d.disparoStatus] ?? { label: d.disparoStatus, cls: 'enviado' };
+                                        return (
+                                            <tr key={d.disparoId}>
+                                                <td style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}>{d.disparoNumero}</td>
+                                                <td>
+                                                    <span className={`camp-disparo-badge camp-disparo-${s.cls}`}>{s.label}</span>
+                                                </td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    {d.teveInteracao
+                                                        ? <FaCheckCircle size={14} color="#16a34a" title="Respondeu" />
+                                                        : <FaTimesCircle size={14} color="#94a3b8" title="Sem resposta" />
+                                                    }
+                                                </td>
+                                                <td style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{fmt(d.disparoEnviadoEm)}</td>
+                                                <td style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{fmt(d.disparoEntregueEm)}</td>
+                                                <td style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{fmt(d.disparoLidoEm)}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                {totalPaginas > 1 && (
+                    <div className="camp-modal-footer" style={{ justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
+                        <button
+                            className="camp-btn-secondary"
+                            style={{ padding: '8px 16px' }}
+                            disabled={pagina === 1}
+                            onClick={() => setPagina(p => p - 1)}
+                        >
+                            <FaChevronLeft /> Anterior
+                        </button>
+                        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                            Página {pagina} de {totalPaginas}
+                        </span>
+                        <button
+                            className="camp-btn-secondary"
+                            style={{ padding: '8px 16px' }}
+                            disabled={pagina >= totalPaginas}
+                            onClick={() => setPagina(p => p + 1)}
+                        >
+                            Próxima <FaChevronRight />
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 // ---- Main Page ----
 
 const CampaignPage = () => {
     const [metrics, setMetrics] = useState<CampaignMetrics[]>([]);
+    const [conversations, setConversations] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState<CampanhaStatus | 'TODOS'>('TODOS');
@@ -1092,15 +1637,29 @@ const CampaignPage = () => {
     const [campaignToEdit, setCampaignToEdit] = useState<Campaign | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<{ id: number; nome: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [conversasTarget, setConversasTarget] = useState<{ id: number; nome: string } | null>(null);
 
     const loadMetrics = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await CampaignService.getMetrics();
-            if (res.sucesso) {
-                setMetrics(res.dados || []);
+            const [metricsRes, chatRes] = await Promise.all([
+                CampaignService.getMetrics(),
+                apiFetch(`${import.meta.env.VITE_API_URL || ''}/api/Chat/ConversasPorVendedor`)
+                    .then(r => r.json())
+                    .catch(err => {
+                        console.error("Erro ao carregar conversas para métricas:", err);
+                        return { sucesso: false, dados: [] };
+                    })
+            ]);
+
+            if (metricsRes.sucesso) {
+                setMetrics(metricsRes.dados || []);
             } else {
-                toast.error(res.mensagem || 'Erro ao carregar campanhas.');
+                toast.error(metricsRes.mensagem || 'Erro ao carregar campanhas.');
+            }
+
+            if (chatRes && chatRes.sucesso && Array.isArray(chatRes.dados)) {
+                setConversations(chatRes.dados);
             }
         } catch {
             toast.error('Erro ao conectar com o servidor.');
@@ -1150,11 +1709,39 @@ const CampaignPage = () => {
     });
 
     const totalDisparado = metrics.reduce((sum, m) => sum + m.totalDisparado, 0);
-    const totalInteracao = metrics.reduce((sum, m) => sum + m.totalComInteracao, 0);
+    const totalLeads = useMemo(() => {
+        return conversations.filter(c => c.campanha === true || c.idCampanha != null).length;
+    }, [conversations]);
+    const totalVendas = useMemo(() => {
+        return conversations.filter(c => (c.campanha === true || c.idCampanha != null) && c.statusId === 3).length;
+    }, [conversations]);
+    const conversionRate = totalLeads > 0 ? (totalVendas / totalLeads) * 100 : 0;
+
+    const leadsByCampaign = useMemo(() => {
+        const map: Record<number, number> = {};
+        conversations.forEach(c => {
+            if (c.idCampanha) {
+                map[c.idCampanha] = (map[c.idCampanha] || 0) + 1;
+            }
+        });
+        return map;
+    }, [conversations]);
+
+    const vendasByCampaign = useMemo(() => {
+        const map: Record<number, number> = {};
+        conversations.forEach(c => {
+            if (c.idCampanha && c.statusId === 3) {
+                map[c.idCampanha] = (map[c.idCampanha] || 0) + 1;
+            }
+        });
+        return map;
+    }, [conversations]);
+
     const totalRascunho = metrics.filter((m) => m.campanhaStatus === 'Rascunho').length;
     const totalFinalizada = metrics.filter((m) => m.campanhaStatus === 'Finalizada').length;
 
     return (
+        <WhatsAppConnectionGuard>
         <div className="page-container">
             <div className="page-header">
                 <div className="camp-header-left">
@@ -1180,8 +1767,10 @@ const CampaignPage = () => {
                         <span className="camp-stat-value accent">{totalDisparado.toLocaleString('pt-BR')}</span>
                     </div>
                     <div className="camp-stat-card">
-                        <span className="camp-stat-label">Com interação</span>
-                        <span className="camp-stat-value accent">{totalInteracao.toLocaleString('pt-BR')}</span>
+                        <span className="camp-stat-label">Conversão (Vendas)</span>
+                        <span className="camp-stat-value accent">
+                            {totalVendas.toLocaleString('pt-BR')} ({conversionRate.toFixed(1)}%)
+                        </span>
                     </div>
                     <div className="camp-stat-card">
                         <span className="camp-stat-label">Rascunhos / Finalizadas</span>
@@ -1253,7 +1842,7 @@ const CampaignPage = () => {
                                 <th>Campanha</th>
                                 <th>Categoria</th>
                                 <th>Status</th>
-                                <th>Interação</th>
+                                <th>Conversão (Leads)</th>
                                 <th>Custo (Est.)</th>
                                 <th>Criada em</th>
                                 <th style={{ textAlign: 'right', paddingRight: '20px' }}>Ações</th>
@@ -1276,17 +1865,24 @@ const CampaignPage = () => {
                                     </td>
                                     <td>
                                         {c.totalDisparado > 0 ? (
-                                            <div className="camp-metrics-cell">
-                                                <span className="camp-metrics-text">
-                                                    {c.totalComInteracao}/{c.totalDisparado} ({c.percentualInteracao.toFixed(1)}%)
-                                                </span>
-                                                <div className="camp-metrics-bar-bg">
-                                                    <div
-                                                        className="camp-metrics-bar-fill"
-                                                        style={{ width: `${Math.min(c.percentualInteracao, 100)}%` }}
-                                                    />
-                                                </div>
-                                            </div>
+                                            (() => {
+                                                const campaignLeadsCount = leadsByCampaign[c.campanhaId] || 0;
+                                                const campaignVendasCount = vendasByCampaign[c.campanhaId] || 0;
+                                                const campaignConversionRate = campaignLeadsCount > 0 ? (campaignVendasCount / campaignLeadsCount) * 100 : 0;
+                                                return (
+                                                    <div className="camp-metrics-cell">
+                                                        <span className="camp-metrics-text" title={`${campaignLeadsCount} Leads`}>
+                                                            {campaignVendasCount}/{campaignLeadsCount} ({campaignConversionRate.toFixed(1)}%)
+                                                        </span>
+                                                        <div className="camp-metrics-bar-bg">
+                                                            <div
+                                                                className="camp-metrics-bar-fill"
+                                                                style={{ width: `${Math.min(campaignConversionRate, 100)}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()
                                         ) : (
                                             <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>—</span>
                                         )}
@@ -1303,6 +1899,14 @@ const CampaignPage = () => {
                                     </td>
                                     <td>
                                         <div className="camp-actions-cell">
+                                            <button
+                                                className="camp-action-btn view"
+                                                title={c.totalDisparado === 0 ? 'Nenhum disparo registrado' : 'Ver disparos'}
+                                                onClick={() => setConversasTarget({ id: c.campanhaId, nome: c.campanhaNome })}
+                                                disabled={c.totalDisparado === 0}
+                                            >
+                                                <FaEye size={13} />
+                                            </button>
                                             <button
                                                 className="camp-action-btn dispatch"
                                                 title={c.campanhaStatus !== 'Rascunho' ? 'Só é possível disparar campanhas em Rascunho' : 'Disparar campanha'}
@@ -1357,7 +1961,16 @@ const CampaignPage = () => {
                     isDeleting={isDeleting}
                 />
             )}
+
+            {conversasTarget && (
+                <ConversasModal
+                    campanhaId={conversasTarget.id}
+                    campanhaNome={conversasTarget.nome}
+                    onClose={() => setConversasTarget(null)}
+                />
+            )}
         </div>
+        </WhatsAppConnectionGuard>
     );
 };
 

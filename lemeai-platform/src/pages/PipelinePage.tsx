@@ -24,15 +24,16 @@ interface Deal {
     tag: 'hot' | 'warm' | 'cold' | 'new';
     owner: string;
     date: string;
-    rawDate: Date; // Added for filtering
+    rawDate: Date;
     contactId: number;
     statusId: number;
-    tipoLeadId?: number; // New field
+    tipoLeadId?: number;
     rawValue?: number;
     phone?: string;
     details?: DetalheConversa[];
-    source?: string;
-    campaignId?: string;
+    campanha?: boolean;
+    idCampanha?: number | null;
+    nomeCampanha?: string;
 }
 
 interface Column {
@@ -51,8 +52,8 @@ const INITIAL_COLUMNS: Column[] = [
     { id: 'ai_service', title: 'Atendimento IA', statusId: 1, deals: [] },
     { id: 'ai_service_finished', title: 'IA Encerrada', statusId: 8, deals: [] },
     { id: 'intro', title: 'Em Qualificação', statusId: 2, deals: [] },
-    { id: 'qualified', title: 'Em Negociação', statusId: 5, deals: [] },
     { id: 'proposal', title: 'Proposta Enviada', statusId: 4, deals: [] },
+    { id: 'qualified', title: 'Em Negociação', statusId: 5, deals: [] },
     { id: 'closed', title: 'Venda Fechada', statusId: 3, deals: [] },
     { id: 'lost', title: 'Venda Perdida', statusId: 6, deals: [] }
 ];
@@ -187,11 +188,16 @@ const PipelinePage = () => {
                 apiFetch(`${apiUrl}/api/Chat/ConversasPorVendedor`).then(r => r.json())
             ]);
 
-            // Map idConversa -> tipoLeadId
-            const leadTypeMap: { [key: number]: number } = {};
+            // Map idConversa -> chat data
+            const chatDataMap: { [key: number]: { tipoLeadId: number; campanha: boolean; idCampanha: number | null; nomeCampanha: string } } = {};
             if (chatRes.sucesso && Array.isArray(chatRes.dados)) {
                 chatRes.dados.forEach((c: any) => {
-                    leadTypeMap[c.idConversa] = c.tipoLeadId;
+                    chatDataMap[c.idConversa] = {
+                        tipoLeadId: c.tipoLeadId,
+                        campanha: c.campanha,
+                        idCampanha: c.idCampanha,
+                        nomeCampanha: c.nomeCampanha || ''
+                    };
                 });
             }
 
@@ -216,7 +222,10 @@ const PipelinePage = () => {
                     rawDate: createdDate,
                     contactId: opp.idContato,
                     statusId: statusId,
-                    tipoLeadId: leadTypeMap[opp.idConversa], // Map from chat data
+                    tipoLeadId: chatDataMap[opp.idConversa]?.tipoLeadId,
+                    campanha: chatDataMap[opp.idConversa]?.campanha,
+                    idCampanha: chatDataMap[opp.idConversa]?.idCampanha,
+                    nomeCampanha: chatDataMap[opp.idConversa]?.nomeCampanha,
                     phone: opp.numeroWhatsapp,
                     details: opp.detalhesConversa
                 };
@@ -312,13 +321,13 @@ const PipelinePage = () => {
         scrollAnimationFrameRef.current = requestAnimationFrame(scroll);
     };
 
-    const handleMouseMoveWhileDragging = (e: MouseEvent) => {
+    const handleDragMove = (e: MouseEvent | TouchEvent) => {
         if (!isDraggingRef.current || !boardRef.current) {
             stopAutoScroll();
             return;
         }
 
-        const { clientX } = e;
+        const clientX = 'touches' in e && e.touches.length > 0 ? e.touches[0].clientX : (e as MouseEvent).clientX;
         const rect = boardRef.current.getBoundingClientRect();
         const { left, right } = rect;
 
@@ -340,12 +349,14 @@ const PipelinePage = () => {
 
     const onDragStart = () => {
         isDraggingRef.current = true;
-        window.addEventListener('mousemove', handleMouseMoveWhileDragging);
+        window.addEventListener('mousemove', handleDragMove, true);
+        window.addEventListener('touchmove', handleDragMove, true);
     };
 
     const onDragEnd = async (result: DropResult) => {
         isDraggingRef.current = false;
-        window.removeEventListener('mousemove', handleMouseMoveWhileDragging);
+        window.removeEventListener('mousemove', handleDragMove, true);
+        window.removeEventListener('touchmove', handleDragMove, true);
         stopAutoScroll();
         const { source, destination } = result;
 
@@ -459,18 +470,16 @@ const PipelinePage = () => {
 
             let matchesSource = true;
             if (selectedSource !== 'all') {
-                const dealSource = (deal as any).source || (deal as any).origem;
-                if (dealSource) {
-                    matchesSource = dealSource === selectedSource;
+                if (selectedSource === 'marketing') {
+                    matchesSource = deal.campanha === true;
+                } else if (selectedSource === 'organic') {
+                    matchesSource = !deal.campanha;
                 }
             }
 
             let matchesCampaign = true;
             if (selectedSource === 'marketing' && selectedCampaign !== 'all') {
-                const dealCampaignId = (deal as any).campaignId || (deal as any).idCampanha || (deal as any).campanhaId;
-                if (dealCampaignId) {
-                    matchesCampaign = dealCampaignId.toString() === selectedCampaign;
-                }
+                matchesCampaign = deal.idCampanha?.toString() === selectedCampaign;
             }
 
             let matchesDate = true;
@@ -613,7 +622,7 @@ const PipelinePage = () => {
                                                                     {...provided.dragHandleProps}
                                                                     className={`kanban-card ${snapshot.isDragging ? 'is-dragging' : ''}`}
                                                                     style={{ ...provided.draggableProps.style }}
-                                                                    onClick={() => setSelectedDeal(deal)}
+                                                                    onClick={() => window.open(`/pipeline/deal/${deal.id}`, '_blank')}
                                                                 >
                                                                     <div className="card-top-row">
                                                                         <div className="card-title">{deal.title}</div>

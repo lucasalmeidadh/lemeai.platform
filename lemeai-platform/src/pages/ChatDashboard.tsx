@@ -1,408 +1,411 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import toast from 'react-hot-toast';
-import KPICard from '../components/KPICard';
-import { OpportunityService, type Opportunity } from '../services/OpportunityService';
-import { ChatService } from '../services/ChatService';
-import { AgendaService, type AgendaEvent } from '../services/AgendaService';
-import { apiFetch } from '../services/api';
-import SummaryModal from '../components/SummaryModal';
-import DealDetailsModal from '../components/DealDetailsModal';
-import { format } from 'date-fns';
-import { FaComments, FaFire, FaHeadset, FaCalendarCheck, FaSearch, FaFilter, FaSyncAlt, FaRegCalendarAlt, FaExternalLinkAlt } from 'react-icons/fa';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  FaDollarSign, FaPhoneAlt, FaTrophy, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaChartLine, FaDesktop, FaChartBar
+} from 'react-icons/fa';
+import AnalyticsPage from './AnalyticsPage';
 import './ChatDashboard.css';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+interface Goal {
+  id: string;
+  userId: number;
+  userName: string;
+  type: 'value' | 'quantity' | 'calls';
+  targetValue: number;
+  month: string; // YYYY-MM
+}
+
+interface WorkingDays {
+  monday: boolean;
+  tuesday: boolean;
+  wednesday: boolean;
+  thursday: boolean;
+  friday: boolean;
+  saturday: boolean;
+  sunday: boolean;
+}
+
+const DEFAULT_WORKING_DAYS: WorkingDays = {
+  monday: true,
+  tuesday: true,
+  wednesday: true,
+  thursday: true,
+  friday: true,
+  saturday: false,
+  sunday: false,
+};
 
 const ChatDashboard = () => {
-    const [deals, setDeals] = useState<Opportunity[]>([]);
-    const [nextEvents, setNextEvents] = useState<AgendaEvent[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [humanWaitingCount, setHumanWaitingCount] = useState(0);
-    const [hotLeadsCount, setHotLeadsCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<'monitoring' | 'analytics'>('monitoring');
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [workingDays, setWorkingDays] = useState<WorkingDays>(DEFAULT_WORKING_DAYS);
+  const [goalsTimeframe, setGoalsTimeframe] = useState<'month' | 'week' | 'day'>('month');
 
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('Pendente Movimentação');
-    const [unreadMap, setUnreadMap] = useState<{ [key: number]: number }>({});
-    const [lastOriginMap, setLastOriginMap] = useState<{ [key: number]: number }>({});
+  const currentMonthStr = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
 
-    const statusTabs = ['Pendente Movimentação', 'Atendimento IA', 'Em Qualificação', 'Todos'];
+  // Calculate working days in current month & week
+  const workingDaysInfo = useMemo(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    
+    let monthlyDays = 0;
+    const tempDate = new Date(year, month, 1);
+    const dayNames: (keyof WorkingDays)[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    
+    while (tempDate.getMonth() === month) {
+      const dayIndex = tempDate.getDay();
+      if (workingDays[dayNames[dayIndex]]) {
+        monthlyDays++;
+      }
+      tempDate.setDate(tempDate.getDate() + 1);
+    }
 
-    // Pagination State
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6;
+    const weeklyDays = Object.values(workingDays).filter(Boolean).length;
 
-    // Modal State
-    const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
-    const [selectedSummary, setSelectedSummary] = useState('');
-    const [isSummaryLoading, setIsSummaryLoading] = useState(false);
-    const [expandedDeals, setExpandedDeals] = useState<{ [key: number]: boolean }>({});
-    const [selectedDeal, setSelectedDeal] = useState<any>(null);
+    return { monthlyDays: monthlyDays || 22, weeklyDays: weeklyDays || 5 };
+  }, [workingDays]);
 
-    const openDealModal = (opp: Opportunity) => {
-        const mappedDeal = {
-            id: opp.idConversa,
-            title: opp.nomeContato,
-            value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(opp.valor || 0),
-            tag: 'hot' as const, // Default for dashboard
-            owner: opp.nomeUsuarioResponsavel,
-            date: format(new Date(opp.dataConversaCriada), 'dd/MM/yyyy'),
-            contactId: opp.idContato,
-            statusId: opp.idStauts,
-            rawValue: opp.valor,
-            phone: opp.numeroWhatsapp,
-            details: opp.detalhesConversa
-        };
-        setSelectedDeal(mappedDeal);
-    };
+  // Load from localStorage
+  useEffect(() => {
+    const storedGoals = localStorage.getItem('lemeai_goals');
+    if (storedGoals) {
+      setGoals(JSON.parse(storedGoals));
+    }
 
-    const fetchData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const [opps, events, chatRes] = await Promise.all([
-                OpportunityService.getAllOpportunities(),
-                AgendaService.getTodayEvents(),
-                apiFetch(`${apiUrl}/api/Chat/ConversasPorVendedor`).then(r => r.json())
-            ]);
+    const storedDays = localStorage.getItem('lemeai_working_days');
+    if (storedDays) {
+      setWorkingDays(JSON.parse(storedDays));
+    }
+  }, []);
 
-            setDeals(opps || []);
-            setNextEvents(events || []);
+  // Filter current month goals
+  const currentMonthGoals = useMemo(() => {
+    return goals.filter(g => g.month === currentMonthStr);
+  }, [goals, currentMonthStr]);
 
-            if (chatRes.sucesso && Array.isArray(chatRes.dados)) {
-                const oppsMap: { [key: number]: any } = {};
-                (opps || []).forEach(opp => {
-                    oppsMap[opp.idConversa] = opp;
-                });
+  // Aggregate targets
+  const totalMonthlyGoal = useMemo(() => {
+    return currentMonthGoals
+      .filter(g => g.type === 'value')
+      .reduce((sum, g) => sum + g.targetValue, 0) || 165000;
+  }, [currentMonthGoals]);
 
-                // Mapping everything first
-                const uMap: { [key: number]: number } = {};
-                const oMap: { [key: number]: number } = {};
-                chatRes.dados.forEach((c: any) => {
-                    uMap[c.idConversa] = c.totalNaoLidas || 0;
-                    const text = c.ultimaMensagem?.toLowerCase() || '';
-                    const isBot = text.includes('téo') || text.includes('(ia)');
-                    const apiOrigin = c.origemUltimaMensagem ?? c.idOrigemUltimaMensagem;
-                    if (apiOrigin !== undefined) oMap[c.idConversa] = apiOrigin;
-                    else if (isBot) oMap[c.idConversa] = 2;
-                    else if (c.totalNaoLidas > 0) oMap[c.idConversa] = 0;
-                });
-                setUnreadMap(uMap);
-                setLastOriginMap(oMap);
+  const totalMonthlyCallsGoal = useMemo(() => {
+    return currentMonthGoals
+      .filter(g => g.type === 'calls')
+      .reduce((sum, g) => sum + g.targetValue, 0) || 800;
+  }, [currentMonthGoals]);
 
-                // KPI: Pendente Movimentação
-                const pendingCount = (opps || []).filter(deal => {
-                    const sId = Number(deal.idStauts);
-                    const unread = uMap[deal.idConversa] || 0;
-                    const lastOrigin = oMap[deal.idConversa];
-                    return sId === 2 && (lastOrigin !== 1 || unread > 0);
-                }).length;
+  // Dynamic metas based on working days
+  const targetDailyValue = useMemo(() => {
+    return totalMonthlyGoal / workingDaysInfo.monthlyDays;
+  }, [totalMonthlyGoal, workingDaysInfo]);
 
-                // KPI: Atendimento IA
-                const aiCount = (opps || []).filter(deal => {
-                    const sId = Number(deal.idStauts);
-                    return sId === 1;
-                }).length;
+  const targetWeeklyValue = useMemo(() => {
+    return targetDailyValue * workingDaysInfo.weeklyDays;
+  }, [targetDailyValue, workingDaysInfo]);
 
-                // KPI: Hot
-                const hot = chatRes.dados.filter((c: any) => c.tipoLeadId === 2).length;
+  // Realized Sales & Calls data (Mock linked with actual users)
+  const teamPerformance = useMemo(() => {
+    const agents = [
+      { id: 1, name: 'Lucas Almeida', salesCount: 15, salesValue: 58000, callsCount: 290 },
+      { id: 2, name: 'Ana Silva', salesCount: 10, salesValue: 39500, callsCount: 210 },
+      { id: 3, name: 'Roberto Santos', salesCount: 18, salesValue: 62000, callsCount: 320 },
+      { id: 4, name: 'Julia Costa', salesCount: 4, salesValue: 16000, callsCount: 85 },
+    ];
 
-                setUnreadCount(pendingCount);
-                setHumanWaitingCount(aiCount);
-                setHotLeadsCount(hot);
-            }
+    return agents.map(agent => {
+      // Find individual goals
+      const valueGoal = currentMonthGoals.find(g => g.userId === agent.id && g.type === 'value')?.targetValue || 40000;
+      const callsGoal = currentMonthGoals.find(g => g.userId === agent.id && g.type === 'calls')?.targetValue || 200;
 
-        } catch (error) {
-            console.error('Erro ao carregar dados do monitoramento:', error);
-            toast.error('Erro ao atualizar dados.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+      const valueProgress = Math.min((agent.salesValue / valueGoal) * 100, 100);
+      const callsProgress = Math.min((agent.callsCount / callsGoal) * 100, 100);
 
-    useEffect(() => {
-        fetchData();
-        const interval = setInterval(fetchData, 60000); // Refresh every minute
-        return () => clearInterval(interval);
-    }, [fetchData]);
+      // Daily goals (individual)
+      const dailyValueTarget = valueGoal / workingDaysInfo.monthlyDays;
+      // Assume today agent has accomplished a portion of the daily target
+      const dailyValueAccomplished = (agent.salesValue / workingDaysInfo.monthlyDays) * (0.9 + (agent.id % 2) * 0.25);
+      const dailyValueAcheived = dailyValueAccomplished >= dailyValueTarget;
 
-    const filteredDeals = useMemo(() => {
-        const filtered = deals.filter(deal => {
-            const searchMatch = !searchTerm ||
-                deal.nomeContato?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                deal.numeroWhatsapp?.includes(searchTerm);
+      return {
+        ...agent,
+        valueGoal,
+        callsGoal,
+        valueProgress,
+        callsProgress,
+        dailyValueTarget,
+        dailyValueAccomplished,
+        dailyValueAcheived
+      };
+    }).sort((a, b) => b.salesValue - a.salesValue); // Sort for ranking
+  }, [currentMonthGoals, workingDaysInfo]);
 
-            let statusMatch = false;
+  // Totals realized
+  const totalSalesRealized = useMemo(() => {
+    return teamPerformance.reduce((sum, item) => sum + item.salesValue, 0);
+  }, [teamPerformance]);
 
-            if (statusFilter === 'Todos') {
-                statusMatch = true;
-            } else {
-                const desc = deal.descricaoStatus?.toLowerCase() || '';
-                const sId = Number(deal.idStauts); // API typo
-                const lastOrigin = lastOriginMap[deal.idConversa];
+  const totalCallsRealized = useMemo(() => {
+    return teamPerformance.reduce((sum, item) => sum + item.callsCount, 0);
+  }, [teamPerformance]);
 
-                if (statusFilter === 'Atendimento IA') {
-                    statusMatch = sId === 1;
-                } else if (statusFilter === 'Pendente Movimentação') {
-                    // Show if status is Human AND (last message is NOT from Agent OR unread > 0)
-                    const unread = unreadMap[deal.idConversa] || 0;
-                    statusMatch = sId === 2 && (lastOrigin !== 1 || unread > 0);
-                } else if (statusFilter === 'Em Qualificação') {
-                    // Show if status is Human AND last message IS from Agent AND no unread
-                    const unread = unreadMap[deal.idConversa] || 0;
-                    statusMatch = (sId === 2 || desc.includes('humano')) && lastOrigin === 1 && unread === 0;
-                } else {
-                    statusMatch = desc === statusFilter.toLowerCase();
-                }
-            }
+  // Calculated Progresses for Metas do Time Block
+  const monthlyProgressPercent = useMemo(() => {
+    return Math.round((totalSalesRealized / totalMonthlyGoal) * 100);
+  }, [totalSalesRealized, totalMonthlyGoal]);
 
-            return searchMatch && statusMatch;
-        });
-        return filtered;
-    }, [deals, searchTerm, statusFilter, lastOriginMap]);
+  // For weekly and daily, let's mock elapsed progress that is proportional
+  const weeklySalesRealized = useMemo(() => {
+    return totalSalesRealized * 0.13; // approx 13% (simulating a poor week, showing Red)
+  }, [totalSalesRealized]);
 
-    // Paginated Items
-    const paginatedDeals = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredDeals.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredDeals, currentPage]);
+  const weeklyProgressPercent = useMemo(() => {
+    return Math.round((weeklySalesRealized / targetWeeklyValue) * 100);
+  }, [weeklySalesRealized, targetWeeklyValue]);
 
-    const totalPages = Math.ceil(filteredDeals.length / itemsPerPage);
+  const dailySalesRealized = useMemo(() => {
+    return totalSalesRealized * 0.038; // approx 3.8% (simulating a moderate/attention day, showing Yellow)
+  }, [totalSalesRealized]);
 
-    useEffect(() => {
-        setCurrentPage(1); // Reset to first page when filters change
-    }, [searchTerm, statusFilter]);
+  const dailyProgressPercent = useMemo(() => {
+    return Math.round((dailySalesRealized / targetDailyValue) * 100);
+  }, [dailySalesRealized, targetDailyValue]);
 
-    const handleSummarize = async (id: number) => {
-        if (isSummaryLoading) return;
-        setIsSummaryLoading(true);
-        const toastId = toast.loading('Gerando insights...');
-        try {
-            const response = await ChatService.getConversationSummary(id);
-            if (response.sucesso) {
-                setSelectedSummary(response.dados);
-                setIsSummaryModalOpen(true);
-                toast.success('Pronto!', { id: toastId });
-            }
-        } catch (error) {
-            toast.error('Erro ao gerar resumo', { id: toastId });
-        } finally {
-            setIsSummaryLoading(false);
-        }
-    };
+  // Projected Closure calculation
+  const projectedClosure = useMemo(() => {
+    const elapsedDays = Math.max(new Date().getDate() - 2, 1); // Mock operational days elapsed
+    const monthlyDays = workingDaysInfo.monthlyDays;
+    const dailyAverage = totalSalesRealized / Math.min(elapsedDays, monthlyDays);
+    return dailyAverage * monthlyDays;
+  }, [totalSalesRealized, workingDaysInfo]);
 
-    return (
-        <div className="page-container chat-dashboard">
-            <div className="page-header">
-                <h1>Monitoramento Operacional</h1>
-                <button className="refresh-btn" onClick={fetchData} disabled={isLoading}>
-                    <FaSyncAlt className={isLoading ? 'spin' : ''} /> Atualizar
-                </button>
-            </div>
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  };
 
-            <div className="kpi-grid">
-                <KPICard
-                    title="Conversas Pendentes"
-                    value={unreadCount.toString()}
-                    icon={<FaComments />}
-                />
-                <KPICard
-                    title="Atendimento IA"
-                    value={humanWaitingCount.toString()}
-                    icon={<FaHeadset />}
-                />
-                <KPICard
-                    title="Leads Quentes"
-                    value={hotLeadsCount.toString()}
-                    icon={<FaFire />}
-                />
-                <KPICard
-                    title="Tarefas para Hoje"
-                    value={nextEvents.length.toString()}
-                    icon={<FaCalendarCheck />}
-                />
-            </div>
+  const getProgressBarColorClass = (percent: number) => {
+    if (percent >= 100) return 'progress-green';
+    if (percent >= 70) return 'progress-yellow';
+    return 'progress-red';
+  };
 
-            <div className="monitoring-content">
-                <div className="monitoring-main">
-                    <div className="dashboard-card">
-                        <div className="card-header-row">
-                            <h3>Atividades em Tempo Real</h3>
-                            <div className="table-filters">
-                                <div className="status-pills">
-                                    {statusTabs.map(tab => (
-                                        <button
-                                            key={tab}
-                                            className={`status-pill ${statusFilter === tab ? 'active' : ''}`}
-                                            onClick={() => setStatusFilter(tab)}
-                                        >
-                                            {tab}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="search-input-wrapper">
-                                    <FaSearch className="search-icon" />
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar contato..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="table-container">
-                            <table className="deals-table">
-                                <thead>
-                                    <tr>
-                                        <th>Cliente</th>
-                                        <th>Última Interação</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedDeals.length > 0 ? (
-                                        paginatedDeals.map(deal => (
-                                            <React.Fragment key={deal.idConversa}>
-                                                <tr>
-                                                    <td>
-                                                        <div className="client-info">
-                                                            <span className="client-name">{deal.nomeContato}</span>
-                                                            <span className="client-phone">{deal.numeroWhatsapp}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td>{new Date(deal.dataConversaCriada).toLocaleDateString()}</td>
-                                                    <td>
-                                                        <span className={`status-badge status-${deal.descricaoStatus?.toLowerCase().replace(/\s/g, '-')}`}>
-                                                            {deal.idStauts === 2 ? 'Pendente Movimentação' : deal.descricaoStatus}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <div className="action-cell">
-                                                            <button
-                                                                className="btn-icon"
-                                                                onClick={() => openDealModal(deal)}
-                                                                title="Abrir Card Completo"
-                                                                style={{ color: 'var(--petroleum-blue)' }}
-                                                            >
-                                                                <FaExternalLinkAlt />
-                                                            </button>
-                                                            <button
-                                                                className="btn-icon"
-                                                                onClick={() => setExpandedDeals(prev => ({ ...prev, [deal.idConversa]: !prev[deal.idConversa] }))}
-                                                                title="Ver Notas"
-                                                            >
-                                                                <FaFilter />
-                                                            </button>
-                                                            <button
-                                                                className="btn-ai"
-                                                                onClick={() => handleSummarize(deal.idConversa)}
-                                                                title="Resumo IA"
-                                                            >
-                                                                ✨
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                {expandedDeals[deal.idConversa] && (
-                                                    <tr>
-                                                        <td colSpan={4} className="expanded-detail-row">
-                                                            <div className="detail-content">
-                                                                <h5>Últimas Notas</h5>
-                                                                {deal.detalhesConversa?.length > 0 ? (
-                                                                    <ul className="mini-note-list">
-                                                                        {deal.detalhesConversa.slice(0, 3).map((d, i) => (
-                                                                            <li key={i}>
-                                                                                <p>{d.descricaoDetalhe}</p>
-                                                                                <span>{new Date(d.dataDetalheCriado).toLocaleString()}</span>
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
-                                                                ) : <p className="no-data">Sem notas.</p>}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </React.Fragment>
-                                        ))
-                                    ) : (
-                                        <tr><td colSpan={4} className="empty-state">Nenhuma atividade encontrada.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {totalPages > 1 && (
-                            <div className="pagination">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="page-btn"
-                                >
-                                    Anterior
-                                </button>
-                                <span className="page-info">
-                                    Página <strong>{currentPage}</strong> de {totalPages}
-                                </span>
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                    className="page-btn"
-                                >
-                                    Próximo
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="monitoring-sidebar">
-                    <div className="dashboard-card next-tasks">
-                        <div className="card-header">
-                            <h3><FaRegCalendarAlt /> Próximas Tarefas</h3>
-                        </div>
-                        <div className="tasks-list">
-                            {nextEvents.length > 0 ? (
-                                nextEvents.map(event => (
-                                    <div key={event.agendaId} className="task-item">
-                                        <div className="task-time">
-                                            {format(new Date(event.dataInicio), 'HH:mm')}
-                                        </div>
-                                        <div className="task-details">
-                                            <span className="task-title">{event.descricao}</span>
-                                            <span className="task-desc">{event.detalhes || 'Sem descrição'}</span>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="empty-tasks">
-                                    <FaCalendarCheck />
-                                    <p>Tudo em dia por hoje!</p>
-                                </div>
-                            )}
-                        </div>
-                        <button className="view-agenda-btn" onClick={() => window.location.href = '/agenda'}>
-                            Ver Agenda Completa
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <SummaryModal
-                isOpen={isSummaryModalOpen}
-                onClose={() => setIsSummaryModalOpen(false)}
-                summary={selectedSummary}
-            />
-            {selectedDeal && (
-                <DealDetailsModal
-                    deal={selectedDeal}
-                    onClose={() => setSelectedDeal(null)}
-                    onUpdate={fetchData}
-                />
-            )}
+  return (
+    <div className="page-container chat-dashboard commercial-dashboard">
+      <div className="page-header">
+        <div>
+          <h1>Gestão operacional</h1>
         </div>
-    );
+      </div>
+
+      <div className="dashboard-tabs">
+        <button
+          className={`dashboard-tab ${activeTab === 'monitoring' ? 'active' : ''}`}
+          onClick={() => setActiveTab('monitoring')}
+        >
+          <FaDesktop /> Monitoramento
+        </button>
+        <button
+          className={`dashboard-tab ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <FaChartBar /> Analytics
+        </button>
+      </div>
+
+      {activeTab === 'analytics' && <AnalyticsPage />}
+
+      {activeTab === 'monitoring' && <>
+      {/* 1. Topo — 2 cards compactos lado a lado */}
+      <div className="compact-kpi-grid">
+        <div className="compact-kpi-card">
+          <div className="compact-kpi-icon"><FaDollarSign /></div>
+          <div className="compact-kpi-info">
+            <span className="compact-kpi-label">Faturamento Total</span>
+            <strong className="compact-kpi-value">{formatCurrency(totalSalesRealized)}</strong>
+          </div>
+        </div>
+        <div className="compact-kpi-card">
+          <div className="compact-kpi-icon"><FaPhoneAlt /></div>
+          <div className="compact-kpi-info">
+            <span className="compact-kpi-label">Ligações Realizadas</span>
+            <strong className="compact-kpi-value">{totalCallsRealized} / {totalMonthlyCallsGoal}</strong>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Bloco de metas do time */}
+      <div className="dashboard-card team-goals-block">
+        <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
+          <div>
+            <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho e Metas Coletivas</h3>
+            <p className="card-subtitle">Acompanhamento proporcional com base nos dias úteis configurados.</p>
+          </div>
+          <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
+            <button 
+              className={`status-pill ${goalsTimeframe === 'month' ? 'active' : ''}`}
+              onClick={() => setGoalsTimeframe('month')}
+            >
+              Mensal
+            </button>
+            <button 
+              className={`status-pill ${goalsTimeframe === 'week' ? 'active' : ''}`}
+              onClick={() => setGoalsTimeframe('week')}
+            >
+              Semanal
+            </button>
+            <button 
+              className={`status-pill ${goalsTimeframe === 'day' ? 'active' : ''}`}
+              onClick={() => setGoalsTimeframe('day')}
+            >
+              Diário
+            </button>
+          </div>
+        </div>
+
+        <div className="stacked-progress-bars">
+          {/* Meta do Mês */}
+          {goalsTimeframe === 'month' && (
+            <div className="progress-row">
+              <span className="progress-label">Meta do Mês</span>
+              <div className="progress-track-wrapper">
+                <div className="progress-track-bg">
+                  <div 
+                    className={`progress-track-fill ${getProgressBarColorClass(monthlyProgressPercent)}`} 
+                    style={{ width: `${Math.min(monthlyProgressPercent, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              <span className="progress-values">
+                <strong>{formatCurrency(totalSalesRealized)}</strong> / {formatCurrency(totalMonthlyGoal)} ({monthlyProgressPercent}%)
+              </span>
+            </div>
+          )}
+
+          {/* Meta da Semana */}
+          {goalsTimeframe === 'week' && (
+            <div className="progress-row">
+              <span className="progress-label">Meta da Semana</span>
+              <div className="progress-track-wrapper">
+                <div className="progress-track-bg">
+                  <div 
+                    className={`progress-track-fill ${getProgressBarColorClass(weeklyProgressPercent)}`} 
+                    style={{ width: `${Math.min(weeklyProgressPercent, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              <span className="progress-values">
+                <strong>{formatCurrency(weeklySalesRealized)}</strong> / {formatCurrency(targetWeeklyValue)} ({weeklyProgressPercent}%)
+              </span>
+            </div>
+          )}
+
+          {/* Meta do Dia */}
+          {goalsTimeframe === 'day' && (
+            <div className="progress-row">
+              <span className="progress-label">Meta do Dia</span>
+              <div className="progress-track-wrapper">
+                <div className="progress-track-bg">
+                  <div 
+                    className={`progress-track-fill ${getProgressBarColorClass(dailyProgressPercent)}`} 
+                    style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              <span className="progress-values">
+                <strong>{formatCurrency(dailySalesRealized)}</strong> / {formatCurrency(targetDailyValue)} ({dailyProgressPercent}%)
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="projection-footer">
+          <FaHourglassHalf className="projection-icon" />
+          <span>Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.</span>
+        </div>
+      </div>
+
+      {/* 3. Tabela de desempenho individual */}
+      <div className="dashboard-card team-ranking-card">
+        <div className="card-header">
+          <h3><FaTrophy /> Classificação de Vendedores (Ranking)</h3>
+        </div>
+        <div className="table-container" style={{ marginTop: '16px' }}>
+          <table className="ranking-table">
+            <thead>
+              <tr>
+                <th style={{ width: '80px', textAlign: 'center' }}>Posição</th>
+                <th>Vendedor</th>
+                <th>Total de Ligações</th>
+                <th>Total de Vendas</th>
+                <th>Meta Mensal</th>
+                <th style={{ width: '220px', textAlign: 'center' }}>Meta do Dia</th>
+              </tr>
+            </thead>
+            <tbody>
+              {teamPerformance.map((agent, index) => (
+                <tr key={agent.id}>
+                  <td style={{ textAlign: 'center' }}>
+                    <span className={`ranking-badge rank-${index + 1}`}>
+                      {index + 1}º
+                    </span>
+                  </td>
+                  <td>
+                    <span className="agent-name" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {agent.name}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="ranking-calls-col">
+                      <span className="calls-count"><strong>{agent.callsCount}</strong> / {agent.callsGoal}</span>
+                      <span className="calls-subtitle">Ligações realizadas</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="ranking-sales-col">
+                      <strong>{formatCurrency(agent.salesValue)}</strong>
+                      <span className="sales-subtitle">{agent.salesCount} vendas</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="ranking-progress-wrapper">
+                      <div className="ranking-progress-header">
+                        <div className="progress-bar-bg">
+                          <div className="progress-bar-fill value" style={{ width: `${agent.valueProgress}%` }}></div>
+                        </div>
+                        <span className="ranking-percent-text">{Math.round(agent.valueProgress)}%</span>
+                      </div>
+                      <span className="meta-target-caption">Meta: {formatCurrency(agent.valueGoal)}</span>
+                    </div>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <div className="ranking-daily-meta-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <span className="daily-meta-values" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                        <strong>{formatCurrency(agent.dailyValueAccomplished)}</strong> / {formatCurrency(agent.dailyValueTarget)}
+                      </span>
+                      {agent.dailyValueAcheived ? (
+                        <span className="status-badge-meta completed" title="Meta diária atingida">
+                          <FaCheckCircle /> Batida
+                        </span>
+                      ) : (
+                        <span className="status-badge-meta pending" title="Abaixo da meta diária">
+                          <FaTimesCircle /> Pendente
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </>}
+    </div>
+  );
 };
 
 export default ChatDashboard;

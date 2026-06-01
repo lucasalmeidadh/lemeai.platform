@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import './ConversationHeader.css';
-import { FaEllipsisV, FaMagic, FaExchangeAlt, FaArrowLeft, FaChevronDown } from 'react-icons/fa';
+import { FaEllipsisV, FaExchangeAlt, FaArrowLeft, FaChevronDown } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import TransferModal from './TransferModal';
 import { type InternalUser } from '../data/mockData';
 import { ChatService } from '../services/ChatService';
-import SummaryModal from './SummaryModal';
 
 interface ConversationHeaderProps {
   contactName: string;
@@ -26,9 +25,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
   const [isLeadMenuOpen, setLeadMenuOpen] = useState(false);
   const [isUpdatingLead, setIsUpdatingLead] = useState(false);
 
-  const [isSummaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [summary, setSummary] = useState('');
-  const [isSummaryLoading, setSummaryLoading] = useState(false);
+
 
   const getStatusLabel = (id?: number, nome?: string) => {
     if (nome) return nome;
@@ -78,29 +75,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
     setMenuOpen(false);
   };
 
-  const handleAiSummary = async () => {
-    if (isSummaryLoading) return;
 
-    setSummaryLoading(true);
-    const toastId = toast.loading('Gerando resumo da conversa com IA...');
-
-    try {
-      const response = await ChatService.getConversationSummary(conversationId);
-
-      if (response.sucesso) {
-        setSummary(response.dados);
-        setSummaryModalOpen(true);
-        toast.success('Resumo gerado com sucesso!', { id: toastId });
-      } else {
-        toast.error(response.mensagem || 'Erro ao gerar resumo.', { id: toastId });
-      }
-    } catch (error) {
-      console.error('Erro ao gerar resumo:', error);
-      toast.error('Erro ao conectar com o serviço de IA.', { id: toastId });
-    } finally {
-      setSummaryLoading(false);
-    }
-  };
 
   const handleTransfer = (user: InternalUser) => {
     setTransferModalOpen(false);
@@ -144,16 +119,6 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
       </div>
 
       <div className="header-menu-area" style={{ display: 'flex', gap: '5px' }}>
-        <button
-          className="summary-header-btn"
-          onClick={handleAiSummary}
-          title="Resumir com IA"
-          disabled={isSummaryLoading}
-          style={{ opacity: isSummaryLoading ? 0.7 : 1 }}
-        >
-          <FaMagic style={{ marginRight: '8px' }} />
-          <span>Resumir com IA</span>
-        </button>
 
         <button className="icon-button" onClick={() => setMenuOpen(!isMenuOpen)}>
           <FaEllipsisV />
@@ -179,11 +144,7 @@ const ConversationHeader: React.FC<ConversationHeaderProps> = ({ contactName, on
         />
       )}
 
-      <SummaryModal
-        isOpen={isSummaryModalOpen}
-        onClose={() => setSummaryModalOpen(false)}
-        summary={summary}
-      />
+
     </div>
   );
 };

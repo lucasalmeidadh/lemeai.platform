@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaBox, FaComments, FaWhatsapp, FaExternalLinkAlt, FaRocket } from 'react-icons/fa';
 import './OnboardingStepsPage.css';
 
@@ -37,7 +36,7 @@ const OnboardingStepsPage = () => {
                 <div className="header-icon">
                     <FaRocket />
                 </div>
-                <h1>Bem-vindo ao LemeAI!</h1>
+                <h1>Bem-vindo ao CRM da GB Code!</h1>
                 <p>Siga estes três passos fundamentais para colocar sua operação para rodar com excelência.</p>
             </div>
 
@@ -56,9 +55,6 @@ const OnboardingStepsPage = () => {
                 ))}
             </div>
 
-            <div className="onboarding-footer">
-                <p>Precisa de ajuda? Clique em <strong>Ajuda</strong> no menu lateral para ver tutoriais em vídeo.</p>
-            </div>
         </div>
     );
 };

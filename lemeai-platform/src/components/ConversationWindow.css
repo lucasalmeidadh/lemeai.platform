@@ -337,6 +337,48 @@
   color: #ffc107;
 }
 
+/* Double check (delivered / read) */
+.status-double-check {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.status-double-check .status-icon:last-child {
+  margin-left: -5px;
+}
+
+.status-double-check.read .status-icon {
+  color: #53bdeb;
+}
+
+/* Reaction emoji badge */
+.message-wrapper.has-reaction {
+  margin-bottom: 14px;
+}
+
+.message-reaction {
+  position: absolute;
+  bottom: -14px;
+  background: var(--bg-secondary, #fff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  padding: 1px 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.reaction-right {
+  right: 8px;
+}
+
+.reaction-left {
+  left: 8px;
+}
+
 /* Scroll to Bottom Button */
 .conversation-window-wrapper {
   position: relative;

@@ -34,6 +34,7 @@ import {
     type CreateTemplateDTO,
     type BotaoTemplate,
 } from '../services/MetaTemplateService';
+import WhatsAppConnectionGuard from '../components/WhatsAppConnectionGuard';
 import './CampaignTemplatesPage.css';
 
 type TemplateStatus = MetaTemplate['status'];
@@ -188,12 +189,12 @@ function WhatsAppPreview({ textoHeader, formatoHeader, textoBody, textoFooter, b
                             </div>
 
                             {/* Buttons outside bubble */}
-                            {botoes.filter(b => b.texto.trim()).length > 0 && (
+                            {botoes.filter(b => b.tipo === 'COPY_CODE' || b.texto.trim()).length > 0 && (
                                 <div className="ct-preview-btns">
-                                    {botoes.filter(b => b.texto.trim()).map((btn, i) => (
+                                    {botoes.filter(b => b.tipo === 'COPY_CODE' || b.texto.trim()).map((btn, i) => (
                                         <div key={i} className="ct-preview-btn">
                                             {botaoIcon(btn.tipo)}
-                                            <span>{btn.texto}</span>
+                                            <span>{btn.tipo === 'COPY_CODE' ? 'Copiar código de oferta' : btn.texto}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -313,7 +314,7 @@ function CreateTemplateModal({ templateParaEditar, onClose, onCreated }: { templ
                     texto: btn.text || '',
                     url: btn.url || '',
                     telefone: btn.phoneNumber || btn.phone || btn.telefone || '',
-                    exemplo_codigo: btn.example || btn.exemplo_codigo || '',
+                    codigoOferta: btn.example || btn.codigoOferta || '',
                     flow_id: btn.flow_id || '',
                     flow_action: btn.flow_action || 'NAVIGATE',
                     navigate_screen: btn.navigate_screen || '',
@@ -807,8 +808,8 @@ function CreateTemplateModal({ templateParaEditar, onClose, onCreated }: { templ
                                     {btn.tipo === 'COPY_CODE' && (
                                         <input
                                             type="text"
-                                            value={btn.exemplo_codigo || ''}
-                                            onChange={(e) => updateBotao(i, 'exemplo_codigo', e.target.value)}
+                                            value={btn.codigoOferta || ''}
+                                            onChange={(e) => updateBotao(i, 'codigoOferta', e.target.value)}
                                             placeholder="Ex: PROMO20"
                                             className="ct-botao-copycode"
                                         />
@@ -914,6 +915,7 @@ const CampaignTemplatesPage = () => {
     const [deleteTarget, setDeleteTarget] = useState<{ id: number; nome: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [filterStatus, setFilterStatus] = useState<TemplateStatus | 'TODOS'>('TODOS');
+    const [filterCategoria, setFilterCategoria] = useState<TemplateCategoria | 'TODAS'>('TODAS');
     const [searchTerm, setSearchTerm] = useState('');
 
     const loadTemplates = useCallback(async () => {
@@ -1008,12 +1010,13 @@ const CampaignTemplatesPage = () => {
 
     const filtered = templates.filter((t) => {
         const matchStatus = filterStatus === 'TODOS' || t.status === filterStatus;
-        const matchCat = t.categoria === 'MARKETING';
+        const matchCat = filterCategoria === 'TODAS' || t.categoria === filterCategoria;
         const matchSearch = !searchTerm || t.nome.toLowerCase().includes(searchTerm.toLowerCase());
         return matchStatus && matchCat && matchSearch;
     });
 
     return (
+        <WhatsAppConnectionGuard>
         <div className="page-container">
             <div className="page-header">
                 <div className="ct-header-left">
@@ -1054,6 +1057,14 @@ const CampaignTemplatesPage = () => {
                         value={filterStatus}
                         onChange={(v) => setFilterStatus(v as TemplateStatus | 'TODOS')}
                     />
+                    <CustomSelect
+                        options={[
+                            { value: 'TODAS', label: 'Todas as categorias' },
+                            ...Object.entries(CATEGORIA_LABEL).map(([v, l]) => ({ value: v, label: l }))
+                        ]}
+                        value={filterCategoria}
+                        onChange={(v) => setFilterCategoria(v as TemplateCategoria | 'TODAS')}
+                    />
                 </div>
 
                 <div className="table-container">
@@ -1092,19 +1103,29 @@ const CampaignTemplatesPage = () => {
                                         <th>Template</th>
                                         <th>Status</th>
                                         <th>Categoria</th>
+                                        <th>Qualidade</th>
                                         <th>Idioma</th>
                                         <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filtered.map((t) => (
+                                    {filtered.map((t) => {
+                                        const podeEditar = t.status === 'APPROVED' || t.status === 'REJECTED';
+                                        return (
                                         <tr key={t.metaTemplateId}>
                                             <td>
                                                 <div className="contact-name-cell">
                                                     <div className="contact-avatar">
                                                         {t.nome.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <span className="contact-name-text">{t.nome}</span>
+                                                    <div>
+                                                        <span className="contact-name-text">{t.nome}</span>
+                                                        {t.status === 'REJECTED' && t.motivoRejeicao && (
+                                                            <span className="ct-motivo-rejeicao" title={t.motivoRejeicao}>
+                                                                Motivo: {t.motivoRejeicao}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td>
@@ -1114,14 +1135,24 @@ const CampaignTemplatesPage = () => {
                                                 <CategoriaBadge categoria={t.categoria} />
                                             </td>
                                             <td>
+                                                {t.qualidade ? (
+                                                    <span className={`ct-qualidade-badge ct-q-${t.qualidade.toLowerCase()}`}>
+                                                        {t.qualidade === 'HIGH' ? 'Alta' : t.qualidade === 'MEDIUM' ? 'Média' : 'Baixa'}
+                                                    </span>
+                                                ) : (
+                                                    <span className="ct-qualidade-vazia">—</span>
+                                                )}
+                                            </td>
+                                            <td>
                                                 <span className="ct-idioma-badge">{t.idioma}</span>
                                             </td>
                                             <td>
                                                 <div className="actions-cell" style={{ justifyContent: 'flex-end', paddingRight: '10px' }}>
                                                     <button
-                                                        className="action-icon-btn edit"
-                                                        onClick={() => handleEditRequest(t)}
-                                                        title="Editar template"
+                                                        className={`action-icon-btn edit ${!podeEditar ? 'ct-btn-disabled' : ''}`}
+                                                        onClick={() => podeEditar && handleEditRequest(t)}
+                                                        title={podeEditar ? 'Editar template' : 'Apenas templates Aprovados ou Rejeitados podem ser editados'}
+                                                        disabled={!podeEditar}
                                                     >
                                                         <FaEdit size={14} />
                                                     </button>
@@ -1135,7 +1166,8 @@ const CampaignTemplatesPage = () => {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                             <div className="ct-list-count" style={{ padding: '16px 20px 0', borderTop: '1px solid var(--border-color-soft)', marginTop: '8px' }}>
@@ -1163,6 +1195,7 @@ const CampaignTemplatesPage = () => {
                 />
             )}
         </div>
+        </WhatsAppConnectionGuard>
     );
 };
 

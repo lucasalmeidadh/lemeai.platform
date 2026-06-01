@@ -102,16 +102,16 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
     if (!isOpen) return null;
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <header className="modal-header">
+        <div className="profile-modal-overlay" onClick={onClose}>
+            <div className="profile-modal-content" onClick={e => e.stopPropagation()}>
+                <header className="profile-modal-header">
                     <h2>Meu Perfil</h2>
                     <button onClick={onClose} className="close-modal-button" aria-label="Fechar">
                         <FaTimes />
                     </button>
                 </header>
 
-                <div className="modal-body">
+                <div className="profile-modal-body">
                     {loading ? (
                         <div className="loading-state">
                             <p>Carregando informações...</p>
@@ -232,7 +232,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
                     )}
                 </div>
 
-                <footer className="modal-footer">
+                <footer className="profile-modal-footer">
                     <button onClick={onClose} className="button secondary">
                         Fechar
                     </button>

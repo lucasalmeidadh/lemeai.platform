@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [react(), mkcert()],
   server: {
     port: 5173,
-    https: true
+    https: true,
+    host: true
   },
   build: {
     sourcemap: true

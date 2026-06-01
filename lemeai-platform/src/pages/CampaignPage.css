@@ -315,6 +315,28 @@
     border-color: var(--danger-color, #ef4444);
 }
 
+.camp-action-btn.view:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* ---------- Disparo Status Badges ---------- */
+.camp-disparo-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.camp-disparo-enviado  { background: #dbeafe; color: #1d4ed8; }
+.camp-disparo-entregue { background: #e0f2fe; color: #0369a1; }
+.camp-disparo-lido     { background: #dcfce7; color: #15803d; }
+.camp-disparo-falha    { background: #fee2e2; color: #dc2626; }
+
 .camp-action-btn:disabled {
     opacity: 0.35;
     cursor: not-allowed;

@@ -1,3 +1,153 @@
+/* ========== Prerequisites Section ========== */
+
+.prereq-section {
+    margin-bottom: 24px;
+}
+
+.prereq-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--petroleum-blue);
+    margin: 0 0 6px 0;
+}
+
+.prereq-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 16px 0;
+}
+
+.prereq-tip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    background: rgba(79, 70, 229, 0.06);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.prereq-tip-icon {
+    color: #4f46e5;
+    flex-shrink: 0;
+}
+
+.prereq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prereq-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.prereq-item.open {
+    border-color: var(--petroleum-blue);
+}
+
+.prereq-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    gap: 12px;
+}
+
+.prereq-header:disabled {
+    cursor: default;
+}
+
+.prereq-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.prereq-number {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--petroleum-blue);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.prereq-item-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.prereq-chevron {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.prereq-chevron.rotated {
+    transform: rotate(180deg);
+}
+
+.prereq-steps {
+    padding: 0 16px 16px 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.prereq-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    margin: 12px 0 8px 0;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: #92400e;
+}
+
+.prereq-warning svg {
+    color: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.prereq-steps-list {
+    margin: 12px 0 0 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.prereq-steps-list li {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
 /* ========== Connections Page (Unified WhatsApp & Instagram) ========== */
 
 .connections-page {
@@ -59,11 +209,6 @@
 .whatsapp-status-icon.meta {
     background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
     color: white;
-}
-
-.whatsapp-status-icon.evolution {
-    background: #f3f4f6;
-    color: #6b7280;
 }
 
 .whatsapp-status-icon.instagram-icon {
@@ -181,30 +326,6 @@
     50% { opacity: 0.5; transform: scale(1.4); }
 }
 
-/* ---------- QR Code Area ---------- */
-.qr-code-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-    padding: 40px 32px;
-}
-
-.qr-code-container {
-    position: relative;
-    background: white; /* QR Code sempre precisa de fundo branco */
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: var(--shadow-lg);
-}
-
-.qr-code-container img {
-    display: block;
-    width: 260px;
-    height: 260px;
-    border-radius: 12px;
-}
-
 /* ---------- Connected Info ---------- */
 .connected-info {
     display: flex;
@@ -289,13 +410,6 @@
 }
 
 /* ---------- WhatsApp Layout ---------- */
-.whatsapp-options-layout {
-    display: grid;
-    grid-template-columns: 1.8fr 1fr;
-    gap: 24px;
-    width: 100%;
-}
-
 .whatsapp-main-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -356,20 +470,6 @@
     margin: 0;
 }
 
-.whatsapp-secondary-column {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-.whatsapp-side-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 24px;
-    flex: 1;
-}
-
 .full-btn {
     width: 100%;
     padding: 14px;
@@ -387,16 +487,6 @@
     background: var(--primary-color);
     color: white;
     border: none;
-}
-
-.btn-outline {
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-}
-
-.btn-outline:hover {
-    background: var(--bg-secondary);
 }
 
 /* ---------- Skeleton ---------- */
@@ -425,11 +515,7 @@
 .whatsapp-skeleton-line.w40 { width: 40%; }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1000px) {
-    .whatsapp-options-layout {
-        grid-template-columns: 1fr;
-    }
-    
+@media (max-width: 600px) {
     .whatsapp-benefits-grid {
         grid-template-columns: 1fr;
     }

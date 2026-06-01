@@ -21,7 +21,7 @@ export interface BotaoTemplate {
     texto: string;
     url?: string;
     telefone?: string;
-    exemplo_codigo?: string;
+    codigoOferta?: string;
     flow_id?: string;
     flow_action?: 'NAVIGATE' | 'DATA_EXCHANGE';
     navigate_screen?: string;

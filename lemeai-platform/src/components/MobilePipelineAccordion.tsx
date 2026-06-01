@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import type { Message } from '../data/mockData';
 import './MobilePipelineAccordion.css';
 import CustomSelect from './CustomSelect';
+import { ChatService } from '../services/ChatService';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -46,6 +47,8 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
     const [isLoadingChat, setIsLoadingChat] = useState(false);
     const [chatError, setChatError] = useState<string | null>(null);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+    const [tipoLeadId, setTipoLeadId] = useState(deal.tipoLeadId || 0);
+    const [isUpdatingLeadType, setIsUpdatingLeadType] = useState(false);
 
     const fetchMessages = useCallback(async () => {
         if (!deal.contactId) return;
@@ -97,6 +100,26 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
             fetchMessages();
         }
     }, [isExpanded, deal.contactId, fetchMessages]);
+
+    useEffect(() => {
+        setTipoLeadId(deal.tipoLeadId || 0);
+    }, [deal]);
+
+    const handleLeadTypeChange = async (newTipoLeadIdStr: string) => {
+        const newTipoLeadId = parseInt(newTipoLeadIdStr);
+        setTipoLeadId(newTipoLeadId);
+        setIsUpdatingLeadType(true);
+        try {
+            await ChatService.atualizarTipoLead(deal.id, newTipoLeadId);
+            toast.success('Temperatura atualizada!');
+            onUpdate();
+        } catch (error: any) {
+            toast.error(`Erro: ${error.message}`);
+            setTipoLeadId(deal.tipoLeadId || 0);
+        } finally {
+            setIsUpdatingLeadType(false);
+        }
+    };
 
     const handleSendMessage = async (text: string) => {
         if (!text.trim() || !deal.contactId) return;
@@ -222,7 +245,7 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                             </button>
                         </div>
                         <div className="mobile-chat-modal-body">
-                            <div className="mobile-opp-status-changer">
+                             <div className="mobile-opp-status-changer">
                                 <label>Alterar Status:</label>
                                 <CustomSelect
                                     value={String(columnStatusId)}
@@ -232,10 +255,24 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                                         { value: '1', label: 'Atendimento IA' },
                                         { value: '8', label: 'Atendimento IA Finalizado' },
                                         { value: '2', label: 'Em Qualificação' },
-                                        { value: '5', label: 'Em Negociação' },
                                         { value: '4', label: 'Proposta Enviada' },
+                                        { value: '5', label: 'Em Negociação' },
                                         { value: '3', label: 'Venda Fechada' },
                                         { value: '6', label: 'Venda Perdida' }
+                                    ]}
+                                />
+                            </div>
+                            <div className="mobile-opp-status-changer" style={{ marginTop: '10px' }}>
+                                <label>Temperatura:</label>
+                                <CustomSelect
+                                    value={String(tipoLeadId)}
+                                    onChange={handleLeadTypeChange}
+                                    disabled={isUpdatingLeadType}
+                                    options={[
+                                        { value: '0', label: 'Sem temperatura' },
+                                        { value: '1', label: 'Quente' },
+                                        { value: '2', label: 'Morno' },
+                                        { value: '3', label: 'Frio' }
                                     ]}
                                 />
                             </div>
