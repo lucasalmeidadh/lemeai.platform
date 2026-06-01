@@ -517,7 +517,7 @@
 }
 
 /* Pagination Styles */
-.pagination-container {
+.page-system-prompts .pagination-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -528,7 +528,7 @@
     flex-shrink: 0;
 }
 
-.pagination-btn {
+.page-system-prompts .pagination-btn {
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -542,18 +542,18 @@
     transition: all 0.2s ease;
 }
 
-.pagination-btn:hover:not(:disabled) {
+.page-system-prompts .pagination-btn:hover:not(:disabled) {
     border-color: var(--petroleum-blue);
     color: var(--petroleum-blue);
     background: var(--petroleum-light);
 }
 
-.pagination-btn:disabled {
+.page-system-prompts .pagination-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.pagination-info {
+.page-system-prompts .pagination-info {
     font-size: 13px;
     font-weight: 600;
     color: var(--text-secondary);
