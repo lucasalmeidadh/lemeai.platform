@@ -10,12 +10,11 @@ import {
     FaUsersCog,
     FaBox,
     FaCalendarAlt,
-    FaDesktop,
     FaRocket,
     FaPlug,
     FaBullhorn,
     FaPaperPlane,
-    FaBullseye
+    FaCreditCard
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -139,6 +138,10 @@ const Sidebar: FC<SidebarProps> = () => {
                 <Link id="sidebar-contacts" to="/contacts" className={`sidebar-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
                     <FaAddressBook />
                     <span>Contatos</span>
+                </Link>
+                <Link id="sidebar-billing" to="/plano" className={`sidebar-link ${location.pathname === '/plano' ? 'active' : ''}`}>
+                    <FaCreditCard />
+                    <span>Meu Plano</span>
                 </Link>
 
                 <div className="sidebar-item-wrapper">

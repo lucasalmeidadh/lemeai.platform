@@ -25,6 +25,7 @@ import CampaignTemplatesPage from './pages/CampaignTemplatesPage.tsx';
 import CampaignPage from './pages/CampaignPage.tsx';
 import GoalsPage from './pages/GoalsPage.tsx';
 import DealDetailsPage from './pages/DealDetailsPage.tsx';
+import BillingPlanPage from './pages/BillingPlanPage';
 
 const router = createBrowserRouter([
   {
@@ -53,6 +54,7 @@ const router = createBrowserRouter([
           { path: "metas", element: <GoalsPage /> },
           { path: "campaign-templates", element: <CampaignTemplatesPage /> },
           { path: "campanhas", element: <CampaignPage /> },
+          { path: "plano", element: <BillingPlanPage /> },
           { path: "help", element: <HelpPage /> },
         ]
       },
