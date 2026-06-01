@@ -14,6 +14,7 @@ const SystemPromptsPage = () => {
     const [footerText, setFooterText] = useState('');
     const [rules, setRules] = useState<IARule[]>([]);
 
+    const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentRule, setCurrentRule] = useState<IARule | null>(null);
     const [ruleText, setRuleText] = useState('');
@@ -405,28 +406,14 @@ const SystemPromptsPage = () => {
                                 {/* ETAPA 1 - Cabeçalho */}
                                 {currentStep === 1 && (
                                     <>
-                                        <div className="card-header-wizard">
-                                            <h3>1. Personalidade e Objetivos</h3>
-                                            <p>Defina quem é o agente, seu tom de voz e como ele deve conduzir os primeiros contatos.</p>
-                                        </div>
-
-                                        <div className="suggestions-section">
-                                            <div className="suggestions-header">
-                                                <FaLightbulb className="icon-tip" />
-                                                <span>Sugestões de Modelos:</span>
+                                        <div className="card-header-wizard" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div>
+                                                <h3>1. Personalidade e Objetivos</h3>
+                                                <p>Defina quem é o agente, seu tom de voz e como ele deve conduzir os primeiros contatos.</p>
                                             </div>
-                                            <div className="suggestion-chips">
-                                                {personalityTemplates.map(template => (
-                                                    <button
-                                                        key={template.id}
-                                                        className="suggestion-chip"
-                                                        onClick={() => applyTemplate(template.text)}
-                                                    >
-                                                        {template.icon}
-                                                        {template.label}
-                                                    </button>
-                                                ))}
-                                            </div>
+                                            <button className="secondary-button" onClick={() => setShowSuggestionsModal(true)} style={{ fontSize: '13px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                <FaLightbulb /> Sugestões
+                                            </button>
                                         </div>
 
                                         <textarea
@@ -446,27 +433,13 @@ const SystemPromptsPage = () => {
                                                 <h3>2. Regras de Conduta</h3>
                                                 <p>Diretrizes específicas passo a passo para o comportamento da IA.</p>
                                             </div>
-                                            <button className="primary-button" onClick={() => handleOpenModal()} style={{ fontSize: '13px' }}>
-                                                <FaPlus /> Adicionar Regra
-                                            </button>
-                                        </div>
-
-                                        <div className="suggestions-section" style={{ marginBottom: '15px' }}>
-                                            <div className="suggestions-header">
-                                                <FaLightbulb className="icon-tip" />
-                                                <span>Sugestões de Regras:</span>
-                                            </div>
-                                            <div className="suggestion-chips">
-                                                {rulesTemplates.map(template => (
-                                                    <button
-                                                        key={template.id}
-                                                        className="suggestion-chip"
-                                                        onClick={() => addSuggestedRule(template.text)}
-                                                    >
-                                                        {template.icon}
-                                                        {template.label}
-                                                    </button>
-                                                ))}
+                                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                                <button className="secondary-button" onClick={() => setShowSuggestionsModal(true)} style={{ fontSize: '13px' }}>
+                                                    <FaLightbulb /> Sugestões
+                                                </button>
+                                                <button className="primary-button" onClick={() => handleOpenModal()} style={{ fontSize: '13px' }}>
+                                                    <FaPlus /> Adicionar Regra
+                                                </button>
                                             </div>
                                         </div>
 
@@ -489,7 +462,7 @@ const SystemPromptsPage = () => {
                                                                     <td style={{ textAlign: 'center' }}>
                                                                         <span className="rule-number-badge">{globalIndex + 1}</span>
                                                                     </td>
-                                                                    <td style={{ whiteSpace: 'pre-wrap', fontSize: '14px' }}>{rule.descricaoRegra}</td>
+                                                                    <td className="rule-description-cell">{rule.descricaoRegra}</td>
                                                                     <td>
                                                                         <div className="actions-cell">
                                                                             <button className="action-icon-btn edit" onClick={() => handleOpenModal(rule)}>
@@ -546,29 +519,16 @@ const SystemPromptsPage = () => {
                                 {/* ETAPA 3 - Rodapé */}
                                 {currentStep === 3 && (
                                     <>
-                                        <div className="card-header-wizard">
-                                            <h3>3. Formatação e Segurança</h3>
-                                            <p>Regras para finalização, estilo do texto (negritos, listas) e tratamento de dados.</p>
+                                        <div className="card-header-wizard" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div>
+                                                <h3>3. Formatação e Segurança</h3>
+                                                <p>Regras para finalização, estilo do texto (negritos, listas) e tratamento de dados.</p>
+                                            </div>
+                                            <button className="secondary-button" onClick={() => setShowSuggestionsModal(true)} style={{ fontSize: '13px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                                <FaLightbulb /> Sugestões
+                                            </button>
                                         </div>
 
-                                        <div className="suggestions-section">
-                                            <div className="suggestions-header">
-                                                <FaLightbulb className="icon-tip" />
-                                                <span>Sugestões de Modelos:</span>
-                                            </div>
-                                            <div className="suggestion-chips">
-                                                {finalizationTemplates.map(template => (
-                                                    <button 
-                                                        key={template.id} 
-                                                        className="suggestion-chip"
-                                                        onClick={() => applyFinalizationTemplate(template.text)}
-                                                    >
-                                                        {template.icon}
-                                                        {template.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
                                         <textarea
                                             className="premium-textarea"
                                             value={footerText}
@@ -672,6 +632,39 @@ const SystemPromptsPage = () => {
                     </div>
                 </div>
             )}
+
+            {showSuggestionsModal && (() => {
+                const templates = currentStep === 1 ? personalityTemplates : currentStep === 2 ? rulesTemplates : finalizationTemplates;
+                const applyFn = currentStep === 1 ? applyTemplate : currentStep === 2 ? addSuggestedRule : applyFinalizationTemplate;
+                const title = currentStep === 1 ? 'Sugestões de Personalidade' : currentStep === 2 ? 'Sugestões de Regras' : 'Sugestões de Formatação';
+                return (
+                    <div className="modal-overlay" onClick={() => setShowSuggestionsModal(false)}>
+                        <div className="modal-content suggestions-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h2><FaLightbulb style={{ marginRight: 8, color: 'var(--petroleum-blue)' }} />{title}</h2>
+                                <button className="close-button" onClick={() => setShowSuggestionsModal(false)}>&times;</button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="suggestions-modal-grid">
+                                    {templates.map(template => (
+                                        <button
+                                            key={template.id}
+                                            className="suggestion-modal-card"
+                                            onClick={() => { applyFn(template.text); setShowSuggestionsModal(false); }}
+                                        >
+                                            <span className="suggestion-modal-card-icon">{template.icon}</span>
+                                            <span className="suggestion-modal-card-text">
+                                                <strong>{template.label}</strong>
+                                                <span>{template.text.length > 100 ? template.text.substring(0, 100) + '...' : template.text}</span>
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}

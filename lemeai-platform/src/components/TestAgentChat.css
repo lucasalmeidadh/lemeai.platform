@@ -307,6 +307,35 @@
     transition: all 0.2s;
 }
 
+@media (max-height: 850px) {
+    .test-agent-header {
+        padding: 10px 16px;
+    }
+
+    .start-session-view {
+        padding: 20px 20px;
+        gap: 0;
+    }
+
+    .start-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+        margin-bottom: 12px;
+    }
+
+    .start-session-view h4 {
+        font-size: 1.05rem;
+        margin-bottom: 6px;
+    }
+
+    .start-session-view p {
+        font-size: 0.88rem;
+        margin-bottom: 16px;
+        line-height: 1.4;
+    }
+}
+
 .send-btn:hover:not(:disabled) {
     background-color: var(--petroleum-blue-hover);
     transform: translateY(-1px);
