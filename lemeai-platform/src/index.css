@@ -1,7 +1,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* GLOBAL VARIABLES (Light Mode Default) - Premium Sleek Palette */
+  /* ─── RESPONSIVE BASE ─────────────────────────────────── */
+  font-size: clamp(13px, 1vw, 16px);
+
+  /* ─── TYPOGRAPHY SCALE ────────────────────────────────── */
+  /* Usage guide:
+     --font-xs    → badges, meta labels, timestamps
+     --font-sm    → captions, secondary labels, helper text
+     --font-base  → body text, table cells, inputs (default)
+     --font-md    → emphasized body, button labels (lg)
+     --font-lg    → card titles, subheadings
+     --font-xl    → modal headers, section headers
+     --font-2xl   → panel headers, large section titles
+     --font-3xl   → page titles (h1)
+     --font-4xl   → hero/onboarding headings
+  */
+  --font-xs:    0.6875rem;   /* 11px */
+  --font-sm:    0.8125rem;   /* 13px */
+  --font-base:  0.875rem;    /* 14px */
+  --font-md:    1rem;        /* 16px */
+  --font-lg:    1.125rem;    /* 18px */
+  --font-xl:    1.25rem;     /* 20px */
+  --font-2xl:   1.5rem;      /* 24px */
+  --font-3xl:   1.75rem;     /* 28px */
+  --font-4xl:   2rem;        /* 32px */
+
+  /* ─── BUTTON SYSTEM ───────────────────────────────────── */
+  /* sm  → icon-only, inline compact actions
+     md  → default action buttons, table actions
+     lg  → primary CTA (Add, Save, Send)
+  */
+  --btn-font-sm:    var(--font-sm);
+  --btn-font-md:    var(--font-base);
+  --btn-font-lg:    var(--font-md);
+  --btn-pad-sm:     0.375rem 0.75rem;
+  --btn-pad-md:     0.5rem 1rem;
+  --btn-pad-lg:     0.625rem 1.125rem;
+  --btn-radius-sm:  0.375rem;
+  --btn-radius-md:  0.5rem;
+  --btn-radius-lg:  0.625rem;
+
+  /* ─── SPACING SCALE ───────────────────────────────────── */
+  --space-1:  0.25rem;    /*  4px */
+  --space-2:  0.5rem;     /*  8px */
+  --space-3:  0.75rem;    /* 12px */
+  --space-4:  1rem;       /* 16px */
+  --space-5:  1.25rem;    /* 20px */
+  --space-6:  1.5rem;     /* 24px */
+  --space-8:  2rem;       /* 32px */
+  --space-10: 2.5rem;     /* 40px */
+
+  /* ─── COLORS (Light Mode) ─────────────────────────────── */
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
@@ -13,45 +63,72 @@
   --border-color: #e2e8f0;
   --border-color-soft: #f1f5f9;
 
-  /* Skeletons */
   --skeleton-bg: #e2e8f0;
   --skeleton-highlight: #f8fafc;
 
-  /* Brand Colors - Modernized */
   --petroleum-blue: #00275e;
   --petroleum-blue-hover: #001a40;
   --petroleum-light: rgba(0, 39, 94, 0.08);
   --cyan-accent: #00f0ff;
   --brand-official: #00275e;
 
-  /* Semantic Colors */
-  --success-color: #059669;
-  --success-bg: rgba(16, 185, 129, 0.15);
-  --warning-color: #d97706;
-  --warning-bg: rgba(217, 119, 6, 0.15);
-  --danger-color: #ef4444;
-  --danger-bg: rgba(239, 68, 68, 0.15);
-  --info-color: #1d4ed8;
-  --info-bg: #f0f9ff;
-  
+  /* ─── SEMANTIC COLORS ────────────────────────────────────── */
+  /* Padrão: usar --color-X para texto, --color-X-bg para fundo de badge */
+
+  /* Success — concluído, ativo, meta batida, deal ganho */
+  --color-success:        #059669;
+  --color-success-bg:     rgba(5, 150, 105, 0.12);
+  --color-success-border: rgba(5, 150, 105, 0.25);
+
+  /* Warning — em negociação, pendente, lead morno */
+  --color-warning:        #d97706;
+  --color-warning-bg:     rgba(217, 119, 6, 0.12);
+  --color-warning-border: rgba(217, 119, 6, 0.25);
+
+  /* Danger — perdido, erro, deletar, lead quente (urgência) */
+  --color-danger:         #ef4444;
+  --color-danger-bg:      rgba(239, 68, 68, 0.12);
+  --color-danger-border:  rgba(239, 68, 68, 0.25);
+
+  /* Info — novo, informativo, lead frio (neutro positivo) */
+  --color-info:           #2563eb;
+  --color-info-bg:        rgba(37, 99, 235, 0.12);
+  --color-info-border:    rgba(37, 99, 235, 0.25);
+
+  /* Neutral — sem classificação, inativo, rank baixo */
+  --color-neutral:        #64748b;
+  --color-neutral-bg:     rgba(100, 116, 139, 0.12);
+  --color-neutral-border: rgba(100, 116, 139, 0.25);
+
+  /* AI / Purple — funcionalidades de IA */
+  --color-ai:             #8b5cf6;
+  --color-ai-bg:          rgba(139, 92, 246, 0.12);
+  --color-ai-border:      rgba(139, 92, 246, 0.25);
+
+  /* Legacy aliases (backwards compat) */
+  --success-color: var(--color-success);
+  --success-bg:    var(--color-success-bg);
+  --warning-color: var(--color-warning);
+  --warning-bg:    var(--color-warning-bg);
+  --danger-color:  var(--color-danger);
+  --danger-bg:     var(--color-danger-bg);
+  --info-color:    var(--color-info);
+  --info-bg:       var(--color-info-bg);
+
   --dark-yellow: var(--warning-color);
   --white: #ffffff;
 
-  /* Glassmorphism Surface Base */
   --surface-color: rgba(255, 255, 255, 0.85);
 
-  /* Modern Smooth Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
 
-  /* Legacy Compatibility */
   --light-gray: var(--bg-primary);
   --text-color: var(--text-primary);
 }
 
 [data-theme='dark'] {
-  /* DARK MODE VARIABLES - Anthracite Custom */
   --bg-primary: #09090b;
   --bg-secondary: #1e2128;
   --bg-tertiary: #2a2e38;
@@ -63,18 +140,15 @@
   --border-color: #334155;
   --border-color-soft: #1e293b;
 
-  /* Skeletons */
   --skeleton-bg: #334155;
   --skeleton-highlight: #475569;
 
-  /* Brand Colors Setup */
   --petroleum-blue: #3b82f6;
   --petroleum-blue-hover: #60a5fa;
   --petroleum-light: rgba(59, 130, 246, 0.15);
   --cyan-accent: #00f0ff;
   --brand-official: #020d1c;
 
-  /* Glassmorphism Surface Base Dark */
   --surface-color: rgba(2, 13, 28, 0.95);
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
@@ -95,6 +169,7 @@ html {
   background-color: var(--bg-primary);
   overflow: hidden;
   color: var(--text-primary);
+  font-size: var(--font-base);
 }
 
 .app-layout {
@@ -120,17 +195,54 @@ html {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 40px;
+  padding: var(--space-10);
   box-sizing: border-box;
   min-width: 0;
 }
 
-/* Global Action Buttons */
+/* ─── BADGE UTILITY CLASSES ──────────────────────────────────── */
+/* Use estas classes para qualquer indicador de estado na plataforma.
+   Mapeamento semântico:
+     success → concluído, ativo, ganho, meta batida
+     warning → pendente, em negociação, morno
+     danger  → perdido, erro, urgente, quente
+     info    → novo, informativo, frio
+     neutral → sem classificação, inativo
+     ai      → funcionalidades de IA
+*/
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.badge-success { background: var(--color-success-bg); color: var(--color-success); }
+.badge-warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.badge-danger  { background: var(--color-danger-bg);  color: var(--color-danger);  }
+.badge-info    { background: var(--color-info-bg);    color: var(--color-info);    }
+.badge-neutral { background: var(--color-neutral-bg); color: var(--color-neutral); }
+.badge-ai      { background: var(--color-ai-bg);      color: var(--color-ai);      }
+
+/* badge com borda — para estados "sem classificação" */
+.badge-neutral.badge-dashed {
+  background: transparent;
+  border: 1px dashed var(--color-neutral-border);
+}
+
+/* ─── GLOBAL ACTION BUTTONS ───────────────────────────────────── */
 .action-button {
   border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 14px;
+  border-radius: var(--btn-radius-sm);
+  padding: var(--btn-pad-sm);
+  font-size: var(--btn-font-md);
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -156,55 +268,50 @@ html {
   background-color: #f1c2c6;
 }
 
-/* Global Layout */
+/* ─── GLOBAL LAYOUT ───────────────────────────────────────────── */
 .page-container {
-  padding: 40px;
-  padding-bottom: 80px;
+  padding: var(--space-10);
+  padding-bottom: 5rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
 
-/* Allow scrolling within page container if needed, but usually main-content handles it. 
-   Actually, .main-content has overflow-y: auto in index.css. 
-   Let's make .page-container just a wrapper for padding/flex.
-*/
 .main-content .page-container {
   height: auto;
-  /* Let content grow */
   min-height: 100%;
 }
-
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 1.875rem;
   flex-shrink: 0;
 }
 
+/* page title (h1) */
 .page-header h1 {
-  font-size: 28px;
+  font-size: var(--font-3xl);
   color: var(--text-color);
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
 }
 
-/* Global Add Button */
+/* primary CTA button (top-right of page header) */
 .add-button {
   background-color: var(--petroleum-blue);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 10px 18px;
-  font-size: 15px;
+  border-radius: var(--btn-radius-md);
+  padding: var(--btn-pad-lg);
+  font-size: var(--btn-font-lg);
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   transition: all 0.2s ease;
 }
 
@@ -213,7 +320,7 @@ html {
   transform: translateY(-2px);
 }
 
-/* Mobile Navigation Drawer styles */
+/* ─── MOBILE NAVIGATION DRAWER ────────────────────────────────── */
 .mobile-overlay {
   display: none;
   position: fixed;
@@ -235,8 +342,8 @@ html {
 .mobile-drawer {
   position: fixed;
   top: 0;
-  left: -280px;
-  width: 280px;
+  left: -17.5rem;
+  width: 17.5rem;
   height: 100vh;
   background-color: var(--bg-secondary);
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
@@ -251,18 +358,18 @@ html {
 }
 
 .drawer-header {
-  height: 60px;
+  height: 3.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 1.25rem;
   border-bottom: 1px solid var(--border-color);
 }
 
 .drawer-header h3 {
   margin: 0;
   color: var(--petroleum-blue);
-  font-size: 1.2rem;
+  font-size: var(--font-xl);
 }
 
 .close-drawer {
@@ -276,15 +383,15 @@ html {
 .drawer-nav {
   display: flex;
   flex-direction: column;
-  padding: 15px 0;
+  padding: 0.9375rem 0;
   overflow-y: auto;
 }
 
 .drawer-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 15px 25px;
+  gap: var(--space-3);
+  padding: 0.9375rem 1.5625rem;
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
@@ -294,7 +401,7 @@ html {
   width: 100%;
   text-align: left;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: var(--font-md);
   cursor: pointer;
 }
 
@@ -319,7 +426,7 @@ html {
 }
 
 .drawer-chevron {
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
 }
 
 .drawer-submenu {
@@ -329,13 +436,279 @@ html {
 }
 
 .drawer-link.sub-link {
-  padding-left: 50px;
-  font-size: 0.95rem;
+  padding-left: 3.125rem;
+  font-size: var(--font-base);
 }
 
-/* For Firefox compatibility */
+/* ─── SCROLLBAR ───────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) var(--bg-primary);
+}
+
+/* ─── ONBOARDING ──────────────────────────────────────────────── */
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+.onboarding-modal {
+  background: var(--bg-secondary);
+  width: 90%;
+  max-width: 31.25rem;
+  border-radius: 1.5rem;
+  padding: var(--space-10);
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  text-align: center;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.onboarding-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: var(--font-xl);
+  transition: color 0.2s;
+}
+
+.onboarding-close:hover {
+  color: var(--text-primary);
+}
+
+.onboarding-icon {
+  width: auto;
+  height: 3.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-8);
+}
+
+.onboarding-modal h1 {
+  margin-bottom: var(--space-4);
+  font-size: var(--font-4xl);
+  font-weight: 800;
+}
+
+.onboarding-modal p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-8);
+}
+
+.onboarding-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-10);
+}
+
+.feature-mini-card {
+  padding: var(--space-4);
+  background: var(--bg-primary);
+  border-radius: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  border: 1px solid var(--border-color-soft);
+}
+
+.feature-icon {
+  font-size: var(--font-2xl);
+  margin-bottom: var(--space-2);
+  color: var(--petroleum-blue);
+}
+
+.feature-mini-card strong {
+  font-size: var(--font-sm);
+  display: block;
+}
+
+.feature-mini-card small {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.onboarding-actions .btn-primary {
+  background: var(--petroleum-blue);
+  color: white;
+  border: none;
+  padding: var(--space-4);
+  border-radius: var(--btn-radius-lg);
+  font-weight: 600;
+  font-size: var(--font-lg);
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.onboarding-actions .btn-primary:hover {
+  background: var(--petroleum-blue-hover);
+  transform: translateY(-2px);
+}
+
+.onboarding-actions .btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  padding: 0.625rem;
+  font-size: var(--font-base);
+  cursor: pointer;
+}
+
+/* ─── TOOLTIP TOUR ────────────────────────────────────────────── */
+.onboarding-tour-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+  animation: fadeIn 0.3s ease;
+}
+
+.onboarding-tooltip {
+  width: 18.75rem;
+  background: var(--bg-secondary);
+  border-radius: var(--space-4);
+  padding: 1.25rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--petroleum-blue);
+  animation: fadeIn 0.3s ease;
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.skip-link {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.onboarding-tooltip h3 {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-lg);
+  color: var(--petroleum-blue);
+}
+
+.onboarding-tooltip p {
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.tooltip-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.btn-back {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: none;
+  padding: var(--btn-pad-sm);
+  border-radius: var(--btn-radius-md);
+  font-size: var(--btn-font-md);
+  cursor: pointer;
+}
+
+.btn-next {
+  background: var(--petroleum-blue);
+  color: white;
+  border: none;
+  padding: var(--btn-pad-sm);
+  border-radius: var(--btn-radius-md);
+  font-size: var(--btn-font-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid var(--petroleum-blue);
+}
+
+.onboarding-highlight {
+  position: relative;
+  z-index: 10001 !important;
+  box-shadow: 0 0 0 4px rgba(0, 150, 255, 0.3), 0 0 20px rgba(0, 0, 0, 0.2) !important;
+  pointer-events: auto !important;
+  transition: box-shadow 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── RESPONSIVE COMPACT (piso para telas pequenas) ───────────── */
+@media (max-height: 850px), (max-width: 1300px) {
+  .main-content {
+    padding: 20px !important;
+  }
+  .page-container {
+    padding: 20px !important;
+    padding-bottom: 40px !important;
+  }
+  .page-header {
+    margin-bottom: 15px !important;
+  }
+  .page-header h1 {
+    font-size: 20px !important;
+  }
+  .add-button {
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+  }
+  input, select, textarea, button {
+    font-size: 12px !important;
+  }
 }

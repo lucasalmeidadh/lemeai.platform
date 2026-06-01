@@ -9,14 +9,30 @@ interface ConversationWindowProps {
   conversationId: number;
 }
 
-const MessageStatus: React.FC<{ status?: 'sending' | 'sent' | 'failed' }> = ({ status }) => {
+const MessageStatus: React.FC<{ status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed' }> = ({ status }) => {
   if (status === 'sending') {
     return <FaRegClock className="status-icon" title="Enviando..." />;
   }
   if (status === 'failed') {
     return <FaExclamationCircle className="status-icon failed" title="Falha ao enviar" />;
   }
-  return <FaCheck className="status-icon" title="Enviado" />;
+  if (status === 'delivered') {
+    return (
+      <span className="status-double-check" title="Entregue">
+        <FaCheck className="status-icon" />
+        <FaCheck className="status-icon" />
+      </span>
+    );
+  }
+  if (status === 'read') {
+    return (
+      <span className="status-double-check read" title="Lida">
+        <FaCheck className="status-icon" />
+        <FaCheck className="status-icon" />
+      </span>
+    );
+  }
+  return <FaCheck className="status-icon" title="Enviada" />;
 };
 
 
@@ -144,7 +160,7 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
               {messages
                 .sort((a, b) => a.id - b.id)
                 .map(msg => (
-                  <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'}`}>
+                  <div key={msg.id} className={`message-wrapper ${msg.sender === 'other' ? 'received' : 'sent'} ${msg.reacao ? 'has-reaction' : ''}`}>
                     <div className={`message-bubble ${msg.sender} ${msg.type === 'image' ? 'media-message' : ''}`}>
                       {msg.sender === 'ia' && (
                         <div className="ia-header">
@@ -184,6 +200,12 @@ const ConversationWindow: React.FC<ConversationWindowProps> = ({ messagesByDate,
                         <span className="timestamp">{msg.time}</span>
                         {msg.sender === 'me' && <MessageStatus status={msg.status} />}
                       </div>
+
+                      {msg.reacao && (
+                        <div className={`message-reaction ${msg.sender === 'other' ? 'reaction-left' : 'reaction-right'}`}>
+                          {msg.reacao}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -12,6 +12,7 @@ import { OpportunityService, type DetalheConversa } from '../services/Opportunit
 import { ContactService } from '../services/ContactService';
 import { AttachmentService } from '../services/AttachmentService';
 import { AgendaService } from '../services/AgendaService';
+import { ChatService } from '../services/ChatService';
 import type { ContatoAnexoResponseDTO, TipoAnexo } from '../types/Attachment';
 import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
@@ -68,6 +69,10 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
     // Status state
     const [statusId, setStatusId] = useState(deal.statusId || 1);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    // Temperature state
+    const [tipoLeadId, setTipoLeadId] = useState(deal.tipoLeadId || 0);
+    const [isUpdatingLeadType, setIsUpdatingLeadType] = useState(false);
 
     // Deletion state
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -328,7 +333,24 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
     useEffect(() => {
         setDetailsStatusId(deal.statusId || 1);
         setDetailsValue(deal.rawValue || 0);
+        setTipoLeadId(deal.tipoLeadId || 0);
     }, [deal]);
+
+    const handleLeadTypeChange = async (newTipoLeadIdStr: string) => {
+        const newTipoLeadId = parseInt(newTipoLeadIdStr);
+        setTipoLeadId(newTipoLeadId);
+        setIsUpdatingLeadType(true);
+        try {
+            await ChatService.atualizarTipoLead(deal.id, newTipoLeadId);
+            toast.success("Temperatura do lead atualizada!");
+            if (onUpdate) onUpdate();
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao atualizar temperatura do lead");
+            setTipoLeadId(deal.tipoLeadId || 0); // Revert
+        } finally {
+            setIsUpdatingLeadType(false);
+        }
+    };
 
     const handleSaveDetails = async () => {
         // Check for value change
@@ -622,10 +644,26 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                         { value: '1', label: 'Atendimento IA' },
                                         { value: '8', label: 'Atendimento IA Finalizado' },
                                         { value: '2', label: 'Em Qualificação' },
-                                        { value: '5', label: 'Em Negociação' },
                                         { value: '4', label: 'Proposta Enviada' },
+                                        { value: '5', label: 'Em Negociação' },
                                         { value: '3', label: 'Venda Fechada' },
                                         { value: '6', label: 'Venda Perdida' }
+                                    ]}
+                                />
+                            </div>
+                        </div>
+                        <div className="info-group">
+                            <span className="info-label">Temperatura</span>
+                            <div className="info-value">
+                                <CustomSelect
+                                    value={tipoLeadId.toString()}
+                                    onChange={(val) => handleLeadTypeChange(val)}
+                                    disabled={isUpdatingLeadType}
+                                    options={[
+                                        { value: '0', label: 'Sem temperatura' },
+                                        { value: '1', label: 'Quente' },
+                                        { value: '2', label: 'Morno' },
+                                        { value: '3', label: 'Frio' }
                                     ]}
                                 />
                             </div>

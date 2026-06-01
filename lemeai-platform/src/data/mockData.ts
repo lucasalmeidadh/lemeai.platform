@@ -3,9 +3,10 @@ export interface Message {
   text: string;
   sender: 'me' | 'other' | 'ia';
   time: string;
-  status?: 'sending' | 'sent' | 'failed';
+  status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   type?: 'text' | 'image' | 'audio' | 'file' | 'document';
   mediaUrl?: string;
+  reacao?: string | null;
 }
 
 export interface Contact {

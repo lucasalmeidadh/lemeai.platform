@@ -114,16 +114,12 @@ const AnalyticsPage = () => {
     return (
         <div className="analytics-container">
             <header className="analytics-header">
-                <div className="header-title">
-                    <h1>Analytics Estratégico</h1>
-                    <p>Insights e performance baseados em dados reais e projeções.</p>
-                </div>
                 <div className="header-actions">
-                    <DateRangeFilter 
-                        startDate={startDate} 
-                        endDate={endDate} 
-                        onChangeStartDate={setStartDate} 
-                        onChangeEndDate={setEndDate} 
+                    <DateRangeFilter
+                        startDate={startDate}
+                        endDate={endDate}
+                        onChangeStartDate={setStartDate}
+                        onChangeEndDate={setEndDate}
                     />
                 </div>
             </header>

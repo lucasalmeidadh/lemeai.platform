@@ -11,6 +11,7 @@ import { OpportunityService } from '../services/OpportunityService';
 import type { Opportunity } from '../services/OpportunityService';
 import DateRangeFilter from '../components/DateRangeFilter';
 import CustomSelect from '../components/CustomSelect';
+import { apiFetch } from '../services/api';
 
 interface Kpi {
   title: string;
@@ -27,60 +28,31 @@ const Dashboard = () => {
   });
   const [endDate, setEndDate] = useState<Date | null>(new Date());
 
-  const [deals, setDeals] = useState<Opportunity[]>([]);
+  const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>([]);
+  const [chatDataMap, setChatDataMap] = useState<Record<number, number>>({});
   const [kpiData, setKpiData] = useState<Kpi[]>([]);
   const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
+  const [leadsList, setLeadsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const calculateKPIs = (opportunities: Opportunity[]) => {
-    const counts: { [key: string]: number } = {
-      'Atendimento IA': 0,
-      'Atendimento IA Finalizado': 0,
-      'Não Iniciado': 0,
-      'Em Negociação': 0,
-      'Proposta Enviada': 0,
-      'Venda Fechada': 0,
-      'Venda Perdida': 0
-    };
-
-    opportunities.forEach(op => {
-      const status = op.descricaoStatus || 'Não Iniciado';
-      if (counts.hasOwnProperty(status)) {
-        counts[status]++;
-      } else {
-        const lower = status.toLowerCase();
-        if (lower.includes('ia finalizado')) counts['Atendimento IA Finalizado']++;
-        else if (lower.includes('ia')) counts['Atendimento IA']++;
-        else if (lower.includes('não iniciado') || lower.includes('novo')) counts['Não Iniciado']++;
-        else if (lower.includes('negociação') || lower.includes('andamento')) counts['Em Negociação']++;
-        else if (lower.includes('proposta')) counts['Proposta Enviada']++;
-        else if (lower.includes('fechada') || lower.includes('concluída')) counts['Venda Fechada']++;
-        else if (lower.includes('perdida')) counts['Venda Perdida']++;
-      }
-    });
-
-    setKpiData([
-      { title: 'Total / Não Iniciado', value: (counts['Não Iniciado'] + counts['Atendimento IA']).toString(), icon: <FaUserPlus /> },
-      { title: 'Atendimento IA Finalizado', value: counts['Atendimento IA Finalizado'].toString(), icon: <FaCheckCircle /> },
-      { title: 'Vendas Fechadas', value: counts['Venda Fechada'].toString(), icon: <FaCheckCircle /> },
-      { title: 'Vendas Perdidas', value: counts['Venda Perdida'].toString(), icon: <FaTimesCircle /> },
-    ]);
-
-    setFunnelData([
-      { id: 'topo', name: 'Não Iniciado', value: counts['Não Iniciado'], color: 'var(--petroleum-blue, #0284c7)' },
-      { id: 'meio-1', name: 'Atendimento IA', value: counts['Atendimento IA'], color: '#d97706' },
-      { id: 'meio-2', name: 'Em Negociação', value: counts['Em Negociação'] + counts['Proposta Enviada'], color: '#7c3aed' },
-      { id: 'fundo', name: 'Venda Fechada', value: counts['Venda Fechada'], color: '#059669' }
-    ]);
-  };
 
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const opportunities = await OpportunityService.getAllOpportunities();
-      setDeals(opportunities || []);
-      calculateKPIs(opportunities || []);
+      const [opportunities, chatRes] = await Promise.all([
+        OpportunityService.getAllOpportunities(),
+        apiFetch(`${import.meta.env.VITE_API_URL}/api/Chat/ConversasPorVendedor`)
+          .then(r => r.json())
+          .catch(() => ({ sucesso: false, dados: [] }))
+      ]);
+
+      const map: Record<number, number> = {};
+      if (chatRes.sucesso && Array.isArray(chatRes.dados)) {
+        chatRes.dados.forEach((c: any) => { map[c.idConversa] = c.tipoLeadId; });
+      }
+
+      setAllOpportunities(opportunities || []);
+      setChatDataMap(map);
     } catch (err) {
       setError("Não foi possível carregar os dados do painel.");
       console.error(err);
@@ -92,6 +64,76 @@ const Dashboard = () => {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  // Filter by selected date range
+  const deals = useMemo(() => {
+    return allOpportunities.filter(op => {
+      const date = new Date(op.dataConversaCriada);
+      if (startDate) {
+        const start = new Date(startDate); start.setHours(0, 0, 0, 0);
+        if (date < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate); end.setHours(23, 59, 59, 999);
+        if (date > end) return false;
+      }
+      return true;
+    });
+  }, [allOpportunities, startDate, endDate]);
+
+  // Recalculate KPIs, funnel and leads whenever filtered data or chat map changes
+  useEffect(() => {
+    const statusIdMap: Record<number, string> = {
+      1: 'ai_service', 2: 'intro', 3: 'closed',
+      4: 'proposal', 5: 'qualified', 6: 'lost', 8: 'ai_service_finished',
+    };
+
+    const counts: Record<string, number> = {
+      'Atendimento IA': 0, 'IA Encerrada': 0, 'Em Qualificação': 0,
+      'Em Negociação': 0, 'Proposta Enviada': 0, 'Venda Fechada': 0, 'Venda Perdida': 0,
+    };
+
+    const processedLeads = deals.map(op => {
+      switch (op.idStauts) {
+        case 1: counts['Atendimento IA']++;   break;
+        case 2: counts['Em Qualificação']++;  break;
+        case 3: counts['Venda Fechada']++;    break;
+        case 4: counts['Proposta Enviada']++; break;
+        case 5: counts['Em Negociação']++;    break;
+        case 6: counts['Venda Perdida']++;    break;
+        case 8: counts['IA Encerrada']++;     break;
+        default: counts['Em Qualificação']++; break;
+      }
+
+      const stageId = statusIdMap[op.idStauts] ?? 'intro';
+      const tipoLeadId = chatDataMap[op.idConversa];
+      let temperature: 'hot' | 'warm' | 'cold' | 'new' = 'new';
+      if (tipoLeadId === 1) temperature = 'hot';
+      else if (tipoLeadId === 2) temperature = 'warm';
+      else if (tipoLeadId === 3) temperature = 'cold';
+
+      return { id: op.idConversa, stageId, temperature, contactName: op.nomeContato, dealId: op.idConversa };
+    });
+
+    setLeadsList(processedLeads);
+
+    setKpiData([
+      { title: 'Total / Em Qualificação', value: (counts['Em Qualificação'] + counts['Atendimento IA']).toString(), icon: <FaUserPlus /> },
+      { title: 'IA Encerrada', value: counts['IA Encerrada'].toString(), icon: <FaCheckCircle /> },
+      { title: 'Vendas Fechadas', value: counts['Venda Fechada'].toString(), icon: <FaCheckCircle /> },
+      { title: 'Vendas Perdidas', value: counts['Venda Perdida'].toString(), icon: <FaTimesCircle /> },
+    ]);
+
+    setFunnelData([
+      { id: 'ai_service',          name: 'Atendimento IA',   value: counts['Atendimento IA'],   color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+      { id: 'ai_service_finished', name: 'IA Encerrada',     value: counts['IA Encerrada'],     color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+      { id: 'intro',               name: 'Em Qualificação',  value: counts['Em Qualificação'],  color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+      { id: 'qualified',           name: 'Em Negociação',    value: counts['Em Negociação'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+      { id: 'proposal',            name: 'Proposta Enviada', value: counts['Proposta Enviada'], color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+      { id: 'closed',              name: 'Venda Fechada',    value: counts['Venda Fechada'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+      { id: 'lost',                name: 'Venda Perdida',    value: counts['Venda Perdida'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+    ]);
+  }, [deals, chatDataMap]);
 
   const chartData = useMemo(() => {
     const today = new Date();
@@ -151,13 +193,13 @@ const Dashboard = () => {
             onChange={setStatusFilter}
             options={[
               { value: 'Todos', label: 'Status' },
-              { value: 'Não Iniciado', label: 'Não Iniciado' },
+              { value: 'Em Qualificação', label: 'Em Qualificação' },
               { value: 'Em Negociação', label: 'Em Negociação' },
               { value: 'Proposta Enviada', label: 'Proposta Enviada' },
               { value: 'Venda Fechada', label: 'Venda Fechada' },
               { value: 'Venda Perdida', label: 'Venda Perdida' },
               { value: 'Atendimento IA', label: 'Atendimento IA' },
-              { value: 'Atendimento IA Finalizado', label: 'Atendimento IA Finalizado' },
+              { value: 'IA Encerrada', label: 'IA Encerrada' },
             ]}
           />
         </div>
@@ -184,21 +226,21 @@ const Dashboard = () => {
 
           <div className="dashboard-charts-area">
             <div className="dashboard-card chart-card full-width-chart">
+              <h3>Funil de Vendas</h3>
+              <p className="chart-subtitle">Oportunidades pelas etapas de conversão.</p>
+              <FunnelChart data={funnelData} leads={leadsList} />
+            </div>
+
+            <div className="dashboard-card chart-card full-width-chart">
               <h3>Volume por Horário</h3>
               <p className="chart-subtitle">Distribuição de conversas iniciadas ao longo do dia (24h).</p>
               <HourlyActivityChart data={hourlyData} />
             </div>
 
-            <div className="dashboard-card chart-card">
+            <div className="dashboard-card chart-card full-width-chart">
               <h3>Conversas nos últimos 30 dias</h3>
               <p className="chart-subtitle">Volume de conversas iniciadas diariamente.</p>
               <ConversationChart data={chartData} />
-            </div>
-
-            <div className="dashboard-card chart-card">
-              <h3>Funil de Vendas</h3>
-              <p className="chart-subtitle">Oportunidades pelas etapas de conversão.</p>
-              <FunnelChart data={funnelData} />
             </div>
           </div>
         </>

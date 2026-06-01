@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -15,9 +15,8 @@ import ConversationSkeleton from '../components/ConversationSkeleton';
 import hubService from '../hub/HubConnectionService';
 import { ChatService } from '../services/ChatService';
 import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
-import { EvolutionService } from '../services/EvolutionService';
-import { MetaService, type MetaConfig } from '../services/MetaService';
-import { FaComments, FaWhatsapp, FaSync, FaExclamationTriangle, FaPlug } from 'react-icons/fa';
+import { MetaService } from '../services/MetaService';
+import { FaComments, FaWhatsapp, FaExclamationTriangle, FaPlug } from 'react-icons/fa';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -54,17 +53,22 @@ interface ApiConversation {
   valor?: number;
   tipoLeadId?: number;
   tipoLeadNome?: string;
+  campanha?: boolean;
+  idCampanha?: number | null;
+  nomeCampanha?: string | null;
 }
 
 interface ApiMessage {
   idMensagem: number;
-  idConversa: number; // Supondo que a API retorne o ID da conversa na mensagem
+  idConversa: number;
   mensagem: string;
   origemMensagem: number; // 0 = Cliente, 1 = Vendedor, 2 = IA
   dataEnvio: string;
   tipoMensagem?: 'text' | 'image' | 'audio' | 'file' | 'document';
   urlMidia?: string;
   caminhoArquivo?: string;
+  reacao?: string | null;
+  statusMensagem?: string; // "enviada" | "entregue" | "lida"
 }
 
 interface MessagesByDate {
@@ -89,16 +93,9 @@ const ChatPage = () => {
   // Consome o status global do Hub ao invés de gerenciar localmente
   const { isHubConnected } = useGlobalNotification();
 
-  // --- WhatsApp Evolution API States ---
+  // --- WhatsApp Status ---
   const [whatsappStatus, setWhatsappStatus] = useState<'checking' | 'connected' | 'disconnected' | 'no-instance' | null>(null);
   const [showDisconnectedModal, setShowDisconnectedModal] = useState(false);
-  const [showQRCodeModal, setShowQRCodeModal] = useState(false);
-  const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
-  const [isCreatingInstance, setIsCreatingInstance] = useState(false);
-  const [metaConfig, setMetaConfig] = useState<MetaConfig | null>(null);
-  const [isConnectingMeta, setIsConnectingMeta] = useState(false);
-  const qrPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const metaDataRef = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
 
   const isWhatsappDisabled = whatsappStatus === 'disconnected' || whatsappStatus === 'no-instance';
 
@@ -209,23 +206,38 @@ const ChatPage = () => {
     }
   }, [navigate]);
 
+  const mapApiStatus = (statusMensagem?: string): Message['status'] => {
+    switch (statusMensagem) {
+      case 'entregue': return 'delivered';
+      case 'lida':     return 'read';
+      case 'enviada':  return 'sent';
+      default:         return 'sent';
+    }
+  };
+
   const fetchMessages = useCallback(async (contactId: number) => {
     try {
       const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${contactId}/Mensagens`);
-      // 401 check removed
       if (!response.ok) throw new Error('Falha ao buscar mensagens.');
       const result = await response.json();
-      if (result.sucesso && Array.isArray(result.dados.mensagens)) {
-        const messagesByDate = result.dados.mensagens.reduce((acc: MessagesByDate, msg: ApiMessage) => {
+      // Suporta tanto result.dados (array direto) quanto result.dados.mensagens (formato legado)
+      const rawMessages: ApiMessage[] = Array.isArray(result.dados)
+        ? result.dados
+        : Array.isArray(result.dados?.mensagens)
+          ? result.dados.mensagens
+          : [];
+      if (result.sucesso && rawMessages.length >= 0) {
+        const messagesByDate = rawMessages.reduce((acc: MessagesByDate, msg: ApiMessage) => {
           const date = new Date(msg.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
           const formattedMessage: Message = {
             id: msg.idMensagem,
             text: msg.mensagem,
             sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
             time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: 'sent',
+            status: mapApiStatus(msg.statusMensagem),
             type: msg.tipoMensagem || 'text',
-            mediaUrl: msg.urlMidia || msg.caminhoArquivo
+            mediaUrl: msg.urlMidia || msg.caminhoArquivo,
+            reacao: msg.reacao ?? null,
           };
           if (!acc[date]) acc[date] = [];
           acc[date].push(formattedMessage);
@@ -257,9 +269,10 @@ const ChatPage = () => {
         text: newMessage.mensagem,
         sender: newMessage.origemMensagem === 0 ? 'other' : (newMessage.origemMensagem === 1 ? 'me' : 'ia'),
         time: new Date(newMessage.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        status: 'sent',
+        status: mapApiStatus(newMessage.statusMensagem),
         type: newMessage.tipoMensagem || 'text',
-        mediaUrl: newMessage.urlMidia || newMessage.caminhoArquivo
+        mediaUrl: newMessage.urlMidia || newMessage.caminhoArquivo,
+        reacao: newMessage.reacao ?? null,
       };
 
       const dateKey = new Date(newMessage.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -330,226 +343,24 @@ const ChatPage = () => {
     fetchConversations(true);
   }, [fetchCurrentUser, fetchConversations]);
 
-  // --- WhatsApp Evolution API Check ---
-  const stopQRPolling = useCallback(() => {
-    if (qrPollingRef.current) {
-      clearInterval(qrPollingRef.current);
-      qrPollingRef.current = null;
-    }
-  }, []);
-
   const checkWhatsappConnection = useCallback(async () => {
     setWhatsappStatus('checking');
     try {
-      // Verifica qual API está sendo usada através do status central
       const metaStatus = await MetaService.checkStatus();
-      
-      if (metaStatus.sucesso) {
-        // 1. Se usar Meta, está conectado
-        if (metaStatus.usaAPIMeta) {
-          setWhatsappStatus('connected');
-          return;
-        }
-
-        // 2. Se usar Evolution, verifica o status da instância
-        if (metaStatus.usaAPIEvolution) {
-          try {
-            const statusRes = await EvolutionService.getStatus();
-            if (statusRes.sucesso && statusRes.dados) {
-              const state = statusRes.dados.state || statusRes.dados.status || '';
-              if (state === 'open' || state === 'connected') {
-                setWhatsappStatus('connected');
-              } else {
-                setWhatsappStatus('disconnected');
-                setShowDisconnectedModal(true);
-              }
-            } else if (!statusRes.sucesso && statusRes.mensagem?.includes('Instância não encontrada')) {
-              setWhatsappStatus('no-instance');
-            } else {
-              setWhatsappStatus('disconnected');
-              setShowDisconnectedModal(true);
-            }
-          } catch {
-            setWhatsappStatus('disconnected');
-            setShowDisconnectedModal(true);
-          }
-          return;
-        }
+      if (metaStatus.sucesso && metaStatus.usaAPIMeta) {
+        setWhatsappStatus('connected');
+      } else {
+        setWhatsappStatus('no-instance');
       }
-
-      // 3. Se nada estiver ativo, no-instance
-      setWhatsappStatus('no-instance');
     } catch (err) {
       console.error("Erro ao verificar conexão:", err);
-      // Em caso de erro na API de status, não bloqueia o chat por segurança
       setWhatsappStatus('connected');
     }
   }, []);
 
   useEffect(() => {
     checkWhatsappConnection();
-    return () => stopQRPolling();
-  }, [checkWhatsappConnection, stopQRPolling]);
-
-  const handleOpenQRCodeModal = () => {
-    setShowDisconnectedModal(false);
-    setShowQRCodeModal(true);
-    setQrCodeBase64(null);
-    stopQRPolling();
-  };
-
-  const handleStartEvolution = async () => {
-    if (whatsappStatus === 'no-instance') {
-      setIsCreatingInstance(true);
-      try {
-        const res = await EvolutionService.criarInstancia();
-        if (res.sucesso) {
-          toast.success('Instância criada com sucesso!');
-          loadQRCodeAndPoll();
-        } else {
-          toast.error(res.mensagem || 'Erro ao criar instância.');
-        }
-      } catch {
-        toast.error('Erro ao criar instância.');
-      } finally {
-        setIsCreatingInstance(false);
-      }
-    } else {
-      loadQRCodeAndPoll();
-    }
-  };
-
-  const loadQRCodeAndPoll = async () => {
-    try {
-      const qrRes = await EvolutionService.getQRCode();
-      if (qrRes.sucesso && qrRes.dados) {
-        const qr = qrRes.dados.qrcodeBase64 || qrRes.dados.qrcode || qrRes.dados.base64 || qrRes.dados;
-        if (typeof qr === 'string') {
-          setQrCodeBase64(qr);
-        }
-      }
-    } catch {
-      // silent
-    }
-
-    // Start polling for connection
-    stopQRPolling();
-    qrPollingRef.current = setInterval(async () => {
-      try {
-        const statusRes = await EvolutionService.getStatus();
-        if (statusRes.sucesso && statusRes.dados) {
-          const state = statusRes.dados.state || statusRes.dados.status || '';
-          if (state === 'open' || state === 'connected') {
-            setWhatsappStatus('connected');
-            setShowQRCodeModal(false);
-            stopQRPolling();
-            toast.success('WhatsApp conectado com sucesso!');
-          }
-        }
-      } catch {
-        // silent
-      }
-    }, 5000);
-  };
-
-  const handleCloseQRCodeModal = () => {
-    setShowQRCodeModal(false);
-    stopQRPolling();
-  };
-
-  const enviarParaBackendMeta = useCallback(async (code: string, phoneNumberId: string, wabaId: string) => {
-    setIsConnectingMeta(true);
-    try {
-      const res = await MetaService.configurarCoexistencia({ code, phoneNumberId, wabaId });
-      if (res.sucesso) {
-        toast.success('WhatsApp (Meta) conectado com sucesso!');
-        setWhatsappStatus('connected');
-        setShowQRCodeModal(false);
-      } else {
-        toast.error(res.mensagem || 'Erro ao conectar com a Meta.');
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('Erro ao conectar com a Meta.');
-    } finally {
-      setIsConnectingMeta(false);
-    }
-  }, []);
-
-  const handleMetaLogin = useCallback(() => {
-    if (!metaConfig?.appId || !metaConfig?.configurationId) {
-      toast.error('Configurações da Meta não carregadas.');
-      return;
-    }
-
-    if (!(window as any).FB) {
-      toast.error('SDK do Facebook não carregado.');
-      return;
-    }
-
-    (window as any).FB.login(
-      (response: any) => {
-        if (response.status === 'connected' && response.authResponse?.code) {
-          const code = response.authResponse.code;
-          metaDataRef.current.code = code;
-
-          // Se o postMessage já chegou, envia para o backend
-          if (metaDataRef.current.phoneNumberId && metaDataRef.current.wabaId) {
-            enviarParaBackendMeta(code, metaDataRef.current.phoneNumberId, metaDataRef.current.wabaId);
-          }
-        }
-      },
-      {
-        config_id: metaConfig.configurationId,
-        response_type: 'code',
-        override_default_response_type: true,
-      }
-    );
-  }, [metaConfig, enviarParaBackendMeta]);
-
-  useEffect(() => {
-    // Carregar Facebook SDK se não existir
-    if (!(window as any).FB) {
-      const script = document.createElement('script');
-      script.src = "https://connect.facebook.net/en_US/sdk.js";
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        if (metaConfig?.appId) {
-          (window as any).fbAsyncInit = function () {
-            (window as any).FB.init({
-              appId: metaConfig.appId,
-              version: 'v22.0'
-            });
-          };
-        }
-      };
-      document.body.appendChild(script);
-    }
-
-    // Listener para postMessage da Meta
-    const handleMessage = (event: MessageEvent) => {
-      if (
-        event.origin === 'https://www.facebook.com' &&
-        event.data?.type === 'WA_EMBEDDED_SIGNUP' &&
-        event.data?.event === 'FINISH'
-      ) {
-        const phoneNumberId = event.data.data.phone_number_id;
-        const wabaId = event.data.data.waba_id;
-
-        metaDataRef.current.phoneNumberId = phoneNumberId;
-        metaDataRef.current.wabaId = wabaId;
-
-        // Se já temos o code, envia para o backend
-        if (metaDataRef.current.code) {
-          enviarParaBackendMeta(metaDataRef.current.code, phoneNumberId, wabaId);
-        }
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [metaConfig, enviarParaBackendMeta]);
+  }, [checkWhatsappConnection]);
 
   // Lógica de manipulação de eventos e renderização (sem alteração)
   const selectedContact = contacts.find(c => c.id === selectedContactId);
@@ -862,7 +673,7 @@ const ChatPage = () => {
             </span>
             {whatsappStatus === 'connected' && <span className="whatsapp-status-dot connected" />}
             {isWhatsappDisabled && (
-              <button className="whatsapp-connect-btn" onClick={handleOpenQRCodeModal}>
+              <button className="whatsapp-connect-btn" onClick={() => navigate('/connections')}>
                 <FaPlug size={11} /> Conectar
               </button>
             )}
@@ -872,12 +683,12 @@ const ChatPage = () => {
 
       {renderContent()}
 
-      {/* Modal: WhatsApp Desconectado */}
+      {/* Modal: WhatsApp não configurado */}
       {showDisconnectedModal && (
         <div className="modal-overlay" style={{ zIndex: 2000 }}>
           <div className="modal-content" style={{ maxWidth: '480px' }}>
             <div className="modal-header">
-              <h2><FaExclamationTriangle style={{ color: '#f59e0b', marginRight: '8px' }} /> WhatsApp Desconectado</h2>
+              <h2><FaExclamationTriangle style={{ color: '#f59e0b', marginRight: '8px' }} /> WhatsApp não conectado</h2>
               <button className="close-button" onClick={() => setShowDisconnectedModal(false)}>&times;</button>
             </div>
             <div className="modal-body" style={{ textAlign: 'center', padding: '32px 24px' }}>
@@ -885,12 +696,10 @@ const ChatPage = () => {
                 <FaExclamationTriangle size={28} style={{ color: '#f59e0b' }} />
               </div>
               <p style={{ color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>
-                {whatsappStatus === 'no-instance' ? 'Nenhuma instância configurada' : 'Sua conexão com o WhatsApp está inativa'}
+                WhatsApp não configurado
               </p>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6 }}>
-                {whatsappStatus === 'no-instance'
-                  ? 'Sua empresa ainda não possui uma instância do WhatsApp. Crie uma instância e escaneie o QR Code para começar a enviar mensagens.'
-                  : 'Você pode continuar visualizando as mensagens, mas não será possível enviar novas mensagens até reconectar.'}
+                Para enviar mensagens, conecte seu WhatsApp via API Oficial da Meta na página de conexões.
               </p>
             </div>
             <div className="modal-footer" style={{ justifyContent: 'center', gap: '12px' }}>
@@ -899,89 +708,11 @@ const ChatPage = () => {
               </button>
               <button
                 className="primary-button"
-                onClick={handleOpenQRCodeModal}
+                onClick={() => navigate('/connections')}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)' }}
               >
-                <FaWhatsapp /> Conectar agora
+                <FaWhatsapp /> Ir para conexões
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: QR Code para conexão */}
-      {showQRCodeModal && (
-        <div className="modal-overlay" style={{ zIndex: 2000 }}>
-          <div className="modal-content" style={{ maxWidth: whatsappStatus === 'no-instance' && !qrCodeBase64 ? '650px' : '440px' }}>
-            <div className="modal-header">
-              <h2><FaWhatsapp style={{ color: '#25d366', marginRight: '8px' }} /> Conectar WhatsApp</h2>
-              <button className="close-button" onClick={handleCloseQRCodeModal}>&times;</button>
-            </div>
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '32px 24px' }}>
-              {whatsappStatus === 'no-instance' && !qrCodeBase64 && !isCreatingInstance ? (
-                /* Opções de Conexão */
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', width: '100%' }}>
-                  <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(var(--primary-color-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--primary-color)' }}>
-                      <FaSync />
-                    </div>
-                    <h3 style={{ fontSize: '1rem', margin: 0 }}>QR Code</h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', minHeight: '40px' }}>Conexão via Evolution API usando QR Code.</p>
-                    <button
-                      className="primary-button"
-                      style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-                      onClick={handleStartEvolution}
-                    >
-                      Usar QR Code
-                    </button>
-                  </div>
-
-                  <div style={{ border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '12px', padding: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(37, 211, 102, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: '#25d366' }}>
-                      <FaWhatsapp />
-                    </div>
-                    <h3 style={{ fontSize: '1rem', margin: 0 }}>Meta Oficial</h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', minHeight: '40px' }}>API Oficial com suporte a coexistência.</p>
-                    <button
-                      className="primary-button"
-                      style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#25d366' }}
-                      onClick={handleMetaLogin}
-                      disabled={isConnectingMeta}
-                    >
-                      {isConnectingMeta ? 'Conectando...' : 'Conectar Meta'}
-                    </button>
-                  </div>
-                </div>
-              ) : isCreatingInstance ? (
-                <div style={{ padding: '40px', textAlign: 'center' }}>
-                  <FaSync className="spin-animation" size={32} style={{ color: 'var(--text-secondary)', marginBottom: '16px' }} />
-                  <p style={{ color: 'var(--text-secondary)' }}>Criando instância...</p>
-                </div>
-              ) : qrCodeBase64 ? (
-                <>
-                  <div style={{ background: 'white', borderRadius: '16px', padding: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-                    <img
-                      src={qrCodeBase64.startsWith('data:') ? qrCodeBase64 : `data:image/png;base64,${qrCodeBase64}`}
-                      alt="QR Code WhatsApp"
-                      style={{ width: '240px', height: '240px', display: 'block', borderRadius: '8px' }}
-                    />
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>Escaneie o QR Code</p>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                      Abra o WhatsApp no celular → <strong>Dispositivos Conectados</strong> → Escaneie o código
-                    </p>
-                    <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', marginTop: '8px' }}>
-                      <FaSync className="spin-animation" size={11} /> Verificando conexão...
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <div style={{ padding: '40px', textAlign: 'center' }}>
-                  <FaSync className="spin-animation" size={32} style={{ color: 'var(--text-secondary)', marginBottom: '16px' }} />
-                  <p style={{ color: 'var(--text-secondary)' }}>Carregando...</p>
-                </div>
-              )}
             </div>
           </div>
         </div>

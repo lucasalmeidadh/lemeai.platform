@@ -1,14 +1,13 @@
 .topbar {
-  height: 64px;
+  height: 4rem;
   background-color: var(--surface-color);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  /* very subtle */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 1.5rem;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -23,12 +22,13 @@
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 1.25rem;
 }
 
+/* page subtitle shown in topbar */
 .topbar-page-title h2 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -37,9 +37,9 @@
 .topbar-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
   font-weight: 800;
-  font-size: 1.4rem;
+  font-size: var(--font-2xl);
   background: linear-gradient(135deg, var(--petroleum-blue), #6366f1);
   -webkit-background-clip: text;
   background-clip: text;
@@ -49,31 +49,29 @@
 }
 
 .brand-logo {
-  height: 32px;
+  height: 2rem;
   width: auto;
-  border-radius: 6px;
-  /* Optional, depending on if the logo looks better with slightly rounded corners */
+  border-radius: var(--btn-radius-sm);
 }
 
-/* Nav Menu Desktop */
+/* ─── NAV (desktop) ───────────────────────────────────────────── */
 .topbar-nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   height: 100%;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 0.5rem;
+  padding: 0.5rem var(--space-4);
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   border-radius: 99px;
-  /* Pill shape */
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   background: transparent;
@@ -100,7 +98,6 @@
   font-weight: 600;
 }
 
-/* Smooth Icon Hover Rotation */
 .nav-link svg {
   transition: transform 0.2s ease;
 }
@@ -119,21 +116,21 @@
   right: 0px;
   background: linear-gradient(135deg, #ef4444, #f43f5e);
   color: white;
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: bold;
   padding: 2px 6px;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   line-height: 1.2;
   box-shadow: 0 0 0 2px var(--bg-secondary);
 }
 
-/* Dropdown config */
+/* ─── DROPDOWN ────────────────────────────────────────────────── */
 .nav-dropdown {
   position: relative;
 }
 
 .dropdown-toggle .chevron {
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -143,19 +140,19 @@
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 0.75rem);
   right: 0;
-  width: 220px;
+  width: 13.75rem;
   background-color: var(--surface-color);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 0.75rem;
   box-shadow: var(--shadow-lg);
-  padding: 8px;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
   z-index: 200;
   animation: floatIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: top right;
@@ -166,22 +163,22 @@
     opacity: 0;
     transform: translateY(-8px) scale(0.97);
   }
-
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
+/* dropdown item */
 .dropdown-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 0.9rem;
-  border-radius: 8px;
+  font-size: var(--font-base);
+  border-radius: 0.5rem;
   transition: all 0.2s ease;
   font-weight: 500;
 }
@@ -190,12 +187,10 @@
 .dropdown-item.active {
   background-color: var(--bg-tertiary);
   color: var(--petroleum-blue);
-  padding-left: 18px;
-  /* Micro-animation slide */
+  padding-left: 1.125rem;
 }
 
-
-/* Actions (Right) */
+/* ─── ACTIONS (right side) ────────────────────────────────────── */
 .topbar-right {
   display: flex;
   align-items: center;
@@ -206,18 +201,19 @@
   align-items: center;
 }
 
+/* topbar action item (theme toggle, user, logout) */
 .topbar-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
-  padding: 10px 16px;
-  border-radius: 10px;
+  padding: 0.625rem var(--space-4);
+  border-radius: 0.625rem;
   transition: all 0.2s ease;
   font-family: inherit;
   white-space: nowrap;
@@ -230,7 +226,7 @@
 }
 
 .topbar-item svg {
-  font-size: 18px;
+  font-size: var(--font-lg);
   color: var(--petroleum-blue);
 }
 
@@ -240,21 +236,20 @@
 
 .topbar-divider {
   width: 1px;
-  height: 24px;
+  height: 1.5rem;
   background-color: var(--border-color);
-  margin: 0 4px;
+  margin: 0 0.25rem;
 }
 
-/* Theme Toggle Adjustment within Topbar */
 .topbar .theme-toggle-btn {
   background: none;
   border: none;
-  padding: 10px 16px;
+  padding: 0.625rem var(--space-4);
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--font-base);
   color: var(--text-secondary);
-  gap: 10px;
-  border-radius: 10px;
+  gap: 0.625rem;
+  border-radius: 0.625rem;
 }
 
 .topbar .theme-toggle-btn:hover {
@@ -265,7 +260,7 @@
 }
 
 .topbar .theme-icon {
-  font-size: 18px;
+  font-size: var(--font-lg);
   color: var(--petroleum-blue);
 }
 
@@ -273,6 +268,7 @@
   display: none;
 }
 
+/* ─── MOBILE ──────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .desktop-only {
     display: none;
@@ -286,13 +282,13 @@
     background: none;
     border: none;
     color: var(--text-primary);
-    font-size: 1.2rem;
+    font-size: var(--font-xl);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
-    border-radius: 8px;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
     transition: background-color 0.2s ease;
   }
 
@@ -304,5 +300,33 @@
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+  }
+}
+
+/* ─── COMPACT (piso para telas pequenas) ──────────────────────── */
+@media (max-height: 850px), (max-width: 1300px) {
+  .topbar {
+    height: 50px !important;
+    padding: 0 16px !important;
+  }
+  .topbar-item, .topbar .theme-toggle-btn {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    gap: 6px !important;
+  }
+  .topbar-item svg, .topbar .theme-icon {
+    font-size: 15px !important;
+  }
+  .topbar-divider {
+    height: 18px !important;
+  }
+  .topbar-page-title h2 {
+    font-size: 1.05rem !important;
+  }
+  .brand-logo {
+    height: 24px !important;
+  }
+  .topbar-brand {
+    font-size: 1.15rem !important;
   }
 }

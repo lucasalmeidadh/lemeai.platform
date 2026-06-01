@@ -4,6 +4,7 @@ import './CustomSelect.css';
 interface Option {
     value: string;
     label: string;
+    disabled?: boolean;
 }
 
 interface CustomSelectProps {
@@ -65,8 +66,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ options, value, onChange, p
                     {options.map((option) => (
                         <div
                             key={option.value}
-                            className={`custom-select-option ${option.value === value ? 'selected' : ''}`}
-                            onClick={() => handleSelect(option.value)}
+                            className={`custom-select-option ${option.value === value ? 'selected' : ''} ${option.disabled ? 'disabled' : ''}`}
+                            onClick={() => { if (!option.disabled) handleSelect(option.value); }}
+                            style={{ 
+                                opacity: option.disabled ? 0.5 : 1, 
+                                cursor: option.disabled ? 'not-allowed' : 'pointer',
+                                backgroundColor: option.disabled ? '#f1f5f9' : undefined
+                            }}
                         >
                             {option.label}
                         </div>
