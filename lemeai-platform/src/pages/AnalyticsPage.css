@@ -89,6 +89,94 @@
     align-items: center;
 }
 
+/* Status badges */
+.analytics-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.badge-achieved  { background: rgba(22, 163, 74, 0.15);  color: #16a34a; }
+.badge-on-track  { background: rgba(202, 138, 4, 0.15);  color: #ca8a04; }
+.badge-at-risk   { background: rgba(220, 38,  38, 0.15); color: #dc2626; }
+
+/* Teams badges row above chart */
+.teams-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+/* Individual ranking list */
+.individual-ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 8px;
+}
+
+.ranking-row {
+    display: grid;
+    grid-template-columns: 24px minmax(120px, 190px) 1fr 44px;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.83rem;
+}
+
+.ranking-pos {
+    font-weight: 700;
+    color: var(--text-secondary, #64748b);
+    text-align: center;
+    align-self: center;
+}
+
+.ranking-name-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ranking-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ranking-subtext {
+    font-size: 0.74rem;
+    color: var(--text-secondary, #64748b);
+    white-space: nowrap;
+}
+
+.ranking-progress-wrap {
+    min-width: 0;
+}
+
+.ranking-progress-bg {
+    background: var(--border-color, #e2e8f0);
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.ranking-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.ranking-pct {
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
 /* Custom Tooltip Styling for Recharts */
 .recharts-tooltip-wrapper {
     outline: none !important;
@@ -99,7 +187,7 @@
     .analytics-container {
         padding: 1rem;
     }
-    
+
     .charts-row {
         grid-template-columns: 1fr;
     }
@@ -107,5 +195,15 @@
     .analytics-header {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .ranking-row {
+        grid-template-columns: 28px 1fr 80px 40px;
+        grid-template-rows: auto auto;
+    }
+
+    .ranking-value,
+    .ranking-calls {
+        display: none;
     }
 }

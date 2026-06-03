@@ -1,0 +1,33 @@
+.target-type-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--bg-primary);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:first-child {
+  border-right: 1px solid var(--border-color);
+}
+
+.toggle-btn.active {
+  background: var(--petroleum-blue);
+  color: white;
+  font-weight: 600;
+}
+
+.toggle-btn:not(.active):hover {
+  background: var(--bg-tertiary);
+}

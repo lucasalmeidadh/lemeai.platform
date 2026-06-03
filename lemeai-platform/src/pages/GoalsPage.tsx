@@ -1,111 +1,181 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../services/api';
 import toast from 'react-hot-toast';
-import { FaPlus, FaTrash, FaCalendarAlt, FaUser, FaBullseye, FaCalendarCheck } from 'react-icons/fa';
+import { FaPlus, FaCalendarCheck, FaCopy } from 'react-icons/fa';
+import GoalFormModal, { type Goal, type MockUser, type MockTeam } from '../components/GoalFormModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import './GoalsPage.css';
+import './UserManagementPage.css';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-interface Goal {
-  id: string;
-  userId: number;
-  userName: string;
-  type: 'value' | 'quantity' | 'calls'; // Faturamento, Quantidade de Vendas, Ligações
-  targetValue: number;
-  month: string; // YYYY-MM
-}
-
-interface WorkingDays {
-  monday: boolean;
-  tuesday: boolean;
-  wednesday: boolean;
-  thursday: boolean;
-  friday: boolean;
-  saturday: boolean;
-  sunday: boolean;
-}
-
-const DEFAULT_WORKING_DAYS: WorkingDays = {
-  monday: true,
-  tuesday: true,
-  wednesday: true,
-  thursday: true,
-  friday: true,
-  saturday: false,
-  sunday: false,
-};
-
-const MOCK_USERS = [
+const MOCK_USERS: MockUser[] = [
   { id: 1, name: 'Lucas Almeida' },
   { id: 2, name: 'Ana Silva' },
   { id: 3, name: 'Roberto Santos' },
   { id: 4, name: 'Julia Costa' },
 ];
 
+const MOCK_TEAMS: MockTeam[] = [
+  { id: 1, name: 'Vendas SP' },
+  { id: 2, name: 'Suporte Técnico' },
+  { id: 3, name: 'Marketing Digital' },
+];
+
+interface WorkingDays {
+  monday: boolean; tuesday: boolean; wednesday: boolean;
+  thursday: boolean; friday: boolean; saturday: boolean; sunday: boolean;
+}
+
+const DEFAULT_WORKING_DAYS: WorkingDays = {
+  monday: true, tuesday: true, wednesday: true,
+  thursday: true, friday: true, saturday: false, sunday: false,
+};
+
+const getCurrentMonth = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const getPreviousMonth = (month: string) => {
+  const [year, m] = month.split('-').map(Number);
+  const prev = new Date(year, m - 2, 1);
+  return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const formatMonth = (month: string) => {
+  const [year, m] = month.split('-');
+  const date = new Date(Number(year), Number(m) - 1, 1);
+  return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+};
+
+const formatGoalType = (type: string) => {
+  if (type === 'value') return 'Faturamento (R$)';
+  if (type === 'quantity') return 'Qtd de Vendas';
+  return 'Qtd de Ligações';
+};
+
+const formatGoalValue = (value: number, type: string) => {
+  if (type === 'value') return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  return value.toLocaleString('pt-BR');
+};
+
 const GoalsPage = () => {
-  const [users, setUsers] = useState<{ id: number; name: string }[]>(MOCK_USERS);
+  const [users, setUsers] = useState<MockUser[]>(MOCK_USERS);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [workingDays, setWorkingDays] = useState<WorkingDays>(DEFAULT_WORKING_DAYS);
 
-  // Form State
-  const [selectedUserId, setSelectedUserId] = useState<number>(0);
-  const [goalType, setGoalType] = useState<'value' | 'quantity' | 'calls'>('value');
-  const [targetValue, setTargetValue] = useState<string>('');
-  const [targetMonth, setTargetMonth] = useState<string>(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [filterType, setFilterType] = useState<'all' | 'user' | 'team'>('all');
 
-  // Fetch users from API (fallback to mock)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [goalToEdit, setGoalToEdit] = useState<Goal | null>(null);
+  const [goalToDeleteId, setGoalToDeleteId] = useState<string | null>(null);
+
   const fetchUsers = useCallback(async () => {
     try {
       const response = await apiFetch(`${apiUrl}/api/Usuario/BuscarTodos`);
       if (response.ok) {
         const result = await response.json();
-        if (result.sucesso && Array.isArray(result.dados)) {
-          const mapped = result.dados.map((u: any) => ({
-            id: u.userId,
-            name: u.userName,
-          }));
-          setUsers(mapped.length > 0 ? mapped : MOCK_USERS);
-          if (mapped.length > 0) {
-            setSelectedUserId(mapped[0].id);
-          }
+        if (result.sucesso && Array.isArray(result.dados) && result.dados.length > 0) {
+          setUsers(result.dados.map((u: any) => ({ id: u.userId, name: u.userName })));
           return;
         }
       }
-    } catch (e) {
-      console.warn('Usando usuários mockados devido a erro na API:', e);
+    } catch {
+      // fallback to mock
     }
-    setSelectedUserId(MOCK_USERS[0].id);
   }, []);
 
-  // Load goals & working days from localStorage
   useEffect(() => {
     fetchUsers();
 
-    const storedGoals = localStorage.getItem('lemeai_goals');
-    if (storedGoals) {
-      setGoals(JSON.parse(storedGoals));
+    const stored = localStorage.getItem('lemeai_goals_v2');
+    if (stored) {
+      setGoals(JSON.parse(stored));
     } else {
-      // Mock initial goals
-      const initialGoals: Goal[] = [
-        { id: '1', userId: 1, userName: 'Lucas Almeida', type: 'value', targetValue: 50000, month: targetMonth },
-        { id: '2', userId: 1, userName: 'Lucas Almeida', type: 'calls', targetValue: 300, month: targetMonth },
-        { id: '3', userId: 2, userName: 'Ana Silva', type: 'value', targetValue: 35000, month: targetMonth },
-        { id: '4', userId: 3, userName: 'Roberto Santos', type: 'value', targetValue: 60000, month: targetMonth },
+      const initial: Goal[] = [
+        { id: '1', targetType: 'user', targetId: 1, targetName: 'Lucas Almeida', type: 'value', targetValue: 50000, month: getCurrentMonth() },
+        { id: '2', targetType: 'user', targetId: 1, targetName: 'Lucas Almeida', type: 'calls', targetValue: 300, month: getCurrentMonth() },
+        { id: '3', targetType: 'user', targetId: 2, targetName: 'Ana Silva', type: 'value', targetValue: 35000, month: getCurrentMonth() },
+        { id: '4', targetType: 'user', targetId: 3, targetName: 'Roberto Santos', type: 'value', targetValue: 60000, month: getCurrentMonth() },
+        { id: '5', targetType: 'team', targetId: 1, targetName: 'Vendas SP', type: 'value', targetValue: 200000, month: getCurrentMonth() },
       ];
-      setGoals(initialGoals);
-      localStorage.setItem('lemeai_goals', JSON.stringify(initialGoals));
+      setGoals(initial);
+      localStorage.setItem('lemeai_goals_v2', JSON.stringify(initial));
     }
 
     const storedDays = localStorage.getItem('lemeai_working_days');
-    if (storedDays) {
-      setWorkingDays(JSON.parse(storedDays));
-    } else {
-      localStorage.setItem('lemeai_working_days', JSON.stringify(DEFAULT_WORKING_DAYS));
+    setWorkingDays(storedDays ? JSON.parse(storedDays) : DEFAULT_WORKING_DAYS);
+  }, [fetchUsers]);
+
+  const persist = (updated: Goal[]) => {
+    setGoals(updated);
+    localStorage.setItem('lemeai_goals_v2', JSON.stringify(updated));
+  };
+
+  const handleSave = (goal: Goal) => {
+    const isEditing = goals.some(g => g.id === goal.id);
+
+    const duplicate = goals.some(g =>
+      g.id !== goal.id &&
+      g.targetType === goal.targetType &&
+      g.targetId === goal.targetId &&
+      g.type === goal.type &&
+      g.month === goal.month
+    );
+    if (duplicate) {
+      toast.error('Já existe uma meta deste tipo para este colaborador/equipe neste mês.');
+      return;
     }
-  }, [fetchUsers, targetMonth]);
+
+    const updated = isEditing
+      ? goals.map(g => g.id === goal.id ? goal : g)
+      : [...goals, goal];
+
+    persist(updated);
+    toast.success(isEditing ? 'Meta atualizada!' : 'Meta cadastrada com sucesso!');
+    setIsModalOpen(false);
+    setGoalToEdit(null);
+  };
+
+  const handleDelete = () => {
+    if (!goalToDeleteId) return;
+    persist(goals.filter(g => g.id !== goalToDeleteId));
+    toast.success('Meta removida.');
+    setGoalToDeleteId(null);
+  };
+
+  const handleReplicatePreviousMonth = () => {
+    const prevMonth = getPreviousMonth(selectedMonth);
+    const prevGoals = goals.filter(g => g.month === prevMonth);
+
+    if (prevGoals.length === 0) {
+      toast.error(`Nenhuma meta encontrada em ${formatMonth(prevMonth)}.`);
+      return;
+    }
+
+    const newGoals: Goal[] = [];
+    let skipped = 0;
+
+    prevGoals.forEach(g => {
+      const exists = goals.some(
+        e => e.targetType === g.targetType && e.targetId === g.targetId && e.type === g.type && e.month === selectedMonth
+      );
+      if (exists) { skipped++; return; }
+      newGoals.push({ ...g, id: Date.now().toString() + Math.random(), month: selectedMonth });
+    });
+
+    if (newGoals.length === 0) {
+      toast.error('Todas as metas do mês anterior já existem neste mês.');
+      return;
+    }
+
+    persist([...goals, ...newGoals]);
+    toast.success(
+      `${newGoals.length} meta(s) copiada(s) de ${formatMonth(prevMonth)}${skipped > 0 ? ` (${skipped} já existiam e foram ignoradas)` : ''}.`
+    );
+  };
 
   const handleWorkingDayChange = (day: keyof WorkingDays) => {
     const updated = { ...workingDays, [day]: !workingDays[day] };
@@ -114,202 +184,127 @@ const GoalsPage = () => {
     toast.success('Dias de funcionamento atualizados!');
   };
 
-  const handleAddGoal = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedUserId || !targetValue || Number(targetValue) <= 0) {
-      toast.error('Preencha todos os campos com valores válidos.');
-      return;
-    }
-
-    const userObj = users.find(u => u.id === selectedUserId);
-    if (!userObj) return;
-
-    // Check if goal already exists for this user, type and month
-    const exists = goals.some(g => g.userId === selectedUserId && g.type === goalType && g.month === targetMonth);
-    if (exists) {
-      toast.error('Já existe uma meta cadastrada para este usuário, tipo e mês.');
-      return;
-    }
-
-    const newGoal: Goal = {
-      id: Date.now().toString(),
-      userId: selectedUserId,
-      userName: userObj.name,
-      type: goalType,
-      targetValue: Number(targetValue),
-      month: targetMonth,
-    };
-
-    const updatedGoals = [...goals, newGoal];
-    setGoals(updatedGoals);
-    localStorage.setItem('lemeai_goals', JSON.stringify(updatedGoals));
-    setTargetValue('');
-    toast.success('Meta cadastrada com sucesso!');
+  const handleOpenEdit = (goal: Goal) => {
+    setGoalToEdit(goal);
+    setIsModalOpen(true);
   };
 
-  const handleDeleteGoal = (id: string) => {
-    const updated = goals.filter(g => g.id !== id);
-    setGoals(updated);
-    localStorage.setItem('lemeai_goals', JSON.stringify(updated));
-    toast.success('Meta removida.');
+  const handleOpenNew = () => {
+    setGoalToEdit(null);
+    setIsModalOpen(true);
   };
 
-  const formatGoalType = (type: string) => {
-    switch (type) {
-      case 'value': return 'Faturamento (R$)';
-      case 'quantity': return 'Qtd de Vendas';
-      case 'calls': return 'Qtd de Ligações';
-      default: return type;
-    }
-  };
+  // Filter goals by selected month and type filter
+  const filteredGoals = goals.filter(g =>
+    g.month === selectedMonth &&
+    (filterType === 'all' || g.targetType === filterType)
+  );
 
-  const formatGoalValue = (value: number, type: string) => {
-    if (type === 'value') {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-    }
-    return value.toString();
-  };
+  // Group by targetName
+  const grouped = filteredGoals.reduce<Record<string, { targetType: 'user' | 'team'; goals: Goal[] }>>((acc, g) => {
+    const key = `${g.targetType}:${g.targetId}`;
+    if (!acc[key]) acc[key] = { targetType: g.targetType, goals: [] };
+    acc[key].goals.push(g);
+    return acc;
+  }, {});
 
   return (
-    <div className="page-container goals-page">
-      <div className="page-header">
-        <h1>Cadastro de Metas</h1>
-        <p className="page-subtitle">Configure as metas do time e o calendário de funcionamento da empresa.</p>
-      </div>
+    <>
+      <GoalFormModal
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setGoalToEdit(null); }}
+        onSave={handleSave}
+        goalToEdit={goalToEdit}
+        users={users}
+        teams={MOCK_TEAMS}
+        currentMonth={selectedMonth}
+      />
+      <ConfirmationModal
+        isOpen={goalToDeleteId !== null}
+        onClose={() => setGoalToDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Remover Meta"
+        message="Tem certeza que deseja remover esta meta?"
+        confirmText="Remover"
+        isConfirming={false}
+      />
 
-      <div className="goals-grid">
-        {/* Calendário de Funcionamento */}
-        <div className="dashboard-card calendar-card">
-          <div className="card-header">
-            <h3><FaCalendarCheck /> Dias de Funcionamento</h3>
-            <p className="card-subtitle">Selecione os dias que a empresa opera para o cálculo de metas diárias/semanais.</p>
-          </div>
-          <div className="working-days-list">
-            {[
-              { key: 'monday', label: 'Segunda-feira' },
-              { key: 'tuesday', label: 'Terça-feira' },
-              { key: 'wednesday', label: 'Quarta-feira' },
-              { key: 'thursday', label: 'Quinta-feira' },
-              { key: 'friday', label: 'Sexta-feira' },
-              { key: 'saturday', label: 'Sábado' },
-              { key: 'sunday', label: 'Domingo' },
-            ].map(day => (
-              <label key={day.key} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={workingDays[day.key as keyof WorkingDays]}
-                  onChange={() => handleWorkingDayChange(day.key as keyof WorkingDays)}
-                />
-                <span className="checkbox-custom"></span>
-                <span className="label-text">{day.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Cadastro de Meta */}
-        <div className="dashboard-card form-card">
-          <div className="card-header">
-            <h3><FaBullseye /> Nova Meta</h3>
-          </div>
-          <form onSubmit={handleAddGoal} className="goal-form">
-            <div className="form-group">
-              <label><FaUser /> Colaborador</label>
-              <select
-                value={selectedUserId}
-                onChange={e => setSelectedUserId(Number(e.target.value))}
-                className="form-select"
-              >
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label><FaBullseye /> Tipo de Meta</label>
-              <select
-                value={goalType}
-                onChange={e => setGoalType(e.target.value as any)}
-                className="form-select"
-              >
-                <option value="value">Faturamento (R$)</option>
-                <option value="quantity">Quantidade de Vendas</option>
-                <option value="calls">Quantidade de Ligações</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label><FaCalendarAlt /> Mês de Referência</label>
-              <input
-                type="month"
-                value={targetMonth}
-                onChange={e => setTargetMonth(e.target.value)}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Valor Alvo</label>
-              <input
-                type="number"
-                placeholder={goalType === 'value' ? 'Ex: 50000' : 'Ex: 100'}
-                value={targetValue}
-                onChange={e => setTargetValue(e.target.value)}
-                className="form-input"
-                min="1"
-              />
-            </div>
-
-            <button type="submit" className="btn-primary">
-              <FaPlus /> Adicionar Meta
+      <div className="page-container goals-page">
+        <div className="page-header">
+          <h1>Metas</h1>
+          <div className="page-header-actions">
+            <button className="secondary-action-btn" onClick={handleReplicatePreviousMonth}>
+              <FaCopy /> Copiar mês anterior
             </button>
-          </form>
+            <button className="add-button" onClick={handleOpenNew}>
+              <FaPlus /> Nova Meta
+            </button>
+          </div>
         </div>
 
-        {/* Lista de Metas */}
-        <div className="dashboard-card list-card full-width-card">
-          <div className="card-header">
-            <h3>Metas Cadastradas</h3>
+        {/* Goals table card */}
+        <div className="dashboard-card">
+          <div className="filters-container">
+            <input
+              type="month"
+              className="filter-input month-filter"
+              value={selectedMonth}
+              onChange={e => setSelectedMonth(e.target.value)}
+            />
+            <div className="users-filters">
+              {(['all', 'user', 'team'] as const).map(f => (
+                <button
+                  key={f}
+                  className={`filter-button ${filterType === f ? 'active' : ''}`}
+                  onClick={() => setFilterType(f)}
+                >
+                  {f === 'all' ? 'Todos' : f === 'user' ? 'Colaboradores' : 'Equipes'}
+                </button>
+              ))}
+            </div>
           </div>
+
           <div className="table-container">
-            <table className="goals-table">
+            <table className="management-table">
               <thead>
                 <tr>
-                  <th>Vendedor</th>
-                  <th>Mês</th>
                   <th>Tipo de Meta</th>
                   <th>Valor Alvo</th>
                   <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {goals.length > 0 ? (
-                  goals.map(g => (
-                    <tr key={g.id}>
-                      <td>{g.userName}</td>
-                      <td>{g.month}</td>
-                      <td>
-                        <span className={`type-badge type-${g.type}`}>
-                          {formatGoalType(g.type)}
-                        </span>
-                      </td>
-                      <td><strong>{formatGoalValue(g.targetValue, g.type)}</strong></td>
-                      <td>
-                        <button
-                          className="btn-delete"
-                          onClick={() => handleDeleteGoal(g.id)}
-                          title="Excluir Meta"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
-                    </tr>
+                {Object.keys(grouped).length > 0 ? (
+                  Object.entries(grouped).map(([key, group]) => (
+                    <>
+                      <tr key={`header-${key}`} className="group-header-row">
+                        <td colSpan={3}>
+                          <span className={`group-type-badge ${group.targetType}`}>
+                            {group.targetType === 'user' ? 'Colaborador' : 'Equipe'}
+                          </span>
+                          {group.goals[0].targetName}
+                        </td>
+                      </tr>
+                      {group.goals.map(g => (
+                        <tr key={g.id} className="group-child-row">
+                          <td>
+                            <span className={`type-badge type-${g.type}`}>
+                              {formatGoalType(g.type)}
+                            </span>
+                          </td>
+                          <td><strong>{formatGoalValue(g.targetValue, g.type)}</strong></td>
+                          <td className="actions-cell">
+                            <button className="action-button edit" onClick={() => handleOpenEdit(g)}>Editar</button>
+                            <button className="action-button delete" onClick={() => setGoalToDeleteId(g.id)}>Remover</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="empty-state">
-                      Nenhuma meta cadastrada para este mês.
+                    <td colSpan={3} className="empty-state">
+                      Nenhuma meta cadastrada para {formatMonth(selectedMonth)}.
                     </td>
                   </tr>
                 )}
@@ -317,8 +312,37 @@ const GoalsPage = () => {
             </table>
           </div>
         </div>
+
+        {/* Working days card */}
+        <div className="dashboard-card working-days-card">
+          <div className="card-header">
+            <h3><FaCalendarCheck /> Dias de Funcionamento</h3>
+            <p className="card-subtitle">Selecione os dias que a empresa opera para o cálculo de metas diárias.</p>
+          </div>
+          <div className="working-days-list">
+            {([
+              { key: 'monday', label: 'Segunda-feira' },
+              { key: 'tuesday', label: 'Terça-feira' },
+              { key: 'wednesday', label: 'Quarta-feira' },
+              { key: 'thursday', label: 'Quinta-feira' },
+              { key: 'friday', label: 'Sexta-feira' },
+              { key: 'saturday', label: 'Sábado' },
+              { key: 'sunday', label: 'Domingo' },
+            ] as const).map(day => (
+              <label key={day.key} className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={workingDays[day.key]}
+                  onChange={() => handleWorkingDayChange(day.key)}
+                />
+                <span className="checkbox-custom"></span>
+                <span className="label-text">{day.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -2,25 +2,83 @@
   animation: fadeIn 0.4s ease-out;
 }
 
-/* page subtitle below h1 */
 .page-subtitle {
   color: var(--text-tertiary);
   font-size: var(--font-base);
   margin-top: 0.25rem;
 }
 
-.goals-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.secondary-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--btn-radius-md);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-action-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.month-filter {
+  max-width: 200px;
+  flex-grow: 0 !important;
+}
+
+/* ─── GROUP ROWS ──────────────────────────────────────────────── */
+.group-header-row td {
+  padding: 10px 20px;
+  background-color: var(--bg-tertiary);
+  font-weight: 700;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-color-soft);
+}
+
+.group-child-row td {
+  padding-left: 36px !important;
+}
+
+.group-type-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.group-type-badge.user {
+  background-color: #e0f7ff;
+  color: var(--petroleum-blue);
+}
+
+.group-type-badge.team {
+  background-color: #f0eaff;
+  color: #6d28d9;
+}
+
+/* ─── WORKING DAYS CARD ───────────────────────────────────────── */
+.working-days-card {
   margin-top: 1.5rem;
+  max-width: 480px;
 }
 
-.full-width-card {
-  grid-column: span 2;
-}
-
-/* card section title */
 .card-header h3 {
   margin: 0 0 0.375rem 0;
   display: flex;
@@ -30,14 +88,12 @@
   font-size: var(--font-xl);
 }
 
-/* card subtitle */
 .card-subtitle {
   font-size: var(--font-sm);
   color: var(--text-tertiary);
   margin: 0;
 }
 
-/* ─── WORKING DAYS ────────────────────────────────────────────── */
 .working-days-list {
   display: flex;
   flex-direction: column;
@@ -71,6 +127,7 @@
   transition: all 0.2s;
   display: inline-block;
   position: relative;
+  flex-shrink: 0;
 }
 
 .checkbox-label:hover input ~ .checkbox-custom {
@@ -99,102 +156,13 @@
   display: block;
 }
 
-/* day label */
 .label-text {
   color: var(--text-secondary);
   font-weight: 500;
   font-size: var(--font-base);
 }
 
-/* ─── GOAL FORM ───────────────────────────────────────────────── */
-.goal-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* form label */
-.form-group label {
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-/* form controls */
-.form-select, .form-input {
-  width: 100%;
-  padding: 0.625rem 0.875rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--btn-radius-md);
-  color: var(--text-primary);
-  outline: none;
-  font-size: var(--font-base);
-  transition: border-color 0.2s;
-}
-
-.form-select:focus, .form-input:focus {
-  border-color: var(--petroleum-blue);
-}
-
-/* submit button */
-.btn-primary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: var(--btn-pad-md);
-  background: var(--petroleum-blue);
-  color: white;
-  border: none;
-  border-radius: var(--btn-radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 0.625rem;
-}
-
-.btn-primary:hover {
-  opacity: 0.95;
-  transform: translateY(-1px);
-}
-
-/* ─── GOALS TABLE ─────────────────────────────────────────────── */
-.goals-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-/* table header */
-.goals-table th {
-  text-align: left;
-  padding: 0.75rem var(--space-4);
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: var(--font-sm);
-  border-bottom: 1px solid var(--border-color);
-}
-
-/* table cell */
-.goals-table td {
-  padding: 0.875rem var(--space-4);
-  border-bottom: 1px solid var(--border-color-soft);
-  color: var(--text-primary);
-  font-size: var(--font-base);
-}
-
-/* goal type badge */
+/* ─── GOAL TYPE BADGES ────────────────────────────────────────── */
 .type-badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
@@ -207,36 +175,13 @@
 .type-quantity { background: var(--color-info-bg);    color: var(--color-info);    }
 .type-calls    { background: var(--color-warning-bg); color: var(--color-warning); }
 
-/* delete button */
-.btn-delete {
-  background: transparent;
-  border: none;
-  color: #ef4444;
-  cursor: pointer;
-  padding: 0.375rem;
-  border-radius: var(--btn-radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-}
-
-.btn-delete:hover {
-  background: rgba(239, 68, 68, 0.1);
-}
-
 .empty-state {
   text-align: center;
   color: var(--text-tertiary);
   padding: 2.5rem !important;
 }
 
-/* ─── RESPONSIVE ──────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .goals-grid {
-    grid-template-columns: 1fr;
-  }
-  .full-width-card {
-    grid-column: span 1;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }

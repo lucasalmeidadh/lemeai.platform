@@ -8,13 +8,20 @@ import {
     FaComments,
     FaCog,
     FaUsersCog,
+    FaUsers,
     FaBox,
     FaCalendarAlt,
     FaRocket,
     FaPlug,
     FaBullhorn,
     FaPaperPlane,
-    FaCreditCard
+    FaCreditCard,
+    FaDesktop,
+    FaBullseye,
+    FaRobot,
+    FaShieldAlt,
+    FaChevronDown,
+    FaChevronRight
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -31,6 +38,8 @@ const Sidebar: FC<SidebarProps> = () => {
     const { unreadCount, clearUnreadCount } = useGlobalNotification();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isMarketingOpen, setIsMarketingOpen] = useState(false);
+    const [isAccessOpen, setIsAccessOpen] = useState(false);
+    const [isChatbotOpen, setIsChatbotOpen] = useState(false);
     const settingsRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -57,7 +66,7 @@ const Sidebar: FC<SidebarProps> = () => {
         };
     }, []);
 
-    const isConfigActive = ['/users', '/chat-rules', '/products', '/connections', '/metas'].includes(location.pathname);
+    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections'].includes(location.pathname);
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
 
     const toggleSettings = () => {
@@ -67,6 +76,8 @@ const Sidebar: FC<SidebarProps> = () => {
     const closeSettings = () => {
         setIsSettingsOpen(false);
         setIsMarketingOpen(false);
+        setIsAccessOpen(false);
+        setIsChatbotOpen(false);
     };
     const toggleMarketing = () => {
         setIsMarketingOpen(!isMarketingOpen);
@@ -88,10 +99,10 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaTachometerAlt />
                     <span>Painel</span>
                 </Link>
-                {/* <Link to="/monitoramento" className={`sidebar-link ${location.pathname === '/monitoramento' ? 'active' : ''}`}>
+                <Link to="/monitoramento" className={`sidebar-link ${location.pathname === '/monitoramento' ? 'active' : ''}`}>
                     <FaDesktop />
                     <span>Monitoramento</span>
-                </Link> */}
+                </Link>
                 <Link id="sidebar-chat" to="/chat" className={`sidebar-link ${location.pathname === '/chat' ? 'active' : ''}`}>
                     <FaComments />
                     <span>Chat</span>
@@ -156,26 +167,50 @@ const Sidebar: FC<SidebarProps> = () => {
                     {isSettingsOpen && (
                         <div className="sidebar-submenu">
                             <div className="submenu-header">Ajustes</div>
-                            <Link id="sidebar-users" to="/users" className={`submenu-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
-                                <FaUsersCog />
-                                <span>Usuários</span>
-                            </Link>
-                            <Link to="/chat-rules" className={`submenu-link ${location.pathname === '/chat-rules' ? 'active' : ''}`} onClick={closeSettings}>
-                                <FaComments />
-                                <span>Regras do Chat</span>
-                            </Link>
-                            <Link to="/products" className={`submenu-link ${location.pathname === '/products' ? 'active' : ''}`} onClick={closeSettings}>
-                                <FaBox />
-                                <span>Produtos e Serviços</span>
-                            </Link>
-                            <Link to="/connections" className={`submenu-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
-                                <FaPlug />
-                                <span>Conexões</span>
-                            </Link>
-                            {/* <Link to="/metas" className={`submenu-link ${location.pathname === '/metas' ? 'active' : ''}`} onClick={closeSettings}>
-                                <FaBullseye />
-                                <span>Metas</span>
-                            </Link> */}
+
+                            <button className="submenu-group-btn" onClick={() => setIsAccessOpen(!isAccessOpen)}>
+                                <FaShieldAlt />
+                                <span>Gestão de acesso</span>
+                                {isAccessOpen ? <FaChevronDown className="submenu-chevron" /> : <FaChevronRight className="submenu-chevron" />}
+                            </button>
+                            {isAccessOpen && (
+                                <div className="submenu-group-links">
+                                    <Link id="sidebar-users" to="/users" className={`submenu-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaUsersCog />
+                                        <span>Usuários</span>
+                                    </Link>
+                                    <Link to="/equipes" className={`submenu-link ${location.pathname === '/equipes' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaUsers />
+                                        <span>Equipes</span>
+                                    </Link>
+                                    <Link to="/metas" className={`submenu-link ${location.pathname === '/metas' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaBullseye />
+                                        <span>Metas</span>
+                                    </Link>
+                                </div>
+                            )}
+
+                            <button className="submenu-group-btn" onClick={() => setIsChatbotOpen(!isChatbotOpen)}>
+                                <FaRobot />
+                                <span>Ajustes de ChatBot</span>
+                                {isChatbotOpen ? <FaChevronDown className="submenu-chevron" /> : <FaChevronRight className="submenu-chevron" />}
+                            </button>
+                            {isChatbotOpen && (
+                                <div className="submenu-group-links">
+                                    <Link to="/chat-rules" className={`submenu-link ${location.pathname === '/chat-rules' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaComments />
+                                        <span>Regras do Chat</span>
+                                    </Link>
+                                    <Link to="/products" className={`submenu-link ${location.pathname === '/products' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaBox />
+                                        <span>Produtos e Serviços</span>
+                                    </Link>
+                                    <Link to="/connections" className={`submenu-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaPlug />
+                                        <span>Conexões</span>
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

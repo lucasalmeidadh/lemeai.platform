@@ -1,0 +1,57 @@
+.team-modal-content {
+  max-width: 520px;
+}
+
+.modal-content-body {
+  padding: 30px 30px 0;
+}
+
+.members-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px;
+  background-color: var(--bg-primary);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.member-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.member-checkbox-row:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.member-checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--petroleum-blue);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.member-name {
+  flex: 1;
+}
+
+.member-leader-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background-color: #e0f7ff;
+  color: var(--petroleum-blue);
+}

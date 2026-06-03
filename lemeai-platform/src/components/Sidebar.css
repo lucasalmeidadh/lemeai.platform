@@ -209,6 +209,48 @@
   color: var(--cyan-accent);
 }
 
+.submenu-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.9375rem;
+  background: none;
+  border: none;
+  border-radius: 0.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.submenu-group-btn svg:first-child {
+  font-size: var(--font-lg);
+}
+
+.submenu-group-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.submenu-chevron {
+  margin-left: auto;
+  font-size: 0.65rem !important;
+  opacity: 0.6;
+}
+
+.submenu-group-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+  margin-left: 1.4rem;
+  margin-bottom: 0.25rem;
+}
+
 .sidebar-theme-toggle {
   display: flex;
   justify-content: center;

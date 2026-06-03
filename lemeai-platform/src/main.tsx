@@ -24,6 +24,7 @@ import OnboardingStepsPage from './pages/OnboardingStepsPage.tsx';
 import CampaignTemplatesPage from './pages/CampaignTemplatesPage.tsx';
 import CampaignPage from './pages/CampaignPage.tsx';
 import GoalsPage from './pages/GoalsPage.tsx';
+import TeamsPage from './pages/TeamsPage.tsx';
 import DealDetailsPage from './pages/DealDetailsPage.tsx';
 import BillingPlanPage from './pages/BillingPlanPage';
 
@@ -51,6 +52,7 @@ const router = createBrowserRouter([
           { path: "chat-rules", element: <SystemPromptsPage /> },
           { path: "products", element: <ProductsPage /> },
           { path: "connections", element: <ConnectionsPage /> },
+          { path: "equipes", element: <TeamsPage /> },
           { path: "metas", element: <GoalsPage /> },
           { path: "campaign-templates", element: <CampaignTemplatesPage /> },
           { path: "campanhas", element: <CampaignPage /> },
