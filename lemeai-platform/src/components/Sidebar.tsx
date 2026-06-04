@@ -16,7 +16,7 @@ import {
     FaBullhorn,
     FaPaperPlane,
     FaCreditCard,
-    FaDesktop,
+    FaUserFriends,
     FaBullseye,
     FaRobot,
     FaShieldAlt,
@@ -96,8 +96,8 @@ const Sidebar: FC<SidebarProps> = () => {
                     <span>Painel</span>
                 </Link>
                 <Link to="/monitoramento" className={`sidebar-link ${location.pathname === '/monitoramento' ? 'active' : ''}`}>
-                    <FaDesktop />
-                    <span>Monitoramento</span>
+                    <FaUserFriends />
+                    <span>Gestão operacional</span>
                 </Link>
                 <Link id="sidebar-chat" to="/chat" className={`sidebar-link ${location.pathname === '/chat' ? 'active' : ''}`}>
                     <FaComments />
