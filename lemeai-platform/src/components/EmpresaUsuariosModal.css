@@ -1,0 +1,35 @@
+.empresa-usuarios-modal {
+    background-color: var(--bg-secondary);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.4s ease;
+}
+
+.empresa-usuarios-body {
+    padding: 24px 30px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.empresa-usuarios-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.empresa-usuarios-toolbar .filter-input {
+    flex: 1;
+}
+
+.empresa-usuarios-loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}

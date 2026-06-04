@@ -1,34 +1,54 @@
-import { useState } from 'react';
-import { FaPlus, FaUsers } from 'react-icons/fa';
+import { useState, useEffect, useCallback } from 'react';
+import { FaPlus, FaUsers, FaEdit, FaTrash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import TeamFormModal, { type Team, type MockUser } from '../components/TeamFormModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import EquipeService from '../services/EquipeService';
+import { apiFetch } from '../services/api';
 import './UserManagementPage.css';
 import './TeamsPage.css';
 
-const MOCK_USERS: MockUser[] = [
-  { id: 1, name: 'Lucas Almeida' },
-  { id: 2, name: 'Ana Silva' },
-  { id: 3, name: 'Roberto Santos' },
-  { id: 4, name: 'Julia Costa' },
-];
-
-const INITIAL_TEAMS: Team[] = [
-  { id: 1, name: 'Vendas SP', leaderId: 1, memberIds: [1, 2, 3] },
-  { id: 2, name: 'Suporte Técnico', leaderId: 4, memberIds: [4, 2] },
-  { id: 3, name: 'Marketing Digital', leaderId: 3, memberIds: [3, 1] },
-];
-
-let nextId = 4;
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 const TeamsPage = () => {
-  const [teams, setTeams] = useState<Team[]>(INITIAL_TEAMS);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [users, setUsers] = useState<MockUser[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDeleteId, setTeamToDeleteId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const getUserName = (id: number) => MOCK_USERS.find(u => u.id === id)?.name ?? '—';
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [equipes, usersRes] = await Promise.all([
+        EquipeService.buscarTodas(),
+        apiFetch(`${API_URL}/api/Usuario/BuscarTodos`),
+      ]);
+
+      setTeams(equipes.map(e => ({
+        id: e.id,
+        name: e.nome,
+        leaderId: e.liderId,
+        memberIds: e.membroIds,
+      })));
+
+      const usersData = await usersRes.json();
+      if (usersData.sucesso && Array.isArray(usersData.dados)) {
+        setUsers(usersData.dados.map((u: any) => ({ id: u.userId, name: u.userName })));
+      }
+    } catch (err: any) {
+      toast.error(err.message ?? 'Erro ao carregar dados.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const getUserName = (id: number) => users.find(u => u.id === id)?.name ?? '—';
 
   const filteredTeams = teams.filter(t =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,22 +60,37 @@ const TeamsPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (team: Team) => {
-    if (team.id) {
-      setTeams(prev => prev.map(t => t.id === team.id ? team : t));
-      toast.success('Equipe atualizada com sucesso!');
-    } else {
-      setTeams(prev => [...prev, { ...team, id: nextId++ }]);
-      toast.success('Equipe criada com sucesso!');
+  const handleSave = async (team: Team) => {
+    try {
+      const dto = { nome: team.name, liderId: team.leaderId, membroIds: team.memberIds };
+      if (team.id) {
+        await EquipeService.atualizar(team.id, dto);
+        toast.success('Equipe atualizada com sucesso!');
+      } else {
+        await EquipeService.criar(dto);
+        toast.success('Equipe criada com sucesso!');
+      }
+      setIsModalOpen(false);
+      setTeamToEdit(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message ?? 'Erro ao salvar equipe.');
     }
-    setIsModalOpen(false);
-    setTeamToEdit(null);
   };
 
-  const handleConfirmDelete = () => {
-    setTeams(prev => prev.filter(t => t.id !== teamToDeleteId));
-    toast.success('Equipe removida.');
-    setTeamToDeleteId(null);
+  const handleConfirmDelete = async () => {
+    if (!teamToDeleteId) return;
+    setIsDeleting(true);
+    try {
+      await EquipeService.excluir(teamToDeleteId);
+      toast.success('Equipe removida.');
+      setTeamToDeleteId(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message ?? 'Erro ao remover equipe.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -65,7 +100,7 @@ const TeamsPage = () => {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         teamToEdit={teamToEdit}
-        users={MOCK_USERS}
+        users={users}
       />
       <ConfirmationModal
         isOpen={teamToDeleteId !== null}
@@ -74,7 +109,7 @@ const TeamsPage = () => {
         title="Excluir Equipe"
         message="Tem certeza que deseja excluir esta equipe? Esta ação não pode ser desfeita."
         confirmText="Excluir"
-        isConfirming={false}
+        isConfirming={isDeleting}
       />
 
       <div className="page-container">
@@ -103,11 +138,17 @@ const TeamsPage = () => {
                   <th>Nome da Equipe</th>
                   <th>Líder</th>
                   <th>Membros</th>
-                  <th>Ações</th>
+                  <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredTeams.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                      Carregando...
+                    </td>
+                  </tr>
+                ) : filteredTeams.length > 0 ? (
                   filteredTeams.map(team => (
                     <tr key={team.id}>
                       <td className="team-name-cell">
@@ -130,13 +171,15 @@ const TeamsPage = () => {
                           <span className="members-count">{team.memberIds.length} membro{team.memberIds.length !== 1 ? 's' : ''}</span>
                         </div>
                       </td>
-                      <td className="actions-cell">
-                        <button className="action-button edit" onClick={() => handleOpenModal(team)}>
-                          Editar
-                        </button>
-                        <button className="action-button delete" onClick={() => setTeamToDeleteId(team.id!)}>
-                          Excluir
-                        </button>
+                      <td>
+                        <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
+                          <button className="action-icon-btn edit" onClick={() => handleOpenModal(team)} title="Editar">
+                            <FaEdit size={14} />
+                          </button>
+                          <button className="action-icon-btn delete" onClick={() => setTeamToDeleteId(team.id!)} title="Excluir">
+                            <FaTrash size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

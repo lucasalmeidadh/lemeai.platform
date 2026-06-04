@@ -20,7 +20,7 @@ import {
     FaBullseye,
     FaRobot,
     FaShieldAlt,
-    FaChevronDown,
+    FaBuilding,
     FaChevronRight
 } from 'react-icons/fa';
 import './Sidebar.css';
@@ -38,8 +38,6 @@ const Sidebar: FC<SidebarProps> = () => {
     const { unreadCount, clearUnreadCount } = useGlobalNotification();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isMarketingOpen, setIsMarketingOpen] = useState(false);
-    const [isAccessOpen, setIsAccessOpen] = useState(false);
-    const [isChatbotOpen, setIsChatbotOpen] = useState(false);
     const settingsRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -66,7 +64,7 @@ const Sidebar: FC<SidebarProps> = () => {
         };
     }, []);
 
-    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections'].includes(location.pathname);
+    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas'].includes(location.pathname);
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
 
     const toggleSettings = () => {
@@ -76,8 +74,6 @@ const Sidebar: FC<SidebarProps> = () => {
     const closeSettings = () => {
         setIsSettingsOpen(false);
         setIsMarketingOpen(false);
-        setIsAccessOpen(false);
-        setIsChatbotOpen(false);
     };
     const toggleMarketing = () => {
         setIsMarketingOpen(!isMarketingOpen);
@@ -168,12 +164,12 @@ const Sidebar: FC<SidebarProps> = () => {
                         <div className="sidebar-submenu">
                             <div className="submenu-header">Ajustes</div>
 
-                            <button className="submenu-group-btn" onClick={() => setIsAccessOpen(!isAccessOpen)}>
-                                <FaShieldAlt />
-                                <span>Gestão de acesso</span>
-                                {isAccessOpen ? <FaChevronDown className="submenu-chevron" /> : <FaChevronRight className="submenu-chevron" />}
-                            </button>
-                            {isAccessOpen && (
+                            <div className="submenu-group-wrapper">
+                                <button className="submenu-group-btn">
+                                    <FaShieldAlt />
+                                    <span>Gestão de acesso</span>
+                                    <FaChevronRight className="submenu-chevron" />
+                                </button>
                                 <div className="submenu-group-links">
                                     <Link id="sidebar-users" to="/users" className={`submenu-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
                                         <FaUsersCog />
@@ -188,14 +184,14 @@ const Sidebar: FC<SidebarProps> = () => {
                                         <span>Metas</span>
                                     </Link>
                                 </div>
-                            )}
+                            </div>
 
-                            <button className="submenu-group-btn" onClick={() => setIsChatbotOpen(!isChatbotOpen)}>
-                                <FaRobot />
-                                <span>Ajustes de ChatBot</span>
-                                {isChatbotOpen ? <FaChevronDown className="submenu-chevron" /> : <FaChevronRight className="submenu-chevron" />}
-                            </button>
-                            {isChatbotOpen && (
+                            <div className="submenu-group-wrapper">
+                                <button className="submenu-group-btn">
+                                    <FaRobot />
+                                    <span>Ajustes de ChatBot</span>
+                                    <FaChevronRight className="submenu-chevron" />
+                                </button>
                                 <div className="submenu-group-links">
                                     <Link to="/chat-rules" className={`submenu-link ${location.pathname === '/chat-rules' ? 'active' : ''}`} onClick={closeSettings}>
                                         <FaComments />
@@ -210,7 +206,21 @@ const Sidebar: FC<SidebarProps> = () => {
                                         <span>Conexões</span>
                                     </Link>
                                 </div>
-                            )}
+                            </div>
+
+                            <div className="submenu-group-wrapper">
+                                <button className="submenu-group-btn">
+                                    <FaBuilding />
+                                    <span>Administração</span>
+                                    <FaChevronRight className="submenu-chevron" />
+                                </button>
+                                <div className="submenu-group-links">
+                                    <Link to="/empresas" className={`submenu-link ${location.pathname === '/empresas' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaBuilding />
+                                        <span>Empresas</span>
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

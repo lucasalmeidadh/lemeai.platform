@@ -715,13 +715,18 @@ const DealDetailsPage = () => {
       return;
     }
     try {
-      const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idStatus: statusId, valor: val }),
+      const formattedPrevious = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.rawValue || 0);
+      const formattedNew = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+      const autoNote = `Alteração de valor: De ${formattedPrevious} para ${formattedNew}`;
+
+      const result = await OpportunityService.addDetails({
+        idConversa: deal.id,
+        descricao: autoNote,
+        statusNegociacaoId: statusId,
+        valor: val
       });
-      const result = await response.json();
-      if (!response.ok || !result.sucesso) {
+
+      if (!result.sucesso) {
         throw new Error(result.mensagem || 'Falha ao atualizar valor.');
       }
       toast.success('Valor atualizado com sucesso!');

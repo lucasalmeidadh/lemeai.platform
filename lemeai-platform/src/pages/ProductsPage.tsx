@@ -233,7 +233,7 @@ const ProductsPage = () => {
                                 <th>Marca</th>
                                 <th>Preço</th>
                                 <th>Peso (kg)</th>
-                                <th style={{ width: '100px' }}>Ações</th>
+                                <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -251,13 +251,15 @@ const ProductsPage = () => {
                                         <td>{product.marca}</td>
                                         <td>{formatCurrency(product.preco)}</td>
                                         <td>{product.peso}</td>
-                                        <td className="actions-cell">
-                                            <button className="action-button edit" onClick={() => handleOpenModal(product)} title="Editar">
-                                                <FaEdit />
-                                            </button>
-                                            <button className="action-button delete" onClick={() => handleDeleteProduct(product.produtoId)} title="Excluir">
-                                                <FaTrash />
-                                            </button>
+                                        <td>
+                                            <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
+                                                <button className="action-icon-btn edit" onClick={() => handleOpenModal(product)} title="Editar">
+                                                    <FaEdit size={14} />
+                                                </button>
+                                                <button className="action-icon-btn delete" onClick={() => handleDeleteProduct(product.produtoId)} title="Excluir">
+                                                    <FaTrash size={14} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

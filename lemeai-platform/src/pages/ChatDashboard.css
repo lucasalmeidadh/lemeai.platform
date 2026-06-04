@@ -570,6 +570,53 @@
   max-width: 640px;
 }
 
+/* ─── SKELETON LOADING ─────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--border-color) 50%,
+    var(--bg-tertiary) 75%
+  );
+  background-size: 600px 100%;
+  animation: skeleton-shimmer 1.6s infinite linear;
+  border-radius: 6px;
+  display: block;
+}
+
+.skeleton-text-xs  { height: 10px; }
+.skeleton-text-sm  { height: 12px; }
+.skeleton-text-md  { height: 16px; }
+.skeleton-text-lg  { height: 24px; border-radius: 4px; }
+.skeleton-text-xl  { height: 32px; border-radius: 4px; }
+
+.skeleton-chart {
+  height: 260px;
+  border-radius: 8px;
+}
+
+.skeleton-table-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px 120px 200px 130px;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color-soft);
+}
+
+.skeleton-ranking-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color-soft);
+}
+
 /* ─── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .compact-kpi-grid {

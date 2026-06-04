@@ -27,6 +27,7 @@ import GoalsPage from './pages/GoalsPage.tsx';
 import TeamsPage from './pages/TeamsPage.tsx';
 import DealDetailsPage from './pages/DealDetailsPage.tsx';
 import BillingPlanPage from './pages/BillingPlanPage';
+import EmpresasPage from './pages/EmpresasPage';
 
 const router = createBrowserRouter([
   {
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
           { path: "campanhas", element: <CampaignPage /> },
           { path: "plano", element: <BillingPlanPage /> },
           { path: "help", element: <HelpPage /> },
+          { path: "empresas", element: <EmpresasPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }
