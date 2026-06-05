@@ -306,6 +306,111 @@
     background: var(--petroleum-blue);
 }
 
+/* ========== Blocked State (platform already connected, multi off) ========== */
+
+.conn-blocked-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 56px 32px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    max-width: 520px;
+    margin: 0 auto;
+    gap: 0;
+    animation: fadeIn 0.3s ease;
+}
+
+.conn-blocked-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 24px;
+}
+
+.conn-blocked-icon.whatsapp {
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.25);
+}
+
+.conn-blocked-icon.instagram {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    box-shadow: 0 8px 24px rgba(220, 39, 67, 0.2);
+}
+
+.conn-blocked-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.conn-blocked-content h3 {
+    font-size: var(--font-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.conn-blocked-desc {
+    font-size: var(--font-base);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 400px;
+}
+
+.conn-blocked-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    text-align: left;
+    line-height: 1.5;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 4px;
+}
+
+.conn-blocked-notice-icon {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 0.9rem;
+}
+
+.conn-blocked-link {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--petroleum-blue);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    padding: 9px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+
+.conn-blocked-link:hover {
+    background: var(--petroleum-light);
+    border-color: var(--petroleum-blue);
+    transform: translateY(-1px);
+}
+
 /* ========== Disabled Connect Banner ========== */
 
 .conn-disabled-banner {

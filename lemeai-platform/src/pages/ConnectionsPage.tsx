@@ -375,20 +375,38 @@ const ConnectionsPage = () => {
         );
     };
 
-    const renderDisabledBanner = (platform: 'WhatsApp' | 'Instagram') => (
-        <div className="conn-disabled-banner">
-            <FaLock className="conn-disabled-icon" />
-            <div>
-                <strong>Conexão bloqueada</strong>
-                <p>
-                    Já existe uma conta de {platform} conectada e o modo multi-contas está desativado.
-                    {isAdmin
-                        ? ' Ative o modo multi-contas acima para adicionar mais contas.'
-                        : ' Solicite ao administrador que ative o modo multi-contas para adicionar mais contas.'}
-                </p>
+    const renderBlockedState = (platform: 'WhatsApp' | 'Instagram') => {
+        const isWhatsApp = platform === 'WhatsApp';
+        return (
+            <div className="conn-blocked-state">
+                <div className={`conn-blocked-icon ${isWhatsApp ? 'whatsapp' : 'instagram'}`}>
+                    {isWhatsApp ? <FaWhatsapp /> : <FaInstagram />}
+                </div>
+                <div className="conn-blocked-content">
+                    <h3>{platform} já está conectado</h3>
+                    <p className="conn-blocked-desc">
+                        Já existe uma conta de <strong>{platform}</strong> conectada a esta empresa.
+                        O modo <strong>multi-contas</strong> está desativado, portanto não é possível
+                        adicionar novas conexões no momento.
+                    </p>
+                    <div className="conn-blocked-notice">
+                        <FaLock className="conn-blocked-notice-icon" />
+                        <span>
+                            {isAdmin
+                                ? 'Para adicionar mais contas, ative o modo multi-contas no painel acima.'
+                                : 'Para adicionar mais contas, solicite ao administrador que habilite o modo multi-contas.'}
+                        </span>
+                    </div>
+                    <button
+                        className="conn-blocked-link"
+                        onClick={() => setActiveTab('connections')}
+                    >
+                        Ver conexões ativas
+                    </button>
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     const renderTabConnections = () => (
         <div className="tab-pane">
@@ -434,10 +452,17 @@ const ConnectionsPage = () => {
         </div>
     );
 
-    const renderTabWhatsapp = () => (
-        <div className="tab-pane">
-            {!canConnectWhatsapp && renderDisabledBanner('WhatsApp')}
+    const renderTabWhatsapp = () => {
+        if (!canConnectWhatsapp) {
+            return (
+                <div className="tab-pane">
+                    {renderBlockedState('WhatsApp')}
+                </div>
+            );
+        }
 
+        return (
+        <div className="tab-pane">
             <div className="meta-partner-banner">
                 <div className="meta-partner-banner-icon"><FaAward /></div>
                 <div className="meta-partner-banner-body">
@@ -528,7 +553,7 @@ const ConnectionsPage = () => {
                 </div>
                 <button
                     onClick={handleMetaLogin}
-                    disabled={isConnectingMeta || !canConnectWhatsapp}
+                    disabled={isConnectingMeta}
                     className="conn-btn-primary"
                 >
                     <FaWhatsapp />
@@ -536,12 +561,20 @@ const ConnectionsPage = () => {
                 </button>
             </div>
         </div>
-    );
+        );
+    };
 
-    const renderTabInstagram = () => (
+    const renderTabInstagram = () => {
+        if (!canConnectInstagram) {
+            return (
+                <div className="tab-pane">
+                    {renderBlockedState('Instagram')}
+                </div>
+            );
+        }
+
+        return (
         <div className="tab-pane">
-            {!canConnectInstagram && renderDisabledBanner('Instagram')}
-
             <div className="instagram-connect-card">
                 <div className="instagram-connect-card-icon"><FaInstagram /></div>
                 <div className="instagram-connect-card-body">
@@ -567,7 +600,7 @@ const ConnectionsPage = () => {
                     <button
                         className="conn-btn-instagram"
                         onClick={handleInstagramLogin}
-                        disabled={isConnectingInstagram || !canConnectInstagram}
+                        disabled={isConnectingInstagram}
                     >
                         <FaInstagram />
                         {isConnectingInstagram ? 'Conectando...' : 'Conectar via Facebook'}
@@ -575,7 +608,8 @@ const ConnectionsPage = () => {
                 </div>
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="page-container connections-page">
