@@ -646,29 +646,42 @@
 }
 
 /* ─── TASK MODAL ──────────────────────────────────────────────── */
+/* ─── TASK MODAL ──────────────────────────────────────────────── */
 .task-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(10, 15, 30, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
-  backdrop-filter: blur(2px);
+  padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .task-modal {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   width: 100%;
-  max-width: 36rem;
-  box-shadow: var(--shadow-lg, 0 20px 60px rgba(0,0,0,0.3));
+  max-width: 34rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   max-height: 90vh;
   overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .task-modal-header {
@@ -677,11 +690,12 @@
   align-items: center;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
 }
 
 .task-modal-header h3 {
   margin: 0;
-  font-size: var(--font-xl);
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -689,28 +703,29 @@
 .task-modal-close {
   background: transparent;
   border: none;
-  color: var(--text-tertiary);
-  font-size: var(--font-lg);
+  color: var(--text-secondary);
+  font-size: 1.1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.375rem;
-  transition: background 0.2s, color 0.2s;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
 .task-modal-close:hover {
-  background: var(--bg-tertiary);
+  background: var(--border-color);
   color: var(--text-primary);
+  transform: rotate(90deg);
 }
 
 .task-modal-body {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.125rem;
+  gap: 1.25rem;
   overflow-y: auto;
 }
 
@@ -720,16 +735,100 @@
   gap: 0.75rem;
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
 }
 
-.task-modal-footer .btn-cancel,
-.task-modal-footer .btn-save {
-  padding: 0.5rem 1.25rem;
-  font-size: var(--font-sm);
+.task-modal-footer .btn-cancel {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  border-radius: var(--btn-radius-md);
+  border-radius: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+}
+
+.task-modal-footer .btn-cancel:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.task-modal-footer .btn-save {
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  background: var(--petroleum-blue);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 39, 94, 0.2);
+}
+
+.task-modal-footer .btn-save:hover {
+  background: var(--petroleum-blue-dark, #001f4d);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(0, 39, 94, 0.3);
+}
+
+.task-modal-footer .btn-save:active {
+  transform: translateY(0);
+}
+
+/* Date Range Picker inside Modal spanning 100% width */
+.task-dates-row .react-datepicker-wrapper {
+  width: 100% !important;
+  display: block !important;
+}
+
+.task-dates-row .react-datepicker__input-container {
+  display: block !important;
+}
+
+.task-dates-row .react-datepicker__input-container input {
+  width: 100%;
+}
+
+.task-dates-row .form-input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-dates-row .form-input:focus {
+  border-color: var(--petroleum-blue);
+  box-shadow: 0 0 0 2px rgba(0, 39, 94, 0.15);
+}
+
+.task-dates-row input[type="time"].form-input {
+  height: 2.5rem;
+  line-height: normal;
+  display: block;
+}
+
+/* Align and style native time selector indicator nicely */
+.task-dates-row input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  filter: invert(0.8);
+  transition: opacity 0.2s ease;
+}
+
+.task-dates-row input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 /* ─── TASK TYPE SELECTOR ──────────────────────────────────────── */
@@ -974,3 +1073,74 @@
     height: 15px !important;
   }
 }
+
+/* Estilos para o editor inline de valor na Sidebar */
+.inline-value-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.inline-value-input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+  font-size: var(--font-base);
+  font-weight: 600;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inline-value-input:focus {
+  border-color: var(--petroleum-blue);
+  box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.15);
+}
+
+.inline-value-actions {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.inline-value-actions button {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--btn-radius-md);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+  text-align: center;
+  height: 2.25rem;
+}
+
+.inline-btn-save {
+  background: var(--petroleum-blue);
+  color: white;
+  border: none;
+}
+
+.inline-btn-save:hover {
+  background: var(--petroleum-blue-hover);
+}
+
+.inline-btn-cancel {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.inline-btn-cancel:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+

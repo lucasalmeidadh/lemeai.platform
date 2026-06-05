@@ -65,11 +65,19 @@ const PipelinePage = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOwner, setSelectedOwner] = useState('all');
-    const [selectedTemperature, setSelectedTemperature] = useState('all');
+    const [selectedTemperatures, setSelectedTemperatures] = useState<string[]>([]);
     const [selectedSource, setSelectedSource] = useState('all');
     const [selectedCampaign, setSelectedCampaign] = useState('all');
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+
+    const handleTemperatureClick = (temp: string) => {
+        setSelectedTemperatures(prev => 
+            prev.includes(temp) 
+                ? prev.filter(t => t !== temp) 
+                : [...prev, temp]
+        );
+    };
 
     useEffect(() => {
         const loadCampaigns = async () => {
@@ -86,12 +94,8 @@ const PipelinePage = () => {
     }, []);
 
     // Date Filter State
-    const [startDate, setStartDate] = useState<Date | null>(() => {
-        const d = new Date();
-        d.setDate(d.getDate() - 7);
-        return d;
-    });
-    const [endDate, setEndDate] = useState<Date | null>(new Date());
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
 
     const isPresetActive = (daysBack: number) => {
         if (!startDate || !endDate) return false;
@@ -122,7 +126,7 @@ const PipelinePage = () => {
             if (!presetActive) count += 1;
         }
         if (selectedOwner !== 'all') count += 1;
-        if (selectedTemperature !== 'all') count += 1;
+        if (selectedTemperatures.length > 0) count += 1;
         if (selectedSource !== 'all') count += 1;
         if (selectedSource === 'marketing' && selectedCampaign !== 'all') count += 1;
         return count;
@@ -132,7 +136,7 @@ const PipelinePage = () => {
         setStartDate(null);
         setEndDate(null);
         setSelectedOwner('all');
-        setSelectedTemperature('all');
+        setSelectedTemperatures([]);
         setSelectedSource('all');
         setSelectedCampaign('all');
     };
@@ -463,9 +467,8 @@ const PipelinePage = () => {
             const matchesOwner = selectedOwner === 'all' || deal.owner === selectedOwner;
             
             let matchesTemperature = true;
-            if (selectedTemperature !== 'all') {
-                const tempId = parseInt(selectedTemperature);
-                matchesTemperature = deal.tipoLeadId === tempId;
+            if (selectedTemperatures.length > 0) {
+                matchesTemperature = selectedTemperatures.includes(deal.tipoLeadId?.toString() || '');
             }
 
             let matchesSource = true;
@@ -536,6 +539,30 @@ const PipelinePage = () => {
                                         width: isMobile ? '100%' : '300px'
                                     }}
                                 />
+
+                                <div className="pipeline-temp-filters">
+                                    <button
+                                        type="button"
+                                        className={`temp-pill-btn temp-cold ${selectedTemperatures.includes('3') ? 'active' : ''}`}
+                                        onClick={() => handleTemperatureClick('3')}
+                                    >
+                                        Frio
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`temp-pill-btn temp-warm ${selectedTemperatures.includes('2') ? 'active' : ''}`}
+                                        onClick={() => handleTemperatureClick('2')}
+                                    >
+                                        Morno
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`temp-pill-btn temp-hot ${selectedTemperatures.includes('1') ? 'active' : ''}`}
+                                        onClick={() => handleTemperatureClick('1')}
+                                    >
+                                        Quente
+                                    </button>
+                                </div>
 
                                 <div className="pipeline-presets">
                                     <button
@@ -730,19 +757,7 @@ const PipelinePage = () => {
                                         />
                                     </div>
 
-                                    <div className="filter-group">
-                                        <label className="filter-label">Temperatura</label>
-                                        <CustomSelect
-                                            value={selectedTemperature}
-                                            onChange={(val) => setSelectedTemperature(val)}
-                                            options={[
-                                                { value: 'all', label: 'Todas as Temperaturas' },
-                                                { value: '1', label: 'Quente' },
-                                                { value: '2', label: 'Morno' },
-                                                { value: '3', label: 'Frio' }
-                                            ]}
-                                        />
-                                    </div>
+
 
                                     <div className="filter-group">
                                         <label className="filter-label">Origem</label>

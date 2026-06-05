@@ -4,6 +4,8 @@ import './MonthPicker.css';
 
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
+const SHORT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
 interface MonthPickerProps {
   value: string; // YYYY-MM
   onChange: (value: string) => void;
@@ -41,7 +43,8 @@ const MonthPicker: React.FC<MonthPickerProps> = ({ value, onChange }) => {
             className={`month-pill ${i === selectedMonth ? 'active' : ''}`}
             onClick={() => setMonth(i)}
           >
-            {m}
+            <span className="month-full">{m}</span>
+            <span className="month-short">{SHORT_MONTHS[i]}</span>
           </button>
         ))}
       </div>

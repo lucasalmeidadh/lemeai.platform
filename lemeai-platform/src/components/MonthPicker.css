@@ -7,7 +7,7 @@
   border-radius: 12px;
   padding: 0.5rem 0.875rem;
   margin-bottom: 1.25rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .month-picker-year {
@@ -50,6 +50,7 @@
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .month-pill {
@@ -75,4 +76,17 @@
   color: white;
   font-weight: 700;
   border-color: var(--petroleum-blue);
+}
+
+.month-short {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .month-full {
+    display: none;
+  }
+  .month-short {
+    display: inline;
+  }
 }

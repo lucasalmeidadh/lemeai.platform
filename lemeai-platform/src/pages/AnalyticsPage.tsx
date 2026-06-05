@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    AreaChart, Area
+    AreaChart, Area, LabelList
 } from 'recharts';
 import {
     FaChartLine, FaDollarSign, FaPercent, FaTrophy, FaBullseye
@@ -244,63 +244,43 @@ const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
                     />
                 </div>
 
-                {/* Row 1: Equipes vs Meta + Crescimento Mensal */}
-                <div className="charts-row">
-                    <div className="chart-card">
-                        <h3>Performance de Equipes vs. Meta</h3>
-                        <p className="chart-description">Realizado x meta por equipe no mês corrente.</p>
-                        {teamsChartData.length > 0 ? (
-                            <>
-                                <div className="teams-badge-row">
-                                    {teamsChartData.map(t => (
-                                        <span key={t.name} className={`analytics-badge ${getStatusBadgeClass(t.status)}`}>
-                                            {t.name}: {t.pct}% — {t.status}
-                                        </span>
-                                    ))}
-                                </div>
-                                <div className="chart-wrapper">
-                                    <ResponsiveContainer width="100%" height={260}>
-                                        <BarChart data={teamsChartData} barGap={4} barCategoryGap="30%">
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                                            <XAxis dataKey="name" stroke={chartColors.text} fontSize={12} />
-                                            <YAxis stroke={chartColors.text} fontSize={12} tickFormatter={v => `R$${(v as number) / 1000}k`} />
-                                            <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={tooltipStyle} itemStyle={itemStyle} />
-                                            <Legend />
-                                            <Bar dataKey="Realizado" fill="var(--petroleum-blue)" radius={[4, 4, 0, 0]} />
-                                            <Bar dataKey="Meta" fill={chartColors.metaBar} radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </>
-                        ) : (
-                            <p className="chart-empty">Nenhum dado de equipes para este mês.</p>
-                        )}
-                    </div>
-
-                    <div className="chart-card">
-                        <h3>Crescimento Mensal de Vendas</h3>
-                        <p className="chart-description">Evolução do faturamento nos últimos 6 meses.</p>
-                        {growthChartData.length > 0 ? (
-                            <div className="chart-wrapper">
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <AreaChart data={growthChartData}>
-                                        <defs>
-                                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%"  stopColor="var(--petroleum-blue)" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="var(--petroleum-blue)" stopOpacity={0}   />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                                        <XAxis dataKey="month" stroke={chartColors.text} fontSize={12} />
-                                        <YAxis stroke={chartColors.text} fontSize={12} tickFormatter={val => `R$ ${(val as number) / 1000}k`} />
-                                        <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} />
-                                        <Area type="monotone" dataKey="value" stroke="var(--petroleum-blue)" fillOpacity={1} fill="url(#colorValue)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        ) : (
-                            <p className="chart-empty">Nenhum dado de faturamento disponível.</p>
-                        )}
+                {/* Row 1: Funil de Vendas */}
+                <div className="chart-card">
+                    <h3>Funil de Vendas (Volume Financeiro)</h3>
+                    <p className="chart-description">Distribuição do valor monetário por etapa do processo.</p>
+                    <div className="chart-wrapper">
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={funnelData} layout="vertical">
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartColors.grid} />
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="name" type="category" width={140} stroke={chartColors.text} fontSize={12} />
+                                <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} />
+                                <Bar dataKey="value" fill="var(--petroleum-blue)" radius={[0, 4, 4, 0]}>
+                                    <LabelList
+                                        dataKey="value"
+                                        position="right"
+                                        content={(props: any) => {
+                                            const { x, y, width, value, index } = props;
+                                            const item = funnelData[index];
+                                            if (!item) return null;
+                                            const displayVal = formatCurrencyShort(value);
+                                            const countText = `${item.count} ${item.count === 1 ? 'deal' : 'deals'}`;
+                                            return (
+                                                <text
+                                                    x={x + width + 8}
+                                                    y={y + 16}
+                                                    fill={theme === 'dark' ? '#94a3b8' : '#64748b'}
+                                                    fontSize={11}
+                                                    fontWeight={600}
+                                                >
+                                                    {displayVal} ({countText})
+                                                </text>
+                                            );
+                                        }}
+                                    />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
 
@@ -382,21 +362,31 @@ const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
                     </div>
                 </div>
 
-                {/* Row 3: Funil de Vendas */}
+                {/* Row 3: Crescimento Mensal de Vendas */}
                 <div className="chart-card">
-                    <h3>Funil de Vendas (Volume Financeiro)</h3>
-                    <p className="chart-description">Distribuição do valor monetário por etapa do processo.</p>
-                    <div className="chart-wrapper">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={funnelData} layout="vertical">
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartColors.grid} />
-                                <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={140} stroke={chartColors.text} fontSize={12} />
-                                <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} />
-                                <Bar dataKey="value" fill="var(--petroleum-blue)" radius={[0, 4, 4, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <h3>Crescimento Mensal de Vendas</h3>
+                    <p className="chart-description">Evolução do faturamento nos últimos 6 meses.</p>
+                    {growthChartData.length > 0 ? (
+                        <div className="chart-wrapper">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <AreaChart data={growthChartData}>
+                                    <defs>
+                                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%"  stopColor="var(--petroleum-blue)" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="var(--petroleum-blue)" stopOpacity={0}   />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
+                                    <XAxis dataKey="month" stroke={chartColors.text} fontSize={12} />
+                                    <YAxis stroke={chartColors.text} fontSize={12} tickFormatter={val => `R$ ${(val as number) / 1000}k`} />
+                                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} />
+                                    <Area type="monotone" dataKey="value" stroke="var(--petroleum-blue)" fillOpacity={1} fill="url(#colorValue)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    ) : (
+                        <p className="chart-empty">Nenhum dado de faturamento disponível.</p>
+                    )}
                 </div>
             </div>
         </div>
