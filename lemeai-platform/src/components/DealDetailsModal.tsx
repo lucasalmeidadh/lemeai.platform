@@ -57,7 +57,7 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
     const [chatError, setChatError] = useState<string | null>(null);
     const [isLoadingChat, setIsLoadingChat] = useState(false);
     const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
-    const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda'>('notes');
+    const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda'>('agenda');
 
     // Summary Modal State
     const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
@@ -691,10 +691,16 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                     <main className="deal-main-content">
                         <div className="deal-tabs">
                             <button
+                                className={`deal-tab ${activeTab === 'agenda' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('agenda')}
+                            >
+                                Tarefas <FaCalendarAlt style={{ marginLeft: '5px', fontSize: '12px' }} />
+                            </button>
+                            <button
                                 className={`deal-tab ${activeTab === 'notes' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('notes')}
                             >
-                                Anotações
+                                Anotações <FaStickyNote style={{ marginLeft: '5px', fontSize: '12px' }} />
                             </button>
                             <button
                                 className={`deal-tab ${activeTab === 'chat' ? 'active' : ''}`}
@@ -707,12 +713,6 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                                 onClick={() => setActiveTab('attachments')}
                             >
                                 Anexos <FaPaperclip style={{ marginLeft: '5px', fontSize: '12px' }} />
-                            </button>
-                            <button
-                                className={`deal-tab ${activeTab === 'agenda' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('agenda')}
-                            >
-                                Agenda <FaCalendarAlt style={{ marginLeft: '5px', fontSize: '12px' }} />
                             </button>
                         </div>
 

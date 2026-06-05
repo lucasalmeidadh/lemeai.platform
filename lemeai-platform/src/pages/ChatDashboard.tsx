@@ -5,9 +5,12 @@ import {
 } from 'react-icons/fa';
 import AnalyticsPage from './AnalyticsPage';
 import TeamMonitoringModal, { type TeamMember } from '../components/TeamMonitoringModal';
+import SellerMonitoringModal from '../components/SellerMonitoringModal';
 import MonthPicker from '../components/MonthPicker';
 import RelatorioService from '../services/RelatorioService';
 import type { PerformanceIndividual, PerformanceEquipe } from '../services/RelatorioService';
+import { OpportunityService, type Opportunity } from '../services/OpportunityService';
+import EquipeService, { type Equipe } from '../services/EquipeService';
 import ConfiguracaoService from '../services/ConfiguracaoService';
 import type { DiasUteis } from '../services/ConfiguracaoService';
 import './ChatDashboard.css';
@@ -37,6 +40,10 @@ const ChatDashboard = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoadingIndividual, setIsLoadingIndividual] = useState(false);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [teams, setTeams] = useState<Equipe[]>([]);
+  const [selectedSeller, setSelectedSeller] = useState<PerformanceIndividual | null>(null);
 
   const workingDaysInfo = useMemo(() => {
     const d = new Date();
@@ -65,6 +72,12 @@ const ChatDashboard = () => {
     ConfiguracaoService.getDiasUteis()
       .then(setWorkingDays)
       .catch(() => {/* keep default */});
+    OpportunityService.getAllOpportunities()
+      .then(setOpportunities)
+      .catch(() => {});
+    EquipeService.buscarTodas()
+      .then(setTeams)
+      .catch(() => {});
   }, []);
 
   const fetchIndividual = useCallback(async (mes: string) => {
@@ -231,6 +244,18 @@ const ChatDashboard = () => {
         getProgressBarColorClass={getProgressBarColorClass}
       />
 
+      <SellerMonitoringModal
+        isOpen={selectedSeller !== null}
+        onClose={() => setSelectedSeller(null)}
+        agent={selectedSeller}
+        opportunities={opportunities}
+        individualPerf={individualPerf}
+        teams={teams}
+        workingDaysInfo={workingDaysInfo}
+        formatCurrency={formatCurrency}
+        getProgressBarColorClass={getProgressBarColorClass}
+      />
+
       <div className="page-header">
         <h1>Gestão operacional</h1>
       </div>
@@ -269,7 +294,7 @@ const ChatDashboard = () => {
           {isLoadingIndividual ? (
             <>
               <div className="compact-kpi-grid">
-                {[0, 1].map(i => (
+                {[0, 1, 2, 3].map(i => (
                   <div key={i} className="compact-kpi-card">
                     <span className="skeleton" style={{ width: '2.875rem', height: '2.875rem', borderRadius: '0.625rem', flexShrink: 0 }} />
                     <div className="compact-kpi-info" style={{ flex: 1, gap: '10px' }}>
@@ -306,6 +331,20 @@ const ChatDashboard = () => {
                   <div className="compact-kpi-info">
                     <span className="compact-kpi-label">Faturamento Total</span>
                     <strong className="compact-kpi-value">{formatCurrency(totalSalesRealized)}</strong>
+                  </div>
+                </div>
+                <div className="compact-kpi-card">
+                  <div className="compact-kpi-icon"><FaTrophy /></div>
+                  <div className="compact-kpi-info">
+                    <span className="compact-kpi-label">Meta Coletiva</span>
+                    <strong className="compact-kpi-value">{formatCurrency(totalMonthlyGoal)}</strong>
+                  </div>
+                </div>
+                <div className="compact-kpi-card">
+                  <div className="compact-kpi-icon"><FaHourglassHalf /></div>
+                  <div className="compact-kpi-info">
+                    <span className="compact-kpi-label">Projeção do Mês</span>
+                    <strong className="compact-kpi-value">{formatCurrency(projectedClosure)}</strong>
                   </div>
                 </div>
                 <div className="compact-kpi-card">
@@ -399,25 +438,23 @@ const ChatDashboard = () => {
                         <th>Total de Ligações</th>
                         <th>Faturamento</th>
                         <th>Meta Mensal</th>
-                        <th style={{ width: '180px', textAlign: 'center' }}>Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {rankedAgents.length === 0 ? (
                         <tr>
-                          <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                          <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                             Nenhum dado disponível para este mês.
                           </td>
                         </tr>
                       ) : rankedAgents.map((agent, index) => {
-                        const status = getStatusBadge(agent.percentualFaturamento);
-                        const dailyTarget = agent.metaFaturamento / workingDaysInfo.monthlyDays;
-                        const dailyAccomplished = workingDaysInfo.elapsedDays > 0
-                          ? agent.totalFaturado / workingDaysInfo.elapsedDays
-                          : 0;
-                        const dailyAchieved = dailyTarget > 0 && dailyAccomplished >= dailyTarget;
                         return (
-                          <tr key={agent.usuarioId}>
+                          <tr
+                            key={agent.usuarioId}
+                            onClick={() => setSelectedSeller(agent)}
+                            style={{ cursor: 'pointer' }}
+                            title="Clique para ver detalhes do vendedor"
+                          >
                             <td style={{ textAlign: 'center' }}>
                               <span className={`ranking-badge rank-${index + 1}`}>{index + 1}º</span>
                             </td>
@@ -442,18 +479,6 @@ const ChatDashboard = () => {
                                   <span className="ranking-percent-text">{agent.percentualFaturamento}%</span>
                                 </div>
                                 <span className="meta-target-caption">Meta: {formatCurrency(agent.metaFaturamento)}</span>
-                              </div>
-                            </td>
-                            <td style={{ textAlign: 'center' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                                  <strong>{formatCurrency(dailyAccomplished)}</strong> / {formatCurrency(dailyTarget)}
-                                </span>
-                                {dailyAchieved ? (
-                                  <span className="status-badge-meta completed"><FaCheckCircle /> Batida</span>
-                                ) : (
-                                  <span className={`status-badge-meta ${status.cls}`}><FaTimesCircle /> {status.label}</span>
-                                )}
                               </div>
                             </td>
                           </tr>

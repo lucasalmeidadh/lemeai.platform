@@ -5,7 +5,7 @@ import {
   FaArrowLeft, FaPhone, FaEnvelope, FaPlus, FaPaperclip, FaTrash,
   FaImage, FaMusic, FaVideo, FaFilePdf, FaCalendarAlt, FaComments, FaEdit,
   FaMagic, FaTasks, FaTimes,
-  FaBullhorn
+  FaBullhorn, FaStickyNote
 } from 'react-icons/fa';
 import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
@@ -25,6 +25,8 @@ import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import { ptBR } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
+import '../components/DateRangeFilter.css';
+import '../components/Skeleton.css';
 import CustomSelect from '../components/CustomSelect';
 import './DealDetailsPage.css';
 
@@ -115,7 +117,7 @@ const DealDetailsPage = () => {
   const [chatError, setChatError] = useState<string | null>(null);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
-  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda'>('notes');
+  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda'>('agenda');
 
   const [contactEmail, setContactEmail] = useState<string>('');
   const [contactName, setContactName] = useState<string>('');
@@ -149,8 +151,10 @@ const DealDetailsPage = () => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [modalDescricao, setModalDescricao] = useState('');
   const [modalTipoTarefaId, setModalTipoTarefaId] = useState<number | null>(null);
-  const [modalDataRetorno, setModalDataRetorno] = useState<Date | null>(null);
+  const [modalDate, setModalDate] = useState<Date | null>(null);
+  const [modalTime, setModalTime] = useState<string>('09:00');
   const [isSavingTask, setIsSavingTask] = useState(false);
+  const [editingTask, setEditingTask] = useState<Tarefa | null>(null);
 
   const [observations, setObservations] = useState<any[]>([]);
   const [isLoadingNotes, setIsLoadingNotes] = useState(false);
@@ -546,9 +550,28 @@ const DealDetailsPage = () => {
   }, [deal, fetchTasks]);
 
   const openTaskModal = () => {
+    setEditingTask(null);
     setModalDescricao('');
-    setModalDataRetorno(null);
+    setModalDate(null);
+    setModalTime('09:00');
     if (tiposTarefa.length > 0) setModalTipoTarefaId(tiposTarefa[0].tipoTarefaId);
+    setIsTaskModalOpen(true);
+  };
+
+  const openEditTaskModal = (task: Tarefa) => {
+    setEditingTask(task);
+    setModalDescricao(task.descricao);
+    setModalTipoTarefaId(task.tipoTarefaId);
+    if (task.dataRetorno) {
+      const d = new Date(task.dataRetorno);
+      setModalDate(d);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      setModalTime(`${hh}:${mm}`);
+    } else {
+      setModalDate(null);
+      setModalTime('09:00');
+    }
     setIsTaskModalOpen(true);
   };
 
@@ -557,7 +580,10 @@ const DealDetailsPage = () => {
   const handleReturnShortcut = (hours: number) => {
     const d = new Date();
     d.setTime(d.getTime() + hours * 60 * 60 * 1000);
-    setModalDataRetorno(d);
+    setModalDate(d);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    setModalTime(`${hh}:${mm}`);
   };
 
   const handleModalSubmit = async () => {
@@ -571,18 +597,48 @@ const DealDetailsPage = () => {
     }
     setIsSavingTask(true);
     try {
-      const res = await TarefaService.criar({
-        descricao: modalDescricao.trim(),
-        conversaId: deal?.id ?? null,
-        tipoTarefaId: modalTipoTarefaId,
-        dataRetorno: modalDataRetorno ? modalDataRetorno.toISOString() : null,
-      });
-      if (res.sucesso) {
-        toast.success('Tarefa criada com sucesso!');
-        closeTaskModal();
-        fetchTasks();
+      let dataRetornoISO: string | null = null;
+      if (modalDate) {
+        const targetDate = new Date(modalDate);
+        if (modalTime) {
+          const [hours, minutes] = modalTime.split(':').map(Number);
+          targetDate.setHours(hours || 0);
+          targetDate.setMinutes(minutes || 0);
+          targetDate.setSeconds(0);
+          targetDate.setMilliseconds(0);
+        }
+        dataRetornoISO = targetDate.toISOString();
+      }
+
+      if (editingTask) {
+        const res = await TarefaService.atualizar({
+          tarefaId: editingTask.tarefaId,
+          descricao: modalDescricao.trim(),
+          estaConcluida: editingTask.estaConcluida,
+          tipoTarefaId: modalTipoTarefaId,
+          dataRetorno: dataRetornoISO,
+        });
+        if (res.sucesso) {
+          toast.success('Tarefa atualizada com sucesso!');
+          closeTaskModal();
+          fetchTasks();
+        } else {
+          toast.error(res.mensagem || 'Erro ao atualizar tarefa.');
+        }
       } else {
-        toast.error(res.mensagem || 'Erro ao criar tarefa.');
+        const res = await TarefaService.criar({
+          descricao: modalDescricao.trim(),
+          conversaId: deal?.id ?? null,
+          tipoTarefaId: modalTipoTarefaId,
+          dataRetorno: dataRetornoISO,
+        });
+        if (res.sucesso) {
+          toast.success('Tarefa criada com sucesso!');
+          closeTaskModal();
+          fetchTasks();
+        } else {
+          toast.error(res.mensagem || 'Erro ao criar tarefa.');
+        }
       }
     } catch {
       toast.error('Erro ao conectar com o servidor.');
@@ -595,7 +651,10 @@ const DealDetailsPage = () => {
     try {
       const res = await TarefaService.atualizar({
         tarefaId: task.tarefaId,
+        descricao: task.descricao,
         estaConcluida: !task.estaConcluida,
+        tipoTarefaId: task.tipoTarefaId,
+        dataRetorno: task.dataRetorno,
       });
       if (res.sucesso) {
         setTasks(prev => prev.map(t => t.tarefaId === task.tarefaId ? { ...t, estaConcluida: !t.estaConcluida } : t));
@@ -823,8 +882,61 @@ const DealDetailsPage = () => {
 
   if (isLoadingDeal) {
     return (
-      <div className="page-container deal-details-page loading">
-        <p>Carregando informações da oportunidade...</p>
+      <div className="page-container deal-details-page">
+        {/* Header Skeleton */}
+        <div className="details-page-header">
+          <div className="skeleton" style={{ width: '180px', height: '30px', borderRadius: 'var(--btn-radius-md)' }}></div>
+          <div className="skeleton" style={{ width: '150px', height: '30px', borderRadius: 'var(--btn-radius-md)' }}></div>
+        </div>
+
+        <div className="details-page-layout">
+          {/* Sidebar Panel Skeleton */}
+          <aside className="details-sidebar-panel">
+            <div className="sidebar-deal-header">
+              <div className="skeleton" style={{ width: '80%', height: '24px', marginBottom: '8px' }}></div>
+              <div className="skeleton" style={{ width: '50%', height: '20px' }}></div>
+            </div>
+            
+            <div className="details-info-section" style={{ marginTop: '20px' }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="info-group" style={{ marginBottom: '16px' }}>
+                  <div className="skeleton" style={{ width: '40%', height: '12px', marginBottom: '6px' }}></div>
+                  <div className="skeleton" style={{ width: '70%', height: '16px' }}></div>
+                </div>
+              ))}
+            </div>
+
+            <div className="sidebar-divider" />
+
+            <div className="sidebar-summary-section">
+              <div className="skeleton" style={{ width: '100px', height: '16px', marginBottom: '10px' }}></div>
+              <div className="skeleton" style={{ width: '100%', height: '150px', borderRadius: '0.75rem' }}></div>
+            </div>
+          </aside>
+
+          {/* Main Content Area Skeleton */}
+          <main className="details-main-area">
+            {/* Tabs skeleton */}
+            <div className="details-tab-nav" style={{ gap: '8px' }}>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="skeleton" style={{ width: '120px', height: '38px', borderRadius: '0.5rem' }}></div>
+              ))}
+            </div>
+
+            {/* Tab content skeleton */}
+            <div className="details-tab-content">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="skeleton" style={{ width: '150px', height: '24px' }}></div>
+                  <div className="skeleton" style={{ width: '120px', height: '34px', borderRadius: 'var(--btn-radius-md)' }}></div>
+                </div>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton" style={{ width: '100%', height: '70px', borderRadius: '0.75rem' }}></div>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -1014,9 +1126,15 @@ const DealDetailsPage = () => {
         {/* Content Tabs */}
         <main className="details-main-area">
           <div className="details-tab-nav">
+            <button className={`tab-button ${activeTab === 'agenda' ? 'active' : ''}`} onClick={() => setActiveTab('agenda')}>
+              <span className="tab-text-full">Tarefas</span>
+              <span className="tab-text-short">Tarefas</span>
+              <FaCalendarAlt />
+            </button>
             <button className={`tab-button ${activeTab === 'notes' ? 'active' : ''}`} onClick={() => setActiveTab('notes')}>
-              <span className="tab-text-full">Anotações e Valor</span>
+              <span className="tab-text-full">Anotações</span>
               <span className="tab-text-short">Anotações</span>
+              <FaStickyNote />
             </button>
             <button className={`tab-button ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>
               <span className="tab-text-full">Chat do WhatsApp</span>
@@ -1027,11 +1145,6 @@ const DealDetailsPage = () => {
               <span className="tab-text-full">Arquivos / Anexos</span>
               <span className="tab-text-short">Anexos</span>
               <FaPaperclip />
-            </button>
-            <button className={`tab-button ${activeTab === 'agenda' ? 'active' : ''}`} onClick={() => setActiveTab('agenda')}>
-              <span className="tab-text-full">Tarefas</span>
-              <span className="tab-text-short">Tarefas</span>
-              <FaCalendarAlt />
             </button>
           </div>
 
@@ -1050,15 +1163,6 @@ const DealDetailsPage = () => {
 
                 {showAddDetails && (
                   <div className="add-note-form-panel">
-                    <div className="form-group-val">
-                      <label>Atualizar Valor Comercial</label>
-                      <input
-                        type="number"
-                        value={detailsValue}
-                        onChange={e => setDetailsValue(parseFloat(e.target.value))}
-                        className="form-input"
-                      />
-                    </div>
                     <div className="form-group-val">
                       <label>Descrição da Anotação</label>
                       <textarea
@@ -1080,7 +1184,13 @@ const DealDetailsPage = () => {
                 )}
 
                 <div className="notes-list-pane">
-                  {filteredNotes.length > 0 ? (
+                  {isLoadingNotes ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="skeleton" style={{ width: '100%', height: '80px', borderRadius: '0.75rem' }}></div>
+                      ))}
+                    </div>
+                  ) : filteredNotes.length > 0 ? (
                     filteredNotes.map(obs => (
                       <div key={obs.id} className="note-card-item">
                         <div className="note-card-header">
@@ -1132,8 +1242,12 @@ const DealDetailsPage = () => {
                   </label>
                 </div>
 
-                {isLoadingAttachments ? (
-                  <p className="loading-msg">Carregando anexos...</p>
+                 {isLoadingAttachments ? (
+                  <div className="attachments-grid-pane">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="skeleton" style={{ width: '100%', height: '180px', borderRadius: '0.75rem' }}></div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="attachments-grid-pane">
                     {attachments.length > 0 ? (
@@ -1169,8 +1283,12 @@ const DealDetailsPage = () => {
                   </button>
                 </div>
 
-                {isLoadingTasks ? (
-                  <p className="loading-msg">Carregando tarefas...</p>
+                 {isLoadingTasks ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="skeleton" style={{ width: '100%', height: '62px', borderRadius: '0.75rem' }}></div>
+                    ))}
+                  </div>
                 ) : tasks.length > 0 ? (
                   <div className="appointments-list-container">
                     {tasks.map(task => {
@@ -1203,9 +1321,14 @@ const DealDetailsPage = () => {
                               </span>
                             </div>
                           </div>
-                          <button className="app-del-btn" onClick={() => handleDeleteTask(task.tarefaId)} style={{ flexShrink: 0, padding: '4px' }}>
-                            <FaTrash />
-                          </button>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                            <button className="app-edit-btn" onClick={() => openEditTaskModal(task)} style={{ padding: '4px', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                              <FaEdit />
+                            </button>
+                            <button className="app-del-btn" onClick={() => handleDeleteTask(task.tarefaId)} style={{ padding: '4px' }}>
+                              <FaTrash />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -1223,7 +1346,7 @@ const DealDetailsPage = () => {
         <div className="task-modal-overlay" onClick={closeTaskModal}>
           <div className="task-modal" onClick={e => e.stopPropagation()}>
             <div className="task-modal-header">
-              <h3>Nova Tarefa</h3>
+              <h3>{editingTask ? 'Editar Tarefa' : 'Nova Tarefa'}</h3>
               <button className="task-modal-close" onClick={closeTaskModal}><FaTimes /></button>
             </div>
 
@@ -1271,20 +1394,29 @@ const DealDetailsPage = () => {
                 </div>
               </div>
 
-              <div className="form-group-val">
-                <label>Data de retorno (opcional)</label>
-                <DatePicker
-                  selected={modalDataRetorno}
-                  onChange={d => setModalDataRetorno(d)}
-                  showTimeSelect
-                  timeFormat="HH:mm"
-                  timeIntervals={15}
-                  dateFormat="dd/MM/yyyy HH:mm"
-                  locale={ptBR}
-                  className="form-input"
-                  placeholderText="Selecionar data e hora"
-                  isClearable
-                />
+              <div className="task-dates-row">
+                <div className="form-group-val" style={{ flex: 1 }}>
+                  <label>Data de retorno (opcional)</label>
+                  <DatePicker
+                    selected={modalDate}
+                    onChange={d => setModalDate(d)}
+                    placeholderText="DD/MM/AAAA"
+                    dateFormat="dd/MM/yyyy"
+                    className="form-input"
+                    locale={ptBR}
+                    isClearable
+                    showPopperArrow={false}
+                  />
+                </div>
+                <div className="form-group-val" style={{ flex: 1 }}>
+                  <label>Hora de retorno</label>
+                  <input
+                    type="time"
+                    value={modalTime}
+                    onChange={e => setModalTime(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
               </div>
             </div>
 
