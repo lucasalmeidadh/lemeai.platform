@@ -1073,3 +1073,74 @@
     height: 15px !important;
   }
 }
+
+/* Estilos para o editor inline de valor na Sidebar */
+.inline-value-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.inline-value-input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+  font-size: var(--font-base);
+  font-weight: 600;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inline-value-input:focus {
+  border-color: var(--petroleum-blue);
+  box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.15);
+}
+
+.inline-value-actions {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.inline-value-actions button {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--btn-radius-md);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+  text-align: center;
+  height: 2.25rem;
+}
+
+.inline-btn-save {
+  background: var(--petroleum-blue);
+  color: white;
+  border: none;
+}
+
+.inline-btn-save:hover {
+  background: var(--petroleum-blue-hover);
+}
+
+.inline-btn-cancel {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.inline-btn-cancel:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+

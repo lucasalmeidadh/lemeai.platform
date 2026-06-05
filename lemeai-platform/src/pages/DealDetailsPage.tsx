@@ -126,6 +126,29 @@ const DealDetailsPage = () => {
   const [isEditingValue, setIsEditingValue] = useState(false);
   const [editValueInput, setEditValueInput] = useState<string>('');
 
+  const formatCurrency = (value: string | number) => {
+    if (value === '' || value === undefined || value === null) return '';
+    if (typeof value === 'number') {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    }
+    const onlyDigits = String(value).replace(/\D/g, '');
+    if (onlyDigits === '') return '';
+    const numberValue = Number(onlyDigits) / 100;
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(numberValue);
+  };
+
+  const handleValueInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const formatted = formatCurrency(rawValue);
+    setEditValueInput(formatted);
+  };
+
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [editEmailInput, setEditEmailInput] = useState<string>('');
 
@@ -189,8 +212,8 @@ const DealDetailsPage = () => {
   }, []);
 
   // Fetch Deal details
-  const fetchDealInfo = useCallback(async () => {
-    setIsLoadingDeal(true);
+  const fetchDealInfo = useCallback(async (silent = false) => {
+    if (!silent) setIsLoadingDeal(true);
     try {
       const opportunities = await OpportunityService.getAllOpportunities();
       const currentOpp = opportunities.find(opp => opp.idConversa === Number(id));
@@ -768,14 +791,30 @@ const DealDetailsPage = () => {
 
   const handleSaveInlineValue = async () => {
     if (!deal) return;
-    const val = Number(editValueInput);
+    let val = 0;
+    if (typeof editValueInput === 'string') {
+      const onlyDigits = editValueInput.replace(/\D/g, '');
+      val = onlyDigits ? Number(onlyDigits) / 100 : 0;
+    } else {
+      val = Number(editValueInput) || 0;
+    }
     if (isNaN(val) || val < 0) {
       toast.error('Informe um valor válido');
       return;
     }
+
+    // Optimistic Update
+    const formattedPrevious = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.rawValue || 0);
+    const formattedNew = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    
+    setDeal(prev => prev ? {
+      ...prev,
+      value: formattedNew,
+      rawValue: val
+    } : null);
+    setIsEditingValue(false);
+
     try {
-      const formattedPrevious = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.rawValue || 0);
-      const formattedNew = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
       const autoNote = `Alteração de valor: De ${formattedPrevious} para ${formattedNew}`;
 
       const result = await OpportunityService.addDetails({
@@ -789,10 +828,11 @@ const DealDetailsPage = () => {
         throw new Error(result.mensagem || 'Falha ao atualizar valor.');
       }
       toast.success('Valor atualizado com sucesso!');
-      setIsEditingValue(false);
-      fetchDealInfo();
+      fetchDealInfo(true);
+      fetchObservations();
     } catch (e: any) {
       toast.error(`Erro: ${e.message}`);
+      fetchDealInfo();
     }
   };
 
@@ -980,19 +1020,22 @@ const DealDetailsPage = () => {
           <div className="sidebar-deal-header">
             <h2>{deal.title}</h2>
             {isEditingValue ? (
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
+              <div className="inline-value-edit-container">
                 <input 
-                  type="number" 
+                  type="text" 
                   value={editValueInput} 
-                  onChange={e => setEditValueInput(e.target.value)} 
-                  className="form-input"
-                  style={{ padding: '6px 10px', fontSize: '0.9rem', width: '120px' }}
+                  onChange={handleValueInputChange} 
+                  className="inline-value-input"
+                  placeholder="R$ 0,00"
+                  autoFocus
                 />
-                <button onClick={handleSaveInlineValue} className="btn-save" style={{ padding: '6px 12px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Salvar</button>
-                <button onClick={() => setIsEditingValue(false)} className="btn-cancel" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>Cancelar</button>
+                <div className="inline-value-actions">
+                  <button onClick={handleSaveInlineValue} className="inline-btn-save">Salvar</button>
+                  <button onClick={() => setIsEditingValue(false)} className="inline-btn-cancel">Cancelar</button>
+                </div>
               </div>
             ) : (
-              <strong className="deal-price" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => { setIsEditingValue(true); setEditValueInput(String(deal.rawValue || 0)); }} title="Clique para editar o valor">
+              <strong className="deal-price" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => { setIsEditingValue(true); setEditValueInput(formatCurrency(deal.rawValue || 0)); }} title="Clique para editar o valor">
                 {deal.value} <FaEdit size={14} style={{ opacity: 0.5 }} />
               </strong>
             )}

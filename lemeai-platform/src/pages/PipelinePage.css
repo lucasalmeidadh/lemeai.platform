@@ -557,3 +557,66 @@ select.pipeline-filter-input {
     gap: 3px !important;
   }
 }
+
+/* ─── TEMPERATURE FILTER PILLS ───────────────────────────────── */
+.pipeline-temp-filters {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.temp-pill-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.temp-pill-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* Frio Active Style */
+.temp-pill-btn.temp-cold.active {
+  background-color: var(--color-neutral-bg, #f3f4f6);
+  border-color: var(--color-neutral, #4b5563);
+  color: var(--color-neutral, #4b5563);
+}
+
+[data-theme='dark'] .temp-pill-btn.temp-cold.active {
+  background-color: rgba(75, 85, 99, 0.2) !important;
+  border-color: #9ca3af !important;
+  color: #f3f4f6 !important;
+}
+
+/* Morno Active Style */
+.temp-pill-btn.temp-warm.active {
+  background-color: var(--color-warning-bg, #fef3c7);
+  border-color: var(--color-warning, #d97706);
+  color: var(--color-warning, #d97706);
+}
+
+[data-theme='dark'] .temp-pill-btn.temp-warm.active {
+  background-color: rgba(217, 119, 6, 0.2) !important;
+  border-color: #fbbf24 !important;
+  color: #fef3c7 !important;
+}
+
+/* Quente Active Style */
+.temp-pill-btn.temp-hot.active {
+  background-color: var(--color-danger-bg, #fee2e2);
+  border-color: var(--color-danger, #dc2626);
+  color: var(--color-danger, #dc2626);
+}
+
+[data-theme='dark'] .temp-pill-btn.temp-hot.active {
+  background-color: rgba(220, 38, 38, 0.2) !important;
+  border-color: #f87171 !important;
+  color: #fee2e2 !important;
+}
