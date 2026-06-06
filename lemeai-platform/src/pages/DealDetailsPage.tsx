@@ -5,8 +5,9 @@ import {
   FaArrowLeft, FaPhone, FaEnvelope, FaPlus, FaPaperclip, FaTrash,
   FaImage, FaMusic, FaVideo, FaFilePdf, FaCalendarAlt, FaComments, FaEdit,
   FaMagic, FaTasks, FaTimes,
-  FaBullhorn, FaStickyNote
+  FaBullhorn, FaStickyNote, FaBoxes
 } from 'react-icons/fa';
+import { ProductService, type Product } from '../services/ProductService';
 import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -29,6 +30,16 @@ import '../components/DateRangeFilter.css';
 import '../components/Skeleton.css';
 import CustomSelect from '../components/CustomSelect';
 import './DealDetailsPage.css';
+
+interface DealProduct {
+  id: string;
+  produtoId: number;
+  nome: string;
+  codigo: string;
+  preco: number;
+  quantidade: number;
+  marca: string;
+}
 
 interface AttachmentPreviewProps {
   id: number;
@@ -92,6 +103,7 @@ interface Deal {
   rawValue?: number;
   phone?: string;
   details?: DetalheConversa[];
+  dataFechamentoVenda?: string | null;
 }
 
 interface ApiMessage {
@@ -117,7 +129,17 @@ const DealDetailsPage = () => {
   const [chatError, setChatError] = useState<string | null>(null);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
-  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda'>('agenda');
+  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda' | 'products'>('agenda');
+
+  const [dealProducts, setDealProducts] = useState<DealProduct[]>([]);
+  const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [productQuantity, setProductQuantity] = useState<number>(1);
+  const [productCustomPrice, setProductCustomPrice] = useState<string>('');
+  const [productSearchQuery, setProductSearchQuery] = useState<string>('');
 
   const [contactEmail, setContactEmail] = useState<string>('');
   const [contactName, setContactName] = useState<string>('');
@@ -211,6 +233,47 @@ const DealDetailsPage = () => {
     fetchCurrentUser();
   }, []);
 
+  // Load deal products from localStorage
+  useEffect(() => {
+    if (id) {
+      const stored = localStorage.getItem(`deal_products_${id}`);
+      if (stored) {
+        try {
+          setDealProducts(JSON.parse(stored));
+        } catch (e) {
+          console.error("Erro ao carregar produtos do localStorage:", e);
+        }
+      } else {
+        setDealProducts([]);
+      }
+    }
+  }, [id]);
+
+  // Load available products from API
+  useEffect(() => {
+    const fetchAvailableProducts = async () => {
+      try {
+        setIsLoadingProducts(true);
+        const res = await ProductService.getAll();
+        if (res.sucesso && res.dados) {
+          setAvailableProducts(res.dados);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar produtos cadastrados:", err);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+    fetchAvailableProducts();
+  }, []);
+
+  const saveDealProducts = (newProducts: DealProduct[]) => {
+    setDealProducts(newProducts);
+    if (id) {
+      localStorage.setItem(`deal_products_${id}`, JSON.stringify(newProducts));
+    }
+  };
+
   // Fetch Deal details
   const fetchDealInfo = useCallback(async (silent = false) => {
     if (!silent) setIsLoadingDeal(true);
@@ -230,7 +293,8 @@ const DealDetailsPage = () => {
           contactId: currentOpp.idContato,
           statusId: currentOpp.idStauts,
           phone: currentOpp.numeroWhatsapp,
-          details: currentOpp.detalhesConversa
+          details: currentOpp.detalhesConversa,
+          dataFechamentoVenda: currentOpp.dataFechamentoVenda,
         };
         setDeal(mappedDeal);
         setStatusId(currentOpp.idStauts);
@@ -1084,6 +1148,18 @@ const DealDetailsPage = () => {
               </div>
             </div>
 
+            {deal.dataFechamentoVenda && (
+              <div className="info-group">
+                <span className="info-label">Data de Fechamento</span>
+                <div className="info-value contact-item deal-closed-date">
+                  <FaCalendarAlt className="icon" />
+                  {new Date(deal.dataFechamentoVenda).toLocaleDateString('pt-BR', {
+                    day: '2-digit', month: 'long', year: 'numeric'
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="info-group">
               <span className="info-label">Telefone</span>
               <div className="info-value contact-item">
@@ -1188,6 +1264,11 @@ const DealDetailsPage = () => {
               <span className="tab-text-full">Arquivos / Anexos</span>
               <span className="tab-text-short">Anexos</span>
               <FaPaperclip />
+            </button>
+            <button className={`tab-button ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')}>
+              <span className="tab-text-full">Produtos</span>
+              <span className="tab-text-short">Produtos</span>
+              <FaBoxes />
             </button>
           </div>
 
@@ -1381,6 +1462,177 @@ const DealDetailsPage = () => {
                 )}
               </div>
             )}
+
+            {/* Products Tab */}
+            {activeTab === 'products' && (
+              <div className="tab-pane products-pane">
+                <div className="pane-header">
+                  <h3>Produtos e Serviços de Interesse</h3>
+                  <button className="btn-add-action" onClick={() => {
+                    setIsProductModalOpen(true);
+                    setSelectedProductId(null);
+                    setProductQuantity(1);
+                    setProductCustomPrice('');
+                    setProductSearchQuery('');
+                  }}>
+                    <FaPlus /> Adicionar Produto
+                  </button>
+                </div>
+
+                <div className="products-list-pane">
+                  {dealProducts.length > 0 ? (
+                    <div className="deal-products-container">
+                      <div className="table-responsive">
+                        <table className="deal-products-table">
+                          <thead>
+                            <tr>
+                              <th>Código</th>
+                              <th>Nome</th>
+                              <th>Marca</th>
+                              <th style={{ textAlign: 'center' }}>Qtd</th>
+                              <th style={{ textAlign: 'right' }}>Preço Unit.</th>
+                              <th style={{ textAlign: 'right' }}>Preço Total</th>
+                              <th style={{ textAlign: 'center' }}>Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dealProducts.map(p => (
+                              <tr key={p.id}>
+                                <td><code>{p.codigo}</code></td>
+                                <td style={{ fontWeight: 600 }}>{p.nome}</td>
+                                <td><span className="product-brand-badge">{p.marca || 'N/A'}</span></td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <div className="quantity-control">
+                                    <button onClick={() => {
+                                      const updated = dealProducts.map(dp => 
+                                        dp.id === p.id ? { ...dp, quantidade: Math.max(1, dp.quantidade - 1) } : dp
+                                      );
+                                      saveDealProducts(updated);
+                                    }}>-</button>
+                                    <span>{p.quantidade}</span>
+                                    <button onClick={() => {
+                                      const updated = dealProducts.map(dp => 
+                                        dp.id === p.id ? { ...dp, quantidade: dp.quantidade + 1 } : dp
+                                      );
+                                      saveDealProducts(updated);
+                                    }}>+</button>
+                                  </div>
+                                </td>
+                                <td style={{ textAlign: 'right' }}>
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco)}
+                                </td>
+                                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--petroleum-blue)' }}>
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco * p.quantidade)}
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <button className="product-delete-btn" onClick={() => {
+                                    const updated = dealProducts.filter(dp => dp.id !== p.id);
+                                    saveDealProducts(updated);
+                                    toast.success("Produto removido!");
+                                  }}>
+                                    <FaTrash />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="products-summary-footer">
+                        <div className="products-total-box">
+                          <span>Total de Produtos:</span>
+                          <strong>
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                              dealProducts.reduce((sum, p) => sum + (p.preco * p.quantidade), 0)
+                            )}
+                          </strong>
+                        </div>
+
+                        <div className="products-actions-footer">
+                          <button className="btn-secondary-action" onClick={async () => {
+                            const total = dealProducts.reduce((sum, p) => sum + (p.preco * p.quantidade), 0);
+                            
+                            // Optimistic update of UI
+                            const formattedNew = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+                            setDeal(prev => prev ? { ...prev, value: formattedNew, rawValue: total } : null);
+                            
+                            try {
+                              const result = await OpportunityService.addDetails({
+                                idConversa: deal.id,
+                                descricao: `Atualização de valor com base na soma dos produtos vinculados (${formattedNew})`,
+                                statusNegociacaoId: statusId,
+                                valor: total
+                              });
+                              if (result.sucesso) {
+                                toast.success("Valor do Deal sincronizado!");
+                                fetchDealInfo(true);
+                                fetchObservations();
+                              } else {
+                                throw new Error(result.mensagem);
+                              }
+                            } catch (e: any) {
+                              toast.error(`Erro ao salvar valor no servidor: ${e.message}`);
+                            }
+                          }}>
+                            Sincronizar Valor com o Deal
+                          </button>
+                          
+                          <button className="btn-success-action" onClick={async () => {
+                            const total = dealProducts.reduce((sum, p) => sum + (p.preco * p.quantidade), 0);
+                            const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+                            
+                            try {
+                              // Simulate closing sale
+                              const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ idStatus: 3, valor: total }), // 3 = Venda Fechada
+                              });
+                              const result = await response.json();
+                              if (!response.ok || !result.sucesso) {
+                                throw new Error(result.mensagem || 'Falha ao atualizar status.');
+                              }
+                              
+                              // Log note about products sold
+                              const productsDescription = dealProducts.map(p => `- ${p.nome} (Qtd: ${p.quantidade}) - ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco * p.quantidade)}`).join('\n');
+                              await OpportunityService.addDetails({
+                                idConversa: deal.id,
+                                descricao: `🏆 Venda Fechada com sucesso!\nProdutos vendidos:\n${productsDescription}\nTotal: ${formattedTotal}`,
+                                statusNegociacaoId: 3,
+                                valor: total
+                              });
+                              
+                              toast.success('🏆 Venda fechada e produtos vinculados!');
+                              fetchDealInfo();
+                              fetchObservations();
+                            } catch (error: any) {
+                              toast.error(`Erro ao fechar venda: ${error.message}`);
+                            }
+                          }}>
+                            Simular Fechamento de Venda
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="empty-products-pane">
+                      <FaBoxes className="empty-icon" style={{ fontSize: '3rem', opacity: 0.5, color: 'var(--petroleum-blue)' }} />
+                      <p>Nenhum produto ou serviço de interesse vinculado a este Deal.</p>
+                      <button className="btn-add-action-inline" onClick={() => {
+                        setIsProductModalOpen(true);
+                        setSelectedProductId(null);
+                        setProductQuantity(1);
+                        setProductCustomPrice('');
+                        setProductSearchQuery('');
+                      }}>
+                        Vincular Primeiro Produto
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -1467,6 +1719,134 @@ const DealDetailsPage = () => {
               <button className="btn-cancel" onClick={closeTaskModal} disabled={isSavingTask}>Cancelar</button>
               <button className="btn-save" onClick={handleModalSubmit} disabled={isSavingTask}>
                 {isSavingTask ? 'Salvando...' : 'Confirmar Tarefa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isProductModalOpen && (
+        <div className="task-modal-overlay" onClick={() => setIsProductModalOpen(false)}>
+          <div className="task-modal product-modal" onClick={e => e.stopPropagation()}>
+            <div className="task-modal-header">
+              <h3>Vincular Produto ao Deal</h3>
+              <button className="task-modal-close" onClick={() => setIsProductModalOpen(false)}><FaTimes /></button>
+            </div>
+
+            <div className="task-modal-body">
+              <div className="form-group-val">
+                <label>Pesquisar Produto</label>
+                <input
+                  type="text"
+                  value={productSearchQuery}
+                  onChange={e => setProductSearchQuery(e.target.value)}
+                  placeholder="Pesquise por nome, marca ou código..."
+                  className="form-input"
+                  autoFocus
+                />
+              </div>
+
+              <div className="form-group-val">
+                <label>Selecionar Produto <span style={{ color: '#dc2626' }}>*</span></label>
+                <div className="product-select-list">
+                  {isLoadingProducts ? (
+                    <p style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)' }}>Carregando produtos...</p>
+                  ) : availableProducts.length > 0 ? (
+                    (() => {
+                      const filtered = availableProducts.filter(p => 
+                        p.nome.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                        p.codigo.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                        (p.marca && p.marca.toLowerCase().includes(productSearchQuery.toLowerCase()))
+                      );
+                      
+                      if (filtered.length === 0) {
+                        return <p style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)' }}>Nenhum produto encontrado.</p>;
+                      }
+
+                      return filtered.map(p => {
+                        const isSelected = selectedProductId === p.produtoId;
+                        return (
+                          <div 
+                            key={p.produtoId} 
+                            className={`product-select-item ${isSelected ? 'selected' : ''}`}
+                            onClick={() => {
+                              setSelectedProductId(p.produtoId);
+                              setProductCustomPrice(p.preco.toString());
+                            }}
+                          >
+                            <div className="product-item-info">
+                              <span className="product-item-name">{p.nome}</span>
+                              <span className="product-item-meta">Cód: {p.codigo} | Marca: {p.marca || 'N/A'}</span>
+                            </div>
+                            <span className="product-item-price">
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco)}
+                            </span>
+                          </div>
+                        );
+                      });
+                    })()
+                  ) : (
+                    <p style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)' }}>Nenhum produto cadastrado no sistema.</p>
+                  )}
+                </div>
+              </div>
+
+              {selectedProductId && (
+                <div className="product-add-details-row">
+                  <div className="form-group-val" style={{ flex: 1 }}>
+                    <label>Quantidade</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={productQuantity}
+                      onChange={e => setProductQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="form-input"
+                    />
+                  </div>
+                  
+                  <div className="form-group-val" style={{ flex: 2 }}>
+                    <label>Preço Unitário Negociado (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={productCustomPrice}
+                      onChange={e => setProductCustomPrice(e.target.value)}
+                      className="form-input"
+                      placeholder="Preço padrão"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="task-modal-footer">
+              <button className="btn-cancel" onClick={() => setIsProductModalOpen(false)}>Cancelar</button>
+              <button 
+                className="btn-save" 
+                disabled={!selectedProductId}
+                onClick={() => {
+                  if (!selectedProductId) return;
+                  const prod = availableProducts.find(p => p.produtoId === selectedProductId);
+                  if (prod) {
+                    const price = parseFloat(productCustomPrice) >= 0 ? parseFloat(productCustomPrice) : prod.preco;
+                    
+                    const updated = [...dealProducts, {
+                      id: `${prod.produtoId}_${Date.now()}`,
+                      produtoId: prod.produtoId,
+                      nome: prod.nome,
+                      codigo: prod.codigo,
+                      preco: price,
+                      quantidade: productQuantity,
+                      marca: prod.marca || ''
+                    }];
+                    saveDealProducts(updated);
+                    setIsProductModalOpen(false);
+                    toast.success(`${prod.nome} vinculado ao Deal!`);
+                  }
+                }}
+              >
+                Vincular Produto
               </button>
             </div>
           </div>

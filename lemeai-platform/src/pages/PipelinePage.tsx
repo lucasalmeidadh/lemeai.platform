@@ -540,53 +540,7 @@ const PipelinePage = () => {
                                     }}
                                 />
 
-                                <div className="pipeline-temp-filters">
-                                    <button
-                                        type="button"
-                                        className={`temp-pill-btn temp-cold ${selectedTemperatures.includes('3') ? 'active' : ''}`}
-                                        onClick={() => handleTemperatureClick('3')}
-                                    >
-                                        Frio
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={`temp-pill-btn temp-warm ${selectedTemperatures.includes('2') ? 'active' : ''}`}
-                                        onClick={() => handleTemperatureClick('2')}
-                                    >
-                                        Morno
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={`temp-pill-btn temp-hot ${selectedTemperatures.includes('1') ? 'active' : ''}`}
-                                        onClick={() => handleTemperatureClick('1')}
-                                    >
-                                        Quente
-                                    </button>
-                                </div>
-
-                                <div className="pipeline-presets">
-                                    <button
-                                        type="button"
-                                        className={`preset-btn ${isPresetActive(7) ? 'active' : ''}`}
-                                        onClick={() => handlePresetClick(7)}
-                                    >
-                                        7 dias
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={`preset-btn ${isPresetActive(15) ? 'active' : ''}`}
-                                        onClick={() => handlePresetClick(15)}
-                                    >
-                                        15 dias
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={`preset-btn ${isPresetActive(30) ? 'active' : ''}`}
-                                        onClick={() => handlePresetClick(30)}
-                                    >
-                                        30 dias
-                                    </button>
-                                </div>
+                                {!isMobile && <div className="pipeline-filter-separator"></div>}
 
                                 <button
                                     type="button"
@@ -599,6 +553,60 @@ const PipelinePage = () => {
                                         <span className="filters-badge">{getActiveFiltersCount()}</span>
                                     )}
                                 </button>
+
+                                <div className="pipeline-filter-section status-section">
+                                    <span className="pipeline-filter-section-label">STATUS:</span>
+                                    <div className="pipeline-temp-filters">
+                                        <button
+                                            type="button"
+                                            className={`temp-pill-btn temp-cold ${selectedTemperatures.includes('3') ? 'active' : ''}`}
+                                            onClick={() => handleTemperatureClick('3')}
+                                        >
+                                            Frio
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`temp-pill-btn temp-warm ${selectedTemperatures.includes('2') ? 'active' : ''}`}
+                                            onClick={() => handleTemperatureClick('2')}
+                                        >
+                                            Morno
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`temp-pill-btn temp-hot ${selectedTemperatures.includes('1') ? 'active' : ''}`}
+                                            onClick={() => handleTemperatureClick('1')}
+                                        >
+                                            Quente
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="pipeline-filter-section period-section">
+                                    <span className="pipeline-filter-section-label">PERÍODO:</span>
+                                    <div className="pipeline-presets">
+                                        <button
+                                            type="button"
+                                            className={`preset-btn ${isPresetActive(7) ? 'active' : ''}`}
+                                            onClick={() => handlePresetClick(7)}
+                                        >
+                                            7 dias
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`preset-btn ${isPresetActive(15) ? 'active' : ''}`}
+                                            onClick={() => handlePresetClick(15)}
+                                        >
+                                            15 dias
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={`preset-btn ${isPresetActive(30) ? 'active' : ''}`}
+                                            onClick={() => handlePresetClick(30)}
+                                        >
+                                            30 dias
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

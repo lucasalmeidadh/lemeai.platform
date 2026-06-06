@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import {
   FaTimes, FaDollarSign, FaPhoneAlt, FaTrophy, FaChartLine,
-  FaCalendarAlt, FaUser, FaExclamationTriangle, FaCheckCircle, FaInbox,
-  FaQuestionCircle
+  FaCalendarAlt, FaUser, FaExclamationTriangle, FaInbox,
+  FaQuestionCircle, FaChevronDown, FaChevronUp, FaHandshake
 } from 'react-icons/fa';
-import type { PerformanceIndividual } from '../services/RelatorioService';
+import type { PerformanceIndividual, ProjecaoFechamento } from '../services/RelatorioService';
 import type { Opportunity } from '../services/OpportunityService';
 import type { Equipe } from '../services/EquipeService';
 import './SellerMonitoringModal.css';
@@ -13,6 +13,8 @@ interface SellerMonitoringModalProps {
   isOpen: boolean;
   onClose: () => void;
   agent: PerformanceIndividual | null;
+  projecao?: ProjecaoFechamento | null;
+  monitoringMonth: string;
   opportunities: Opportunity[];
   individualPerf: PerformanceIndividual[];
   teams: Equipe[];
@@ -29,6 +31,8 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
   isOpen,
   onClose,
   agent,
+  projecao,
+  monitoringMonth,
   opportunities,
   individualPerf,
   teams,
@@ -37,6 +41,7 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
   getProgressBarColorClass,
 }) => {
   const [showHelp, setShowHelp] = useState(false);
+  const [showSales, setShowSales] = useState(false);
 
   // 1. Cabeçalho
   const initials = useMemo(() => {
@@ -65,21 +70,42 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
   }, [agent?.percentualFaturamento]);
 
   // 2. Bloco 1 — Meta do Mês
+  // Usa projeção do servidor (baseada em conversation_closed_at) quando disponível
   const projectedClosure = useMemo(() => {
+    if (projecao) return projecao.projecaoFechamento;
     if (!agent || workingDaysInfo.elapsedDays <= 0) return 0;
     return (agent.totalFaturado / workingDaysInfo.elapsedDays) * workingDaysInfo.monthlyDays;
-  }, [agent?.totalFaturado, workingDaysInfo]);
+  }, [projecao, agent?.totalFaturado, workingDaysInfo]);
 
   const remainingWorkingDays = useMemo(() => {
+    if (projecao) return Math.max(projecao.diasUteisTotais - projecao.diasUteisDecorridos, 0);
     const diff = workingDaysInfo.monthlyDays - workingDaysInfo.elapsedDays;
     return diff > 0 ? diff : 0;
-  }, [workingDaysInfo]);
+  }, [projecao, workingDaysInfo]);
 
   // 3. Bloco 2 — Atividade
   const assignedDeals = useMemo(() => {
     if (!agent) return [];
     return opportunities.filter(op => op.nomeUsuarioResponsavel === agent.usuarioNome);
   }, [opportunities, agent?.usuarioNome]);
+
+  // Vendas fechadas no mês selecionado (usa dataFechamentoVenda)
+  const closedSalesInMonth = useMemo(() => {
+    return assignedDeals
+      .filter(op => {
+        if (op.idStauts !== 3 || !op.dataFechamentoVenda) return false;
+        return op.dataFechamentoVenda.startsWith(monitoringMonth);
+      })
+      .sort((a, b) => {
+        const da = new Date(a.dataFechamentoVenda!).getTime();
+        const db = new Date(b.dataFechamentoVenda!).getTime();
+        return db - da;
+      });
+  }, [assignedDeals, monitoringMonth]);
+
+  const closedSalesTotal = useMemo(() =>
+    closedSalesInMonth.reduce((s, op) => s + (op.valor || 0), 0),
+  [closedSalesInMonth]);
 
   const totalLeads = assignedDeals.length;
 
@@ -222,6 +248,11 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
                 <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                   <em>Exemplo simples: Se você vendeu R$ 2.000 em 5 dias de trabalho, sua média é de R$ 400 por dia. Em um mês de 20 dias de trabalho, sua projeção de fechamento será de R$ 8.000 (R$ 400 x 20).</em>
                 </p>
+                {projecao && (
+                  <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: 'var(--color-success)' }}>
+                    ✓ Projeção calculada com base na <strong>data real de fechamento</strong> das vendas ({projecao.diasUteisDecorridos} de {projecao.diasUteisTotais} dias úteis decorridos).
+                  </p>
+                )}
               </div>
             )}
             <div className="seller-kpi-cards-grid">
@@ -331,7 +362,69 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
             </div>
           </section>
 
-          {/* BLOCO 3 — FUNIL INDIVIDUAL */}
+          {/* BLOCO 3 — VENDAS DO MÊS */}
+          <section className="seller-modal-section">
+            <button
+              className="sales-toggle-btn"
+              onClick={() => setShowSales(v => !v)}
+            >
+              <span className="sales-toggle-left">
+                <FaHandshake />
+                <span>Vendas fechadas no mês</span>
+                <span className="sales-toggle-count">{closedSalesInMonth.length}</span>
+              </span>
+              <span className="sales-toggle-summary">
+                {formatCurrency(closedSalesTotal)}
+                {showSales ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+              </span>
+            </button>
+
+            {showSales && (
+              <div className="sales-list-wrapper">
+                {closedSalesInMonth.length === 0 ? (
+                  <p className="sales-empty">Nenhuma venda fechada neste mês.</p>
+                ) : (
+                  <table className="sales-table">
+                    <thead>
+                      <tr>
+                        <th>Cliente</th>
+                        <th>Data de Fechamento</th>
+                        <th style={{ textAlign: 'right' }}>Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {closedSalesInMonth.map(op => (
+                        <tr key={op.idConversa}>
+                          <td>
+                            <span className="sales-contact-name">{op.nomeContato || '—'}</span>
+                            <span className="sales-phone">{op.numeroWhatsapp}</span>
+                          </td>
+                          <td>
+                            {op.dataFechamentoVenda
+                              ? new Date(op.dataFechamentoVenda).toLocaleDateString('pt-BR')
+                              : '—'}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <strong>{formatCurrency(op.valor || 0)}</strong>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colSpan={2} style={{ fontWeight: 700, paddingTop: '12px' }}>Total</td>
+                        <td style={{ textAlign: 'right', fontWeight: 700, paddingTop: '12px' }}>
+                          {formatCurrency(closedSalesTotal)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* BLOCO 4 — FUNIL INDIVIDUAL */}
           <section className="seller-modal-section">
             <h3 className="section-title"><FaCalendarAlt /> Funil de Vendas</h3>
             <div className="funnel-summary-table-wrapper">

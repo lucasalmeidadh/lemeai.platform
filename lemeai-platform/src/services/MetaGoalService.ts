@@ -9,6 +9,7 @@ export interface MetaGoal {
   alvoNome: string;
   tipo: 'value' | 'quantity' | 'calls';
   valorAlvo: number;
+  valorRealizado: number;
   mes: string;
 }
 

@@ -4,7 +4,7 @@ import './UserFormModal.css';
 import './GoalFormModal.css';
 
 export interface MockUser { id: number; name: string; }
-export interface MockTeam { id: number; name: string; }
+export interface MockTeam { id: number; name: string; memberCount?: number; }
 
 export interface Goal {
   id: string;
@@ -13,6 +13,7 @@ export interface Goal {
   targetName: string;
   type: 'value' | 'quantity' | 'calls';
   targetValue: number;
+  realizedValue?: number;
   month: string;
 }
 
@@ -65,7 +66,7 @@ const GoalFormModal: React.FC<GoalFormModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
-      id: goalToEdit?.id ?? Date.now().toString(),
+      id: goalToEdit?.id ?? `new_${Date.now()}`,
       targetType,
       targetId,
       targetName: getTargetName(),
@@ -78,6 +79,8 @@ const GoalFormModal: React.FC<GoalFormModalProps> = ({
   if (!isOpen) return null;
 
   const options = targetType === 'user' ? users : teams;
+  const selectedTeam = targetType === 'team' ? teams.find(t => t.id === targetId) : null;
+  const memberCount = selectedTeam?.memberCount ?? 0;
 
   return (
     <div className="modal-overlay">
@@ -138,6 +141,34 @@ const GoalFormModal: React.FC<GoalFormModalProps> = ({
                   required
                 />
               </div>
+
+              {targetType === 'team' && !goalToEdit && (
+                <div className="form-group full-width">
+                  <div className="team-distribution-info">
+                    {memberCount > 0 ? (
+                      <>
+                        <span className="distribution-icon">⚡</span>
+                        <span>
+                          A meta será distribuída igualmente entre os <strong>{memberCount} membro(s)</strong> da equipe
+                          {targetValue && Number(targetValue) > 0 && (
+                            <> — <strong>
+                              {type === 'value'
+                                ? `R$ ${(Math.round((Number(targetValue) / memberCount) * 100) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                                : Math.floor(Number(targetValue) / memberCount).toLocaleString('pt-BR')
+                              }
+                            </strong> por vendedor</>
+                          )}.
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="distribution-icon">⚠️</span>
+                        <span>Esta equipe não possui membros cadastrados. A meta será salva apenas para a equipe.</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="form-group full-width">
                 <label>Valor Alvo</label>

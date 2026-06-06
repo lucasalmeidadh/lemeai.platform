@@ -1,28 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { FaPlus, FaCalendarCheck, FaCopy, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaCopy, FaEdit, FaTrash } from 'react-icons/fa';
 import GoalFormModal from '../components/GoalFormModal';
 import type { Goal, MockUser, MockTeam } from '../components/GoalFormModal';
+import type { Equipe } from '../services/EquipeService';
 import ConfirmationModal from '../components/ConfirmationModal';
 import MetaGoalService from '../services/MetaGoalService';
 import EquipeService from '../services/EquipeService';
-import ConfiguracaoService, { DEFAULT_DIAS_UTEIS } from '../services/ConfiguracaoService';
-import type { DiasUteis } from '../services/ConfiguracaoService';
 import { apiFetch } from '../services/api';
 import './GoalsPage.css';
 import './UserManagementPage.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
-
-const DAY_LABELS: { key: keyof DiasUteis; label: string }[] = [
-  { key: 'segunda', label: 'Segunda-feira' },
-  { key: 'terca',   label: 'Terça-feira' },
-  { key: 'quarta',  label: 'Quarta-feira' },
-  { key: 'quinta',  label: 'Quinta-feira' },
-  { key: 'sexta',   label: 'Sexta-feira' },
-  { key: 'sabado',  label: 'Sábado' },
-  { key: 'domingo', label: 'Domingo' },
-];
 
 const getCurrentMonth = () => {
   const d = new Date();
@@ -55,8 +44,8 @@ const formatGoalValue = (value: number, type: string) => {
 const GoalsPage = () => {
   const [users, setUsers] = useState<MockUser[]>([]);
   const [teams, setTeams] = useState<MockTeam[]>([]);
+  const [equipes, setEquipes] = useState<Equipe[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [workingDays, setWorkingDays] = useState<DiasUteis>(DEFAULT_DIAS_UTEIS);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
@@ -66,7 +55,6 @@ const GoalsPage = () => {
   const [goalToEdit, setGoalToEdit] = useState<Goal | null>(null);
   const [goalToDeleteId, setGoalToDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isSavingDays, setIsSavingDays] = useState(false);
 
   const fetchGoals = useCallback(async (mes: string) => {
     try {
@@ -78,6 +66,7 @@ const GoalsPage = () => {
         targetName: m.alvoNome,
         type: m.tipo,
         targetValue: m.valorAlvo,
+        realizedValue: m.valorRealizado,
         month: m.mes,
       })));
     } catch (err: any) {
@@ -87,14 +76,13 @@ const GoalsPage = () => {
 
   const fetchStaticData = useCallback(async () => {
     try {
-      const [equipes, usersRes, dias] = await Promise.all([
+      const [equipes, usersRes] = await Promise.all([
         EquipeService.buscarTodas(),
         apiFetch(`${API_URL}/api/Usuario/BuscarTodos`),
-        ConfiguracaoService.getDiasUteis(),
       ]);
 
-      setTeams(equipes.map(e => ({ id: e.id, name: e.nome })));
-      setWorkingDays(dias);
+      setEquipes(equipes);
+      setTeams(equipes.map(e => ({ id: e.id, name: e.nome, memberCount: e.membros.length })));
 
       const usersData = await usersRes.json();
       if (usersData.sucesso && Array.isArray(usersData.dados)) {
@@ -130,7 +118,37 @@ const GoalsPage = () => {
         toast.success('Meta atualizada!');
       } else {
         await MetaGoalService.criar(dto);
-        toast.success('Meta cadastrada com sucesso!');
+
+        if (goal.targetType === 'team') {
+          const equipe = equipes.find(e => e.id === goal.targetId);
+          const membros = equipe?.membros ?? [];
+          if (membros.length > 0) {
+            const valorPorMembro = goal.type === 'value'
+              ? Math.round((goal.targetValue / membros.length) * 100) / 100
+              : Math.floor(goal.targetValue / membros.length);
+
+            await Promise.allSettled(
+              membros.map(m =>
+                MetaGoalService.criar({
+                  tipoAlvo: 'user',
+                  alvoId: m.id,
+                  tipo: goal.type,
+                  valorAlvo: valorPorMembro,
+                  mes: goal.month,
+                })
+              )
+            );
+
+            const valorFormatado = goal.type === 'value'
+              ? `R$ ${valorPorMembro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+              : valorPorMembro.toLocaleString('pt-BR');
+            toast.success(`Meta da equipe criada! ${valorFormatado} distribuído para ${membros.length} vendedor(es).`);
+          } else {
+            toast.success('Meta da equipe cadastrada com sucesso!');
+          }
+        } else {
+          toast.success('Meta cadastrada com sucesso!');
+        }
       }
       setIsModalOpen(false);
       setGoalToEdit(null);
@@ -169,21 +187,6 @@ const GoalsPage = () => {
       }
     } catch (err: any) {
       toast.error(err.message ?? 'Erro ao replicar metas.');
-    }
-  };
-
-  const handleWorkingDayChange = async (day: keyof DiasUteis) => {
-    const updated = { ...workingDays, [day]: !workingDays[day] };
-    setWorkingDays(updated);
-    setIsSavingDays(true);
-    try {
-      await ConfiguracaoService.updateDiasUteis(updated);
-      toast.success('Dias de funcionamento atualizados!');
-    } catch (err: any) {
-      setWorkingDays(workingDays);
-      toast.error(err.message ?? 'Erro ao atualizar dias.');
-    } finally {
-      setIsSavingDays(false);
     }
   };
 
@@ -269,51 +272,68 @@ const GoalsPage = () => {
               <thead>
                 <tr>
                   <th>Tipo de Meta</th>
-                  <th>Valor Alvo</th>
+                  <th>Meta</th>
+                  <th>Progresso</th>
                   <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={3} className="empty-state">Carregando...</td>
+                    <td colSpan={4} className="empty-state">Carregando...</td>
                   </tr>
                 ) : Object.keys(grouped).length > 0 ? (
                   Object.entries(grouped).map(([key, group]) => (
                     <>
                       <tr key={`header-${key}`} className="group-header-row">
-                        <td colSpan={3}>
+                        <td colSpan={4}>
                           <span className={`group-type-badge ${group.targetType}`}>
                             {group.targetType === 'user' ? 'Colaborador' : 'Equipe'}
                           </span>
                           {group.goals[0].targetName}
                         </td>
                       </tr>
-                      {group.goals.map(g => (
-                        <tr key={g.id} className="group-child-row">
-                          <td>
-                            <span className={`type-badge type-${g.type}`}>
-                              {formatGoalType(g.type)}
-                            </span>
-                          </td>
-                          <td><strong>{formatGoalValue(g.targetValue, g.type)}</strong></td>
-                          <td>
-                            <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
-                              <button className="action-icon-btn edit" onClick={() => handleOpenEdit(g)} title="Editar">
-                                <FaEdit size={14} />
-                              </button>
-                              <button className="action-icon-btn delete" onClick={() => setGoalToDeleteId(g.id)} title="Remover">
-                                <FaTrash size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                      {group.goals.map(g => {
+                        const realized = g.realizedValue ?? 0;
+                        const pct = g.targetValue > 0 ? Math.min(Math.round((realized / g.targetValue) * 100), 100) : 0;
+                        const barColor = pct >= 100 ? 'goal-bar-green' : pct >= 70 ? 'goal-bar-yellow' : 'goal-bar-red';
+                        return (
+                          <tr key={g.id} className="group-child-row">
+                            <td>
+                              <span className={`type-badge type-${g.type}`}>
+                                {formatGoalType(g.type)}
+                              </span>
+                            </td>
+                            <td><strong>{formatGoalValue(g.targetValue, g.type)}</strong></td>
+                            <td>
+                              <div className="goal-progress-cell">
+                                <div className="goal-progress-track">
+                                  <div className={`goal-progress-fill ${barColor}`} style={{ width: `${pct}%` }} />
+                                </div>
+                                <span className="goal-progress-label">
+                                  <strong>{formatGoalValue(realized, g.type)}</strong>
+                                  <span className="goal-progress-pct">{pct}%</span>
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
+                                <button className="action-icon-btn edit" onClick={() => handleOpenEdit(g)} title="Editar">
+                                  <FaEdit size={14} />
+                                </button>
+                                <button className="action-icon-btn delete" onClick={() => setGoalToDeleteId(g.id)} title="Remover">
+                                  <FaTrash size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="empty-state">
+                    <td colSpan={4} className="empty-state">
                       Nenhuma meta cadastrada para {formatMonth(selectedMonth)}.
                     </td>
                   </tr>
@@ -323,26 +343,6 @@ const GoalsPage = () => {
           </div>
         </div>
 
-        <div className="dashboard-card working-days-card">
-          <div className="card-header">
-            <h3><FaCalendarCheck /> Dias de Funcionamento</h3>
-            <p className="card-subtitle">Selecione os dias que a empresa opera para o cálculo de metas diárias.</p>
-          </div>
-          <div className="working-days-list">
-            {DAY_LABELS.map(day => (
-              <label key={day.key} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={workingDays[day.key]}
-                  onChange={() => handleWorkingDayChange(day.key)}
-                  disabled={isSavingDays}
-                />
-                <span className="checkbox-custom"></span>
-                <span className="label-text">{day.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
       </div>
     </>
   );

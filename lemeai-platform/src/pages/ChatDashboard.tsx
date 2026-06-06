@@ -8,7 +8,7 @@ import TeamMonitoringModal, { type TeamMember } from '../components/TeamMonitori
 import SellerMonitoringModal from '../components/SellerMonitoringModal';
 import MonthPicker from '../components/MonthPicker';
 import RelatorioService from '../services/RelatorioService';
-import type { PerformanceIndividual, PerformanceEquipe } from '../services/RelatorioService';
+import type { PerformanceIndividual, PerformanceEquipe, ProjecaoFechamento } from '../services/RelatorioService';
 import { OpportunityService, type Opportunity } from '../services/OpportunityService';
 import EquipeService, { type Equipe } from '../services/EquipeService';
 import ConfiguracaoService from '../services/ConfiguracaoService';
@@ -40,10 +40,11 @@ const ChatDashboard = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoadingIndividual, setIsLoadingIndividual] = useState(false);
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
-  
+
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [teams, setTeams] = useState<Equipe[]>([]);
   const [selectedSeller, setSelectedSeller] = useState<PerformanceIndividual | null>(null);
+  const [sellerProjecao, setSellerProjecao] = useState<ProjecaoFechamento | null>(null);
 
   const workingDaysInfo = useMemo(() => {
     const d = new Date();
@@ -71,13 +72,13 @@ const ChatDashboard = () => {
   useEffect(() => {
     ConfiguracaoService.getDiasUteis()
       .then(setWorkingDays)
-      .catch(() => {/* keep default */});
+      .catch(() => {/* keep default */ });
     OpportunityService.getAllOpportunities()
       .then(setOpportunities)
-      .catch(() => {});
+      .catch(() => { });
     EquipeService.buscarTodas()
       .then(setTeams)
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const fetchIndividual = useCallback(async (mes: string) => {
@@ -108,6 +109,17 @@ const ChatDashboard = () => {
     if (activeTab === 'monitoring') fetchIndividual(monitoringMonth);
     if (activeTab === 'teams') fetchTeams(monitoringMonth);
   }, [activeTab, monitoringMonth, fetchIndividual, fetchTeams]);
+
+  const handleSellerClick = useCallback(async (agent: PerformanceIndividual) => {
+    setSelectedSeller(agent);
+    setSellerProjecao(null);
+    try {
+      const projecao = await RelatorioService.getProjecaoFechamento(monitoringMonth, agent.usuarioId);
+      setSellerProjecao(projecao);
+    } catch {
+      // projeção local como fallback no modal
+    }
+  }, [monitoringMonth]);
 
   const handleTeamClick = useCallback(async (equipeId: number, mes: string) => {
     setSelectedTeamId(equipeId);
@@ -141,7 +153,7 @@ const ChatDashboard = () => {
 
   const monthlyProgressPercent = useMemo(() =>
     totalMonthlyGoal > 0 ? Math.round((totalSalesRealized / totalMonthlyGoal) * 100) : 0,
-  [totalSalesRealized, totalMonthlyGoal]);
+    [totalSalesRealized, totalMonthlyGoal]);
 
   const targetDailyValue = useMemo(() =>
     totalMonthlyGoal / workingDaysInfo.monthlyDays, [totalMonthlyGoal, workingDaysInfo]);
@@ -151,26 +163,30 @@ const ChatDashboard = () => {
 
   const dailySalesRealized = useMemo(() =>
     workingDaysInfo.elapsedDays > 0 ? totalSalesRealized / workingDaysInfo.elapsedDays : 0,
-  [totalSalesRealized, workingDaysInfo]);
+    [totalSalesRealized, workingDaysInfo]);
 
   const weeklySalesRealized = useMemo(() =>
     dailySalesRealized * workingDaysInfo.weeklyDays, [dailySalesRealized, workingDaysInfo]);
 
   const weeklyProgressPercent = useMemo(() =>
     targetWeeklyValue > 0 ? Math.round((weeklySalesRealized / targetWeeklyValue) * 100) : 0,
-  [weeklySalesRealized, targetWeeklyValue]);
+    [weeklySalesRealized, targetWeeklyValue]);
 
   const dailyProgressPercent = useMemo(() =>
     targetDailyValue > 0 ? Math.round((dailySalesRealized / targetDailyValue) * 100) : 0,
-  [dailySalesRealized, targetDailyValue]);
+    [dailySalesRealized, targetDailyValue]);
 
   const projectedClosure = useMemo(() =>
     dailySalesRealized * workingDaysInfo.monthlyDays,
-  [dailySalesRealized, workingDaysInfo]);
+    [dailySalesRealized, workingDaysInfo]);
 
   const rankedAgents = useMemo(() =>
     [...individualPerf].sort((a, b) => b.totalFaturado - a.totalFaturado),
-  [individualPerf]);
+    [individualPerf]);
+
+  const maxFaturadoForBar = useMemo(() =>
+    Math.max(...rankedAgents.map(a => a.totalFaturado), 1),
+    [rankedAgents]);
 
   // ── Teams aggregates ──────────────────────────────────────────
   const totalTeamSalesRealized = useMemo(() =>
@@ -184,14 +200,14 @@ const ChatDashboard = () => {
 
   const teamMonthlyProgress = useMemo(() =>
     totalTeamMonthlyGoal > 0 ? Math.round((totalTeamSalesRealized / totalTeamMonthlyGoal) * 100) : 0,
-  [totalTeamSalesRealized, totalTeamMonthlyGoal]);
+    [totalTeamSalesRealized, totalTeamMonthlyGoal]);
 
   const teamTargetDaily = useMemo(() =>
     totalTeamMonthlyGoal / workingDaysInfo.monthlyDays, [totalTeamMonthlyGoal, workingDaysInfo]);
 
   const teamDailySales = useMemo(() =>
     workingDaysInfo.elapsedDays > 0 ? totalTeamSalesRealized / workingDaysInfo.elapsedDays : 0,
-  [totalTeamSalesRealized, workingDaysInfo]);
+    [totalTeamSalesRealized, workingDaysInfo]);
 
   const teamTargetWeekly = useMemo(() =>
     teamTargetDaily * workingDaysInfo.weeklyDays, [teamTargetDaily, workingDaysInfo]);
@@ -201,19 +217,19 @@ const ChatDashboard = () => {
 
   const teamWeeklyProgress = useMemo(() =>
     teamTargetWeekly > 0 ? Math.round((teamWeeklySales / teamTargetWeekly) * 100) : 0,
-  [teamWeeklySales, teamTargetWeekly]);
+    [teamWeeklySales, teamTargetWeekly]);
 
   const teamDailyProgress = useMemo(() =>
     teamTargetDaily > 0 ? Math.round((teamDailySales / teamTargetDaily) * 100) : 0,
-  [teamDailySales, teamTargetDaily]);
+    [teamDailySales, teamTargetDaily]);
 
   const teamProjectedClosure = useMemo(() =>
     teamDailySales * workingDaysInfo.monthlyDays,
-  [teamDailySales, workingDaysInfo]);
+    [teamDailySales, workingDaysInfo]);
 
   const selectedTeam = useMemo(() =>
     selectedTeamId !== null ? teamPerf.find(t => t.equipeId === selectedTeamId) ?? null : null,
-  [selectedTeamId, teamPerf]);
+    [selectedTeamId, teamPerf]);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -223,14 +239,14 @@ const ChatDashboard = () => {
 
   const getProgressBarColorClass = (pct: number) => {
     if (pct >= 100) return 'progress-green';
-    if (pct >= 70)  return 'progress-yellow';
+    if (pct >= 70) return 'progress-yellow';
     return 'progress-red';
   };
 
   const getStatusBadge = (pct: number) => {
-    if (pct >= 100) return { label: 'Atingida',  cls: 'status-achieved' };
-    if (pct >= 70)  return { label: 'No prazo',  cls: 'status-on-track' };
-    return              { label: 'Em risco',  cls: 'status-at-risk'  };
+    if (pct >= 100) return { label: 'Atingida', cls: 'status-achieved' };
+    if (pct >= 70) return { label: 'No prazo', cls: 'status-on-track' };
+    return { label: 'Em risco', cls: 'status-at-risk' };
   };
 
   return (
@@ -246,8 +262,10 @@ const ChatDashboard = () => {
 
       <SellerMonitoringModal
         isOpen={selectedSeller !== null}
-        onClose={() => setSelectedSeller(null)}
+        onClose={() => { setSelectedSeller(null); setSellerProjecao(null); }}
         agent={selectedSeller}
+        projecao={sellerProjecao}
+        monitoringMonth={monitoringMonth}
         opportunities={opportunities}
         individualPerf={individualPerf}
         teams={teams}
@@ -283,27 +301,20 @@ const ChatDashboard = () => {
 
       {/* ── ANALYTICS ──────────────────────────────────────────── */}
       {activeTab === 'analytics' && (
-        <AnalyticsPage goals={[]} currentMonth={currentMonthStr} />
+        <AnalyticsPage goals={[]} selectedMonth={monitoringMonth} onMonthChange={setMonitoringMonth} />
       )}
 
       {/* ── INDIVIDUAL ─────────────────────────────────────────── */}
       {activeTab === 'monitoring' && (
         <>
-          <MonthPicker value={monitoringMonth} onChange={setMonitoringMonth} />
+          <div className="analytics-header" style={{ marginBottom: '1.5rem' }}>
+            <div className="header-actions">
+              <MonthPicker value={monitoringMonth} onChange={setMonitoringMonth} />
+            </div>
+          </div>
 
           {isLoadingIndividual ? (
             <>
-              <div className="compact-kpi-grid">
-                {[0, 1, 2, 3].map(i => (
-                  <div key={i} className="compact-kpi-card">
-                    <span className="skeleton" style={{ width: '2.875rem', height: '2.875rem', borderRadius: '0.625rem', flexShrink: 0 }} />
-                    <div className="compact-kpi-info" style={{ flex: 1, gap: '10px' }}>
-                      <span className="skeleton skeleton-text-xs" style={{ width: '90px' }} />
-                      <span className="skeleton skeleton-text-xl" style={{ width: '150px' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
               <div className="dashboard-card team-goals-block">
                 <span className="skeleton skeleton-text-md" style={{ width: '260px', marginBottom: '24px' }} />
                 <span className="skeleton" style={{ height: '10px', borderRadius: '99px', display: 'block', marginBottom: '16px' }} />
@@ -325,37 +336,6 @@ const ChatDashboard = () => {
             </>
           ) : (
             <>
-              <div className="compact-kpi-grid">
-                <div className="compact-kpi-card">
-                  <div className="compact-kpi-icon"><FaDollarSign /></div>
-                  <div className="compact-kpi-info">
-                    <span className="compact-kpi-label">Faturamento Total</span>
-                    <strong className="compact-kpi-value">{formatCurrency(totalSalesRealized)}</strong>
-                  </div>
-                </div>
-                <div className="compact-kpi-card">
-                  <div className="compact-kpi-icon"><FaTrophy /></div>
-                  <div className="compact-kpi-info">
-                    <span className="compact-kpi-label">Meta Coletiva</span>
-                    <strong className="compact-kpi-value">{formatCurrency(totalMonthlyGoal)}</strong>
-                  </div>
-                </div>
-                <div className="compact-kpi-card">
-                  <div className="compact-kpi-icon"><FaHourglassHalf /></div>
-                  <div className="compact-kpi-info">
-                    <span className="compact-kpi-label">Projeção do Mês</span>
-                    <strong className="compact-kpi-value">{formatCurrency(projectedClosure)}</strong>
-                  </div>
-                </div>
-                <div className="compact-kpi-card">
-                  <div className="compact-kpi-icon"><FaPhoneAlt /></div>
-                  <div className="compact-kpi-info">
-                    <span className="compact-kpi-label">Ligações Realizadas</span>
-                    <strong className="compact-kpi-value">{totalCallsRealized} / {totalMonthlyCallsGoal}</strong>
-                  </div>
-                </div>
-              </div>
-
               {totalMonthlyGoal > 0 && (
                 <div className="dashboard-card team-goals-block">
                   <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
@@ -379,41 +359,53 @@ const ChatDashboard = () => {
                   <div className="stacked-progress-bars">
                     {goalsTimeframe === 'month' && (
                       <div className="progress-row">
-                        <span className="progress-label">Meta do Mês</span>
-                        <div className="progress-track-wrapper">
-                          <div className="progress-track-bg">
-                            <div className={`progress-track-fill ${getProgressBarColorClass(monthlyProgressPercent)}`} style={{ width: `${Math.min(monthlyProgressPercent, 100)}%` }} />
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta do Mês</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(totalMonthlyGoal)}</strong>
                           </div>
                         </div>
-                        <span className="progress-values">
-                          <strong>{formatCurrency(totalSalesRealized)}</strong> / {formatCurrency(totalMonthlyGoal)} ({monthlyProgressPercent}%)
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalSalesRealized)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(monthlyProgressPercent)}`} style={{ width: `${Math.min(monthlyProgressPercent, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{monthlyProgressPercent}%</span>
+                        </div>
                       </div>
                     )}
                     {goalsTimeframe === 'week' && (
                       <div className="progress-row">
-                        <span className="progress-label">Meta da Semana</span>
-                        <div className="progress-track-wrapper">
-                          <div className="progress-track-bg">
-                            <div className={`progress-track-fill ${getProgressBarColorClass(weeklyProgressPercent)}`} style={{ width: `${Math.min(weeklyProgressPercent, 100)}%` }} />
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta da Semana</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(targetWeeklyValue)}</strong>
                           </div>
                         </div>
-                        <span className="progress-values">
-                          <strong>{formatCurrency(weeklySalesRealized)}</strong> / {formatCurrency(targetWeeklyValue)} ({weeklyProgressPercent}%)
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(weeklySalesRealized)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(weeklyProgressPercent)}`} style={{ width: `${Math.min(weeklyProgressPercent, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{weeklyProgressPercent}%</span>
+                        </div>
                       </div>
                     )}
                     {goalsTimeframe === 'day' && (
                       <div className="progress-row">
-                        <span className="progress-label">Meta do Dia</span>
-                        <div className="progress-track-wrapper">
-                          <div className="progress-track-bg">
-                            <div className={`progress-track-fill ${getProgressBarColorClass(dailyProgressPercent)}`} style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }} />
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta do Dia</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(targetDailyValue)}</strong>
                           </div>
                         </div>
-                        <span className="progress-values">
-                          <strong>{formatCurrency(dailySalesRealized)}</strong> / {formatCurrency(targetDailyValue)} ({dailyProgressPercent}%)
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(dailySalesRealized)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(dailyProgressPercent)}`} style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{dailyProgressPercent}%</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -451,7 +443,7 @@ const ChatDashboard = () => {
                         return (
                           <tr
                             key={agent.usuarioId}
-                            onClick={() => setSelectedSeller(agent)}
+                            onClick={() => handleSellerClick(agent)}
                             style={{ cursor: 'pointer' }}
                             title="Clique para ver detalhes do vendedor"
                           >
@@ -474,11 +466,28 @@ const ChatDashboard = () => {
                               <div className="ranking-progress-wrapper">
                                 <div className="ranking-progress-header">
                                   <div className="progress-bar-bg">
-                                    <div className="progress-bar-fill value" style={{ width: `${Math.min(agent.percentualFaturamento, 100)}%` }} />
+                                    <div
+                                      className={`progress-track-fill ${getProgressBarColorClass(
+                                        agent.metaFaturamento > 0
+                                          ? agent.percentualFaturamento
+                                          : Math.round((agent.totalFaturado / maxFaturadoForBar) * 100)
+                                      )}`}
+                                      style={{
+                                        width: agent.metaFaturamento > 0
+                                          ? `${Math.min(agent.percentualFaturamento, 100)}%`
+                                          : `${Math.round((agent.totalFaturado / maxFaturadoForBar) * 100)}%`
+                                      }}
+                                    />
                                   </div>
-                                  <span className="ranking-percent-text">{agent.percentualFaturamento}%</span>
+                                  <span className="ranking-percent-text">
+                                    {agent.metaFaturamento > 0 ? `${agent.percentualFaturamento}%` : '—'}
+                                  </span>
                                 </div>
-                                <span className="meta-target-caption">Meta: {formatCurrency(agent.metaFaturamento)}</span>
+                                <span className="meta-target-caption">
+                                  {agent.metaFaturamento > 0
+                                    ? `Meta: ${formatCurrency(agent.metaFaturamento)}`
+                                    : 'Sem meta definida'}
+                                </span>
                               </div>
                             </td>
                           </tr>
@@ -496,21 +505,14 @@ const ChatDashboard = () => {
       {/* ── EQUIPES ────────────────────────────────────────────── */}
       {activeTab === 'teams' && (
         <>
-          <MonthPicker value={monitoringMonth} onChange={setMonitoringMonth} />
+          <div className="analytics-header" style={{ marginBottom: '1.5rem' }}>
+            <div className="header-actions">
+              <MonthPicker value={monitoringMonth} onChange={setMonitoringMonth} />
+            </div>
+          </div>
 
           {isLoadingTeams ? (
             <>
-              <div className="compact-kpi-grid">
-                {[0, 1].map(i => (
-                  <div key={i} className="compact-kpi-card">
-                    <span className="skeleton" style={{ width: '2.875rem', height: '2.875rem', borderRadius: '0.625rem', flexShrink: 0 }} />
-                    <div className="compact-kpi-info" style={{ flex: 1, gap: '10px' }}>
-                      <span className="skeleton skeleton-text-xs" style={{ width: '90px' }} />
-                      <span className="skeleton skeleton-text-xl" style={{ width: '150px' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
               <div className="dashboard-card team-goals-block">
                 <span className="skeleton skeleton-text-md" style={{ width: '240px', marginBottom: '24px' }} />
                 <span className="skeleton" style={{ height: '10px', borderRadius: '99px', display: 'block', marginBottom: '16px' }} />
@@ -545,29 +547,11 @@ const ChatDashboard = () => {
             </>
           ) : (
             <>
-              <div className="compact-kpi-grid">
-                <div className="compact-kpi-card">
-                  <div className="compact-kpi-icon"><FaDollarSign /></div>
-                  <div className="compact-kpi-info">
-                    <span className="compact-kpi-label">Faturamento Total</span>
-                    <strong className="compact-kpi-value">{formatCurrency(totalTeamSalesRealized)}</strong>
-                  </div>
-                </div>
-                <div className="compact-kpi-card">
-                  <div className="compact-kpi-icon"><FaPhoneAlt /></div>
-                  <div className="compact-kpi-info">
-                    <span className="compact-kpi-label">Ligações Realizadas</span>
-                    <strong className="compact-kpi-value">{totalTeamCallsRealized}</strong>
-                  </div>
-                </div>
-              </div>
-
               {totalTeamMonthlyGoal > 0 && (
                 <div className="dashboard-card team-goals-block">
                   <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
                     <div>
                       <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho das Equipes</h3>
-                      <p className="card-subtitle">Acompanhamento proporcional com base nos dias úteis configurados.</p>
                     </div>
                     <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
                       {(['month', 'week', 'day'] as const).map(tf => (
@@ -585,41 +569,53 @@ const ChatDashboard = () => {
                   <div className="stacked-progress-bars">
                     {goalsTimeframe === 'month' && (
                       <div className="progress-row">
-                        <span className="progress-label">Meta do Mês</span>
-                        <div className="progress-track-wrapper">
-                          <div className="progress-track-bg">
-                            <div className={`progress-track-fill ${getProgressBarColorClass(teamMonthlyProgress)}`} style={{ width: `${Math.min(teamMonthlyProgress, 100)}%` }} />
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta do Mês</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(totalTeamMonthlyGoal)}</strong>
                           </div>
                         </div>
-                        <span className="progress-values">
-                          <strong>{formatCurrency(totalTeamSalesRealized)}</strong> / {formatCurrency(totalTeamMonthlyGoal)} ({teamMonthlyProgress}%)
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalTeamSalesRealized)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(teamMonthlyProgress)}`} style={{ width: `${Math.min(teamMonthlyProgress, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamMonthlyProgress}%</span>
+                        </div>
                       </div>
                     )}
                     {goalsTimeframe === 'week' && (
                       <div className="progress-row">
-                        <span className="progress-label">Meta da Semana</span>
-                        <div className="progress-track-wrapper">
-                          <div className="progress-track-bg">
-                            <div className={`progress-track-fill ${getProgressBarColorClass(teamWeeklyProgress)}`} style={{ width: `${Math.min(teamWeeklyProgress, 100)}%` }} />
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta da Semana</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(teamTargetWeekly)}</strong>
                           </div>
                         </div>
-                        <span className="progress-values">
-                          <strong>{formatCurrency(teamWeeklySales)}</strong> / {formatCurrency(teamTargetWeekly)} ({teamWeeklyProgress}%)
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(teamWeeklySales)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(teamWeeklyProgress)}`} style={{ width: `${Math.min(teamWeeklyProgress, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamWeeklyProgress}%</span>
+                        </div>
                       </div>
                     )}
                     {goalsTimeframe === 'day' && (
                       <div className="progress-row">
-                        <span className="progress-label">Meta do Dia</span>
-                        <div className="progress-track-wrapper">
-                          <div className="progress-track-bg">
-                            <div className={`progress-track-fill ${getProgressBarColorClass(teamDailyProgress)}`} style={{ width: `${Math.min(teamDailyProgress, 100)}%` }} />
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta do Dia</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(teamTargetDaily)}</strong>
                           </div>
                         </div>
-                        <span className="progress-values">
-                          <strong>{formatCurrency(teamDailySales)}</strong> / {formatCurrency(teamTargetDaily)} ({teamDailyProgress}%)
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(teamDailySales)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(teamDailyProgress)}`} style={{ width: `${Math.min(teamDailyProgress, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamDailyProgress}%</span>
+                        </div>
                       </div>
                     )}
                   </div>

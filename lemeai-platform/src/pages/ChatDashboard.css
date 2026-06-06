@@ -132,6 +132,10 @@
 .team-goals-block {
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .stacked-progress-bars {
@@ -139,29 +143,37 @@
   flex-direction: column;
   gap: 1.25rem;
   margin: 1.5rem 0;
+  max-width: 600px;
+  width: 100%;
+  align-self: center;
 }
 
 .progress-row {
-  display: grid;
-  grid-template-columns: 8.75rem 1fr 19.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.progress-row-header {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: 0.25rem;
+  text-align: center;
 }
 
 /* progress bar label */
 .progress-label {
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: var(--font-base);
-}
-
-.progress-track-wrapper {
-  width: 100%;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  font-size: var(--font-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .progress-track-bg {
   width: 100%;
-  height: 0.625rem;
+  height: 1rem;
   background: var(--bg-tertiary);
   border-radius: 99px;
   overflow: hidden;
@@ -177,21 +189,40 @@
 .progress-yellow { background: linear-gradient(90deg, #f59e0b, #d97706); }
 .progress-red    { background: linear-gradient(90deg, #ef4444, #dc2626); }
 
-/* progress values column */
+/* progress values — shown centered above the bar */
 .progress-values {
-  font-size: var(--font-sm);
-  color: var(--text-tertiary);
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .progress-values strong {
   color: var(--text-primary);
-  font-size: var(--font-base);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.progress-realized {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.progress-pct {
+  color: var(--text-tertiary);
+  font-size: var(--font-sm);
 }
 
 .projection-footer {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.625rem;
   background: var(--bg-tertiary);
   padding: 0.75rem 1.125rem;
@@ -200,6 +231,8 @@
   font-size: var(--font-base);
   color: var(--text-secondary);
   margin-top: 0.625rem;
+  width: 100%;
+  max-width: 600px;
 }
 
 .projection-icon {
@@ -622,11 +655,7 @@
   .compact-kpi-grid {
     grid-template-columns: 1fr;
   }
-  .progress-row {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-  .progress-values {
-    text-align: left;
+  .progress-values strong {
+    font-size: 1.4rem;
   }
 }

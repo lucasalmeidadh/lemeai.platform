@@ -17,6 +17,7 @@ export interface Opportunity {
     nomeContato: string;
     numeroWhatsapp: string;
     dataConversaCriada: string;
+    dataFechamentoVenda: string | null;
     idStauts: number;
     descricaoStatus: string;
     nomeUsuarioResponsavel: string;

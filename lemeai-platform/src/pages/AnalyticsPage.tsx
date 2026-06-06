@@ -4,9 +4,8 @@ import {
     AreaChart, Area, LabelList
 } from 'recharts';
 import {
-    FaChartLine, FaDollarSign, FaPercent, FaTrophy, FaBullseye
+    FaChartLine, FaDollarSign, FaPercent, FaHourglassHalf
 } from 'react-icons/fa';
-import KPICard from '../components/KPICard';
 import MonthPicker from '../components/MonthPicker';
 import { OpportunityService } from '../services/OpportunityService';
 import type { Opportunity } from '../services/OpportunityService';
@@ -17,12 +16,12 @@ import './AnalyticsPage.css';
 
 interface AnalyticsPageProps {
     goals: unknown[];
-    currentMonth: string;
+    selectedMonth: string;
+    onMonthChange: (month: string) => void;
 }
 
-const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
+const AnalyticsPage = ({ selectedMonth, onMonthChange }: AnalyticsPageProps) => {
     const { theme } = useTheme();
-    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
     const [individualPerf, setIndividualPerf] = useState<PerformanceIndividual[]>([]);
     const [teamPerf, setTeamPerf] = useState<PerformanceEquipe[]>([]);
@@ -89,18 +88,21 @@ const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
         })),
     [teamPerf]);
 
-    const individualRankingData = useMemo(() =>
-        [...individualPerf]
-            .sort((a, b) => b.percentualFaturamento - a.percentualFaturamento)
-            .map(a => ({
-                id: a.usuarioId,
-                name: a.usuarioNome,
-                salesValue: a.totalFaturado,
-                goal: a.metaFaturamento,
-                pct: a.percentualFaturamento,
-                status: a.percentualFaturamento >= 100 ? 'Atingida' : a.percentualFaturamento >= 70 ? 'No prazo' : 'Em risco',
-            })),
-    [individualPerf]);
+    const individualRankingData = useMemo(() => {
+        const sorted = [...individualPerf].sort((a, b) => b.percentualFaturamento - a.percentualFaturamento);
+        const maxFaturado = Math.max(...sorted.map(a => a.totalFaturado), 1);
+        return sorted.map(a => ({
+            id: a.usuarioId,
+            name: a.usuarioNome,
+            salesValue: a.totalFaturado,
+            goal: a.metaFaturamento,
+            pct: a.metaFaturamento > 0
+                ? a.percentualFaturamento
+                : Math.round((a.totalFaturado / maxFaturado) * 100),
+            hasGoal: a.metaFaturamento > 0,
+            status: a.percentualFaturamento >= 100 ? 'Atingida' : a.percentualFaturamento >= 70 ? 'No prazo' : 'Em risco',
+        }));
+    }, [individualPerf]);
 
     const growthChartData = useMemo(() =>
         monthlyGrowth.map(m => ({ month: m.mesLabel, value: m.totalFaturado })),
@@ -147,8 +149,18 @@ const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
     const getStatusBadgeClass = (status: string) =>
         status === 'Atingida' ? 'badge-achieved' : status === 'No prazo' ? 'badge-on-track' : 'badge-at-risk';
 
-    const getKpiVariant = (pct: number): 'success' | 'warning' | 'danger' =>
-        pct >= 100 ? 'success' : pct >= 70 ? 'warning' : 'danger';
+    const getProgressBarColorClass = (pct: number) =>
+        pct >= 100 ? 'progress-green' : pct >= 70 ? 'progress-yellow' : 'progress-red';
+
+    const projectedClosure = useMemo(() => {
+        const [year, month] = selectedMonth.split('-').map(Number);
+        const now = new Date();
+        const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
+        if (!isCurrentMonth || totalRealized === 0) return totalRealized;
+        const today = now.getDate();
+        const totalDays = new Date(year, month, 0).getDate();
+        return (totalRealized / today) * totalDays;
+    }, [selectedMonth, totalRealized]);
 
     const tooltipStyle = {
         backgroundColor: chartColors.tooltipBg,
@@ -163,22 +175,19 @@ const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
             <div className="analytics-container">
                 <header className="analytics-header">
                     <div className="header-actions">
-                        <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+                        <MonthPicker value={selectedMonth} onChange={onMonthChange} />
                     </div>
                 </header>
                 <div className="analytics-grid">
-                    <div className="kpi-section">
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className="kpi-card">
-                                <div className="kpi-header">
-                                    <span className="skeleton" style={{ width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0 }} />
-                                    <span className="skeleton skeleton-text-sm" style={{ width: '100px' }} />
-                                </div>
-                                <div className="kpi-data-content">
-                                    <span className="skeleton skeleton-text-xl" style={{ width: '120px' }} />
-                                </div>
-                            </div>
-                        ))}
+                    <div className="chart-card analytics-goals-block">
+                        <span className="skeleton skeleton-text-md" style={{ width: '260px', marginBottom: '16px' }} />
+                        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+                            <span className="skeleton" style={{ height: '32px', width: '180px', borderRadius: '99px' }} />
+                            <span className="skeleton" style={{ height: '32px', width: '160px', borderRadius: '99px' }} />
+                        </div>
+                        <span className="skeleton skeleton-text-sm" style={{ width: '55%', margin: '0 auto 12px', display: 'block' }} />
+                        <span className="skeleton" style={{ height: '12px', borderRadius: '99px', display: 'block', marginBottom: '16px' }} />
+                        <span className="skeleton" style={{ height: '44px', borderRadius: '8px', display: 'block' }} />
                     </div>
                     <div className="charts-row">
                         {[0, 1].map(i => (
@@ -224,25 +233,55 @@ const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
         <div className="analytics-container">
             <header className="analytics-header">
                 <div className="header-actions">
-                    <MonthPicker value={selectedMonth} onChange={setSelectedMonth} />
+                    <MonthPicker value={selectedMonth} onChange={onMonthChange} />
                 </div>
             </header>
 
             <div className="analytics-grid">
-                {/* KPIs */}
-                <div className="kpi-section">
-                    <KPICard title="Valor em Pipeline"  value={formatCurrency(stats.totalValue)}                              icon={<FaDollarSign />} isActive={false} />
-                    <KPICard title="Taxa de Conversão"  value={`${stats.winRate.toFixed(1)}%`}                                icon={<FaPercent />}    isActive={false} />
-                    <KPICard title="Meta Geral do Mês"  value={metaGeralTotal > 0 ? formatCurrency(metaGeralTotal) : '—'}    icon={<FaBullseye />}   isActive={false} />
-                    <KPICard title="Valor Atingido"     value={totalRealized > 0 ? formatCurrency(totalRealized) : '—'}      icon={<FaChartLine />}  isActive={false} />
-                    <KPICard
-                        title="Atingimento Global"
-                        value={metaGeralTotal > 0 ? `${globalAchievement}%` : '—'}
-                        icon={<FaTrophy />}
-                        isActive={false}
-                        variant={metaGeralTotal > 0 ? getKpiVariant(globalAchievement) : undefined}
-                    />
-                </div>
+                {/* Desempenho e Metas Coletivas */}
+                {metaGeralTotal > 0 && (
+                    <div className="chart-card analytics-goals-block">
+                        <div className="analytics-goals-header">
+                            <h3><FaChartLine /> Desempenho e Metas Coletivas</h3>
+                            <p className="chart-description">Acompanhamento mensal com base nos dados do período selecionado.</p>
+                        </div>
+
+                        <div className="analytics-kpi-tags">
+                            <div className="analytics-kpi-tag">
+                                <FaDollarSign className="tag-icon" />
+                                <span className="tag-label">Valor em Pipeline</span>
+                                <strong className="tag-value">{formatCurrency(stats.totalValue)}</strong>
+                            </div>
+                            <div className="analytics-kpi-tag">
+                                <FaPercent className="tag-icon" />
+                                <span className="tag-label">Taxa de Conversão</span>
+                                <strong className="tag-value">{stats.winRate.toFixed(1)}%</strong>
+                            </div>
+                        </div>
+
+                        <div className="ag-progress-row">
+                            <div className="ag-progress-header">
+                                <span className="ag-progress-label">Meta do Mês</span>
+                                <strong className="ag-progress-meta-value">{formatCurrency(metaGeralTotal)}</strong>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                                <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalRealized)} atingido</span>
+                                <div className="ag-progress-track-bg" style={{ flex: 1 }}>
+                                    <div
+                                        className={`ag-progress-track-fill ${getProgressBarColorClass(globalAchievement)}`}
+                                        style={{ width: `${Math.min(globalAchievement, 100)}%` }}
+                                    />
+                                </div>
+                                <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{globalAchievement}%</span>
+                            </div>
+                        </div>
+
+                        <div className="projection-footer">
+                            <FaHourglassHalf className="projection-icon" />
+                            <span>Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Row 1: Funil de Vendas */}
                 <div className="chart-card">
@@ -297,7 +336,7 @@ const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
                                         <div className="ranking-name-block">
                                             <span className="ranking-name">{agent.name}</span>
                                             <span className="ranking-subtext">
-                                                {formatCurrencyShort(agent.salesValue)} atingido · meta {formatCurrencyShort(agent.goal)}
+                                                {formatCurrencyShort(agent.salesValue)} atingido · {agent.hasGoal ? `meta ${formatCurrencyShort(agent.goal)}` : 'sem meta definida'}
                                             </span>
                                         </div>
                                         <div className="ranking-progress-wrap">
@@ -306,13 +345,13 @@ const AnalyticsPage = ({ currentMonth }: AnalyticsPageProps) => {
                                                     className="ranking-progress-fill"
                                                     style={{
                                                         width: `${Math.min(agent.pct, 100)}%`,
-                                                        backgroundColor: getAchievementColor(agent.pct),
+                                                        backgroundColor: agent.hasGoal ? getAchievementColor(agent.pct) : 'var(--petroleum-blue)',
                                                     }}
                                                 />
                                             </div>
                                         </div>
-                                        <span className="ranking-pct" style={{ color: getAchievementColor(agent.pct) }}>
-                                            {agent.pct}%
+                                        <span className="ranking-pct" style={{ color: agent.hasGoal ? getAchievementColor(agent.pct) : 'var(--text-secondary)' }}>
+                                            {agent.hasGoal ? `${agent.pct}%` : '—'}
                                         </span>
                                     </div>
                                 ))}

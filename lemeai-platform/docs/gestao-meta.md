@@ -201,8 +201,13 @@ Authorization: Bearer <token>
 ## Módulo Metas — `/api/meta`
 
 > `TipoAlvo`: `"user"` | `"team"`  
-> `Tipo` (TipoMeta): `"value"` | `"quantity"` | `"calls"`  
+> `Tipo` (TipoMeta): `"vendas"` (contagem de vendas fechadas) | `"valor"` (soma do valor das vendas fechadas)  
 > `Mes`: formato `"YYYY-MM"` (ex: `"2025-06"`)
+
+> **`ValorRealizado`:** calculado automaticamente pelo servidor com base nas conversas com status `VendaFechada` e `conversation_closed_at` dentro do mês da meta.  
+> - `TipoMeta = "vendas"` → contagem de conversas fechadas no mês  
+> - `TipoMeta = "valor"` → soma do campo `value` das conversas fechadas no mês  
+> - Para metas de equipe, soma todos os membros da equipe. Equipe sem membros retorna `0`.
 
 ---
 
@@ -232,8 +237,9 @@ Authorization: Bearer <token>
       "tipoAlvo": "user",
       "alvoId": 5,
       "alvoNome": "Ana Lima",
-      "tipo": "value",
+      "tipo": "valor",
       "valorAlvo": 50000.00,
+      "valorRealizado": 38000.00,
       "mes": "2025-06"
     },
     {
@@ -241,8 +247,9 @@ Authorization: Bearer <token>
       "tipoAlvo": "user",
       "alvoId": 5,
       "alvoNome": "Ana Lima",
-      "tipo": "calls",
-      "valorAlvo": 80.00,
+      "tipo": "vendas",
+      "valorAlvo": 20.00,
+      "valorRealizado": 13,
       "mes": "2025-06"
     }
   ]
@@ -271,8 +278,9 @@ Authorization: Bearer <token>
     "tipoAlvo": "user",
     "alvoId": 5,
     "alvoNome": "Ana Lima",
-    "tipo": "value",
+    "tipo": "valor",
     "valorAlvo": 50000.00,
+    "valorRealizado": 38000.00,
     "mes": "2025-06"
   }
 }
@@ -303,7 +311,7 @@ Content-Type: application/json
 |-------|------|-------------|-----------|
 | `tipoAlvo` | string | Sim | `"user"` ou `"team"` |
 | `alvoId` | int | Sim | ID do usuário ou da equipe |
-| `tipo` | string | Sim | `"value"`, `"quantity"` ou `"calls"` |
+| `tipo` | string | Sim | `"vendas"` ou `"valor"` |
 | `valorAlvo` | decimal | Sim | Valor da meta |
 | `mes` | string | Sim | Mês no formato `"YYYY-MM"` |
 
@@ -317,8 +325,9 @@ Content-Type: application/json
     "tipoAlvo": "user",
     "alvoId": 5,
     "alvoNome": "Ana Lima",
-    "tipo": "value",
+    "tipo": "valor",
     "valorAlvo": 50000.00,
+    "valorRealizado": 0,
     "mes": "2025-06"
   }
 }

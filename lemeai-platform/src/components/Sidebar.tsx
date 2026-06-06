@@ -21,7 +21,8 @@ import {
     FaRobot,
     FaShieldAlt,
     FaBuilding,
-    FaChevronRight
+    FaChevronRight,
+    FaCalendarCheck
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -64,7 +65,7 @@ const Sidebar: FC<SidebarProps> = () => {
         };
     }, []);
 
-    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas'].includes(location.pathname);
+    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas', '/dias-uteis'].includes(location.pathname);
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
 
     const toggleSettings = () => {
@@ -218,6 +219,10 @@ const Sidebar: FC<SidebarProps> = () => {
                                     <Link to="/empresas" className={`submenu-link ${location.pathname === '/empresas' ? 'active' : ''}`} onClick={closeSettings}>
                                         <FaBuilding />
                                         <span>Empresas</span>
+                                    </Link>
+                                    <Link to="/dias-uteis" className={`submenu-link ${location.pathname === '/dias-uteis' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaCalendarCheck />
+                                        <span>Dias de funcionamento</span>
                                     </Link>
                                 </div>
                             </div>

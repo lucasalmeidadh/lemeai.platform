@@ -28,6 +28,7 @@ import TeamsPage from './pages/TeamsPage.tsx';
 import DealDetailsPage from './pages/DealDetailsPage.tsx';
 import BillingPlanPage from './pages/BillingPlanPage';
 import EmpresasPage from './pages/EmpresasPage';
+import WorkingDaysPage from './pages/WorkingDaysPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
           { path: "plano", element: <BillingPlanPage /> },
           { path: "help", element: <HelpPage /> },
           { path: "empresas", element: <EmpresasPage /> },
+          { path: "dias-uteis", element: <WorkingDaysPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }
