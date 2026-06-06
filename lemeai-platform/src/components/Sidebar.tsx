@@ -65,7 +65,10 @@ const Sidebar: FC<SidebarProps> = () => {
         };
     }, []);
 
-    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas', '/dias-uteis'].includes(location.pathname);
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = user?.permissoes?.includes('gbcode_admin_sistema') || false;
+
+    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas', '/dias-uteis', '/gerenciar-planos'].includes(location.pathname);
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
 
     const toggleSettings = () => {
@@ -92,13 +95,13 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaRocket />
                     <span>Primeiros passos</span>
                 </Link>
-                <Link to="/dashboard" className={`sidebar-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
-                    <FaTachometerAlt />
-                    <span>Painel</span>
-                </Link>
                 <Link to="/monitoramento" className={`sidebar-link ${location.pathname === '/monitoramento' ? 'active' : ''}`}>
                     <FaUserFriends />
                     <span>Gestão operacional</span>
+                </Link>
+                <Link to="/dashboard" className={`sidebar-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
+                    <FaTachometerAlt />
+                    <span>Painel</span>
                 </Link>
                 <Link id="sidebar-chat" to="/chat" className={`sidebar-link ${location.pathname === '/chat' ? 'active' : ''}`}>
                     <FaComments />
@@ -224,6 +227,12 @@ const Sidebar: FC<SidebarProps> = () => {
                                         <FaCalendarCheck />
                                         <span>Dias de funcionamento</span>
                                     </Link>
+                                    {isAdmin && (
+                                        <Link to="/gerenciar-planos" className={`submenu-link ${location.pathname === '/gerenciar-planos' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <FaCreditCard />
+                                            <span>Gerenciar Planos</span>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         </div>

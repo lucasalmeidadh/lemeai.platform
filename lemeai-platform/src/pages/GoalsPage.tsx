@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { FaPlus, FaCopy, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaCopy, FaEdit, FaTrash, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import GoalFormModal from '../components/GoalFormModal';
 import type { Goal, MockUser, MockTeam } from '../components/GoalFormModal';
 import type { Equipe } from '../services/EquipeService';
 import ConfirmationModal from '../components/ConfirmationModal';
 import MetaGoalService from '../services/MetaGoalService';
 import EquipeService from '../services/EquipeService';
+import RelatorioService from '../services/RelatorioService';
+import type { PerformanceIndividual, PerformanceEquipe } from '../services/RelatorioService';
+import { OpportunityService, type Opportunity } from '../services/OpportunityService';
 import { apiFetch } from '../services/api';
 import './GoalsPage.css';
 import './UserManagementPage.css';
@@ -30,12 +33,6 @@ const formatMonth = (month: string) => {
   return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 };
 
-const formatGoalType = (type: string) => {
-  if (type === 'value') return 'Faturamento (R$)';
-  if (type === 'quantity') return 'Qtd de Vendas';
-  return 'Qtd de Ligações';
-};
-
 const formatGoalValue = (value: number, type: string) => {
   if (type === 'value') return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   return value.toLocaleString('pt-BR');
@@ -48,8 +45,21 @@ const GoalsPage = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [pendingGoalSave, setPendingGoalSave] = useState<Goal | null>(null);
+  const [syncConfirmData, setSyncConfirmData] = useState<{
+    equipeNome: string;
+    valorAntigo: number;
+    valorNovo: number;
+    tipo: 'value' | 'quantity' | 'calls';
+  } | null>(null);
+
+  // Estados adicionados para a busca dos dados reais de monitoramento/oportunidades
+  const [individualPerf, setIndividualPerf] = useState<PerformanceIndividual[]>([]);
+  const [teamPerf, setTeamPerf] = useState<PerformanceEquipe[]>([]);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
-  const [filterType, setFilterType] = useState<'all' | 'user' | 'team'>('all');
+  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>({});
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [goalToEdit, setGoalToEdit] = useState<Goal | null>(null);
@@ -59,30 +69,58 @@ const GoalsPage = () => {
   const fetchGoals = useCallback(async (mes: string) => {
     try {
       const metas = await MetaGoalService.buscarTodas(mes);
-      setGoals(metas.map(m => ({
-        id: String(m.id),
-        targetType: m.tipoAlvo,
-        targetId: m.alvoId,
-        targetName: m.alvoNome,
-        type: m.tipo,
-        targetValue: m.valorAlvo,
-        realizedValue: m.valorRealizado,
-        month: m.mes,
-      })));
+      setGoals(metas.map(m => {
+        // Normaliza o tipo retornado pela API para os tipos internos do frontend
+        let mappedType: 'value' | 'quantity' | 'calls' = 'calls';
+        const rawTipo = String(m.tipo).toLowerCase();
+        if (rawTipo === 'valor' || rawTipo === 'value') {
+          mappedType = 'value';
+        } else if (rawTipo === 'vendas' || rawTipo === 'quantity') {
+          mappedType = 'quantity';
+        } else if (rawTipo === 'calls' || rawTipo === 'ligacoes') {
+          mappedType = 'calls';
+        }
+
+        return {
+          id: String(m.id),
+          targetType: m.tipoAlvo,
+          targetId: m.alvoId,
+          targetName: m.alvoNome,
+          type: mappedType,
+          targetValue: m.valorAlvo,
+          realizedValue: m.valorRealizado,
+          month: m.mes,
+        };
+      }));
     } catch (err: any) {
       toast.error(err.message ?? 'Erro ao carregar metas.');
     }
   }, []);
 
+  const fetchPerformanceAndOpportunities = useCallback(async (mes: string) => {
+    try {
+      const [indData, teamData, oppData] = await Promise.all([
+        RelatorioService.getPerformanceIndividual(mes).catch(() => []),
+        RelatorioService.getPerformanceEquipes(mes).catch(() => []),
+        OpportunityService.getAllOpportunities().catch(() => []),
+      ]);
+      setIndividualPerf(indData);
+      setTeamPerf(teamData);
+      setOpportunities(oppData);
+    } catch (err) {
+      console.error('Erro ao buscar dados de performance e oportunidades:', err);
+    }
+  }, []);
+
   const fetchStaticData = useCallback(async () => {
     try {
-      const [equipes, usersRes] = await Promise.all([
+      const [equipesData, usersRes] = await Promise.all([
         EquipeService.buscarTodas(),
         apiFetch(`${API_URL}/api/Usuario/BuscarTodos`),
       ]);
 
-      setEquipes(equipes);
-      setTeams(equipes.map(e => ({ id: e.id, name: e.nome, memberCount: e.membros.length })));
+      setEquipes(equipesData);
+      setTeams(equipesData.map(e => ({ id: e.id, name: e.nome, memberCount: e.membros.length })));
 
       const usersData = await usersRes.json();
       if (usersData.sucesso && Array.isArray(usersData.dados)) {
@@ -95,14 +133,55 @@ const GoalsPage = () => {
 
   useEffect(() => {
     setIsLoading(true);
-    Promise.all([fetchStaticData(), fetchGoals(selectedMonth)]).finally(() => setIsLoading(false));
+    Promise.all([
+      fetchStaticData(),
+      fetchGoals(selectedMonth),
+      fetchPerformanceAndOpportunities(selectedMonth)
+    ]).finally(() => setIsLoading(false));
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    fetchGoals(selectedMonth);
-  }, [selectedMonth, fetchGoals]);
+    setIsLoading(true);
+    Promise.all([
+      fetchGoals(selectedMonth),
+      fetchPerformanceAndOpportunities(selectedMonth)
+    ]).finally(() => setIsLoading(false));
+  }, [selectedMonth, fetchGoals, fetchPerformanceAndOpportunities]);
 
-  const handleSave = async (goal: Goal) => {
+  const toggleTeam = (teamId: string) => {
+    setExpandedTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }));
+  };
+
+  // Sincroniza a meta da equipe correspondente com base no tipo e no mês
+  const syncTeamGoal = async (userId: number, type: 'value' | 'quantity' | 'calls', month: string) => {
+    try {
+      const equipe = equipes.find(e => e.membros.some(m => m.id === userId));
+      if (!equipe) return;
+
+      const todasMetas = await MetaGoalService.buscarTodas(month);
+      const metaEquipe = todasMetas.find(m => m.tipoAlvo === 'team' && m.alvoId === equipe.id && m.tipo === type);
+      if (!metaEquipe) return;
+
+      const membrosIds = equipe.membros.map(m => m.id);
+      const somaMembros = todasMetas
+        .filter(m => m.tipoAlvo === 'user' && m.tipo === type && membrosIds.includes(m.alvoId))
+        .reduce((sum, m) => sum + m.valorAlvo, 0);
+
+      await MetaGoalService.atualizar(metaEquipe.id, {
+        tipoAlvo: 'team',
+        alvoId: equipe.id,
+        tipo: type,
+        valorAlvo: somaMembros,
+        mes: month,
+      });
+
+      toast.success(`Meta da equipe ${equipe.nome} atualizada automaticamente para a soma dos vendedores (${formatGoalValue(somaMembros, type)}).`);
+    } catch (err: any) {
+      console.error('Erro ao sincronizar meta da equipe:', err);
+    }
+  };
+
+  const executeSave = async (goal: Goal) => {
     const dto = {
       tipoAlvo: goal.targetType,
       alvoId: goal.targetId,
@@ -116,16 +195,22 @@ const GoalsPage = () => {
       if (isEditing) {
         await MetaGoalService.atualizar(Number(goal.id), dto);
         toast.success('Meta atualizada!');
+
+        if (goal.targetType === 'user') {
+          await syncTeamGoal(goal.targetId, goal.type, goal.month);
+        }
       } else {
         await MetaGoalService.criar(dto);
 
         if (goal.targetType === 'team') {
           const equipe = equipes.find(e => e.id === goal.targetId);
           const membros = equipe?.membros ?? [];
-          if (membros.length > 0) {
-            const valorPorMembro = goal.type === 'value'
-              ? Math.round((goal.targetValue / membros.length) * 100) / 100
-              : Math.floor(goal.targetValue / membros.length);
+          if (membros.length > 0 && goal.distributionType !== 'none') {
+            const valorPorMembro = goal.distributionType === 'equal'
+              ? (goal.type === 'value'
+                ? Math.round((goal.targetValue / membros.length) * 100) / 100
+                : Math.floor(goal.targetValue / membros.length))
+              : goal.targetValue; // 'full'
 
             await Promise.allSettled(
               membros.map(m =>
@@ -142,12 +227,13 @@ const GoalsPage = () => {
             const valorFormatado = goal.type === 'value'
               ? `R$ ${valorPorMembro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
               : valorPorMembro.toLocaleString('pt-BR');
-            toast.success(`Meta da equipe criada! ${valorFormatado} distribuído para ${membros.length} vendedor(es).`);
+            toast.success(`Meta da equipe criada! ${valorFormatado} atribuído para os membros.`);
           } else {
             toast.success('Meta da equipe cadastrada com sucesso!');
           }
         } else {
           toast.success('Meta cadastrada com sucesso!');
+          await syncTeamGoal(goal.targetId, goal.type, goal.month);
         }
       }
       setIsModalOpen(false);
@@ -155,17 +241,68 @@ const GoalsPage = () => {
       fetchGoals(selectedMonth);
     } catch (err: any) {
       toast.error(err.message ?? 'Erro ao salvar meta.');
+    } finally {
+      setPendingGoalSave(null);
+      setSyncConfirmData(null);
+    }
+  };
+
+  const handleSave = async (goal: Goal) => {
+    const isEditing = goal.id && !goal.id.startsWith('new_');
+    if (isEditing && goal.targetType === 'user') {
+      const equipe = equipes.find(e => e.membros.some(m => m.id === goal.targetId));
+      if (equipe) {
+        const metaEquipe = goals.find(g => g.targetType === 'team' && g.targetId === equipe.id && g.type === goal.type);
+        if (metaEquipe) {
+          const membrosIds = equipe.membros.map(m => m.id);
+          const somaOutrosMembros = goals
+            .filter(g => g.targetType === 'user' && g.type === goal.type && g.targetId !== goal.targetId && membrosIds.includes(g.targetId))
+            .reduce((sum, g) => sum + g.targetValue, 0);
+
+          const novoValorEquipe = somaOutrosMembros + goal.targetValue;
+
+          if (novoValorEquipe !== metaEquipe.targetValue) {
+            setPendingGoalSave(goal);
+            setSyncConfirmData({
+              equipeNome: equipe.nome,
+              valorAntigo: metaEquipe.targetValue,
+              valorNovo: novoValorEquipe,
+              tipo: goal.type,
+            });
+            return;
+          }
+        }
+      }
+    }
+
+    await executeSave(goal);
+  };
+
+  const handleConfirmSyncSave = async () => {
+    if (pendingGoalSave) {
+      await executeSave(pendingGoalSave);
     }
   };
 
   const handleDelete = async () => {
     if (!goalToDeleteId) return;
-    setIsDeleting(true);
+    setIsDeleting(false);
+
+    // Encontra a meta antes de deletar para sincronizar depois
+    const goalToDelete = goals.find(g => g.id === goalToDeleteId);
+
     try {
+      setIsDeleting(true);
       await MetaGoalService.excluir(Number(goalToDeleteId));
       toast.success('Meta removida.');
       setGoalToDeleteId(null);
-      fetchGoals(selectedMonth);
+      await fetchGoals(selectedMonth);
+
+      if (goalToDelete && goalToDelete.targetType === 'user') {
+        // Aguarda carregar as novas metas e atualiza a equipe
+        await syncTeamGoal(goalToDelete.targetId, goalToDelete.type, goalToDelete.month);
+        await fetchGoals(selectedMonth);
+      }
     } catch (err: any) {
       toast.error(err.message ?? 'Erro ao remover meta.');
     } finally {
@@ -200,17 +337,122 @@ const GoalsPage = () => {
     setIsModalOpen(true);
   };
 
-  const filteredGoals = goals.filter(g =>
-    g.month === selectedMonth &&
-    (filterType === 'all' || g.targetType === filterType)
-  );
+  // Retorna o valor realizado em tempo real alinhado com o monitoramento
+  const getRealizedValue = (
+    targetType: 'user' | 'team',
+    targetId: number,
+    type: 'value' | 'quantity' | 'calls',
+    targetName: string
+  ): number => {
+    if (targetType === 'user') {
+      const perf = individualPerf.find(p => p.usuarioId === targetId);
+      if (type === 'value') {
+        return perf ? perf.totalFaturado : 0;
+      }
+      if (type === 'calls') {
+        return perf ? perf.totalLigacoes : 0;
+      }
+      if (type === 'quantity') {
+        const nameToMatch = targetName.toLowerCase().trim();
+        const salesCount = opportunities.filter(op =>
+          op.nomeUsuarioResponsavel?.toLowerCase().trim() === nameToMatch &&
+          op.idStauts === 3 &&
+          op.dataFechamentoVenda?.startsWith(selectedMonth)
+        ).length;
+        return salesCount;
+      }
+    } else {
+      const perf = teamPerf.find(p => p.equipeId === targetId);
+      if (type === 'value') {
+        return perf ? perf.totalFaturado : 0;
+      }
+      if (type === 'calls') {
+        return perf ? perf.totalLigacoes : 0;
+      }
+      if (type === 'quantity') {
+        const equipe = equipes.find(e => e.id === targetId);
+        if (!equipe) return 0;
+        const membrosNames = equipe.membros.map(m => m.nome.toLowerCase().trim());
+        const salesCount = opportunities.filter(op =>
+          op.idStauts === 3 &&
+          op.dataFechamentoVenda?.startsWith(selectedMonth) &&
+          op.nomeUsuarioResponsavel &&
+          membrosNames.includes(op.nomeUsuarioResponsavel.toLowerCase().trim())
+        ).length;
+        return salesCount;
+      }
+    }
+    return 0;
+  };
 
-  const grouped = filteredGoals.reduce<Record<string, { targetType: 'user' | 'team'; goals: Goal[] }>>((acc, g) => {
-    const key = `${g.targetType}:${g.targetId}`;
-    if (!acc[key]) acc[key] = { targetType: g.targetType, goals: [] };
-    acc[key].goals.push(g);
-    return acc;
-  }, {});
+  // Métodos auxiliares de renderização
+  const renderGoalCell = (targetType: 'user' | 'team', targetId: number, type: 'value' | 'quantity' | 'calls', targetName: string) => {
+    const goal = goals.find(g => g.targetType === targetType && g.targetId === targetId && g.type === type);
+    const realized = getRealizedValue(targetType, targetId, type, targetName);
+
+    if (!goal) {
+      if (realized > 0) {
+        return (
+          <div className="goal-cell-content no-goal-defined">
+            <div className="goal-values-wrapper">
+              <div className="goal-values">
+                <span className="goal-target" style={{ color: 'var(--text-tertiary)' }}>-</span>
+                <span className="goal-realized"> / {formatGoalValue(realized, type)}</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return <span className="empty-goal">-</span>;
+    }
+
+    const pct = goal.targetValue > 0 ? Math.min(Math.round((realized / goal.targetValue) * 100), 100) : 0;
+    const badgeColor = pct >= 100 ? 'pct-green' : pct >= 70 ? 'pct-yellow' : 'pct-red';
+
+    return (
+      <div className="goal-cell-content">
+        <div className="goal-values-wrapper">
+          <div className="goal-values">
+            <span className="goal-target">{formatGoalValue(goal.targetValue, type)}</span>
+            <span className="goal-realized"> / {formatGoalValue(realized, type)}</span>
+          </div>
+          <span className={`goal-pct-badge ${badgeColor}`}>{pct}%</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Renderiza a coluna de Ações para a linha correspondente
+  const renderActionsCell = (targetType: 'user' | 'team', targetId: number) => {
+    const rowGoals = goals.filter(g => g.targetType === targetType && g.targetId === targetId);
+    if (rowGoals.length === 0) return <span className="empty-goal">-</span>;
+
+    const showTags = rowGoals.length > 1;
+
+    return (
+      <div className="actions-cell-wrapper">
+        {rowGoals.map(g => (
+          <div key={g.id} className="row-action-item">
+            {showTags && (
+              <span className={`type-badge type-${g.type}`} style={{ fontSize: '10px', padding: '2px 6px', lineHeight: 1 }}>
+                {g.type === 'value' ? 'Fat.' : g.type === 'quantity' ? 'Vnd.' : 'Lig.'}
+              </span>
+            )}
+            <button className="action-icon-btn edit" onClick={() => handleOpenEdit(g)} title={`Editar Meta (${g.type === 'value' ? 'Faturamento' : g.type === 'quantity' ? 'Vendas' : 'Ligações'})`}>
+              <FaEdit size={12} />
+            </button>
+            <button className="action-icon-btn delete" onClick={() => setGoalToDeleteId(g.id)} title={`Remover Meta (${g.type === 'value' ? 'Faturamento' : g.type === 'quantity' ? 'Vendas' : 'Ligações'})`}>
+              <FaTrash size={12} />
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Identifica vendedores sem equipe
+  const allTeamMemberIds = equipes.flatMap(e => e.membros.map(m => m.id));
+  const independentUsers = users.filter(u => !allTeamMemberIds.includes(u.id));
 
   return (
     <>
@@ -231,6 +473,19 @@ const GoalsPage = () => {
         message="Tem certeza que deseja remover esta meta?"
         confirmText="Remover"
         isConfirming={isDeleting}
+      />
+      <ConfirmationModal
+        isOpen={syncConfirmData !== null}
+        onClose={() => { setPendingGoalSave(null); setSyncConfirmData(null); }}
+        onConfirm={handleConfirmSyncSave}
+        title="Confirmar Alteração de Meta da Equipe"
+        message={
+          syncConfirmData
+            ? `A alteração da meta deste colaborador afetará a meta da equipe ${syncConfirmData.equipeNome}. A meta da equipe será atualizada de ${formatGoalValue(syncConfirmData.valorAntigo, syncConfirmData.tipo)} para ${formatGoalValue(syncConfirmData.valorNovo, syncConfirmData.tipo)}. Deseja prosseguir com a alteração?`
+            : ''
+        }
+        confirmText="Confirmar e Salvar"
+        cancelText="Cancelar"
       />
 
       <div className="page-container goals-page">
@@ -254,89 +509,97 @@ const GoalsPage = () => {
               value={selectedMonth}
               onChange={e => setSelectedMonth(e.target.value)}
             />
-            <div className="users-filters">
-              {(['all', 'user', 'team'] as const).map(f => (
-                <button
-                  key={f}
-                  className={`filter-button ${filterType === f ? 'active' : ''}`}
-                  onClick={() => setFilterType(f)}
-                >
-                  {f === 'all' ? 'Todos' : f === 'user' ? 'Colaboradores' : 'Equipes'}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div className="table-container">
-            <table className="management-table">
+            <table className="management-table goals-table">
               <thead>
                 <tr>
-                  <th>Tipo de Meta</th>
-                  <th>Meta</th>
-                  <th>Progresso</th>
-                  <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
+                  <th style={{ width: '25%' }}>Equipe / Colaborador</th>
+                  <th style={{ width: '22%' }}>Faturamento</th>
+                  <th style={{ width: '18%' }}>Qtd. Vendas</th>
+                  <th style={{ width: '18%' }}>Ligações</th>
+                  <th style={{ width: '17%', textAlign: 'right', paddingRight: '20px' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={4} className="empty-state">Carregando...</td>
+                    <td colSpan={5} className="empty-state">Carregando...</td>
                   </tr>
-                ) : Object.keys(grouped).length > 0 ? (
-                  Object.entries(grouped).map(([key, group]) => (
-                    <>
-                      <tr key={`header-${key}`} className="group-header-row">
-                        <td colSpan={4}>
-                          <span className={`group-type-badge ${group.targetType}`}>
-                            {group.targetType === 'user' ? 'Colaborador' : 'Equipe'}
-                          </span>
-                          {group.goals[0].targetName}
-                        </td>
-                      </tr>
-                      {group.goals.map(g => {
-                        const realized = g.realizedValue ?? 0;
-                        const pct = g.targetValue > 0 ? Math.min(Math.round((realized / g.targetValue) * 100), 100) : 0;
-                        const barColor = pct >= 100 ? 'goal-bar-green' : pct >= 70 ? 'goal-bar-yellow' : 'goal-bar-red';
-                        return (
-                          <tr key={g.id} className="group-child-row">
-                            <td>
-                              <span className={`type-badge type-${g.type}`}>
-                                {formatGoalType(g.type)}
-                              </span>
-                            </td>
-                            <td><strong>{formatGoalValue(g.targetValue, g.type)}</strong></td>
-                            <td>
-                              <div className="goal-progress-cell">
-                                <div className="goal-progress-track">
-                                  <div className={`goal-progress-fill ${barColor}`} style={{ width: `${pct}%` }} />
-                                </div>
-                                <span className="goal-progress-label">
-                                  <strong>{formatGoalValue(realized, g.type)}</strong>
-                                  <span className="goal-progress-pct">{pct}%</span>
-                                </span>
-                              </div>
-                            </td>
-                            <td>
-                              <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
-                                <button className="action-icon-btn edit" onClick={() => handleOpenEdit(g)} title="Editar">
-                                  <FaEdit size={14} />
-                                </button>
-                                <button className="action-icon-btn delete" onClick={() => setGoalToDeleteId(g.id)} title="Remover">
-                                  <FaTrash size={14} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </>
-                  ))
-                ) : (
+                ) : (equipes.length === 0 && independentUsers.length === 0) ? (
                   <tr>
-                    <td colSpan={4} className="empty-state">
-                      Nenhuma meta cadastrada para {formatMonth(selectedMonth)}.
+                    <td colSpan={5} className="empty-state">
+                      Nenhuma equipe ou colaborador cadastrado no sistema.
                     </td>
                   </tr>
+                ) : (
+                  <>
+                    {/* Renderiza as Equipes */}
+                    {equipes.map(eq => {
+                      const isExpanded = !!expandedTeams[`team-${eq.id}`];
+                      return (
+                        <>
+                          <tr key={`team-row-${eq.id}`} className="team-row-header">
+                            <td>
+                              <button className="expand-toggle-btn" onClick={() => toggleTeam(`team-${eq.id}`)}>
+                                {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
+                              </button>
+                              <span className="team-name-text">Equipe {eq.nome}</span>
+                              <span className="team-badge-members">{eq.membros.length} membros</span>
+                            </td>
+                            <td>{renderGoalCell('team', eq.id, 'value', eq.nome)}</td>
+                            <td>{renderGoalCell('team', eq.id, 'quantity', eq.nome)}</td>
+                            <td>{renderGoalCell('team', eq.id, 'calls', eq.nome)}</td>
+                            <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('team', eq.id)}</td>
+                          </tr>
+
+                          {/* Renderiza membros se expandido */}
+                          {isExpanded && eq.membros.map(mb => (
+                            <tr key={`member-row-${mb.id}`} className="member-row-child">
+                              <td className="member-name-td">
+                                <span className="member-indent-icon">└</span>
+                                <span className="member-name-text">{mb.nome}</span>
+                              </td>
+                              <td>{renderGoalCell('user', mb.id, 'value', mb.nome)}</td>
+                              <td>{renderGoalCell('user', mb.id, 'quantity', mb.nome)}</td>
+                              <td>{renderGoalCell('user', mb.id, 'calls', mb.nome)}</td>
+                              <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('user', mb.id)}</td>
+                            </tr>
+                          ))}
+                        </>
+                      );
+                    })}
+
+                    {/* Renderiza Vendedores Sem Equipe */}
+                    {independentUsers.length > 0 && (
+                      <>
+                        <tr className="team-row-header independent-header">
+                          <td>
+                            <button className="expand-toggle-btn" onClick={() => toggleTeam('independent')}>
+                              {expandedTeams['independent'] ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
+                            </button>
+                            <span className="team-name-text">Colaboradores Sem Equipe</span>
+                            <span className="team-badge-members">{independentUsers.length}</span>
+                          </td>
+                          <td colSpan={4}></td>
+                        </tr>
+
+                        {expandedTeams['independent'] && independentUsers.map(u => (
+                          <tr key={`indep-row-${u.id}`} className="member-row-child">
+                            <td className="member-name-td">
+                              <span className="member-indent-icon">└</span>
+                              <span className="member-name-text">{u.name}</span>
+                            </td>
+                            <td>{renderGoalCell('user', u.id, 'value', u.name)}</td>
+                            <td>{renderGoalCell('user', u.id, 'quantity', u.name)}</td>
+                            <td>{renderGoalCell('user', u.id, 'calls', u.name)}</td>
+                            <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('user', u.id)}</td>
+                          </tr>
+                        ))}
+                      </>
+                    )}
+                  </>
                 )}
               </tbody>
             </table>

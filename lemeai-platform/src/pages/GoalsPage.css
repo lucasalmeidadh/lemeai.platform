@@ -39,39 +39,200 @@
   flex-grow: 0 !important;
 }
 
-/* ─── GROUP ROWS ──────────────────────────────────────────────── */
-.group-header-row td {
-  padding: 10px 20px;
-  background-color: var(--bg-tertiary);
+/* ─── GOAL TABLE STRUCTURE ────────────────────────────────── */
+.goals-table th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-color);
+  padding: 12px 16px;
+}
+
+.team-row-header {
+  background-color: var(--bg-secondary);
   font-weight: 700;
-  font-size: var(--font-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.team-row-header td {
+  padding: 12px 16px !important;
   color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.independent-header {
+  border-top: 2px solid var(--border-color);
+}
+
+.expand-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  vertical-align: middle;
+}
+
+.expand-toggle-btn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.team-name-text {
+  font-size: 15px;
+  vertical-align: middle;
+}
+
+.team-badge-members {
+  font-size: 11px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 10px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.member-row-child {
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+
+.member-row-child:hover {
+  background-color: var(--bg-secondary-hover, rgba(0, 0, 0, 0.015));
+}
+
+.member-row-child td {
+  padding: 10px 16px !important;
+  border-bottom: 1px solid var(--border-color-soft);
+  vertical-align: middle;
+}
+
+.member-name-td {
+  padding-left: 28px !important;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--border-color-soft);
 }
 
-.group-child-row td {
-  padding-left: 36px !important;
+.member-indent-icon {
+  color: var(--text-tertiary);
+  margin-right: 8px;
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 14px;
+  user-select: none;
 }
 
-.group-type-badge {
+.member-name-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ─── GOAL CELL STYLING ───────────────────────────────────── */
+.goal-cell-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+  width: 100%;
+}
+
+.goal-values-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.goal-values {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.goal-target {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.goal-realized {
+  color: var(--text-tertiary);
+}
+
+.empty-goal {
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Badges de percentual */
+.goal-pct-badge {
   font-size: 11px;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
-.group-type-badge.user {
-  background-color: #e0f7ff;
+.pct-green  { background-color: var(--color-success-bg); color: var(--color-success); }
+.pct-yellow { background-color: var(--color-warning-bg); color: var(--color-warning); }
+.pct-red    { background-color: var(--color-danger-bg);  color: var(--color-danger); }
+
+/* Coluna de Ações unificada no final da tabela */
+.actions-cell-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  vertical-align: middle;
+}
+
+.row-action-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-icon-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.action-icon-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.action-icon-btn.edit:hover {
+  border-color: var(--petroleum-blue);
   color: var(--petroleum-blue);
 }
 
-.group-type-badge.team {
-  background-color: #f0eaff;
-  color: #6d28d9;
+.action-icon-btn.delete:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
 }
+
+
 
 /* ─── WORKING DAYS CARD ───────────────────────────────────────── */
 .working-days-card {
@@ -179,50 +340,6 @@
   text-align: center;
   color: var(--text-tertiary);
   padding: 2.5rem !important;
-}
-
-/* ─── GOAL PROGRESS COLUMN ───────────────────────────────────── */
-.goal-progress-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  min-width: 160px;
-}
-
-.goal-progress-track {
-  height: 6px;
-  background: var(--bg-tertiary);
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.goal-progress-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 0.4s ease;
-}
-
-.goal-bar-green  { background: var(--color-success); }
-.goal-bar-yellow { background: var(--color-warning); }
-.goal-bar-red    { background: var(--color-danger); }
-
-.goal-progress-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: var(--font-xs);
-  color: var(--text-secondary);
-}
-
-.goal-progress-label strong {
-  color: var(--text-primary);
-  font-size: var(--font-sm);
-}
-
-.goal-progress-pct {
-  margin-left: auto;
-  font-weight: 600;
-  color: var(--text-tertiary);
 }
 
 @keyframes fadeIn {

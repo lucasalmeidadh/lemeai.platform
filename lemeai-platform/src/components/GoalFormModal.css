@@ -54,3 +54,19 @@
   font-size: 14px;
   margin-top: 1px;
 }
+
+.month-year-select-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.month-year-select-container select,
+.month-year-select-container .custom-select-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-group .custom-select-container {
+  width: 100%;
+}

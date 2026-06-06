@@ -83,7 +83,7 @@ const Login = () => {
       const data = await response1.json();
       localStorage.setItem('user', JSON.stringify(data));
 
-      navigate(window.innerWidth <= 768 ? '/pipeline' : '/dashboard');
+      navigate(window.innerWidth <= 768 ? '/pipeline' : '/monitoramento');
     } catch (err) {
       console.error(err);
       setError('Acesso negado. Verifique suas credenciais.');

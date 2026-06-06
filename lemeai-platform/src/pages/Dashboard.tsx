@@ -1,23 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import KPICard from '../components/KPICard';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import ConversationChart from '../components/ConversationChart';
 import FunnelChart from '../components/FunnelChart';
 import HourlyActivityChart from '../components/HourlyActivityChart';
 import type { FunnelData } from '../components/FunnelChart';
 import './Dashboard.css';
-import { FaUserPlus, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 import { OpportunityService } from '../services/OpportunityService';
 import type { Opportunity } from '../services/OpportunityService';
 import DateRangeFilter from '../components/DateRangeFilter';
 import CustomSelect from '../components/CustomSelect';
 import { apiFetch } from '../services/api';
-
-interface Kpi {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-}
 
 const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState('Todos');
@@ -26,7 +18,6 @@ const Dashboard = () => {
 
   const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>([]);
   const [chatDataMap, setChatDataMap] = useState<Record<number, number>>({});
-  const [kpiData, setKpiData] = useState<Kpi[]>([]);
   const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
   const [leadsList, setLeadsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,13 +103,6 @@ const Dashboard = () => {
     });
 
     setLeadsList(processedLeads);
-
-    setKpiData([
-      { title: 'Total / Em Qualificação', value: (counts['Em Qualificação'] + counts['Atendimento IA']).toString(), icon: <FaUserPlus /> },
-      { title: 'IA Encerrada', value: counts['IA Encerrada'].toString(), icon: <FaCheckCircle /> },
-      { title: 'Vendas Fechadas', value: counts['Venda Fechada'].toString(), icon: <FaCheckCircle /> },
-      { title: 'Vendas Perdidas', value: counts['Venda Perdida'].toString(), icon: <FaTimesCircle /> },
-    ]);
 
     setFunnelData([
       { id: 'ai_service',          name: 'Atendimento IA',   value: counts['Atendimento IA'],   color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
@@ -207,19 +191,6 @@ const Dashboard = () => {
         <p style={{ color: 'red' }}>{error}</p>
       ) : (
         <>
-          <div className="kpi-grid">
-            {kpiData.map((kpi, index) => (
-              <KPICard
-                key={`primary-${index}`}
-                title={kpi.title}
-                value={kpi.value}
-                icon={kpi.icon}
-                isActive={statusFilter === kpi.title}
-                onClick={() => setStatusFilter(kpi.title)}
-              />
-            ))}
-          </div>
-
           <div className="dashboard-charts-area">
             <div className="dashboard-card chart-card full-width-chart">
               <h3>Funil de Vendas</h3>

@@ -2,7 +2,7 @@
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  color: var(--text-color, #333);
+  color: var(--text-primary);
   font-family: inherit;
 }
 
@@ -60,13 +60,13 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
-  color: var(--text-color, #1e293b);
+  color: var(--text-primary);
 }
 
 /* Card do Plano Atual */
 .current-plan-card {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
@@ -140,14 +140,14 @@
 
 .current-plan-price {
   font-weight: 600;
-  color: var(--text-color, #334155);
+  color: var(--text-primary);
 }
 
 .current-plan-details {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background-color: var(--bg-color, #f8fafc);
+  background-color: var(--bg-tertiary);
   padding: 1rem;
   border-radius: 8px;
 }
@@ -166,7 +166,7 @@
 
 .detail-item strong {
   display: block;
-  color: var(--text-color, #475569);
+  color: var(--text-primary);
 }
 
 .detail-item span {
@@ -177,7 +177,7 @@
   margin: 0 0 1rem 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text-color, #475569);
+  color: var(--text-primary);
 }
 
 .current-plan-features-list ul {
@@ -210,8 +210,8 @@
 }
 
 .plan-card {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 2.25rem 2rem;
   display: flex;
@@ -224,7 +224,7 @@
 .plan-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1);
-  border-color: var(--primary-light, #93c5fd);
+  border-color: var(--petroleum-blue);
 }
 
 .plan-card-popular {
@@ -232,7 +232,7 @@
 }
 
 .plan-card-current {
-  background-color: var(--bg-hover, rgba(59, 130, 246, 0.02));
+  background-color: var(--bg-tertiary);
 }
 
 .popular-badge {
@@ -257,10 +257,11 @@
   font-size: 1.35rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
 }
 
 .plan-description {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary);
   font-size: 0.88rem;
   line-height: 1.4;
   margin: 0 0 1.5rem 0;
@@ -285,7 +286,7 @@
 }
 
 .plan-price .period {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin-left: 0.25rem;
 }
@@ -305,6 +306,7 @@
   align-items: flex-start;
   gap: 0.75rem;
   font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .feature-check {
@@ -767,4 +769,90 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Custom items for active API integration */
+.no-active-subscription {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.no-sub-alert {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  color: #dc2626;
+}
+
+.no-sub-alert svg {
+  font-size: 2.25rem;
+  flex-shrink: 0;
+}
+
+.no-sub-alert h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.no-sub-alert p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.subscription-actions-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-pay-now-checkout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #10b981;
+  color: white !important;
+  text-decoration: none;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.15);
+}
+
+.btn-pay-now-checkout:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-cancel-subscription {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #fca5a5;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel-subscription:hover {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: #ef4444;
+}
+
+.no-features-text {
+  font-style: italic;
+  color: var(--text-secondary, #94a3b8);
 }

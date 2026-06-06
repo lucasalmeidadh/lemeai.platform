@@ -263,6 +263,11 @@
   animation: groupFlyIn 0.15s ease-out;
 }
 
+.submenu-group-wrapper:last-child .submenu-group-links {
+  top: auto;
+  bottom: 0;
+}
+
 .submenu-group-links::before {
   content: '';
   position: absolute;
