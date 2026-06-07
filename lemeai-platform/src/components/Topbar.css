@@ -23,6 +23,7 @@
   display: flex;
   align-items: center;
   gap: 1.25rem;
+  flex: 1;
 }
 
 /* page subtitle shown in topbar */
@@ -194,6 +195,8 @@
 .topbar-right {
   display: flex;
   align-items: center;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .topbar-nav-items {
@@ -329,6 +332,12 @@
   }
   .topbar-brand {
     font-size: 1.15rem !important;
+  }
+}
+
+@media (max-width: 1000px) {
+  .topbar-item span:not(.topbar-notif-badge) {
+    display: none !important;
   }
 }
 
@@ -679,11 +688,11 @@
 
 /* ─── SEARCH BAR ────────────────────────────────────────────────── */
 .topbar-search-container {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  margin: 0 auto;
   width: 280px;
   transition: all 0.3s ease;
+  z-index: 10;
 }
 
 .topbar-search-container:focus-within {
@@ -843,10 +852,72 @@
   color: var(--petroleum-blue);
 }
 
-/* Hide or shrink on mobile */
+/* Estilo colapsável para telas de largura menor que 900px */
 @media (max-width: 900px) {
   .topbar-search-container {
+    width: 40px;
+    height: 40px;
+    position: relative;
+    margin: 0;
+    flex: 0 0 auto;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .topbar-search-input-wrapper {
+    height: 100%;
+  }
+
+  .topbar-search-input {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    color: transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .topbar-search-input::placeholder {
+    color: transparent !important;
+  }
+
+  .topbar-search-icon {
+    left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .topbar-search-container:not(:focus-within) .topbar-search-clear-btn {
     display: none;
+  }
+
+  /* Expande o campo quando recebe foco */
+  .topbar-search-container:focus-within {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    z-index: 1000;
+  }
+
+  .topbar-search-container:focus-within .topbar-search-input {
+    width: 100%;
+    padding: 0.5rem 2.25rem;
+    border-radius: 99px;
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    cursor: text;
+  }
+
+  .topbar-search-container:focus-within .topbar-search-input::placeholder {
+    color: var(--text-tertiary) !important;
+  }
+
+  .topbar-search-container:focus-within .topbar-search-icon {
+    left: 0.875rem;
+    transform: none;
   }
 }
 

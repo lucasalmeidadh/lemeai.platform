@@ -356,3 +356,30 @@
   max-width: 400px;
   margin: 0;
 }
+
+/* Custom DatePicker inputs for Reports Page */
+.reports-page-wrapper .react-datepicker-wrapper {
+  width: 100% !important;
+}
+
+.reports-datepicker-input {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--btn-radius-md); /* Less rounded! */
+  color: var(--text-primary);
+  padding: 8px 12px 8px 36px;
+  font-family: inherit;
+  font-size: var(--font-base);
+  width: 100%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reports-datepicker-input:focus {
+  border-color: var(--petroleum-blue);
+  box-shadow: 0 0 0 3px var(--petroleum-light);
+  outline: none;
+}
+
+.reports-page-wrapper .react-datepicker__close-icon {
+  right: 10px !important;
+}

@@ -126,7 +126,7 @@ const Sidebar: FC<SidebarProps> = () => {
                     <span>Fluxo de Vendas</span>
                 </Link>
                 <div className="sidebar-item-wrapper">
-                    <button 
+                    <button
                         id="sidebar-marketing"
                         className={`sidebar-btn ${isMarketingActive || isMarketingOpen ? 'active' : ''}`}
                         onClick={toggleMarketing}
@@ -154,7 +154,7 @@ const Sidebar: FC<SidebarProps> = () => {
                     <span>Agenda</span>
                 </Link>
                 <div className="sidebar-item-wrapper">
-                    <button 
+                    <button
                         id="sidebar-reports"
                         className={`sidebar-btn ${isReportsActive || isReportsOpen ? 'active' : ''}`}
                         onClick={toggleReports}
@@ -206,7 +206,7 @@ const Sidebar: FC<SidebarProps> = () => {
                 </Link>
 
                 <div className="sidebar-item-wrapper">
-                    <button 
+                    <button
                         id="sidebar-settings"
                         className={`sidebar-btn ${isConfigActive || isSettingsOpen ? 'active' : ''}`}
                         onClick={toggleSettings}

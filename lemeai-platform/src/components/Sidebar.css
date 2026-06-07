@@ -167,10 +167,31 @@
     opacity: 0;
     transform: translateY(-50%) translateX(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
   }
+}
+
+@keyframes submenuFadeInBottom {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+#sidebar-reports~.sidebar-submenu,
+#sidebar-settings~.sidebar-submenu {
+  top: auto;
+  bottom: 0;
+  transform: none;
+  animation: submenuFadeInBottom 0.2s ease-out;
 }
 
 .submenu-header {
@@ -268,6 +289,11 @@
   bottom: 0;
 }
 
+#sidebar-settings~.sidebar-submenu .submenu-group-wrapper:nth-child(n+3) .submenu-group-links {
+  top: auto;
+  bottom: 0;
+}
+
 .submenu-group-links::before {
   content: '';
   position: absolute;
@@ -282,6 +308,7 @@
     opacity: 0;
     transform: translateX(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -300,7 +327,7 @@
 }
 
 /* ─── MOBILE ──────────────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 702px) {
   .sidebar {
     display: none;
   }
@@ -311,53 +338,67 @@
   .sidebar {
     padding: 10px 0;
   }
+
   .sidebar-logo {
     margin-bottom: 15px;
   }
+
   .sidebar-logo img {
     width: 35px;
   }
+
   .sidebar-nav {
     gap: 2px;
   }
+
   .sidebar-link {
     padding: 5px 0;
   }
+
   .sidebar-link svg {
     font-size: 20px;
     margin-bottom: 3px;
   }
+
   .sidebar-link span {
     font-size: 9.5px;
   }
+
   .sidebar-bottom {
     padding-top: 8px;
     gap: 2px;
   }
+
   .sidebar-btn {
     padding: 5px 0;
   }
+
   .sidebar-btn svg {
     font-size: 20px;
     margin-bottom: 3px;
   }
+
   .sidebar-btn span {
     font-size: 9.5px;
   }
+
   .sidebar-submenu {
     width: 170px !important;
     padding: 6px !important;
     gap: 3px !important;
   }
+
   .submenu-header {
     padding: 6px 10px !important;
     font-size: 9.5px !important;
   }
+
   .submenu-link {
     padding: 8px 10px !important;
     font-size: 11.5px !important;
     gap: 8px !important;
   }
+
   .submenu-link svg {
     font-size: 14px !important;
   }

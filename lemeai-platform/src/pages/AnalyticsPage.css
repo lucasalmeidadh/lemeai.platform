@@ -120,9 +120,9 @@
 
 .ranking-row {
     display: grid;
-    grid-template-columns: 24px minmax(120px, 190px) 1fr 44px;
+    grid-template-columns: 24px minmax(150px, 270px) 1fr 44px;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     font-size: 0.83rem;
 }
 

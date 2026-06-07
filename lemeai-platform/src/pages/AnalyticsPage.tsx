@@ -145,9 +145,11 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
     const formatCurrencyShort = (value: number) => {
-        if (value >= 1_000_000) return `R$${(value / 1_000_000).toFixed(1).replace('.', ',')}M`;
-        if (value >= 1_000)     return `R$${(value / 1_000).toFixed(0)}k`;
-        return `R$${value}`;
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            maximumFractionDigits: 0
+        }).format(value);
     };
 
     const getAchievementColor = (pct: number) =>
@@ -323,7 +325,7 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
                     <p className="chart-description">Distribuição do valor monetário por etapa do processo.</p>
                     <div className="chart-wrapper">
                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={funnelData} layout="vertical">
+                            <BarChart data={funnelData} layout="vertical" margin={{ top: 10, right: 120, left: 10, bottom: 10 }}>
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartColors.grid} />
                                 <XAxis type="number" hide />
                                 <YAxis dataKey="name" type="category" width={140} stroke={chartColors.text} fontSize={12} />

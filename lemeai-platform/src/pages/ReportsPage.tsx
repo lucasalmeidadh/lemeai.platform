@@ -4,6 +4,7 @@ import { OpportunityService, type Opportunity } from '../services/OpportunitySer
 import { ProductService, type Product } from '../services/ProductService';
 import { ContactService } from '../services/ContactService';
 import { FaFileExcel, FaSearch, FaCalendarAlt, FaDollarSign, FaShoppingCart, FaPercentage } from 'react-icons/fa';
+import DatePicker from 'react-datepicker';
 import './ReportsPage.css';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -19,8 +20,8 @@ export default function ReportsPage() {
   
   // Filters
   const [preset, setPreset] = useState<PresetType>('hoje');
-  const [startDateStr, setStartDateStr] = useState('');
-  const [endDateStr, setEndDateStr] = useState('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Initial Load
@@ -77,37 +78,28 @@ export default function ReportsPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const getFormattedDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
     if (preset === 'hoje') {
-      const d = getFormattedDate(today);
-      setStartDateStr(d);
-      setEndDateStr(d);
+      setStartDate(today);
+      setEndDate(today);
     } else if (preset === 'ontem') {
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
-      const d = getFormattedDate(yesterday);
-      setStartDateStr(d);
-      setEndDateStr(d);
+      setStartDate(yesterday);
+      setEndDate(yesterday);
     } else if (preset === '7dias') {
       const past = new Date(today);
       past.setDate(today.getDate() - 7);
-      setStartDateStr(getFormattedDate(past));
-      setEndDateStr(getFormattedDate(today));
+      setStartDate(past);
+      setEndDate(today);
     } else if (preset === '30dias') {
       const past = new Date(today);
       past.setDate(today.getDate() - 30);
-      setStartDateStr(getFormattedDate(past));
-      setEndDateStr(getFormattedDate(today));
+      setStartDate(past);
+      setEndDate(today);
     } else if (preset === 'mesAtual') {
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      setStartDateStr(getFormattedDate(startOfMonth));
-      setEndDateStr(getFormattedDate(today));
+      setStartDate(startOfMonth);
+      setEndDate(today);
     }
   }, [preset]);
 
@@ -122,8 +114,10 @@ export default function ReportsPage() {
 
   // Process Sales Data (Filter statusId = 3 which means Ganho/Won)
   const salesData = useMemo(() => {
-    const start = startDateStr ? new Date(startDateStr + 'T00:00:00') : null;
-    const end = endDateStr ? new Date(endDateStr + 'T23:59:59') : null;
+    const start = startDate ? new Date(startDate) : null;
+    if (start) start.setHours(0, 0, 0, 0);
+    const end = endDate ? new Date(endDate) : null;
+    if (end) end.setHours(23, 59, 59, 999);
 
     return opportunities
       .filter(opp => {
@@ -176,7 +170,7 @@ export default function ReportsPage() {
           dateFormatted: new Date(opp.dataFechamentoVenda || opp.dataConversaCriada).toLocaleDateString('pt-BR')
         };
       });
-  }, [opportunities, products, fallbackProducts, contactsMap, conversationsMap, startDateStr, endDateStr, searchTerm]);
+  }, [opportunities, products, fallbackProducts, contactsMap, conversationsMap, startDate, endDate, searchTerm]);
 
   // Summary Metrics
   const metrics = useMemo(() => {
@@ -216,7 +210,15 @@ export default function ReportsPage() {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     
-    const filename = `relatorio_vendas_${startDateStr}_a_${endDateStr}.csv`;
+    const formatCSVDate = (date: Date | null) => {
+      if (!date) return '';
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    const filename = `relatorio_vendas_${formatCSVDate(startDate)}_a_${formatCSVDate(endDate)}.csv`;
     link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
@@ -290,13 +292,21 @@ export default function ReportsPage() {
               <label>Data Início</label>
               <div className="date-input-wrapper">
                 <FaCalendarAlt className="input-icon" />
-                <input 
-                  type="date" 
-                  value={startDateStr} 
-                  onChange={(e) => {
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date: Date | null) => {
                     setPreset('personalizado');
-                    setStartDateStr(e.target.value);
+                    setStartDate(date);
                   }}
+                  selectsStart
+                  startDate={startDate}
+                  endDate={endDate}
+                  placeholderText="DD/MM/AAAA"
+                  dateFormat="dd/MM/yyyy"
+                  className="reports-datepicker-input"
+                  locale="pt-BR"
+                  isClearable
+                  showPopperArrow={false}
                 />
               </div>
             </div>
@@ -305,13 +315,22 @@ export default function ReportsPage() {
               <label>Data Fim</label>
               <div className="date-input-wrapper">
                 <FaCalendarAlt className="input-icon" />
-                <input 
-                  type="date" 
-                  value={endDateStr} 
-                  onChange={(e) => {
+                <DatePicker
+                  selected={endDate}
+                  onChange={(date: Date | null) => {
                     setPreset('personalizado');
-                    setEndDateStr(e.target.value);
+                    setEndDate(date);
                   }}
+                  selectsEnd
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={startDate || undefined}
+                  placeholderText="DD/MM/AAAA"
+                  dateFormat="dd/MM/yyyy"
+                  className="reports-datepicker-input"
+                  locale="pt-BR"
+                  isClearable
+                  showPopperArrow={false}
                 />
               </div>
             </div>
