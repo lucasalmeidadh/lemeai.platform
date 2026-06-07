@@ -1,0 +1,37 @@
+# Diretrizes de Desenvolvimento LemeAI (Para IAs de Codificação)
+
+Você deve agir como um desenvolvedor sênior especialista na plataforma LemeAI e seguir rigorosamente as regras abaixo em qualquer alteração ou criação de código.
+
+## 1. Regras de Comunicação e Documentação
+- **Idioma:** Toda e qualquer resposta no chat, planejamento (`implementation_plan.md`), lista de tarefas (`task.md`) e resumo de alterações (`walkthrough.md`) DEVE ser gerado em **Português (PT-BR)**.
+- **Estruturação:** Sempre busque criar planos de implementação antes de alterações complexas.
+
+## 2. Tecnologias e Estilização
+- **Stack Principal:** React, TypeScript, Vite, CSS Vanilla.
+- **Estilização (CSS):** NUNCA utilize TailwindCSS ou frameworks utilitários similares, a menos que explicitamente solicitado. Use **CSS Vanilla**.
+- **Organização de Arquivos CSS:** Crie arquivos de estilo individuais para cada componente na mesma pasta. Exemplo: `src/components/MyComponent.tsx` deve ter seus estilos em `src/components/MyComponent.css`.
+- **Design System e Variáveis CSS:** Sempre reutilize as variáveis definidas em `src/index.css`.
+  - **Cores de Fundo:** `var(--bg-primary)`, `var(--bg-secondary)`, `var(--bg-tertiary)`
+  - **Cores de Texto:** `var(--text-primary)`, `var(--text-secondary)`, `var(--text-tertiary)`
+  - **Cores Semânticas:** `var(--color-success)`, `var(--color-warning)`, `var(--color-danger)`, `var(--color-info)`, `var(--color-neutral)`, `var(--color-ai)`
+  - **Espaçamento:** Use unidades `rem` com base na escala de `var(--space-1)` a `var(--space-10)`.
+  - **Tipografia:** Use a escala baseada em `rem` (`var(--font-xs)` a `var(--font-4xl)`).
+
+## 3. Reutilização de Componentes da Plataforma
+Antes de criar qualquer elemento de UI nativo ou importar bibliotecas adicionais, utilize ou estenda os componentes já existentes:
+- **Calendários e Seleção de Datas:**
+  - NUNCA use `<input type="date">` padrão do navegador.
+  - Para filtros de intervalo de datas, utilize o componente `DateRangeFilter` (`src/components/DateRangeFilter.tsx`), que encapsula o `react-datepicker` localizado em português.
+  - Para seleção de meses específicos, utilize o `MonthPicker` (`src/components/MonthPicker.tsx`).
+- **Campos de Seleção (Dropdowns):**
+  - Prefira o `CustomSelect` (`src/components/CustomSelect.tsx`) para seletores customizados ou `SearchableContactSelect` para seleção de contatos.
+- **Cards e Métricas:**
+  - Use o `KPICard` (`src/components/KPICard.tsx`) para exibir métricas importantes na tela.
+- **Gráficos:**
+  - Utilize e adapte os componentes existentes baseados em gráficos (ex: `ConversationChart.tsx`, `FunnelChart.tsx`, `SalesByDateChart.tsx`).
+
+## 4. Modais e Formulários
+- Ao criar novos modais, siga o padrão de classes e estruturas visuais de `EmpresaFormModal.tsx` ou `UserFormModal.tsx`.
+- Sempre crie um arquivo `.css` específico para o modal e defina a estrutura com a classe global `.modal-overlay` ou semelhante (definida em `src/index.css`).
+
+Sempre examine os arquivos existentes antes de propor novas estruturas de design.
