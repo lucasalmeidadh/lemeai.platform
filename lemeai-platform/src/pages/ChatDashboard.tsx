@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   FaDollarSign, FaPhoneAlt, FaTrophy, FaCheckCircle, FaTimesCircle,
-  FaHourglassHalf, FaChartLine, FaDesktop, FaChartBar, FaUsers,
+  FaHourglassHalf, FaChartLine, FaDesktop, FaChartBar, FaUsers, FaQuestionCircle,
 } from 'react-icons/fa';
 import AnalyticsPage from './AnalyticsPage';
 import TeamMonitoringModal, { type TeamMember } from '../components/TeamMonitoringModal';
@@ -412,7 +412,22 @@ const ChatDashboard = () => {
 
                   <div className="projection-footer">
                     <FaHourglassHalf className="projection-icon" />
-                    <span>Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.</span>
+                    <span>
+                      Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.
+                      <span className="info-tooltip-container">
+                        <FaQuestionCircle className="info-tooltip-trigger" />
+                        <span className="info-tooltip-text">
+                          <strong>💡 Como calculamos?</strong><br />
+                          {workingDaysInfo.elapsedDays <= 0 ? (
+                            "A projeção começará a ser calculada no primeiro dia útil do mês."
+                          ) : (
+                            <>
+                              Pegamos o faturamento atingido até hoje ({formatCurrency(totalSalesRealized)}) e dividimos pelos dias úteis decorridos ({workingDaysInfo.elapsedDays} {workingDaysInfo.elapsedDays === 1 ? 'dia útil' : 'dias úteis'}) para achar a média diária de {formatCurrency(dailySalesRealized)}. Depois, multiplicamos essa média pelos {workingDaysInfo.monthlyDays} dias úteis totais do mês.
+                            </>
+                          )}
+                        </span>
+                      </span>
+                    </span>
                   </div>
                 </div>
               )}
@@ -622,7 +637,22 @@ const ChatDashboard = () => {
 
                   <div className="projection-footer">
                     <FaHourglassHalf className="projection-icon" />
-                    <span>Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(teamProjectedClosure)}</strong> com base no ritmo atual.</span>
+                    <span>
+                      Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(teamProjectedClosure)}</strong> com base no ritmo atual.
+                      <span className="info-tooltip-container">
+                        <FaQuestionCircle className="info-tooltip-trigger" />
+                        <span className="info-tooltip-text">
+                          <strong>💡 Como calculamos?</strong><br />
+                          {workingDaysInfo.elapsedDays <= 0 ? (
+                            "A projeção começará a ser calculada no primeiro dia útil do mês."
+                          ) : (
+                            <>
+                              Pegamos o faturamento das equipes atingido até hoje ({formatCurrency(totalTeamSalesRealized)}) e dividimos pelos dias úteis decorridos ({workingDaysInfo.elapsedDays} {workingDaysInfo.elapsedDays === 1 ? 'dia útil' : 'dias úteis'}) para achar a média diária de {formatCurrency(teamDailySales)}. Depois, multiplicamos essa média pelos {workingDaysInfo.monthlyDays} dias úteis totais do mês.
+                            </>
+                          )}
+                        </span>
+                      </span>
+                    </span>
                   </div>
                 </div>
               )}

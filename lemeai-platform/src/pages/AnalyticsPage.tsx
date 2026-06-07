@@ -4,7 +4,7 @@ import {
     AreaChart, Area, LabelList
 } from 'recharts';
 import {
-    FaChartLine, FaDollarSign, FaPercent, FaHourglassHalf
+    FaChartLine, FaDollarSign, FaPercent, FaHourglassHalf, FaQuestionCircle
 } from 'react-icons/fa';
 import MonthPicker from '../components/MonthPicker';
 import { OpportunityService } from '../services/OpportunityService';
@@ -110,7 +110,7 @@ const AnalyticsPage = ({ selectedMonth, onMonthChange }: AnalyticsPageProps) => 
 
     const funnelData = useMemo(() => {
         const stages: { [key: string]: { count: number; value: number } } = {
-            'Atendimento IA':  { count: 0, value: 0 },
+            'Novos':            { count: 0, value: 0 },
             'Em Qualificação': { count: 0, value: 0 },
             'Proposta Enviada':{ count: 0, value: 0 },
             'Em Negociação':   { count: 0, value: 0 },
@@ -120,13 +120,13 @@ const AnalyticsPage = ({ selectedMonth, onMonthChange }: AnalyticsPageProps) => 
         opportunities.forEach(op => {
             let key: string;
             switch (op.idStauts) {
-                case 1: case 8: key = 'Atendimento IA';  break;
+                case 1: case 8: key = 'Novos';           break;
                 case 2:         key = 'Em Qualificação'; break;
                 case 4:         key = 'Proposta Enviada'; break;
                 case 5:         key = 'Em Negociação';   break;
                 case 3:         key = 'Venda Fechada';   break;
                 case 6:         key = 'Venda Perdida';   break;
-                default:        key = 'Atendimento IA';  break;
+                default:        key = 'Novos';           break;
             }
             stages[key].count++;
             stages[key].value += op.valor || 0;
@@ -152,15 +152,28 @@ const AnalyticsPage = ({ selectedMonth, onMonthChange }: AnalyticsPageProps) => 
     const getProgressBarColorClass = (pct: number) =>
         pct >= 100 ? 'progress-green' : pct >= 70 ? 'progress-yellow' : 'progress-red';
 
-    const projectedClosure = useMemo(() => {
+    const projectionInfo = useMemo(() => {
         const [year, month] = selectedMonth.split('-').map(Number);
         const now = new Date();
         const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
-        if (!isCurrentMonth || totalRealized === 0) return totalRealized;
         const today = now.getDate();
         const totalDays = new Date(year, month, 0).getDate();
-        return (totalRealized / today) * totalDays;
+        
+        let value = totalRealized;
+        if (isCurrentMonth && totalRealized > 0) {
+            value = (totalRealized / today) * totalDays;
+        }
+        
+        return {
+            isCurrentMonth,
+            today,
+            totalDays,
+            value,
+            dailyAverage: today > 0 ? (totalRealized / today) : 0
+        };
     }, [selectedMonth, totalRealized]);
+
+    const projectedClosure = projectionInfo.value;
 
     const tooltipStyle = {
         backgroundColor: chartColors.tooltipBg,
@@ -278,7 +291,24 @@ const AnalyticsPage = ({ selectedMonth, onMonthChange }: AnalyticsPageProps) => 
 
                         <div className="projection-footer">
                             <FaHourglassHalf className="projection-icon" />
-                            <span>Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.</span>
+                            <span>
+                                Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.
+                                <span className="info-tooltip-container">
+                                    <FaQuestionCircle className="info-tooltip-trigger" />
+                                    <span className="info-tooltip-text">
+                                        <strong>💡 Como calculamos?</strong><br />
+                                        {!projectionInfo.isCurrentMonth ? (
+                                            `Para meses que já terminaram, a projeção é igual ao faturamento total final do período: ${formatCurrency(totalRealized)}.`
+                                        ) : totalRealized <= 0 ? (
+                                            "A projeção começará a ser calculada assim que houver o primeiro faturamento realizado no mês."
+                                        ) : (
+                                            <>
+                                                Como este é o mês atual, pegamos o faturamento coletivo até hoje ({formatCurrency(totalRealized)}) e dividimos pelo dia atual ({projectionInfo.today}) para achar a média de {formatCurrency(projectionInfo.dailyAverage)} por dia. Depois, multiplicamos pelos {projectionInfo.totalDays} dias totais do mês.
+                                            </>
+                                        )}
+                                    </span>
+                                </span>
+                            </span>
                         </div>
                     </div>
                 )}
