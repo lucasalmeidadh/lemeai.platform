@@ -23,6 +23,10 @@ export interface Opportunity {
     nomeUsuarioResponsavel: string;
     valor: number;
     detalhesConversa: DetalheConversa[];
+    campanha?: boolean;
+    idCampanha?: number | null;
+    nomeCampanha?: string;
+    tipoLeadId?: number;
 }
 
 export interface OpportunityResponse {

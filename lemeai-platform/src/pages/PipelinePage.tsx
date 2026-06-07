@@ -226,10 +226,10 @@ const PipelinePage = () => {
                     rawDate: createdDate,
                     contactId: opp.idContato,
                     statusId: statusId,
-                    tipoLeadId: chatDataMap[opp.idConversa]?.tipoLeadId,
-                    campanha: chatDataMap[opp.idConversa]?.campanha,
-                    idCampanha: chatDataMap[opp.idConversa]?.idCampanha,
-                    nomeCampanha: chatDataMap[opp.idConversa]?.nomeCampanha,
+                    tipoLeadId: opp.tipoLeadId !== undefined ? opp.tipoLeadId : chatDataMap[opp.idConversa]?.tipoLeadId,
+                    campanha: opp.campanha !== undefined ? opp.campanha : chatDataMap[opp.idConversa]?.campanha,
+                    idCampanha: opp.idCampanha !== undefined ? opp.idCampanha : chatDataMap[opp.idConversa]?.idCampanha,
+                    nomeCampanha: opp.nomeCampanha !== undefined ? opp.nomeCampanha : (chatDataMap[opp.idConversa]?.nomeCampanha || ''),
                     phone: opp.numeroWhatsapp,
                     details: opp.detalhesConversa
                 };

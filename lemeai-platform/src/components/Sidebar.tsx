@@ -22,7 +22,8 @@ import {
     FaShieldAlt,
     FaBuilding,
     FaChevronRight,
-    FaCalendarCheck
+    FaCalendarCheck,
+    FaFileAlt
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -39,6 +40,7 @@ const Sidebar: FC<SidebarProps> = () => {
     const { unreadCount, clearUnreadCount } = useGlobalNotification();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isMarketingOpen, setIsMarketingOpen] = useState(false);
+    const [isReportsOpen, setIsReportsOpen] = useState(false);
     const settingsRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -50,6 +52,7 @@ const Sidebar: FC<SidebarProps> = () => {
     useEffect(() => {
         setIsSettingsOpen(false);
         setIsMarketingOpen(false);
+        setIsReportsOpen(false);
     }, [location.pathname]);
 
     useEffect(() => {
@@ -57,6 +60,7 @@ const Sidebar: FC<SidebarProps> = () => {
             if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
                 setIsSettingsOpen(false);
                 setIsMarketingOpen(false);
+                setIsReportsOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -70,18 +74,27 @@ const Sidebar: FC<SidebarProps> = () => {
 
     const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas', '/dias-uteis', '/gerenciar-planos'].includes(location.pathname);
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
+    const isReportsActive = location.pathname.startsWith('/relatorios');
 
     const toggleSettings = () => {
         setIsSettingsOpen(!isSettingsOpen);
         setIsMarketingOpen(false);
+        setIsReportsOpen(false);
     };
     const closeSettings = () => {
         setIsSettingsOpen(false);
         setIsMarketingOpen(false);
+        setIsReportsOpen(false);
     };
     const toggleMarketing = () => {
         setIsMarketingOpen(!isMarketingOpen);
         setIsSettingsOpen(false);
+        setIsReportsOpen(false);
+    };
+    const toggleReports = () => {
+        setIsReportsOpen(!isReportsOpen);
+        setIsSettingsOpen(false);
+        setIsMarketingOpen(false);
     };
 
     return (
@@ -140,6 +153,47 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaCalendarAlt />
                     <span>Agenda</span>
                 </Link>
+                <div className="sidebar-item-wrapper">
+                    <button 
+                        id="sidebar-reports"
+                        className={`sidebar-btn ${isReportsActive || isReportsOpen ? 'active' : ''}`}
+                        onClick={toggleReports}
+                    >
+                        <FaFileAlt />
+                        <span>Relatórios</span>
+                    </button>
+                    {isReportsOpen && (
+                        <div className="sidebar-submenu">
+                            <div className="submenu-header">Relatórios</div>
+                            <div className="submenu-group-wrapper">
+                                <button className="submenu-group-btn">
+                                    <FaStream />
+                                    <span>Comercial</span>
+                                    <FaChevronRight className="submenu-chevron" />
+                                </button>
+                                <div className="submenu-group-links">
+                                    <Link to="/relatorios/vendas" className={`submenu-link ${location.pathname === '/relatorios/vendas' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaFileAlt />
+                                        <span>Vendas</span>
+                                    </Link>
+                                </div>
+                            </div>
+                            <div className="submenu-group-wrapper">
+                                <button className="submenu-group-btn">
+                                    <FaBullhorn />
+                                    <span>Marketing</span>
+                                    <FaChevronRight className="submenu-chevron" />
+                                </button>
+                                <div className="submenu-group-links">
+                                    <Link to="/relatorios/campanhas" className={`submenu-link ${location.pathname === '/relatorios/campanhas' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaFileAlt />
+                                        <span>Campanhas</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 {/* 
                 <Link to="/analytics" className={`sidebar-link ${location.pathname === '/analytics' ? 'active' : ''}`}>
                     <FaChartLine />

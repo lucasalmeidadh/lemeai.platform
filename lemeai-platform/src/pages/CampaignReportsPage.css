@@ -1,0 +1,10 @@
+@import "./ReportsPage.css";
+
+/* Specific styles for Campaign Reports Page if any */
+.text-info {
+  color: var(--petroleum-blue);
+}
+
+[data-theme='dark'] .text-info {
+  color: #3b82f6;
+}

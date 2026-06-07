@@ -31,6 +31,8 @@ import EmpresasPage from './pages/EmpresasPage';
 import WorkingDaysPage from './pages/WorkingDaysPage.tsx';
 import PlanManagementPage from './pages/PlanManagementPage';
 import NovidadesPage from './pages/NovidadesPage.tsx';
+import ReportsPage from './pages/ReportsPage.tsx';
+import CampaignReportsPage from './pages/CampaignReportsPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -51,6 +53,8 @@ const router = createBrowserRouter([
           { path: "analytics", element: <AnalyticsPage /> },
           { path: "contacts", element: <ContactsPage /> },
           { path: "agenda", element: <AgendaPage /> },
+          { path: "relatorios/vendas", element: <ReportsPage /> },
+          { path: "relatorios/campanhas", element: <CampaignReportsPage /> },
           { path: "users", element: <UserManagementPage /> },
           // { path: "profiles", element: <ProfileManagementPage /> },
           { path: "chat-rules", element: <SystemPromptsPage /> },

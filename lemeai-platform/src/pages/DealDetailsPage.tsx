@@ -102,6 +102,10 @@ interface Deal {
   phone?: string;
   details?: DetalheConversa[];
   dataFechamentoVenda?: string | null;
+  campanha?: boolean;
+  idCampanha?: number | null;
+  nomeCampanha?: string;
+  tipoLeadId?: number;
 }
 
 interface ApiMessage {
@@ -293,6 +297,10 @@ const DealDetailsPage = () => {
           phone: currentOpp.numeroWhatsapp,
           details: currentOpp.detalhesConversa,
           dataFechamentoVenda: currentOpp.dataFechamentoVenda,
+          campanha: currentOpp.campanha,
+          idCampanha: currentOpp.idCampanha,
+          nomeCampanha: currentOpp.nomeCampanha,
+          tipoLeadId: currentOpp.tipoLeadId,
         };
         setDeal(mappedDeal);
         setStatusId(currentOpp.idStauts);
@@ -923,6 +931,17 @@ const DealDetailsPage = () => {
   useEffect(() => {
     const fetchCampaignInfo = async () => {
       if (!deal) return;
+      if (deal.campanha !== undefined) {
+        setCampaignInfo({
+          campanha: deal.campanha,
+          idCampanha: deal.idCampanha ?? null,
+          nomeCampanha: deal.nomeCampanha || ''
+        });
+        if (deal.tipoLeadId !== undefined) {
+          setTipoLeadId(deal.tipoLeadId);
+        }
+        return;
+      }
       try {
         const response = await apiFetch(`${apiUrl}/api/Chat/ConversasPorVendedor`);
         const result = await response.json();
@@ -935,10 +954,27 @@ const DealDetailsPage = () => {
               nomeCampanha: conv.nomeCampanha || ''
             });
             setTipoLeadId(conv.tipoLeadId || 0);
+          } else {
+            setCampaignInfo({
+              campanha: false,
+              idCampanha: null,
+              nomeCampanha: ''
+            });
           }
+        } else {
+          setCampaignInfo({
+            campanha: false,
+            idCampanha: null,
+            nomeCampanha: ''
+          });
         }
       } catch (err) {
         console.error("Erro ao buscar informações de campanha:", err);
+        setCampaignInfo({
+          campanha: false,
+          idCampanha: null,
+          nomeCampanha: ''
+        });
       }
     };
     fetchCampaignInfo();
