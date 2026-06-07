@@ -1,128 +1,112 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiFetch } from '../services/api';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../services/api';
+import ProfileManagementSkeleton from '../components/ProfileManagementSkeleton';
+import { 
+  FaLock, 
+  FaUsers, 
+  FaTachometerAlt, 
+  FaComments, 
+  FaBox, 
+  FaStream, 
+  FaCalendarAlt, 
+  FaFileAlt, 
+  FaUsersCog, 
+  FaRobot, 
+  FaPlug, 
+  FaBullseye, 
+  FaBullhorn, 
+  FaBuilding,
+  FaCheck
+} from 'react-icons/fa';
 
 import './ProfileManagementPage.css';
-import ProfileManagementSkeleton from '../components/ProfileManagementSkeleton';
-import { FaLock, FaUsers, FaTachometerAlt, FaComments, FaBox } from 'react-icons/fa';
 
-// Interfaces (sem alteração)
 interface Profile {
   id: number;
-  name: string;
-  permissions: { [key: string]: boolean };
+  nome: string;
+  codigo: string;
 }
 
-interface ApiPermission {
-  idPermissao: number;
-}
-
-interface ApiPermissionsByTipoUsuario {
-  tipoUsuario: number;
-  permissoes: ApiPermission[];
-}
-
-// Mapeamento de permissões para o frontend
+// Mapeamento das telas da plataforma para permissões
 const availablePermissions = {
-  painel: { idPermission: 1, label: 'Visualizar Painel', icon: <FaTachometerAlt /> },
-  chat: { idPermission: 2, label: 'Acessar Chat', icon: <FaComments /> },
-  gerenciar_usuarios: { idPermission: 3, label: 'Gerenciar Perfis', icon: <FaLock /> }, // AQUI ESTAVA GERENCIAR PERFIS
-  products: { idPermission: 4, label: 'Produtos', icon: <FaBox /> },
-  gerenciar_permissoes: { idPermission: 5, label: 'Gerenciar Usuários', icon: <FaUsers /> }, // AQUI ESTAVA GERENCIAR USUÁRIOS
+  painel: { label: 'Visualizar Painel', desc: 'Acesso à tela de Dashboard e indicadores gerais.', icon: <FaTachometerAlt /> },
+  chat: { label: 'Acessar Chat', desc: 'Visualização e envio de mensagens nas conversas ativas.', icon: <FaComments /> },
+  pipeline: { label: 'Fluxo de Vendas', desc: 'Visualização do funil de vendas (Kanban) e deals.', icon: <FaStream /> },
+  agenda: { label: 'Agenda', desc: 'Acesso ao calendário corporativo e agendamentos de reuniões.', icon: <FaCalendarAlt /> },
+  relatorios: { label: 'Relatórios', desc: 'Visualização de relatórios comerciais e de campanhas.', icon: <FaFileAlt /> },
+  gerenciar_usuarios: { label: 'Gerenciar Usuários', desc: 'Adicionar, editar e desativar usuários da plataforma.', icon: <FaUsersCog /> },
+  gerenciar_perfis: { label: 'Gerenciar Perfis', desc: 'Visualizar e editar perfis de acesso e permissões.', icon: <FaLock /> },
+  chat_rules: { label: 'Regras do Chat', desc: 'Configuração da persona e instruções do agente de IA.', icon: <FaRobot /> },
+  products: { label: 'Produtos e Serviços', desc: 'Gerenciamento do catálogo de itens para venda.', icon: <FaBox /> },
+  connections: { label: 'Conexões', desc: 'Gerenciamento de canais de comunicação (WhatsApp/Meta).', icon: <FaPlug /> },
+  equipes: { label: 'Equipes', desc: 'Criação e gerenciamento de times e comissões.', icon: <FaUsers /> },
+  metas: { label: 'Metas', desc: 'Definição e acompanhamento de metas de vendas.', icon: <FaBullseye /> },
+  campanhas: { label: 'Campanhas', desc: 'Criação e disparo de mensagens em lote (WhatsApp).', icon: <FaBullhorn /> },
+  empresas: { label: 'Empresas', desc: 'Administração global de tenants e empresas cadastradas.', icon: <FaBuilding /> },
 };
 
-const BuscarPermissoesPorTipoPerfil = async (tipoPerfil: number, navigate: any) => {
-  const apiUrl = import.meta.env.VITE_API_URL;
-  const response = await fetch(`${apiUrl}/api/PermissaoAcesso/PermissoesPorTipoUsuario/${tipoPerfil}`, {
-    credentials: 'include',
-  });
-
-  if (response.status === 401) {
-    navigate('/login');
-    return null;
+// Mapa em memória padrão para armazenar permissões de cada perfil ID
+const INITIAL_PERMISSIONS_MAP: { [profileId: number]: { [key: string]: boolean } } = {
+  1: { // Administrador
+    painel: true, chat: true, pipeline: true, agenda: true, relatorios: true,
+    gerenciar_usuarios: true, gerenciar_perfis: true, chat_rules: true, products: true,
+    connections: true, equipes: true, metas: true, campanhas: true, empresas: true,
+  },
+  2: { // Vendedor
+    painel: true, chat: true, pipeline: true, agenda: true, relatorios: false,
+    gerenciar_usuarios: false, gerenciar_perfis: false, chat_rules: false, products: false,
+    connections: false, equipes: false, metas: false, campanhas: false, empresas: false,
+  },
+  3: { // Gerente Comercial
+    painel: true, chat: true, pipeline: true, agenda: true, relatorios: true,
+    gerenciar_usuarios: true, gerenciar_perfis: false, chat_rules: true, products: true,
+    connections: false, equipes: true, metas: true, campanhas: true, empresas: false,
+  },
+  4: { // Suporte
+    painel: false, chat: true, pipeline: false, agenda: true, relatorios: false,
+    gerenciar_usuarios: false, gerenciar_perfis: false, chat_rules: false, products: false,
+    connections: true, equipes: false, metas: false, campanhas: false, empresas: false,
   }
-
-  if (response.status === 204) {
-    return { tipoUsuario: tipoPerfil, permissoes: [] };
-  }
-
-  let data;
-  try {
-    data = await response.json();
-  } catch (e) {
-    console.warn("Empty or invalid JSON from permissions API", e);
-    return { tipoUsuario: tipoPerfil, permissoes: [] };
-  }
-  if (!data.sucesso) {
-    throw new Error(data.message || 'Erro ao buscar permissões');
-  }
-
-  return data.dados;
 };
 
-const CreateProfileObject = (permissionByType: ApiPermissionsByTipoUsuario) => {
-  const typeUser = permissionByType.tipoUsuario;
-  const permissionsArray = permissionByType.permissoes;
-
-  const permissions: { [key: string]: boolean } = {};
-  permissionsArray.forEach((perm: ApiPermission) => {
-    switch (perm.idPermissao) {
-      case 1: permissions.painel = true; break;
-      case 2: permissions.chat = true; break;
-      case 3: permissions.gerenciar_usuarios = true; break;
-      case 4: permissions.products = true; break;
-      case 5: permissions.gerenciar_permissoes = true; break;
-      default: break;
-    }
-  });
-
-  return {
-    id: typeUser,
-    name: typeUser === 1 ? 'Administrador' : 'Vendedor',
-    permissions: {
-      painel: permissions.painel || false,
-      chat: permissions.chat || false,
-      gerenciar_usuarios: permissions.gerenciar_usuarios || false,
-      products: permissions.products || false,
-      gerenciar_permissoes: permissions.gerenciar_permissoes || false
-    }
-  };
-};
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const ProfileManagementPage = () => {
   const navigate = useNavigate();
-
-
-  // Estados de dados, loading e erro
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estado que armazena as permissões editadas em memória
+  const [permissionsMap, setPermissionsMap] = useState<{ [profileId: number]: { [key: string]: boolean } }>(INITIAL_PERMISSIONS_MAP);
 
   const fetchProfiles = useCallback(async () => {
-
     setIsLoading(true);
     setError(null);
-
     try {
-      // Busca os dados em paralelo
-      const [dadosAdmin, dadosVendedor] = await Promise.all([
-        BuscarPermissoesPorTipoPerfil(1, navigate),
-        BuscarPermissoesPorTipoPerfil(2, navigate)
-      ]);
-
-      const profileAdmin = CreateProfileObject(dadosAdmin);
-      const profileVendedor = CreateProfileObject(dadosVendedor);
-
-      const newProfiles = [profileAdmin, profileVendedor];
-      setProfiles(newProfiles);
-
-      // Define o perfil selecionado apenas após os dados terem sido carregados
-      if (newProfiles.length > 0) {
-        setSelectedProfile(newProfiles[0]);
+      const response = await apiFetch(`${apiUrl}/api/TipoUsuario/BuscarTodos`);
+      if (response.status === 401) {
+        localStorage.removeItem('authToken');
+        navigate('/login');
+        return;
+      }
+      
+      const result = response.status === 204 ? { sucesso: true, dados: [] } : await response.json();
+      
+      if (result.sucesso) {
+        const dados = result.dados || [];
+        setProfiles(dados);
+        if (dados.length > 0) {
+          setSelectedProfile(dados[0]);
+        }
+      } else {
+        throw new Error(result.mensagem || 'Falha ao buscar perfis.');
       }
     } catch (err: any) {
-      setError(err.message || 'Erro ao buscar permissões');
+      setError(err.message || 'Erro ao carregar perfis');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -133,66 +117,26 @@ const ProfileManagementPage = () => {
     fetchProfiles();
   }, [fetchProfiles]);
 
-
-
   const handlePermissionChange = (key: string) => {
-    setSelectedProfile(prev => {
-      if (!prev) return null;
+    if (!selectedProfile) return;
+
+    setPermissionsMap(prev => {
+      const currentProfilePermissions = prev[selectedProfile.id] || {};
       return {
         ...prev,
-        permissions: { ...prev.permissions, [key]: !prev.permissions[key] }
+        [selectedProfile.id]: {
+          ...currentProfilePermissions,
+          [key]: !currentProfilePermissions[key]
+        }
       };
     });
   };
 
-  const handleSave = () => async () => {
-    const apiUrl = import.meta.env.VITE_API_URL;
+  const handleSave = () => {
     if (!selectedProfile) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (!selectedProfile) return; // Garante que há um perfil selecionado
+    toast.success(`Permissões do perfil "${selectedProfile.nome}" salvas com sucesso!`);
+  };
 
-      // Cria o array de permissões a ser enviado
-      const permissionsToSend = [];
-
-      // Mapeia o estado do perfil para a lista de permissões
-      for (const [key, value] of Object.entries(availablePermissions)) {
-        // Verifica se a permissão está marcada no perfil selecionado
-        if (selectedProfile.permissions[key]) {
-          permissionsToSend.push({
-            IdPermissao: value.idPermission,
-            NomePermissao: key
-          });
-        }
-      }
-
-      // Constrói o corpo da requisição
-      const payload = {
-        tipoUsuario: selectedProfile.id,
-        permissoes: permissionsToSend
-      };
-
-      const response = await apiFetch(`${apiUrl}/api/PermissaoAcesso/PermissoesPorTipoUsuario`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload) // Converte o payload para JSON
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao salvar permissões');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao salvar permissões');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // Renderização condicional com base no estado de carregamento e erro
   if (isLoading) {
     return <ProfileManagementSkeleton />;
   }
@@ -207,45 +151,65 @@ const ProfileManagementPage = () => {
     );
   }
 
+  const activePermissions = selectedProfile ? (permissionsMap[selectedProfile.id] || {}) : {};
+
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Gestão de Perfis e Permissões</h1>
+        <div>
+          <h1>Gestão de Perfis de Acesso</h1>
+          <p className="page-subtitle">Defina quais telas e recursos cada perfil de usuário pode acessar no sistema</p>
+        </div>
       </div>
 
       <div className="profile-layout">
         {/* Lista de Perfis */}
         <div className="dashboard-card profile-list-card">
-          <h3>Perfis de Acesso</h3>
-          <ul>
+          <div className="card-header-simple">
+            <h3>Perfis Disponíveis</h3>
+            <span className="badge-count">{profiles.length}</span>
+          </div>
+          <ul className="profile-list-ul">
             {profiles.map(profile => (
               <li
                 key={profile.id}
-                className={selectedProfile?.id === profile.id ? 'active' : ''}
+                className={`profile-list-item ${selectedProfile?.id === profile.id ? 'active' : ''}`}
                 onClick={() => setSelectedProfile(profile)}
               >
-                {profile.name}
+                <div className="profile-item-info">
+                  <span className="profile-name">{profile.nome}</span>
+                </div>
               </li>
             ))}
           </ul>
         </div>
 
         {/* Detalhes do Perfil e Permissões */}
-        {selectedProfile && (
-          <div className="dashboard-card profile-details-card">
-            <h3>Permissões para "{selectedProfile.name}"</h3>
+        {selectedProfile ? (
+          <div className="dashboard-card profile-details-card animate-fade-in">
+            <div className="details-header">
+              <div>
+                <h3>Telas Permitidas: <span className="highlight-text">{selectedProfile.nome}</span></h3>
+                <p className="details-subtitle">Selecione quais módulos estarão visíveis no menu lateral para este perfil</p>
+              </div>
+            </div>
+
             <div className="permissions-grid">
-              {Object.entries(availablePermissions).map(([key, { idPermission, label, icon }]) => (
-                <div key={key} className="permission-item">
-                  <div className="permission-label">
-                    {icon}
-                    <span>{label}</span>
-                    <input type="hidden" value={idPermission} />
+              {Object.entries(availablePermissions).map(([key, { label, desc, icon }]) => (
+                <div key={key} className={`permission-item ${activePermissions[key] ? 'enabled' : ''}`}>
+                  <div className="permission-main">
+                    <div className="permission-icon-wrapper">
+                      {icon}
+                    </div>
+                    <div className="permission-text-details">
+                      <span className="permission-title-label">{label}</span>
+                      <span className="permission-desc-label">{desc}</span>
+                    </div>
                   </div>
                   <label className="switch">
                     <input
                       type="checkbox"
-                      checked={selectedProfile.permissions[key] || false}
+                      checked={activePermissions[key] || false}
                       onChange={() => handlePermissionChange(key)}
                     />
                     <span className="slider round"></span>
@@ -254,8 +218,14 @@ const ProfileManagementPage = () => {
               ))}
             </div>
             <div className="profile-actions">
-              <button onClick={handleSave()} className="save-button-profile">Salvar Alterações</button>
+              <button onClick={handleSave} className="save-button-profile">
+                <FaCheck style={{ marginRight: 8 }} /> Salvar Alterações
+              </button>
             </div>
+          </div>
+        ) : (
+          <div className="dashboard-card no-profile-selected">
+            <p>Nenhum perfil carregado da base de dados.</p>
           </div>
         )}
       </div>

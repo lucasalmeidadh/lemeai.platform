@@ -23,7 +23,8 @@ import {
     FaBuilding,
     FaChevronRight,
     FaCalendarCheck,
-    FaFileAlt
+    FaFileAlt,
+    FaLock
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -72,7 +73,7 @@ const Sidebar: FC<SidebarProps> = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = user?.permissoes?.includes('gbcode_admin_sistema') || false;
 
-    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas', '/dias-uteis', '/gerenciar-planos'].includes(location.pathname);
+    const isConfigActive = ['/users', '/profiles', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas', '/dias-uteis', '/gerenciar-planos'].includes(location.pathname);
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
     const isReportsActive = location.pathname.startsWith('/relatorios');
 
@@ -228,6 +229,10 @@ const Sidebar: FC<SidebarProps> = () => {
                                     <Link id="sidebar-users" to="/users" className={`submenu-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
                                         <FaUsersCog />
                                         <span>Usuários</span>
+                                    </Link>
+                                    <Link id="sidebar-profiles" to="/profiles" className={`submenu-link ${location.pathname === '/profiles' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaLock />
+                                        <span>Perfis</span>
                                     </Link>
                                     <Link to="/equipes" className={`submenu-link ${location.pathname === '/equipes' ? 'active' : ''}`} onClick={closeSettings}>
                                         <FaUsers />
