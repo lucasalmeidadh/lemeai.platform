@@ -9,20 +9,18 @@ import {
 } from 'react-icons/fa';
 import { ProductService, type Product } from '../services/ProductService';
 import { ChatService } from '../services/ChatService';
-import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ConversationWindow from '../components/ConversationWindow';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 import MessageInput from '../components/MessageInput';
 import { type Message } from '../data/mockData';
 import toast from 'react-hot-toast';
-import { OpportunityService, type DetalheConversa, type Opportunity } from '../services/OpportunityService';
+import { OpportunityService, type DetalheConversa } from '../services/OpportunityService';
 import { ContactService } from '../services/ContactService';
 import { AttachmentService } from '../services/AttachmentService';
 import { AgendaService } from '../services/AgendaService';
 import { TarefaService, TipoTarefaService, type Tarefa, type TipoTarefa } from '../services/TarefaService';
 import type { ContatoAnexoResponseDTO, TipoAnexo } from '../types/Attachment';
-import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import { ptBR } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -1325,7 +1323,14 @@ const DealDetailsPage = () => {
                       </div>
                     ))
                   ) : (
-                    <p className="empty-pane-message">Nenhuma anotação cadastrada.</p>
+                    <div className="empty-pane-container">
+                      <FaStickyNote className="empty-pane-icon" />
+                      <p className="empty-pane-title">Nenhuma anotação cadastrada</p>
+                      <p className="empty-pane-subtitle">Adicione anotações para registrar o histórico e detalhes da negociação.</p>
+                      <button className="btn-add-action-inline" onClick={() => setShowAddDetails(true)}>
+                        <FaPlus /> Nova Anotação
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1389,9 +1394,17 @@ const DealDetailsPage = () => {
                           </div>
                         </div>
                       ))
-                    ) : (
-                      <p className="empty-pane-message">Nenhum anexo disponível.</p>
-                    )}
+                      ) : (
+                        <div className="empty-pane-container" style={{ gridColumn: '1 / -1' }}>
+                          <FaPaperclip className="empty-pane-icon" />
+                          <p className="empty-pane-title">Nenhum anexo disponível</p>
+                          <p className="empty-pane-subtitle">Envie documentos, imagens ou mídias compartilhadas para este negócio.</p>
+                          <label className="upload-btn-label" style={{ cursor: 'pointer' }}>
+                            <FaPaperclip /> Enviar Arquivo
+                            <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} />
+                          </label>
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -1458,7 +1471,14 @@ const DealDetailsPage = () => {
                     })}
                   </div>
                 ) : (
-                  <p className="empty-pane-message">Nenhuma tarefa cadastrada. Clique em "Nova Tarefa" para começar.</p>
+                  <div className="empty-pane-container">
+                    <FaCalendarAlt className="empty-pane-icon" />
+                    <p className="empty-pane-title">Nenhuma tarefa agendada</p>
+                    <p className="empty-pane-subtitle">Crie tarefas para não perder prazos e acompanhar a evolução do negócio.</p>
+                    <button className="btn-add-action-inline" onClick={openTaskModal}>
+                      <FaPlus /> Nova Tarefa
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -1616,9 +1636,10 @@ const DealDetailsPage = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="empty-products-pane">
-                      <FaBoxes className="empty-icon" style={{ fontSize: '3rem', opacity: 0.5, color: 'var(--petroleum-blue)' }} />
-                      <p>Nenhum produto ou serviço de interesse vinculado a este Deal.</p>
+                    <div className="empty-pane-container">
+                      <FaBoxes className="empty-pane-icon" />
+                      <p className="empty-pane-title">Nenhum produto vinculado</p>
+                      <p className="empty-pane-subtitle">Vincule produtos ou serviços de interesse para calcular o valor total do Deal.</p>
                       <button className="btn-add-action-inline" onClick={() => {
                         setIsProductModalOpen(true);
                         setSelectedProductId(null);
@@ -1626,7 +1647,7 @@ const DealDetailsPage = () => {
                         setProductCustomPrice('');
                         setProductSearchQuery('');
                       }}>
-                        Vincular Primeiro Produto
+                        <FaPlus /> Vincular Primeiro Produto
                       </button>
                     </div>
                   )}
@@ -1694,7 +1715,7 @@ const DealDetailsPage = () => {
                   <label>Data de retorno (opcional)</label>
                   <DatePicker
                     selected={modalDate}
-                    onChange={d => setModalDate(d)}
+                    onChange={(d: Date | null) => setModalDate(d)}
                     placeholderText="DD/MM/AAAA"
                     dateFormat="dd/MM/yyyy"
                     className="form-input"

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     AreaChart, Area, LabelList
 } from 'recharts';
 import {
@@ -15,12 +15,19 @@ import { useTheme } from '../contexts/ThemeContext';
 import './AnalyticsPage.css';
 
 interface AnalyticsPageProps {
-    goals: unknown[];
-    selectedMonth: string;
-    onMonthChange: (month: string) => void;
+    selectedMonth?: string;
+    onMonthChange?: (month: string) => void;
 }
 
-const AnalyticsPage = ({ selectedMonth, onMonthChange }: AnalyticsPageProps) => {
+const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOnMonthChange }: AnalyticsPageProps) => {
+    const [localMonth, setLocalMonth] = useState(() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    });
+
+    const selectedMonth = propSelectedMonth || localMonth;
+    const onMonthChange = propOnMonthChange || setLocalMonth;
+
     const { theme } = useTheme();
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
     const [individualPerf, setIndividualPerf] = useState<PerformanceIndividual[]>([]);
@@ -145,9 +152,6 @@ const AnalyticsPage = ({ selectedMonth, onMonthChange }: AnalyticsPageProps) => 
 
     const getAchievementColor = (pct: number) =>
         pct >= 100 ? '#16a34a' : pct >= 70 ? '#ca8a04' : '#dc2626';
-
-    const getStatusBadgeClass = (status: string) =>
-        status === 'Atingida' ? 'badge-achieved' : status === 'No prazo' ? 'badge-on-track' : 'badge-at-risk';
 
     const getProgressBarColorClass = (pct: number) =>
         pct >= 100 ? 'progress-green' : pct >= 70 ? 'progress-yellow' : 'progress-red';
