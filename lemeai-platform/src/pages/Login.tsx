@@ -8,7 +8,7 @@ const PHRASES = [
   'Vender mais todo dia.',
   'Focar no que mais importa, vender.',
   'Melhorar a cada mês.',
-  'Do lead a venda fechada.',
+  'Do lead ao negócio ganho.',
 ];
 
 const TYPING_SPEED   = 60;

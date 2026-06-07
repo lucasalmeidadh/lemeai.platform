@@ -14,7 +14,9 @@ import {
     FaBullhorn,
     FaUserClock,
     FaTasks,
-    FaExternalLinkAlt
+    FaExternalLinkAlt,
+    FaSearch,
+    FaTimes
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import { novidadesData } from '../data/novidadesMock';
@@ -38,10 +40,78 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
     const [isNovidadesOpen, setIsNovidadesOpen] = useState(false);
     const novidadesRef = useRef<HTMLDivElement>(null);
 
+    // Search states
+    const [searchTerm, setSearchTerm] = useState('');
+    const [allDeals, setAllDeals] = useState<Opportunity[]>([]);
+    const [contactsDetailsMap, setContactsDetailsMap] = useState<Record<number, any>>({});
+    const [searchResults, setSearchResults] = useState<Opportunity[]>([]);
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const searchContainerRef = useRef<HTMLDivElement>(null);
+
+    const loadSearchData = useCallback(async () => {
+        try {
+            const [opps, contactsData] = await Promise.all([
+                OpportunityService.getAllOpportunities().catch(() => []),
+                ContactService.getAll().catch(() => ({ sucesso: false, dados: [] }))
+            ]);
+
+            setAllDeals(opps);
+
+            const cMap: Record<number, any> = {};
+            if (contactsData.sucesso && Array.isArray(contactsData.dados)) {
+                contactsData.dados.forEach((c: any) => {
+                    cMap[c.contatoId] = c;
+                });
+                setContactsDetailsMap(cMap);
+            }
+        } catch (err) {
+            console.error("Erro ao carregar dados para pesquisa:", err);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadSearchData();
+    }, [loadSearchData]);
+
+    const handleSearchFocus = () => {
+        setIsSearchFocused(true);
+        loadSearchData();
+    };
+
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        const term = searchTerm.toLowerCase().trim();
+        const cleanTerm = term.replace(/\D/g, '');
+
+        const filtered = allDeals.filter(opp => {
+            const contact = contactsDetailsMap[opp.idContato];
+            
+            const matchName = opp.nomeContato?.toLowerCase().includes(term);
+            const matchWhatsapp = opp.numeroWhatsapp?.toLowerCase().includes(term);
+            const matchEmail = contact?.email?.toLowerCase().includes(term);
+            
+            const cleanWhatsapp = opp.numeroWhatsapp?.replace(/\D/g, '') || '';
+            const cleanContactPhone = contact?.telefone?.replace(/\D/g, '') || '';
+            
+            const matchPhone = !!(cleanTerm && (cleanWhatsapp.includes(cleanTerm) || cleanContactPhone.includes(cleanTerm)));
+
+            return matchName || matchWhatsapp || matchEmail || matchPhone;
+        });
+
+        setSearchResults(filtered);
+    }, [searchTerm, allDeals, contactsDetailsMap]);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (novidadesRef.current && !novidadesRef.current.contains(event.target as Node)) {
                 setIsNovidadesOpen(false);
+            }
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+                setIsSearchFocused(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -52,6 +122,8 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
     useEffect(() => {
         setIsNovidadesOpen(false);
+        setIsSearchFocused(false);
+        setSearchTerm('');
     }, [location.pathname]);
 
     interface UnifiedTask {
@@ -204,6 +276,75 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                 </button>
                 {companyName && (
                     <span className="topbar-company-name">{companyName}</span>
+                )}
+            </div>
+
+            {/* Campo de Pesquisa de Deals */}
+            <div className="topbar-search-container" ref={searchContainerRef}>
+                <div className="topbar-search-input-wrapper">
+                    <input
+                        type="text"
+                        placeholder="Buscar negócios (nome, email, tel)..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onFocus={handleSearchFocus}
+                        className="topbar-search-input"
+                        autoComplete="off"
+                    />
+                    <FaSearch className="topbar-search-icon" />
+                    {searchTerm && (
+                        <button className="topbar-search-clear-btn" onClick={() => setSearchTerm('')} title="Limpar pesquisa">
+                            <FaTimes />
+                        </button>
+                    )}
+                </div>
+
+                {isSearchFocused && searchTerm.trim() !== '' && (
+                    <div className="topbar-search-results-dropdown">
+                        {searchResults.length === 0 ? (
+                            <div className="topbar-search-no-results">
+                                Nenhum negócio encontrado
+                            </div>
+                        ) : (
+                            searchResults.map(opp => {
+                                const contact = contactsDetailsMap[opp.idContato];
+                                return (
+                                    <Link
+                                        key={opp.idConversa}
+                                        to={`/pipeline/deal/${opp.idConversa}`}
+                                        onClick={() => {
+                                            setSearchTerm('');
+                                            setIsSearchFocused(false);
+                                        }}
+                                        className="topbar-search-result-item"
+                                    >
+                                        <div className="topbar-search-result-main">
+                                            <span className="topbar-search-result-name">{opp.nomeContato}</span>
+                                            <div className="topbar-search-result-meta">
+                                                <span>{opp.numeroWhatsapp}</span>
+                                                {contact?.email && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span>{contact.email}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="topbar-search-result-side">
+                                            <span className="topbar-search-result-status">
+                                                {opp.descricaoStatus}
+                                            </span>
+                                            {opp.valor > 0 && (
+                                                <span className="topbar-search-result-value">
+                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(opp.valor)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </Link>
+                                );
+                            })
+                        )}
+                    </div>
                 )}
             </div>
 

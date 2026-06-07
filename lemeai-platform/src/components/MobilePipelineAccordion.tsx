@@ -257,7 +257,7 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                                         { value: '2', label: 'Em Qualificação' },
                                         { value: '4', label: 'Proposta Enviada' },
                                         { value: '5', label: 'Em Negociação' },
-                                        { value: '3', label: 'Venda Fechada' },
+                                        { value: '3', label: 'Ganho' },
                                         { value: '6', label: 'Venda Perdida' }
                                     ]}
                                 />

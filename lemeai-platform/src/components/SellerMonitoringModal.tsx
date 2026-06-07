@@ -156,7 +156,7 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
       'Em Qualificação': { count: 0, value: 0 },
       'Proposta Enviada':{ count: 0, value: 0 },
       'Em Negociação':   { count: 0, value: 0 },
-      'Venda Fechada':   { count: 0, value: 0 },
+      'Ganho':   { count: 0, value: 0 },
       'Venda Perdida':   { count: 0, value: 0 },
     };
     assignedDeals.forEach(op => {
@@ -165,7 +165,7 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
         case 2:  key = 'Em Qualificação'; break;
         case 4:  key = 'Proposta Enviada'; break;
         case 5:  key = 'Em Negociação';   break;
-        case 3:  key = 'Venda Fechada';   break;
+        case 3:  key = 'Ganho';   break;
         case 6:  key = 'Venda Perdida';   break;
         default: break;
       }
@@ -370,7 +370,7 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
             >
               <span className="sales-toggle-left">
                 <FaHandshake />
-                <span>Vendas fechadas no mês</span>
+                <span>Negócios ganhos no mês</span>
                 <span className="sales-toggle-count">{closedSalesInMonth.length}</span>
               </span>
               <span className="sales-toggle-summary">
@@ -382,7 +382,7 @@ const SellerMonitoringModal: React.FC<SellerMonitoringModalProps> = ({
             {showSales && (
               <div className="sales-list-wrapper">
                 {closedSalesInMonth.length === 0 ? (
-                  <p className="sales-empty">Nenhuma venda fechada neste mês.</p>
+                  <p className="sales-empty">Nenhum negócio ganho neste mês.</p>
                 ) : (
                   <table className="sales-table">
                     <thead>

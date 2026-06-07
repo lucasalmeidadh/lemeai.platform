@@ -54,7 +54,7 @@ const INITIAL_COLUMNS: Column[] = [
     { id: 'intro', title: 'Em Qualificação', statusId: 2, deals: [] },
     { id: 'proposal', title: 'Proposta Enviada', statusId: 4, deals: [] },
     { id: 'qualified', title: 'Em Negociação', statusId: 5, deals: [] },
-    { id: 'closed', title: 'Venda Fechada', statusId: 3, deals: [] },
+    { id: 'closed', title: 'Ganho', statusId: 3, deals: [] },
     { id: 'lost', title: 'Venda Perdida', statusId: 6, deals: [] }
 ];
 

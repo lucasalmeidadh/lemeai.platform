@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    AreaChart, Area, LabelList
+    AreaChart, Area, LabelList, Cell
 } from 'recharts';
 import {
     FaChartLine, FaDollarSign, FaPercent, FaHourglassHalf, FaQuestionCircle
@@ -69,7 +69,7 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
 
     const stats = useMemo(() => {
         const total = opportunities.length;
-        const won = opportunities.filter(op => op.descricaoStatus?.toLowerCase().includes('fechada')).length;
+        const won = opportunities.filter(op => op.idStauts === 3).length;
         const totalValue = opportunities.reduce((acc, op) => acc + (op.valor || 0), 0);
         const winRate = total > 0 ? (won / total) * 100 : 0;
         return { total, won, totalValue, winRate };
@@ -121,7 +121,7 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
             'Em Qualificação': { count: 0, value: 0 },
             'Proposta Enviada':{ count: 0, value: 0 },
             'Em Negociação':   { count: 0, value: 0 },
-            'Venda Fechada':   { count: 0, value: 0 },
+            'Ganho':   { count: 0, value: 0 },
             'Venda Perdida':   { count: 0, value: 0 },
         };
         opportunities.forEach(op => {
@@ -131,7 +131,7 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
                 case 2:         key = 'Em Qualificação'; break;
                 case 4:         key = 'Proposta Enviada'; break;
                 case 5:         key = 'Em Negociação';   break;
-                case 3:         key = 'Venda Fechada';   break;
+                case 3:         key = 'Ganho';   break;
                 case 6:         key = 'Venda Perdida';   break;
                 default:        key = 'Novos';           break;
             }
@@ -328,7 +328,16 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
                                 <XAxis type="number" hide />
                                 <YAxis dataKey="name" type="category" width={140} stroke={chartColors.text} fontSize={12} />
                                 <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} />
-                                <Bar dataKey="value" fill="var(--petroleum-blue)" radius={[0, 4, 4, 0]}>
+                                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                    {funnelData.map((entry, index) => {
+                                        let cellColor = 'var(--petroleum-blue)';
+                                        if (entry.name === 'Ganho') {
+                                            cellColor = '#4ade80'; // Verde claro premium
+                                        } else if (entry.name === 'Venda Perdida') {
+                                            cellColor = '#f87171'; // Vermelho claro premium
+                                        }
+                                        return <Cell key={`cell-${index}`} fill={cellColor} />;
+                                    })}
                                     <LabelList
                                         dataKey="value"
                                         position="right"

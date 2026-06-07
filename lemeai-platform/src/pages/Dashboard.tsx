@@ -77,14 +77,14 @@ const Dashboard = () => {
 
     const counts: Record<string, number> = {
       'Atendimento IA': 0, 'IA Encerrada': 0, 'Em Qualificação': 0,
-      'Em Negociação': 0, 'Proposta Enviada': 0, 'Venda Fechada': 0, 'Venda Perdida': 0,
+      'Em Negociação': 0, 'Proposta Enviada': 0, 'Ganho': 0, 'Venda Perdida': 0,
     };
 
     const processedLeads = deals.map(op => {
       switch (op.idStauts) {
         case 1: counts['Atendimento IA']++;   break;
         case 2: counts['Em Qualificação']++;  break;
-        case 3: counts['Venda Fechada']++;    break;
+        case 3: counts['Ganho']++;    break;
         case 4: counts['Proposta Enviada']++; break;
         case 5: counts['Em Negociação']++;    break;
         case 6: counts['Venda Perdida']++;    break;
@@ -110,7 +110,7 @@ const Dashboard = () => {
       { id: 'intro',               name: 'Em Qualificação',  value: counts['Em Qualificação'],  color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
       { id: 'qualified',           name: 'Em Negociação',    value: counts['Em Negociação'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
       { id: 'proposal',            name: 'Proposta Enviada', value: counts['Proposta Enviada'], color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
-      { id: 'closed',              name: 'Venda Fechada',    value: counts['Venda Fechada'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+      { id: 'closed',              name: 'Ganho',    value: counts['Ganho'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
       { id: 'lost',                name: 'Venda Perdida',    value: counts['Venda Perdida'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
     ]);
   }, [deals, chatDataMap]);
@@ -176,7 +176,7 @@ const Dashboard = () => {
               { value: 'Em Qualificação', label: 'Em Qualificação' },
               { value: 'Em Negociação', label: 'Em Negociação' },
               { value: 'Proposta Enviada', label: 'Proposta Enviada' },
-              { value: 'Venda Fechada', label: 'Venda Fechada' },
+              { value: 'Ganho', label: 'Ganho' },
               { value: 'Venda Perdida', label: 'Venda Perdida' },
               { value: 'Atendimento IA', label: 'Atendimento IA' },
               { value: 'IA Encerrada', label: 'IA Encerrada' },

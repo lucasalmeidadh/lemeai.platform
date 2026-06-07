@@ -1122,7 +1122,7 @@ const DealDetailsPage = () => {
                     { value: '2', label: 'Em Qualificação' },
                     { value: '4', label: 'Proposta Enviada' },
                     { value: '5', label: 'Em Negociação' },
-                    { value: '3', label: 'Venda Fechada' },
+                    { value: '3', label: 'Ganho' },
                     { value: '6', label: 'Venda Perdida' }
                   ]}
                 />
@@ -1607,7 +1607,7 @@ const DealDetailsPage = () => {
                               const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
                                 method: 'PATCH',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ idStatus: 3, valor: total }), // 3 = Venda Fechada
+                                body: JSON.stringify({ idStatus: 3, valor: total }), // 3 = Ganho
                               });
                               const result = await response.json();
                               if (!response.ok || !result.sucesso) {
@@ -1618,19 +1618,19 @@ const DealDetailsPage = () => {
                               const productsDescription = dealProducts.map(p => `- ${p.nome} (Qtd: ${p.quantidade}) - ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco * p.quantidade)}`).join('\n');
                               await OpportunityService.addDetails({
                                 idConversa: deal.id,
-                                descricao: `🏆 Venda Fechada com sucesso!\nProdutos vendidos:\n${productsDescription}\nTotal: ${formattedTotal}`,
+                                descricao: `🏆 Negócio Ganho com sucesso!\nProdutos vendidos:\n${productsDescription}\nTotal: ${formattedTotal}`,
                                 statusNegociacaoId: 3,
                                 valor: total
                               });
                               
-                              toast.success('🏆 Venda fechada e produtos vinculados!');
+                              toast.success('🏆 Negócio ganho e produtos vinculados!');
                               fetchDealInfo();
                               fetchObservations();
                             } catch (error: any) {
-                              toast.error(`Erro ao fechar venda: ${error.message}`);
+                              toast.error(`Erro ao marcar negócio como ganho: ${error.message}`);
                             }
                           }}>
-                            Simular Fechamento de Venda
+                            Simular Negócio Ganho
                           </button>
                         </div>
                       </div>
