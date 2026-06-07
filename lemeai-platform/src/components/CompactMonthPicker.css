@@ -1,0 +1,10 @@
+.compact-month-picker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.compact-month-picker .custom-select-container {
+  min-width: auto !important;
+  width: 100%;
+}

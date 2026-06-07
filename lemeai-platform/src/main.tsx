@@ -30,6 +30,8 @@ import BillingPlanPage from './pages/BillingPlanPage';
 import EmpresasPage from './pages/EmpresasPage';
 import WorkingDaysPage from './pages/WorkingDaysPage.tsx';
 import PlanManagementPage from './pages/PlanManagementPage';
+import CommissionRulesPage from './pages/CommissionRulesPage.tsx';
+import CommissionsPage from './pages/CommissionsPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -64,6 +66,8 @@ const router = createBrowserRouter([
           { path: "empresas", element: <EmpresasPage /> },
           { path: "dias-uteis", element: <WorkingDaysPage /> },
           { path: "gerenciar-planos", element: <PlanManagementPage /> },
+          { path: "ajustes/comissao-regras", element: <CommissionRulesPage /> },
+          { path: "comissoes", element: <CommissionsPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }

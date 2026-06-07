@@ -22,7 +22,9 @@ import {
     FaShieldAlt,
     FaBuilding,
     FaChevronRight,
-    FaCalendarCheck
+    FaCalendarCheck,
+    FaDollarSign,
+    FaPercentage
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -68,7 +70,7 @@ const Sidebar: FC<SidebarProps> = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const isAdmin = user?.permissoes?.includes('gbcode_admin_sistema') || false;
 
-    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas', '/dias-uteis', '/gerenciar-planos'].includes(location.pathname);
+    const isConfigActive = ['/users', '/equipes', '/metas', '/chat-rules', '/products', '/connections', '/empresas', '/dias-uteis', '/gerenciar-planos', '/ajustes/comissao-regras'].includes(location.pathname);
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
 
     const toggleSettings = () => {
@@ -111,6 +113,10 @@ const Sidebar: FC<SidebarProps> = () => {
                 <Link id="sidebar-pipeline" to="/pipeline" className={`sidebar-link ${location.pathname === '/pipeline' ? 'active' : ''}`}>
                     <FaStream />
                     <span>Fluxo de Vendas</span>
+                </Link>
+                <Link to="/comissoes" className={`sidebar-link ${location.pathname === '/comissoes' ? 'active' : ''}`}>
+                    <FaDollarSign />
+                    <span>Comissões</span>
                 </Link>
                 <div className="sidebar-item-wrapper">
                     <button 
@@ -182,6 +188,10 @@ const Sidebar: FC<SidebarProps> = () => {
                                     <Link to="/metas" className={`submenu-link ${location.pathname === '/metas' ? 'active' : ''}`} onClick={closeSettings}>
                                         <FaBullseye />
                                         <span>Metas</span>
+                                    </Link>
+                                    <Link to="/ajustes/comissao-regras" className={`submenu-link ${location.pathname === '/ajustes/comissao-regras' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <FaPercentage />
+                                        <span>Regras de comissão</span>
                                     </Link>
                                 </div>
                             </div>

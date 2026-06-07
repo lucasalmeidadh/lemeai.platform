@@ -11,6 +11,7 @@ import RelatorioService from '../services/RelatorioService';
 import type { PerformanceIndividual, PerformanceEquipe } from '../services/RelatorioService';
 import { OpportunityService, type Opportunity } from '../services/OpportunityService';
 import { apiFetch } from '../services/api';
+import CompactMonthPicker from '../components/CompactMonthPicker';
 import './GoalsPage.css';
 import './UserManagementPage.css';
 
@@ -503,11 +504,9 @@ const GoalsPage = () => {
 
         <div className="dashboard-card">
           <div className="filters-container">
-            <input
-              type="month"
-              className="filter-input month-filter"
+            <CompactMonthPicker
               value={selectedMonth}
-              onChange={e => setSelectedMonth(e.target.value)}
+              onChange={setSelectedMonth}
             />
           </div>
 
