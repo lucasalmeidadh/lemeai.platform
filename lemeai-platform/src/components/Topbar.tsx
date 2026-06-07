@@ -8,7 +8,8 @@ import {
     FaBars,
     FaQuestionCircle,
     FaMoon,
-    FaSun
+    FaSun,
+    FaCreditCard
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import './Topbar.css';
@@ -21,6 +22,8 @@ interface TopbarProps {
 
 const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }) => {
     const location = useLocation();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const companyName = user?.empresaDescricao || '';
     
     return (
         <header className="topbar">
@@ -28,6 +31,9 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                 <button className="topbar-menu-btn mobile-only" onClick={onToggleMobileMenu} title="Menu">
                     <FaBars />
                 </button>
+                {companyName && (
+                    <span className="topbar-company-name">{companyName}</span>
+                )}
             </div>
 
             <div className="topbar-right">
@@ -46,6 +52,18 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     <div className="topbar-divider"></div>
                     */}
                     
+                    <Link 
+                        id="topbar-billing" 
+                        to="/plano" 
+                        className={`topbar-item ${location.pathname === '/plano' ? 'active' : ''}`}
+                        style={{ textDecoration: 'none' }}
+                    >
+                        <FaCreditCard />
+                        <span>Meu Plano</span>
+                    </Link>
+
+                    <div className="topbar-divider"></div>
+
                     <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
                         <FaUser />
                         <span>Minha conta</span>
@@ -53,7 +71,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
                     <div className="topbar-divider"></div>
 
-                    <ThemeToggle collapsed={false} />
+                    <ThemeToggle collapsed={true} />
 
                     <div className="topbar-divider"></div>
 

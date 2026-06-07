@@ -150,10 +150,6 @@ const Sidebar: FC<SidebarProps> = () => {
                     <FaAddressBook />
                     <span>Contatos</span>
                 </Link>
-                <Link id="sidebar-billing" to="/plano" className={`sidebar-link ${location.pathname === '/plano' ? 'active' : ''}`}>
-                    <FaCreditCard />
-                    <span>Meu Plano</span>
-                </Link>
 
                 <div className="sidebar-item-wrapper">
                     <button 
