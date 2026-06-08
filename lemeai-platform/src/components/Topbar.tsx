@@ -36,6 +36,16 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const companyName = user?.empresaDescricao || '';
+    const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
+
+    useEffect(() => {
+        const handlePhotoUpdate = (e: Event) => {
+            const detail = (e as CustomEvent<{ photoUrl: string | null }>).detail;
+            setPhotoUrl(detail.photoUrl);
+        };
+        window.addEventListener('userPhotoUpdated', handlePhotoUpdate);
+        return () => window.removeEventListener('userPhotoUpdated', handlePhotoUpdate);
+    }, []);
 
     const [isNovidadesOpen, setIsNovidadesOpen] = useState(false);
     const novidadesRef = useRef<HTMLDivElement>(null);
@@ -528,7 +538,11 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     <div className="topbar-divider"></div>
 
                     <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
-                        <FaUser />
+                        {photoUrl ? (
+                            <img src={photoUrl} className="topbar-avatar-img" alt="Avatar" />
+                        ) : (
+                            <FaUser />
+                        )}
                         <span>Minha conta</span>
                     </button>
 

@@ -8,6 +8,7 @@ import {
   FaBullhorn, FaStickyNote, FaBoxes
 } from 'react-icons/fa';
 import { ProductService, type Product } from '../services/ProductService';
+import { ConversaProdutoService, type ConversaProduto } from '../services/ConversaProdutoService';
 import { ChatService } from '../services/ChatService';
 import ConfirmationModal from '../components/ConfirmationModal';
 import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
@@ -30,15 +31,7 @@ import '../components/Skeleton.css';
 import CustomSelect from '../components/CustomSelect';
 import './DealDetailsPage.css';
 
-interface DealProduct {
-  id: string;
-  produtoId: number;
-  nome: string;
-  codigo: string;
-  preco: number;
-  quantidade: number;
-  marca: string;
-}
+type DealProduct = ConversaProduto;
 
 interface AttachmentPreviewProps {
   id: number;
@@ -135,6 +128,7 @@ const DealDetailsPage = () => {
   const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda' | 'products'>('agenda');
 
   const [dealProducts, setDealProducts] = useState<DealProduct[]>([]);
+  const [isLoadingDealProducts, setIsLoadingDealProducts] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -240,23 +234,24 @@ const DealDetailsPage = () => {
     fetchCurrentUser();
   }, []);
 
-  // Load deal products from localStorage
-  useEffect(() => {
-    if (id) {
-      const stored = localStorage.getItem(`deal_products_${id}`);
-      if (stored) {
-        try {
-          setDealProducts(JSON.parse(stored));
-        } catch (e) {
-          console.error("Erro ao carregar produtos do localStorage:", e);
-        }
-      } else {
-        setDealProducts([]);
-      }
+  const fetchDealProducts = useCallback(async () => {
+    if (!id) return;
+    setIsLoadingDealProducts(true);
+    try {
+      const res = await ConversaProdutoService.listar(Number(id));
+      if (res.sucesso) setDealProducts(res.dados ?? []);
+    } catch (err) {
+      console.error('Erro ao buscar produtos da conversa:', err);
+    } finally {
+      setIsLoadingDealProducts(false);
     }
   }, [id]);
 
-  // Load available products from API
+  useEffect(() => {
+    fetchDealProducts();
+  }, [fetchDealProducts]);
+
+  // Load available products from API (used in the add-product modal)
   useEffect(() => {
     const fetchAvailableProducts = async () => {
       try {
@@ -273,13 +268,6 @@ const DealDetailsPage = () => {
     };
     fetchAvailableProducts();
   }, []);
-
-  const saveDealProducts = (newProducts: DealProduct[]) => {
-    setDealProducts(newProducts);
-    if (id) {
-      localStorage.setItem(`deal_products_${id}`, JSON.stringify(newProducts));
-    }
-  };
 
   // Fetch Deal details
   const fetchDealInfo = useCallback(async (silent = false) => {
@@ -1631,7 +1619,12 @@ const DealDetailsPage = () => {
                 </div>
 
                 <div className="products-list-pane">
-                  {dealProducts.length > 0 ? (
+                  {isLoadingDealProducts ? (
+                    <div className="notif-loading" style={{ padding: 'var(--space-8)', justifyContent: 'center' }}>
+                      <div className="notif-spinner"></div>
+                      <span>Carregando produtos...</span>
+                    </div>
+                  ) : dealProducts.length > 0 ? (
                     <div className="deal-products-container">
                       <div className="table-responsive">
                         <table className="deal-products-table">
@@ -1648,38 +1641,68 @@ const DealDetailsPage = () => {
                           </thead>
                           <tbody>
                             {dealProducts.map(p => (
-                              <tr key={p.id}>
-                                <td><code>{p.codigo}</code></td>
-                                <td style={{ fontWeight: 600 }}>{p.nome}</td>
+                              <tr key={p.oportunidadeProdutoId}>
+                                <td><code>{p.codigo ?? '—'}</code></td>
+                                <td style={{ fontWeight: 600 }}>{p.nome ?? '—'}</td>
                                 <td><span className="product-brand-badge">{p.marca || 'N/A'}</span></td>
                                 <td style={{ textAlign: 'center' }}>
                                   <div className="quantity-control">
-                                    <button onClick={() => {
-                                      const updated = dealProducts.map(dp => 
-                                        dp.id === p.id ? { ...dp, quantidade: Math.max(1, dp.quantidade - 1) } : dp
-                                      );
-                                      saveDealProducts(updated);
+                                    <button onClick={async () => {
+                                      const novaQtd = Math.max(1, p.quantidade - 1);
+                                      setDealProducts(prev => prev.map(dp =>
+                                        dp.oportunidadeProdutoId === p.oportunidadeProdutoId
+                                          ? { ...dp, quantidade: novaQtd, precoTotal: novaQtd * dp.precoUnitarioNegociado }
+                                          : dp
+                                      ));
+                                      try {
+                                        await ConversaProdutoService.atualizar(Number(id), p.oportunidadeProdutoId, {
+                                          quantidade: novaQtd,
+                                          precoUnitarioNegociado: p.precoUnitarioNegociado,
+                                        });
+                                        fetchDealInfo(true);
+                                      } catch (err: any) {
+                                        toast.error(err.message || 'Erro ao atualizar quantidade');
+                                        fetchDealProducts();
+                                      }
                                     }}>-</button>
                                     <span>{p.quantidade}</span>
-                                    <button onClick={() => {
-                                      const updated = dealProducts.map(dp => 
-                                        dp.id === p.id ? { ...dp, quantidade: dp.quantidade + 1 } : dp
-                                      );
-                                      saveDealProducts(updated);
+                                    <button onClick={async () => {
+                                      const novaQtd = p.quantidade + 1;
+                                      setDealProducts(prev => prev.map(dp =>
+                                        dp.oportunidadeProdutoId === p.oportunidadeProdutoId
+                                          ? { ...dp, quantidade: novaQtd, precoTotal: novaQtd * dp.precoUnitarioNegociado }
+                                          : dp
+                                      ));
+                                      try {
+                                        await ConversaProdutoService.atualizar(Number(id), p.oportunidadeProdutoId, {
+                                          quantidade: novaQtd,
+                                          precoUnitarioNegociado: p.precoUnitarioNegociado,
+                                        });
+                                        fetchDealInfo(true);
+                                      } catch (err: any) {
+                                        toast.error(err.message || 'Erro ao atualizar quantidade');
+                                        fetchDealProducts();
+                                      }
                                     }}>+</button>
                                   </div>
                                 </td>
                                 <td style={{ textAlign: 'right' }}>
-                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco)}
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.precoUnitarioNegociado)}
                                 </td>
                                 <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--petroleum-blue)' }}>
-                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco * p.quantidade)}
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.precoTotal)}
                                 </td>
                                 <td style={{ textAlign: 'center' }}>
-                                  <button className="product-delete-btn" onClick={() => {
-                                    const updated = dealProducts.filter(dp => dp.id !== p.id);
-                                    saveDealProducts(updated);
-                                    toast.success("Produto removido!");
+                                  <button className="product-delete-btn" onClick={async () => {
+                                    setDealProducts(prev => prev.filter(dp => dp.oportunidadeProdutoId !== p.oportunidadeProdutoId));
+                                    try {
+                                      await ConversaProdutoService.remover(Number(id), p.oportunidadeProdutoId);
+                                      toast.success('Produto removido!');
+                                      fetchDealInfo(true);
+                                    } catch (err: any) {
+                                      toast.error(err.message || 'Erro ao remover produto');
+                                      fetchDealProducts();
+                                    }
                                   }}>
                                     <FaTrash />
                                   </button>
@@ -1695,75 +1718,11 @@ const DealDetailsPage = () => {
                           <span>Total de Produtos:</span>
                           <strong>
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                              dealProducts.reduce((sum, p) => sum + (p.preco * p.quantidade), 0)
+                              dealProducts.reduce((sum, p) => sum + p.precoTotal, 0)
                             )}
                           </strong>
                         </div>
 
-                        <div className="products-actions-footer">
-                          <button className="btn-secondary-action" onClick={async () => {
-                            const total = dealProducts.reduce((sum, p) => sum + (p.preco * p.quantidade), 0);
-                            
-                            // Optimistic update of UI
-                            const formattedNew = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
-                            setDeal(prev => prev ? { ...prev, value: formattedNew, rawValue: total } : null);
-                            
-                            try {
-                              const result = await OpportunityService.addDetails({
-                                idConversa: deal.id,
-                                descricao: `Atualização de valor com base na soma dos produtos vinculados (${formattedNew})`,
-                                statusNegociacaoId: statusId,
-                                valor: total
-                              });
-                              if (result.sucesso) {
-                                toast.success("Valor do Deal sincronizado!");
-                                fetchDealInfo(true);
-                                fetchObservations();
-                              } else {
-                                throw new Error(result.mensagem);
-                              }
-                            } catch (e: any) {
-                              toast.error(`Erro ao salvar valor no servidor: ${e.message}`);
-                            }
-                          }}>
-                            Sincronizar Valor com o Deal
-                          </button>
-                          
-                          <button className="btn-success-action" onClick={async () => {
-                            const total = dealProducts.reduce((sum, p) => sum + (p.preco * p.quantidade), 0);
-                            const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
-                            
-                            try {
-                              // Simulate closing sale
-                              const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ idStatus: 3, valor: total }), // 3 = Ganho
-                              });
-                              const result = await response.json();
-                              if (!response.ok || !result.sucesso) {
-                                throw new Error(result.mensagem || 'Falha ao atualizar status.');
-                              }
-                              
-                              // Log note about products sold
-                              const productsDescription = dealProducts.map(p => `- ${p.nome} (Qtd: ${p.quantidade}) - ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco * p.quantidade)}`).join('\n');
-                              await OpportunityService.addDetails({
-                                idConversa: deal.id,
-                                descricao: `🏆 Negócio Ganho com sucesso!\nProdutos vendidos:\n${productsDescription}\nTotal: ${formattedTotal}`,
-                                statusNegociacaoId: 3,
-                                valor: total
-                              });
-                              
-                              toast.success('🏆 Negócio ganho e produtos vinculados!');
-                              fetchDealInfo(true);
-                              fetchObservations();
-                            } catch (error: any) {
-                              toast.error(`Erro ao marcar negócio como ganho: ${error.message}`);
-                            }
-                          }}>
-                            Simular Negócio Ganho
-                          </button>
-                        </div>
                       </div>
                     </div>
                   ) : (
@@ -1974,27 +1933,26 @@ const DealDetailsPage = () => {
 
             <div className="task-modal-footer">
               <button className="btn-cancel" onClick={() => setIsProductModalOpen(false)}>Cancelar</button>
-              <button 
-                className="btn-save" 
+              <button
+                className="btn-save"
                 disabled={!selectedProductId}
-                onClick={() => {
+                onClick={async () => {
                   if (!selectedProductId) return;
                   const prod = availableProducts.find(p => p.produtoId === selectedProductId);
-                  if (prod) {
-                    const price = parseFloat(productCustomPrice) >= 0 ? parseFloat(productCustomPrice) : prod.preco;
-                    
-                    const updated = [...dealProducts, {
-                      id: `${prod.produtoId}_${Date.now()}`,
+                  if (!prod) return;
+                  const price = parseFloat(productCustomPrice) >= 0 ? parseFloat(productCustomPrice) : prod.preco;
+                  try {
+                    await ConversaProdutoService.vincular(Number(id), {
                       produtoId: prod.produtoId,
-                      nome: prod.nome,
-                      codigo: prod.codigo,
-                      preco: price,
                       quantidade: productQuantity,
-                      marca: prod.marca || ''
-                    }];
-                    saveDealProducts(updated);
+                      precoUnitarioNegociado: price,
+                    });
+                    await fetchDealProducts();
+                    fetchDealInfo(true);
                     setIsProductModalOpen(false);
                     toast.success(`${prod.nome} vinculado ao Deal!`);
+                  } catch (err: any) {
+                    toast.error(err.message || 'Erro ao vincular produto');
                   }
                 }}
               >

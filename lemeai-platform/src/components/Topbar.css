@@ -233,6 +233,15 @@
   color: var(--petroleum-blue);
 }
 
+.topbar-avatar-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--petroleum-blue);
+  flex-shrink: 0;
+}
+
 .topbar-item .logout-icon {
   color: #ef4444;
 }
