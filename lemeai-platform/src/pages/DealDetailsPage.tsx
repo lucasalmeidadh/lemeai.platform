@@ -10,6 +10,7 @@ import {
 import { ProductService, type Product } from '../services/ProductService';
 import { ChatService } from '../services/ChatService';
 import ConfirmationModal from '../components/ConfirmationModal';
+import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
 import ConversationWindow from '../components/ConversationWindow';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 import MessageInput from '../components/MessageInput';
@@ -181,6 +182,10 @@ const DealDetailsPage = () => {
   const [tipoLeadId, setTipoLeadId] = useState<number | undefined>(undefined);
   const [isUpdatingLeadType, setIsUpdatingLeadType] = useState(false);
 
+  // States for handling temperature validation on status change
+  const [isTempModalOpen, setIsTempModalOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
+
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -306,6 +311,9 @@ const DealDetailsPage = () => {
         setStatusId(currentOpp.idStauts);
         setDetailsStatusId(currentOpp.idStauts);
         setDetailsValue(currentOpp.valor || 0);
+        
+        const resolvedTipoLeadId = mappedDeal.tipoLeadId !== undefined ? mappedDeal.tipoLeadId : 0;
+        setTipoLeadId(resolvedTipoLeadId);
       } else {
         toast.error("Oportunidade não encontrada.");
         navigate('/pipeline');
@@ -468,6 +476,45 @@ const DealDetailsPage = () => {
   const handleStatusChange = async (newStatus: string) => {
     if (!deal) return;
     const newStatusId = parseInt(newStatus);
+
+    // Check if status is 3 (Ganho) and temperature is not set to 1 (Quente)
+    if (newStatusId === 3 && tipoLeadId !== 1) {
+      setStatusId(3);
+      setIsUpdatingStatus(true);
+      try {
+        await ChatService.atualizarTipoLead(deal.id, 1);
+        setTipoLeadId(1);
+        
+        const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idStatus: 3, valor: deal.rawValue || 0 }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.sucesso) {
+          throw new Error(result.mensagem || 'Falha ao atualizar status.');
+        }
+        toast.success('Oportunidade ganha e qualificada como quente!');
+        fetchDealInfo(true);
+      } catch (error: any) {
+        toast.error(`Erro: ${error.message}`);
+        setStatusId(deal.statusId || 1);
+        setTipoLeadId(deal.tipoLeadId || 0);
+      } finally {
+        setIsUpdatingStatus(false);
+      }
+      return;
+    }
+
+    // Check if status is 4 (Proposta Enviada) or 5 (Em Negociação) and temperature is not set (0 or undefined)
+    const needsTemperature = (newStatusId === 4 || newStatusId === 5) && (!tipoLeadId || tipoLeadId === 0);
+
+    if (needsTemperature) {
+      setPendingStatusChange(newStatus);
+      setIsTempModalOpen(true);
+      return;
+    }
+
     setStatusId(newStatusId);
     setIsUpdatingStatus(true);
     try {
@@ -481,13 +528,55 @@ const DealDetailsPage = () => {
         throw new Error(result.mensagem || 'Falha ao atualizar status.');
       }
       toast.success('Status atualizado!');
-      fetchDealInfo();
+      fetchDealInfo(true);
     } catch (error: any) {
       toast.error(`Erro: ${error.message}`);
       setStatusId(deal.statusId || 1);
     } finally {
       setIsUpdatingStatus(false);
     }
+  };
+
+  const handleTempConfirm = async (selectedTipoLeadId: number) => {
+    if (!deal || !pendingStatusChange) return;
+
+    setIsTempModalOpen(false);
+    const newStatusId = parseInt(pendingStatusChange);
+    setPendingStatusChange(null);
+
+    const toastId = toast.loading('Qualificando lead...');
+    setIsUpdatingStatus(true);
+    try {
+      // 1. Update Lead Type (Temperature)
+      await ChatService.atualizarTipoLead(deal.id, selectedTipoLeadId);
+      setTipoLeadId(selectedTipoLeadId);
+
+      // 2. Update Deal Status
+      const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idStatus: newStatusId, valor: deal.rawValue || 0 }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.sucesso) {
+        throw new Error(result.mensagem || 'Falha ao atualizar status.');
+      }
+      
+      toast.success('Oportunidade qualificada e status atualizado!', { id: toastId });
+      fetchDealInfo(true);
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao qualificar lead.', { id: toastId });
+      setStatusId(deal.statusId || 1);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleTempCancel = () => {
+    setIsTempModalOpen(false);
+    setPendingStatusChange(null);
+    // Reset dropdown visually
+    setStatusId(deal?.statusId || 1);
   };
 
   // Delete
@@ -545,7 +634,7 @@ const DealDetailsPage = () => {
         toast.success('Anotação adicionada!');
         setDetailsDescription('');
         setShowAddDetails(false);
-        fetchDealInfo();
+        fetchDealInfo(true);
       } else {
         toast.error(result.mensagem || 'Erro ao salvar detalhes.');
       }
@@ -797,7 +886,7 @@ const DealDetailsPage = () => {
       const response = await ChatService.getConversationSummary(deal.id);
       if (response.sucesso) {
         toast.success('Resumo gerado com sucesso!', { id: toastId });
-        await fetchDealInfo();
+        await fetchDealInfo(true);
       } else {
         toast.error(response.mensagem || 'Erro ao gerar resumo.', { id: toastId });
       }
@@ -897,12 +986,12 @@ const DealDetailsPage = () => {
       if (!result.sucesso) {
         throw new Error(result.mensagem || 'Falha ao atualizar valor.');
       }
-      toast.success('Valor atualizado com sucesso!');
+      toast.success('Valor updated successfully!');
       fetchDealInfo(true);
       fetchObservations();
     } catch (e: any) {
       toast.error(`Erro: ${e.message}`);
-      fetchDealInfo();
+      fetchDealInfo(true);
     }
   };
 
@@ -988,7 +1077,7 @@ const DealDetailsPage = () => {
       await ChatService.atualizarTipoLead(deal.id, newTipoLeadId);
       setTipoLeadId(newTipoLeadId);
       toast.success("Temperatura do lead atualizada!");
-      fetchDealInfo();
+      fetchDealInfo(true);
     } catch (error: any) {
       toast.error(error.message || "Erro ao atualizar temperatura do lead");
     } finally {
@@ -1099,6 +1188,12 @@ const DealDetailsPage = () => {
         message="Deseja realmente excluir esta oportunidade? Essa ação é permanente."
         confirmText="Excluir"
         isConfirming={isDeleting}
+      />
+
+      <TemperatureSelectionModal
+        isOpen={isTempModalOpen}
+        onClose={handleTempCancel}
+        onConfirm={handleTempConfirm}
       />
 
       <div className="details-page-header">
@@ -1660,7 +1755,7 @@ const DealDetailsPage = () => {
                               });
                               
                               toast.success('🏆 Negócio ganho e produtos vinculados!');
-                              fetchDealInfo();
+                              fetchDealInfo(true);
                               fetchObservations();
                             } catch (error: any) {
                               toast.error(`Erro ao marcar negócio como ganho: ${error.message}`);

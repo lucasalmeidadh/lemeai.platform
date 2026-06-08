@@ -7,9 +7,6 @@ import type { Equipe } from '../services/EquipeService';
 import ConfirmationModal from '../components/ConfirmationModal';
 import MetaGoalService from '../services/MetaGoalService';
 import EquipeService from '../services/EquipeService';
-import RelatorioService from '../services/RelatorioService';
-import type { PerformanceIndividual, PerformanceEquipe } from '../services/RelatorioService';
-import { OpportunityService, type Opportunity } from '../services/OpportunityService';
 import { apiFetch } from '../services/api';
 import './GoalsPage.css';
 import './UserManagementPage.css';
@@ -53,11 +50,6 @@ const GoalsPage = () => {
     tipo: 'value' | 'quantity' | 'calls';
   } | null>(null);
 
-  // Estados adicionados para a busca dos dados reais de monitoramento/oportunidades
-  const [individualPerf, setIndividualPerf] = useState<PerformanceIndividual[]>([]);
-  const [teamPerf, setTeamPerf] = useState<PerformanceEquipe[]>([]);
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>({});
 
@@ -70,7 +62,6 @@ const GoalsPage = () => {
     try {
       const metas = await MetaGoalService.buscarTodas(mes);
       setGoals(metas.map(m => {
-        // Normaliza o tipo retornado pela API para os tipos internos do frontend
         let mappedType: 'value' | 'quantity' | 'calls' = 'calls';
         const rawTipo = String(m.tipo).toLowerCase();
         if (rawTipo === 'valor' || rawTipo === 'value') {
@@ -97,21 +88,6 @@ const GoalsPage = () => {
     }
   }, []);
 
-  const fetchPerformanceAndOpportunities = useCallback(async (mes: string) => {
-    try {
-      const [indData, teamData, oppData] = await Promise.all([
-        RelatorioService.getPerformanceIndividual(mes).catch(() => []),
-        RelatorioService.getPerformanceEquipes(mes).catch(() => []),
-        OpportunityService.getAllOpportunities().catch(() => []),
-      ]);
-      setIndividualPerf(indData);
-      setTeamPerf(teamData);
-      setOpportunities(oppData);
-    } catch (err) {
-      console.error('Erro ao buscar dados de performance e oportunidades:', err);
-    }
-  }, []);
-
   const fetchStaticData = useCallback(async () => {
     try {
       const [equipesData, usersRes] = await Promise.all([
@@ -135,24 +111,21 @@ const GoalsPage = () => {
     setIsLoading(true);
     Promise.all([
       fetchStaticData(),
-      fetchGoals(selectedMonth),
-      fetchPerformanceAndOpportunities(selectedMonth)
+      fetchGoals(selectedMonth)
     ]).finally(() => setIsLoading(false));
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setIsLoading(true);
     Promise.all([
-      fetchGoals(selectedMonth),
-      fetchPerformanceAndOpportunities(selectedMonth)
+      fetchGoals(selectedMonth)
     ]).finally(() => setIsLoading(false));
-  }, [selectedMonth, fetchGoals, fetchPerformanceAndOpportunities]);
+  }, [selectedMonth, fetchGoals]);
 
   const toggleTeam = (teamId: string) => {
     setExpandedTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }));
   };
 
-  // Sincroniza a meta da equipe correspondente com base no tipo e no mês
   const syncTeamGoal = async (userId: number, type: 'value' | 'quantity' | 'calls', month: string) => {
     try {
       const equipe = equipes.find(e => e.membros.some(m => m.id === userId));
@@ -288,7 +261,6 @@ const GoalsPage = () => {
     if (!goalToDeleteId) return;
     setIsDeleting(false);
 
-    // Encontra a meta antes de deletar para sincronizar depois
     const goalToDelete = goals.find(g => g.id === goalToDeleteId);
 
     try {
@@ -299,7 +271,6 @@ const GoalsPage = () => {
       await fetchGoals(selectedMonth);
 
       if (goalToDelete && goalToDelete.targetType === 'user') {
-        // Aguarda carregar as novas metas e atualiza a equipe
         await syncTeamGoal(goalToDelete.targetId, goalToDelete.type, goalToDelete.month);
         await fetchGoals(selectedMonth);
       }
@@ -337,96 +308,15 @@ const GoalsPage = () => {
     setIsModalOpen(true);
   };
 
-  // Retorna o valor realizado em tempo real alinhado com o monitoramento
-  const getRealizedValue = (
-    targetType: 'user' | 'team',
-    targetId: number,
-    type: 'value' | 'quantity' | 'calls',
-    targetName: string
-  ): number => {
-    if (targetType === 'user') {
-      const perf = individualPerf.find(p => p.usuarioId === targetId);
-      if (type === 'value') {
-        return perf ? perf.totalFaturado : 0;
-      }
-      if (type === 'calls') {
-        return perf ? perf.totalLigacoes : 0;
-      }
-      if (type === 'quantity') {
-        const nameToMatch = targetName.toLowerCase().trim();
-        const salesCount = opportunities.filter(op =>
-          op.nomeUsuarioResponsavel?.toLowerCase().trim() === nameToMatch &&
-          op.idStauts === 3 &&
-          op.dataFechamentoVenda?.startsWith(selectedMonth)
-        ).length;
-        return salesCount;
-      }
-    } else {
-      const perf = teamPerf.find(p => p.equipeId === targetId);
-      if (type === 'value') {
-        return perf ? perf.totalFaturado : 0;
-      }
-      if (type === 'calls') {
-        return perf ? perf.totalLigacoes : 0;
-      }
-      if (type === 'quantity') {
-        const equipe = equipes.find(e => e.id === targetId);
-        if (!equipe) return 0;
-        const membrosNames = equipe.membros.map(m => m.nome.toLowerCase().trim());
-        const salesCount = opportunities.filter(op =>
-          op.idStauts === 3 &&
-          op.dataFechamentoVenda?.startsWith(selectedMonth) &&
-          op.nomeUsuarioResponsavel &&
-          membrosNames.includes(op.nomeUsuarioResponsavel.toLowerCase().trim())
-        ).length;
-        return salesCount;
-      }
-    }
-    return 0;
-  };
-
-  // Métodos auxiliares de renderização
-  const renderGoalCell = (targetType: 'user' | 'team', targetId: number, type: 'value' | 'quantity' | 'calls', targetName: string) => {
+  const renderGoalCell = (targetType: 'user' | 'team', targetId: number, type: 'value' | 'quantity' | 'calls') => {
     const goal = goals.find(g => g.targetType === targetType && g.targetId === targetId && g.type === type);
-    const realized = getRealizedValue(targetType, targetId, type, targetName);
-
-    if (!goal) {
-      if (realized > 0) {
-        return (
-          <div className="goal-cell-content no-goal-defined">
-            <div className="goal-values-wrapper">
-              <div className="goal-values">
-                <span className="goal-target" style={{ color: 'var(--text-tertiary)' }}>-</span>
-                <span className="goal-realized"> / {formatGoalValue(realized, type)}</span>
-              </div>
-            </div>
-          </div>
-        );
-      }
-      return <span className="empty-goal">-</span>;
-    }
-
-    const pct = goal.targetValue > 0 ? Math.min(Math.round((realized / goal.targetValue) * 100), 100) : 0;
-    const badgeColor = pct >= 100 ? 'pct-green' : pct >= 70 ? 'pct-yellow' : 'pct-red';
-
-    return (
-      <div className="goal-cell-content">
-        <div className="goal-values-wrapper">
-          <div className="goal-values">
-            <span className="goal-target">{formatGoalValue(goal.targetValue, type)}</span>
-            <span className="goal-realized"> / {formatGoalValue(realized, type)}</span>
-          </div>
-          <span className={`goal-pct-badge ${badgeColor}`}>{pct}%</span>
-        </div>
-      </div>
-    );
+    if (!goal) return <span className="empty-goal">-</span>;
+    return <span style={{ fontWeight: 600 }}>{formatGoalValue(goal.targetValue, type)}</span>;
   };
 
-  // Renderiza a coluna de Ações para a linha correspondente
   const renderActionsCell = (targetType: 'user' | 'team', targetId: number) => {
     const rowGoals = goals.filter(g => g.targetType === targetType && g.targetId === targetId);
     if (rowGoals.length === 0) return <span className="empty-goal">-</span>;
-
     const showTags = rowGoals.length > 1;
 
     return (
@@ -438,10 +328,10 @@ const GoalsPage = () => {
                 {g.type === 'value' ? 'Fat.' : g.type === 'quantity' ? 'Vnd.' : 'Lig.'}
               </span>
             )}
-            <button className="action-icon-btn edit" onClick={() => handleOpenEdit(g)} title={`Editar Meta (${g.type === 'value' ? 'Faturamento' : g.type === 'quantity' ? 'Vendas' : 'Ligações'})`}>
+            <button className="action-icon-btn edit" onClick={() => handleOpenEdit(g)} title="Editar Meta">
               <FaEdit size={12} />
             </button>
-            <button className="action-icon-btn delete" onClick={() => setGoalToDeleteId(g.id)} title={`Remover Meta (${g.type === 'value' ? 'Faturamento' : g.type === 'quantity' ? 'Vendas' : 'Ligações'})`}>
+            <button className="action-icon-btn delete" onClick={() => setGoalToDeleteId(g.id)} title="Remover Meta">
               <FaTrash size={12} />
             </button>
           </div>
@@ -450,7 +340,6 @@ const GoalsPage = () => {
     );
   };
 
-  // Identifica vendedores sem equipe
   const allTeamMemberIds = equipes.flatMap(e => e.membros.map(m => m.id));
   const independentUsers = users.filter(u => !allTeamMemberIds.includes(u.id));
 
@@ -539,8 +428,8 @@ const GoalsPage = () => {
                     {equipes.map(eq => {
                       const isExpanded = !!expandedTeams[`team-${eq.id}`];
                       return (
-                        <>
-                          <tr key={`team-row-${eq.id}`} className="team-row-header">
+                        <div key={`team-group-${eq.id}`} style={{ display: 'contents' }}>
+                          <tr className="team-row-header">
                             <td>
                               <button className="expand-toggle-btn" onClick={() => toggleTeam(`team-${eq.id}`)}>
                                 {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
@@ -548,9 +437,9 @@ const GoalsPage = () => {
                               <span className="team-name-text">Equipe {eq.nome}</span>
                               <span className="team-badge-members">{eq.membros.length} membros</span>
                             </td>
-                            <td>{renderGoalCell('team', eq.id, 'value', eq.nome)}</td>
-                            <td>{renderGoalCell('team', eq.id, 'quantity', eq.nome)}</td>
-                            <td>{renderGoalCell('team', eq.id, 'calls', eq.nome)}</td>
+                            <td>{renderGoalCell('team', eq.id, 'value')}</td>
+                            <td>{renderGoalCell('team', eq.id, 'quantity')}</td>
+                            <td>{renderGoalCell('team', eq.id, 'calls')}</td>
                             <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('team', eq.id)}</td>
                           </tr>
 
@@ -561,19 +450,19 @@ const GoalsPage = () => {
                                 <span className="member-indent-icon">└</span>
                                 <span className="member-name-text">{mb.nome}</span>
                               </td>
-                              <td>{renderGoalCell('user', mb.id, 'value', mb.nome)}</td>
-                              <td>{renderGoalCell('user', mb.id, 'quantity', mb.nome)}</td>
-                              <td>{renderGoalCell('user', mb.id, 'calls', mb.nome)}</td>
+                              <td>{renderGoalCell('user', mb.id, 'value')}</td>
+                              <td>{renderGoalCell('user', mb.id, 'quantity')}</td>
+                              <td>{renderGoalCell('user', mb.id, 'calls')}</td>
                               <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('user', mb.id)}</td>
                             </tr>
                           ))}
-                        </>
+                        </div>
                       );
                     })}
 
                     {/* Renderiza Vendedores Sem Equipe */}
                     {independentUsers.length > 0 && (
-                      <>
+                      <div style={{ display: 'contents' }}>
                         <tr className="team-row-header independent-header">
                           <td>
                             <button className="expand-toggle-btn" onClick={() => toggleTeam('independent')}>
@@ -591,13 +480,13 @@ const GoalsPage = () => {
                               <span className="member-indent-icon">└</span>
                               <span className="member-name-text">{u.name}</span>
                             </td>
-                            <td>{renderGoalCell('user', u.id, 'value', u.name)}</td>
-                            <td>{renderGoalCell('user', u.id, 'quantity', u.name)}</td>
-                            <td>{renderGoalCell('user', u.id, 'calls', u.name)}</td>
+                            <td>{renderGoalCell('user', u.id, 'value')}</td>
+                            <td>{renderGoalCell('user', u.id, 'quantity')}</td>
+                            <td>{renderGoalCell('user', u.id, 'calls')}</td>
                             <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('user', u.id)}</td>
                           </tr>
                         ))}
-                      </>
+                      </div>
                     )}
                   </>
                 )}
@@ -605,7 +494,6 @@ const GoalsPage = () => {
             </table>
           </div>
         </div>
-
       </div>
     </>
   );

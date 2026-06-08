@@ -3,6 +3,7 @@ import { apiFetch } from '../services/api';
 import { FaTimes, FaPhone, FaEnvelope, FaStickyNote, FaComments, FaPlus, FaFileAlt, FaTrash, FaBoxOpen, FaPaperclip, FaUpload, FaImage, FaFilePdf, FaMusic, FaVideo, FaEye, FaDownload, FaClock, FaCalendarAlt } from 'react-icons/fa';
 import SummaryModal from './SummaryModal';
 import ConfirmationModal from './ConfirmationModal';
+import TemperatureSelectionModal from './TemperatureSelectionModal';
 import './DealDetailsModal.css';
 import ConversationWindow from './ConversationWindow';
 import MessageInput from './MessageInput';
@@ -73,6 +74,10 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
     // Temperature state
     const [tipoLeadId, setTipoLeadId] = useState(deal.tipoLeadId || 0);
     const [isUpdatingLeadType, setIsUpdatingLeadType] = useState(false);
+
+    // States for handling temperature validation on status change
+    const [isTempModalOpen, setIsTempModalOpen] = useState(false);
+    const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
 
     // Deletion state
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -277,6 +282,45 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
 
     const handleStatusChange = async (newStatus: string) => {
         const newStatusId = parseInt(newStatus);
+
+        // Check if status is 3 (Ganho) and temperature is not set to 1 (Quente)
+        if (newStatusId === 3 && tipoLeadId !== 1) {
+            setStatusId(3);
+            setIsUpdatingStatus(true);
+            try {
+                await ChatService.atualizarTipoLead(deal.id, 1);
+                setTipoLeadId(1);
+                
+                const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idStatus: 3, valor: deal.rawValue || 0 }),
+                });
+                const result = await response.json();
+                if (!response.ok || !result.sucesso) {
+                    throw new Error(result.mensagem || 'Falha ao atualizar status.');
+                }
+                toast.success('Oportunidade ganha e qualificada como quente!');
+                if (onUpdate) onUpdate();
+            } catch (error: any) {
+                toast.error(`Erro: ${error.message}`);
+                setStatusId(deal.statusId || 1);
+                setTipoLeadId(deal.tipoLeadId || 0);
+            } finally {
+                setIsUpdatingStatus(false);
+            }
+            return;
+        }
+
+        // Check if status is 4 (Proposta Enviada) or 5 (Em Negociação) and temperature is not set (0 or undefined)
+        const needsTemperature = (newStatusId === 4 || newStatusId === 5) && (!tipoLeadId || tipoLeadId === 0);
+
+        if (needsTemperature) {
+            setPendingStatusChange(newStatus);
+            setIsTempModalOpen(true);
+            return;
+        }
+
         setStatusId(newStatusId);
         setIsUpdatingStatus(true);
 
@@ -298,6 +342,48 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
         } finally {
             setIsUpdatingStatus(false);
         }
+    };
+
+    const handleTempConfirm = async (selectedTipoLeadId: number) => {
+        if (!deal || !pendingStatusChange) return;
+
+        setIsTempModalOpen(false);
+        const newStatusId = parseInt(pendingStatusChange);
+        setPendingStatusChange(null);
+
+        const toastId = toast.loading('Qualificando lead...');
+        setIsUpdatingStatus(true);
+        try {
+            // 1. Update Lead Type (Temperature)
+            await ChatService.atualizarTipoLead(deal.id, selectedTipoLeadId);
+            setTipoLeadId(selectedTipoLeadId);
+
+            // 2. Update Deal Status
+            const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idStatus: newStatusId, valor: deal.rawValue || 0 }),
+            });
+            const result = await response.json();
+            if (!response.ok || !result.sucesso) {
+                throw new Error(result.mensagem || 'Falha ao atualizar status.');
+            }
+            
+            toast.success('Oportunidade qualificada e status atualizado!', { id: toastId });
+            if (onUpdate) onUpdate();
+        } catch (error: any) {
+            toast.error(error.message || 'Erro ao qualificar lead.', { id: toastId });
+            setStatusId(deal.statusId || 1);
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+
+    const handleTempCancel = () => {
+        setIsTempModalOpen(false);
+        setPendingStatusChange(null);
+        // Reset dropdown visually
+        setStatusId(deal?.statusId || 1);
     };
 
     const handleDelete = async () => {
@@ -1033,6 +1119,11 @@ const DealDetailsModal: React.FC<DealDetailsModalProps> = ({ deal, onClose, onUp
                 message="Tem certeza que deseja excluir esta oportunidade? Esta ação não pode ser desfeita e todo o histórico da conversa será perdido."
                 confirmText={isDeleting ? "Excluindo..." : "Sim, Excluir"}
                 cancelText="Cancelar"
+            />
+            <TemperatureSelectionModal
+                isOpen={isTempModalOpen}
+                onClose={handleTempCancel}
+                onConfirm={handleTempConfirm}
             />
         </div>
     );

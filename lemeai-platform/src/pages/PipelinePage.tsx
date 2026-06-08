@@ -11,6 +11,7 @@ import { OpportunityService, type Opportunity, type DetalheConversa } from '../s
 import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
 import { FaMagic, FaFilter } from 'react-icons/fa';
 import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
 import { CampaignService, type Campaign } from '../services/CampaignService';
@@ -70,6 +71,14 @@ const PipelinePage = () => {
     const [selectedCampaign, setSelectedCampaign] = useState('all');
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+
+    // States for handling mandatory temperature selection during drag
+    const [isTempModalOpen, setIsTempModalOpen] = useState(false);
+    const [pendingDragDeal, setPendingDragDeal] = useState<Deal | null>(null);
+    const [pendingDragDestCol, setPendingDragDestCol] = useState<Column | null>(null);
+    const [pendingDragSourceCol, setPendingDragSourceCol] = useState<Column | null>(null);
+    const [pendingDragSourceIndex, setPendingDragSourceIndex] = useState<number>(-1);
+    const [pendingDragDestIndex, setPendingDragDestIndex] = useState<number>(-1);
 
     const handleTemperatureClick = (temp: string) => {
         setSelectedTemperatures(prev => 
@@ -386,26 +395,160 @@ const PipelinePage = () => {
             newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
             setColumns(newColumns);
         } else {
-            // Update the deal status locally
-            removed.statusId = destCol.statusId;
-            destDeals.splice(destination.index, 0, removed);
-            newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
-            newColumns[destColIndex] = { ...destCol, deals: destDeals };
-            setColumns(newColumns);
+            const needsTemperature = (destCol.statusId === 4 || destCol.statusId === 5) && 
+                (!removed.tipoLeadId || removed.tipoLeadId === 0);
 
-            // Call API
-            const success = await updateDealStatus(removed.id, destCol.statusId, removed.rawValue);
-            if (!success) {
-                // Revert if failed (simple revert: refresh)
-                fetchOpportunities();
+            if (destCol.statusId === 3 && removed.tipoLeadId !== 1) {
+                // Automatically qualify as hot (tipoLeadId = 1)
+                removed.tipoLeadId = 1;
+                removed.tag = 'hot';
+                removed.statusId = 3;
+                destDeals.splice(destination.index, 0, removed);
+                newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
+                newColumns[destColIndex] = { ...destCol, deals: destDeals };
+                setColumns(newColumns);
+
+                // Call APIs in background
+                (async () => {
+                    try {
+                        await ChatService.atualizarTipoLead(removed.id, 1);
+                        await updateDealStatus(removed.id, 3, removed.rawValue);
+                        fetchOpportunities(true);
+                    } catch (error) {
+                        fetchOpportunities(true);
+                    }
+                })();
+            } else if (needsTemperature) {
+                // Optimistically move card so it stays in the new column while modal is open
+                removed.statusId = destCol.statusId;
+                destDeals.splice(destination.index, 0, removed);
+                newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
+                newColumns[destColIndex] = { ...destCol, deals: destDeals };
+                setColumns(newColumns);
+
+                // Set pending state and open temperature selection modal
+                setPendingDragDeal(removed);
+                setPendingDragDestCol(destCol);
+                setPendingDragSourceCol(sourceCol);
+                setPendingDragSourceIndex(source.index);
+                setPendingDragDestIndex(destination.index);
+                setIsTempModalOpen(true);
+            } else {
+                removed.statusId = destCol.statusId;
+                destDeals.splice(destination.index, 0, removed);
+                newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
+                newColumns[destColIndex] = { ...destCol, deals: destDeals };
+                setColumns(newColumns);
+
+                // Call API (silent refresh if fails)
+                const success = await updateDealStatus(removed.id, destCol.statusId, removed.rawValue);
+                if (!success) {
+                    fetchOpportunities(true);
+                }
             }
         }
     };
 
+    const handleTempConfirm = async (tipoLeadId: number) => {
+        if (!pendingDragDeal || !pendingDragDestCol) return;
+
+        setIsTempModalOpen(false);
+        const dealId = pendingDragDeal.id;
+        const newStatusId = pendingDragDestCol.statusId;
+
+        // Optimistically update the tag in our state columns so it renders the correct color
+        setColumns(prevColumns => {
+            return prevColumns.map(col => {
+                if (col.statusId === newStatusId) {
+                    return {
+                        ...col,
+                        deals: col.deals.map(d => {
+                            if (d.id === dealId) {
+                                let tag: 'hot' | 'warm' | 'cold' | 'new' = 'new';
+                                if (tipoLeadId === 1) tag = 'hot';
+                                else if (tipoLeadId === 2) tag = 'warm';
+                                else if (tipoLeadId === 3) tag = 'cold';
+                                return {
+                                    ...d,
+                                    tipoLeadId,
+                                    tag
+                                };
+                            }
+                            return d;
+                        })
+                    };
+                }
+                return col;
+            });
+        });
+
+        // Clean up pending states
+        const dealToUpdate = pendingDragDeal;
+        setPendingDragDeal(null);
+        setPendingDragDestCol(null);
+        setPendingDragSourceCol(null);
+
+        const toastId = toast.loading('Qualificando lead...');
+        try {
+            // 1. Update Lead Type (Temperature)
+            await ChatService.atualizarTipoLead(dealId, tipoLeadId);
+            // 2. Update Deal Status
+            const success = await updateDealStatus(dealId, newStatusId, dealToUpdate.rawValue);
+            if (success) {
+                toast.success('Oportunidade qualificada e movida!', { id: toastId });
+            } else {
+                toast.error('Erro ao mover oportunidade.', { id: toastId });
+                fetchOpportunities(true); // Revert via background refresh
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Erro ao qualificar lead.', { id: toastId });
+            fetchOpportunities(true); // Revert via background refresh
+        }
+    };
+
+    const handleTempCancel = () => {
+        if (!pendingDragDeal || !pendingDragSourceCol || !pendingDragDestCol) {
+            setIsTempModalOpen(false);
+            return;
+        }
+
+        setIsTempModalOpen(false);
+
+        // Revert optimistic update
+        setColumns(prevColumns => {
+            const updated = [...prevColumns];
+            const sourceColIdx = updated.findIndex(c => c.id === pendingDragSourceCol.id);
+            const destColIdx = updated.findIndex(c => c.id === pendingDragDestCol.id);
+
+            if (sourceColIdx !== -1 && destColIdx !== -1) {
+                const sDeals = [...updated[sourceColIdx].deals];
+                const dDeals = [...updated[destColIdx].deals];
+
+                // Find and remove from destination column
+                const dealIdx = dDeals.findIndex(d => d.id === pendingDragDeal.id);
+                if (dealIdx !== -1) {
+                    const [deal] = dDeals.splice(dealIdx, 1);
+                    // Reset status to source status
+                    deal.statusId = pendingDragSourceCol.statusId;
+                    // Put back to source index
+                    sDeals.splice(pendingDragSourceIndex, 0, deal);
+
+                    updated[sourceColIdx] = { ...updated[sourceColIdx], deals: sDeals };
+                    updated[destColIdx] = { ...updated[destColIdx], deals: dDeals };
+                }
+            }
+            return updated;
+        });
+
+        // Clean up pending states
+        setPendingDragDeal(null);
+        setPendingDragDestCol(null);
+        setPendingDragSourceCol(null);
+    };
 
     const handleDealUpdate = async () => {
         // Callback when modal updates something (like status)
-        const updatedColumns = await fetchOpportunities();
+        const updatedColumns = await fetchOpportunities(true);
 
         // Update the selected deal object to reflect changes (like value) in the open modal
         if (selectedDeal && updatedColumns) {
@@ -732,6 +875,12 @@ const PipelinePage = () => {
                         message="Deseja gerar o resumo inteligente desta conversa agora?"
                         confirmText="Gerar Resumo"
                         cancelText="Cancelar"
+                    />
+
+                    <TemperatureSelectionModal
+                        isOpen={isTempModalOpen}
+                        onClose={handleTempCancel}
+                        onConfirm={handleTempConfirm}
                     />
 
                     {isFiltersModalOpen && (

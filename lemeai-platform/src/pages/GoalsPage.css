@@ -336,6 +336,24 @@
 .type-quantity { background: var(--color-info-bg);    color: var(--color-info);    }
 .type-calls    { background: var(--color-warning-bg); color: var(--color-warning); }
 
+.target-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--btn-radius-sm);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.target-badge.user {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.target-badge.team {
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral);
+}
+
 .empty-state {
   text-align: center;
   color: var(--text-tertiary);
@@ -346,3 +364,4 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
