@@ -15,6 +15,8 @@ import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
 import { FaMagic, FaFilter } from 'react-icons/fa';
 import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
 import { CampaignService, type Campaign } from '../services/CampaignService';
+import { ConversaProdutoService } from '../services/ConversaProdutoService';
+import WinDealProductModal from '../components/WinDealProductModal';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -79,6 +81,10 @@ const PipelinePage = () => {
     const [pendingDragSourceCol, setPendingDragSourceCol] = useState<Column | null>(null);
     const [pendingDragSourceIndex, setPendingDragSourceIndex] = useState<number>(-1);
     const [pendingDragDestIndex, setPendingDragDestIndex] = useState<number>(-1);
+
+    // States for win-deal product modal (fired when closing a deal without product)
+    const [isWinProductModalOpen, setIsWinProductModalOpen] = useState(false);
+    const [pendingWonDeal, setPendingWonDeal] = useState<Deal | null>(null);
 
     const handleTemperatureClick = (temp: string) => {
         setSelectedTemperatures(prev => 
@@ -294,7 +300,7 @@ const PipelinePage = () => {
         return () => clearInterval(interval);
     }, [fetchOpportunities]);
 
-    const updateDealStatus = async (dealId: number, newStatusId: number, value?: number) => {
+    const updateDealStatus = async (dealId: number, newStatusId: number, value?: number): Promise<{ success: boolean; message?: string }> => {
         try {
             const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${dealId}/AtualizarStatus`, {
                 method: 'PATCH',
@@ -303,15 +309,17 @@ const PipelinePage = () => {
             });
             const result = await response.json();
             if (!response.ok || !result.sucesso) {
-                throw new Error(result.mensagem || 'Falha ao atualizar status.');
+                return { success: false, message: result.mensagem || 'Falha ao atualizar status.' };
             }
-            return true;
-        } catch (error) {
+            return { success: true };
+        } catch (error: any) {
             console.error("Error updating status:", error);
-            toast.error("Erro ao atualizar status.");
-            return false;
+            return { success: false, message: error.message || 'Erro ao atualizar status.' };
         }
     };
+
+    const isProductRequiredError = (message?: string) =>
+        !!message?.toLowerCase().includes('produto');
 
     const stopAutoScroll = () => {
         if (scrollAnimationFrameRef.current !== null) {
@@ -412,8 +420,18 @@ const PipelinePage = () => {
                 (async () => {
                     try {
                         await ChatService.atualizarTipoLead(removed.id, 1);
-                        await updateDealStatus(removed.id, 3, removed.rawValue);
-                        fetchOpportunities(true);
+                        const result = await updateDealStatus(removed.id, 3, removed.rawValue);
+                        if (!result.success) {
+                            if (isProductRequiredError(result.message)) {
+                                setPendingWonDeal(removed);
+                                setIsWinProductModalOpen(true);
+                            } else {
+                                toast.error(result.message || 'Erro ao atualizar status.');
+                                fetchOpportunities(true);
+                            }
+                        } else {
+                            fetchOpportunities(true);
+                        }
                     } catch (error) {
                         fetchOpportunities(true);
                     }
@@ -441,9 +459,15 @@ const PipelinePage = () => {
                 setColumns(newColumns);
 
                 // Call API (silent refresh if fails)
-                const success = await updateDealStatus(removed.id, destCol.statusId, removed.rawValue);
-                if (!success) {
-                    fetchOpportunities(true);
+                const result = await updateDealStatus(removed.id, destCol.statusId, removed.rawValue);
+                if (!result.success) {
+                    if (destCol.statusId === 3 && isProductRequiredError(result.message)) {
+                        setPendingWonDeal(removed);
+                        setIsWinProductModalOpen(true);
+                    } else {
+                        toast.error(result.message || 'Erro ao atualizar status.');
+                        fetchOpportunities(true);
+                    }
                 }
             }
         }
@@ -493,17 +517,37 @@ const PipelinePage = () => {
             // 1. Update Lead Type (Temperature)
             await ChatService.atualizarTipoLead(dealId, tipoLeadId);
             // 2. Update Deal Status
-            const success = await updateDealStatus(dealId, newStatusId, dealToUpdate.rawValue);
-            if (success) {
+            const result = await updateDealStatus(dealId, newStatusId, dealToUpdate.rawValue);
+            if (result.success) {
                 toast.success('Oportunidade qualificada e movida!', { id: toastId });
             } else {
-                toast.error('Erro ao mover oportunidade.', { id: toastId });
+                toast.error(result.message || 'Erro ao mover oportunidade.', { id: toastId });
                 fetchOpportunities(true); // Revert via background refresh
             }
         } catch (error: any) {
             toast.error(error.message || 'Erro ao qualificar lead.', { id: toastId });
             fetchOpportunities(true); // Revert via background refresh
         }
+    };
+
+    const handleWinProductConfirm = async () => {
+        if (!pendingWonDeal) return;
+        const toastId = toast.loading('Fechando venda...');
+        const result = await updateDealStatus(pendingWonDeal.id, 3, pendingWonDeal.rawValue);
+        if (result.success) {
+            toast.success('Venda fechada com sucesso!', { id: toastId });
+        } else {
+            toast.error(result.message || 'Erro ao fechar venda.', { id: toastId });
+        }
+        setIsWinProductModalOpen(false);
+        setPendingWonDeal(null);
+        fetchOpportunities(true);
+    };
+
+    const handleWinProductCancel = () => {
+        setIsWinProductModalOpen(false);
+        setPendingWonDeal(null);
+        fetchOpportunities(true);
     };
 
     const handleTempCancel = () => {
@@ -875,6 +919,14 @@ const PipelinePage = () => {
                         message="Deseja gerar o resumo inteligente desta conversa agora?"
                         confirmText="Gerar Resumo"
                         cancelText="Cancelar"
+                    />
+
+                    <WinDealProductModal
+                        isOpen={isWinProductModalOpen}
+                        dealId={pendingWonDeal?.id ?? 0}
+                        dealTitle={pendingWonDeal?.title ?? ''}
+                        onConfirm={handleWinProductConfirm}
+                        onCancel={handleWinProductCancel}
                     />
 
                     <TemperatureSelectionModal
