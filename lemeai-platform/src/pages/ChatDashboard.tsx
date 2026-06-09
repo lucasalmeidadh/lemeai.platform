@@ -1,409 +1,744 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  FaDollarSign, FaPhoneAlt, FaTrophy, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaChartLine, FaDesktop, FaChartBar
+  FaDollarSign, FaPhoneAlt, FaTrophy, FaCheckCircle, FaTimesCircle,
+  FaHourglassHalf, FaChartLine, FaDesktop, FaChartBar, FaUsers, FaQuestionCircle,
 } from 'react-icons/fa';
 import AnalyticsPage from './AnalyticsPage';
+import TeamMonitoringModal, { type TeamMember } from '../components/TeamMonitoringModal';
+import SellerMonitoringModal from '../components/SellerMonitoringModal';
+import MonthPicker from '../components/MonthPicker';
+import RelatorioService from '../services/RelatorioService';
+import type { PerformanceIndividual, PerformanceEquipe, ProjecaoFechamento } from '../services/RelatorioService';
+import { OpportunityService, type Opportunity } from '../services/OpportunityService';
+import EquipeService, { type Equipe } from '../services/EquipeService';
+import ConfiguracaoService from '../services/ConfiguracaoService';
+import type { DiasUteis } from '../services/ConfiguracaoService';
 import './ChatDashboard.css';
 
-interface Goal {
-  id: string;
-  userId: number;
-  userName: string;
-  type: 'value' | 'quantity' | 'calls';
-  targetValue: number;
-  month: string; // YYYY-MM
-}
-
-interface WorkingDays {
-  monday: boolean;
-  tuesday: boolean;
-  wednesday: boolean;
-  thursday: boolean;
-  friday: boolean;
-  saturday: boolean;
-  sunday: boolean;
-}
-
-const DEFAULT_WORKING_DAYS: WorkingDays = {
-  monday: true,
-  tuesday: true,
-  wednesday: true,
-  thursday: true,
-  friday: true,
-  saturday: false,
-  sunday: false,
+const DEFAULT_WORKING_DAYS: DiasUteis = {
+  segunda: true, terca: true, quarta: true, quinta: true, sexta: true, sabado: false, domingo: false,
 };
 
+// dayNames indexed by getDay(): 0=Sun,1=Mon,...,6=Sat
+const DAY_NAMES: (keyof DiasUteis)[] = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+
 const ChatDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'monitoring' | 'analytics'>('monitoring');
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [workingDays, setWorkingDays] = useState<WorkingDays>(DEFAULT_WORKING_DAYS);
+  const [activeTab, setActiveTab] = useState<'analytics' | 'monitoring' | 'teams'>('analytics');
+  const [workingDays, setWorkingDays] = useState<DiasUteis>(DEFAULT_WORKING_DAYS);
   const [goalsTimeframe, setGoalsTimeframe] = useState<'month' | 'week' | 'day'>('month');
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
 
   const currentMonthStr = useMemo(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   }, []);
 
-  // Calculate working days in current month & week
+  const [monitoringMonth, setMonitoringMonth] = useState(currentMonthStr);
+
+  const [individualPerf, setIndividualPerf] = useState<PerformanceIndividual[]>([]);
+  const [teamPerf, setTeamPerf] = useState<PerformanceEquipe[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [isLoadingIndividual, setIsLoadingIndividual] = useState(false);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [teams, setTeams] = useState<Equipe[]>([]);
+  const [selectedSeller, setSelectedSeller] = useState<PerformanceIndividual | null>(null);
+  const [sellerProjecao, setSellerProjecao] = useState<ProjecaoFechamento | null>(null);
+
   const workingDaysInfo = useMemo(() => {
     const d = new Date();
     const year = d.getFullYear();
     const month = d.getMonth();
-    
     let monthlyDays = 0;
+    let elapsedDays = 0;
+    const today = d.getDate();
     const tempDate = new Date(year, month, 1);
-    const dayNames: (keyof WorkingDays)[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    
     while (tempDate.getMonth() === month) {
-      const dayIndex = tempDate.getDay();
-      if (workingDays[dayNames[dayIndex]]) {
+      if (workingDays[DAY_NAMES[tempDate.getDay()]]) {
         monthlyDays++;
+        if (tempDate.getDate() <= today) elapsedDays++;
       }
       tempDate.setDate(tempDate.getDate() + 1);
     }
-
     const weeklyDays = Object.values(workingDays).filter(Boolean).length;
-
-    return { monthlyDays: monthlyDays || 22, weeklyDays: weeklyDays || 5 };
+    return {
+      monthlyDays: monthlyDays || 22,
+      weeklyDays: weeklyDays || 5,
+      elapsedDays: elapsedDays || 1,
+    };
   }, [workingDays]);
 
-  // Load from localStorage
   useEffect(() => {
-    const storedGoals = localStorage.getItem('lemeai_goals');
-    if (storedGoals) {
-      setGoals(JSON.parse(storedGoals));
-    }
+    ConfiguracaoService.getDiasUteis()
+      .then(setWorkingDays)
+      .catch(() => {/* keep default */ });
+    OpportunityService.getAllOpportunities()
+      .then(setOpportunities)
+      .catch(() => { });
+    EquipeService.buscarTodas()
+      .then(setTeams)
+      .catch(() => { });
+  }, []);
 
-    const storedDays = localStorage.getItem('lemeai_working_days');
-    if (storedDays) {
-      setWorkingDays(JSON.parse(storedDays));
+  const fetchIndividual = useCallback(async (mes: string) => {
+    setIsLoadingIndividual(true);
+    try {
+      const data = await RelatorioService.getPerformanceIndividual(mes);
+      setIndividualPerf(data);
+    } catch {
+      setIndividualPerf([]);
+    } finally {
+      setIsLoadingIndividual(false);
     }
   }, []);
 
-  // Filter current month goals
-  const currentMonthGoals = useMemo(() => {
-    return goals.filter(g => g.month === currentMonthStr);
-  }, [goals, currentMonthStr]);
+  const fetchTeams = useCallback(async (mes: string) => {
+    setIsLoadingTeams(true);
+    try {
+      const data = await RelatorioService.getPerformanceEquipes(mes);
+      setTeamPerf(data);
+    } catch {
+      setTeamPerf([]);
+    } finally {
+      setIsLoadingTeams(false);
+    }
+  }, []);
 
-  // Aggregate targets
-  const totalMonthlyGoal = useMemo(() => {
-    return currentMonthGoals
-      .filter(g => g.type === 'value')
-      .reduce((sum, g) => sum + g.targetValue, 0) || 165000;
-  }, [currentMonthGoals]);
+  useEffect(() => {
+    if (activeTab === 'monitoring') fetchIndividual(monitoringMonth);
+    if (activeTab === 'teams') fetchTeams(monitoringMonth);
+  }, [activeTab, monitoringMonth, fetchIndividual, fetchTeams]);
 
-  const totalMonthlyCallsGoal = useMemo(() => {
-    return currentMonthGoals
-      .filter(g => g.type === 'calls')
-      .reduce((sum, g) => sum + g.targetValue, 0) || 800;
-  }, [currentMonthGoals]);
+  const handleSellerClick = useCallback(async (agent: PerformanceIndividual) => {
+    setSelectedSeller(agent);
+    setSellerProjecao(null);
+    try {
+      const projecao = await RelatorioService.getProjecaoFechamento(monitoringMonth, agent.usuarioId);
+      setSellerProjecao(projecao);
+    } catch {
+      // projeção local como fallback no modal
+    }
+  }, [monitoringMonth]);
 
-  // Dynamic metas based on working days
-  const targetDailyValue = useMemo(() => {
-    return totalMonthlyGoal / workingDaysInfo.monthlyDays;
-  }, [totalMonthlyGoal, workingDaysInfo]);
+  const handleTeamClick = useCallback(async (equipeId: number, mes: string) => {
+    setSelectedTeamId(equipeId);
+    try {
+      const details = await RelatorioService.getPerformanceEquipeMembros(equipeId, mes);
+      setTeamMembers(details.membros.map(m => ({
+        id: m.usuarioId,
+        name: m.usuarioNome,
+        salesValue: m.totalFaturado,
+        calls: m.totalLigacoes,
+        valueGoal: m.metaFaturamento,
+        valueProgress: m.percentualFaturamento,
+      })));
+    } catch {
+      setTeamMembers([]);
+    }
+  }, []);
 
-  const targetWeeklyValue = useMemo(() => {
-    return targetDailyValue * workingDaysInfo.weeklyDays;
-  }, [targetDailyValue, workingDaysInfo]);
+  // ── Individual aggregates ─────────────────────────────────────
+  const totalSalesRealized = useMemo(() =>
+    individualPerf.reduce((s, a) => s + a.totalFaturado, 0), [individualPerf]);
 
-  // Realized Sales & Calls data (Mock linked with actual users)
-  const teamPerformance = useMemo(() => {
-    const agents = [
-      { id: 1, name: 'Lucas Almeida', salesCount: 15, salesValue: 58000, callsCount: 290 },
-      { id: 2, name: 'Ana Silva', salesCount: 10, salesValue: 39500, callsCount: 210 },
-      { id: 3, name: 'Roberto Santos', salesCount: 18, salesValue: 62000, callsCount: 320 },
-      { id: 4, name: 'Julia Costa', salesCount: 4, salesValue: 16000, callsCount: 85 },
-    ];
+  const totalCallsRealized = useMemo(() =>
+    individualPerf.reduce((s, a) => s + a.totalLigacoes, 0), [individualPerf]);
 
-    return agents.map(agent => {
-      // Find individual goals
-      const valueGoal = currentMonthGoals.find(g => g.userId === agent.id && g.type === 'value')?.targetValue || 40000;
-      const callsGoal = currentMonthGoals.find(g => g.userId === agent.id && g.type === 'calls')?.targetValue || 200;
+  const totalMonthlyGoal = useMemo(() =>
+    individualPerf.reduce((s, a) => s + a.metaFaturamento, 0), [individualPerf]);
 
-      const valueProgress = Math.min((agent.salesValue / valueGoal) * 100, 100);
-      const callsProgress = Math.min((agent.callsCount / callsGoal) * 100, 100);
+  const totalMonthlyCallsGoal = useMemo(() =>
+    individualPerf.reduce((s, a) => s + a.metaLigacoes, 0), [individualPerf]);
 
-      // Daily goals (individual)
-      const dailyValueTarget = valueGoal / workingDaysInfo.monthlyDays;
-      // Assume today agent has accomplished a portion of the daily target
-      const dailyValueAccomplished = (agent.salesValue / workingDaysInfo.monthlyDays) * (0.9 + (agent.id % 2) * 0.25);
-      const dailyValueAcheived = dailyValueAccomplished >= dailyValueTarget;
+  const monthlyProgressPercent = useMemo(() =>
+    totalMonthlyGoal > 0 ? Math.round((totalSalesRealized / totalMonthlyGoal) * 100) : 0,
+    [totalSalesRealized, totalMonthlyGoal]);
 
-      return {
-        ...agent,
-        valueGoal,
-        callsGoal,
-        valueProgress,
-        callsProgress,
-        dailyValueTarget,
-        dailyValueAccomplished,
-        dailyValueAcheived
-      };
-    }).sort((a, b) => b.salesValue - a.salesValue); // Sort for ranking
-  }, [currentMonthGoals, workingDaysInfo]);
+  const targetDailyValue = useMemo(() =>
+    totalMonthlyGoal / workingDaysInfo.monthlyDays, [totalMonthlyGoal, workingDaysInfo]);
 
-  // Totals realized
-  const totalSalesRealized = useMemo(() => {
-    return teamPerformance.reduce((sum, item) => sum + item.salesValue, 0);
-  }, [teamPerformance]);
+  const targetWeeklyValue = useMemo(() =>
+    targetDailyValue * workingDaysInfo.weeklyDays, [targetDailyValue, workingDaysInfo]);
 
-  const totalCallsRealized = useMemo(() => {
-    return teamPerformance.reduce((sum, item) => sum + item.callsCount, 0);
-  }, [teamPerformance]);
+  const dailySalesRealized = useMemo(() =>
+    workingDaysInfo.elapsedDays > 0 ? totalSalesRealized / workingDaysInfo.elapsedDays : 0,
+    [totalSalesRealized, workingDaysInfo]);
 
-  // Calculated Progresses for Metas do Time Block
-  const monthlyProgressPercent = useMemo(() => {
-    return Math.round((totalSalesRealized / totalMonthlyGoal) * 100);
-  }, [totalSalesRealized, totalMonthlyGoal]);
+  const weeklySalesRealized = useMemo(() =>
+    dailySalesRealized * workingDaysInfo.weeklyDays, [dailySalesRealized, workingDaysInfo]);
 
-  // For weekly and daily, let's mock elapsed progress that is proportional
-  const weeklySalesRealized = useMemo(() => {
-    return totalSalesRealized * 0.13; // approx 13% (simulating a poor week, showing Red)
-  }, [totalSalesRealized]);
+  const weeklyProgressPercent = useMemo(() =>
+    targetWeeklyValue > 0 ? Math.round((weeklySalesRealized / targetWeeklyValue) * 100) : 0,
+    [weeklySalesRealized, targetWeeklyValue]);
 
-  const weeklyProgressPercent = useMemo(() => {
-    return Math.round((weeklySalesRealized / targetWeeklyValue) * 100);
-  }, [weeklySalesRealized, targetWeeklyValue]);
+  const dailyProgressPercent = useMemo(() =>
+    targetDailyValue > 0 ? Math.round((dailySalesRealized / targetDailyValue) * 100) : 0,
+    [dailySalesRealized, targetDailyValue]);
 
-  const dailySalesRealized = useMemo(() => {
-    return totalSalesRealized * 0.038; // approx 3.8% (simulating a moderate/attention day, showing Yellow)
-  }, [totalSalesRealized]);
+  const projectedClosure = useMemo(() =>
+    dailySalesRealized * workingDaysInfo.monthlyDays,
+    [dailySalesRealized, workingDaysInfo]);
 
-  const dailyProgressPercent = useMemo(() => {
-    return Math.round((dailySalesRealized / targetDailyValue) * 100);
-  }, [dailySalesRealized, targetDailyValue]);
+  const rankedAgents = useMemo(() =>
+    [...individualPerf].sort((a, b) => b.totalFaturado - a.totalFaturado),
+    [individualPerf]);
 
-  // Projected Closure calculation
-  const projectedClosure = useMemo(() => {
-    const elapsedDays = Math.max(new Date().getDate() - 2, 1); // Mock operational days elapsed
-    const monthlyDays = workingDaysInfo.monthlyDays;
-    const dailyAverage = totalSalesRealized / Math.min(elapsedDays, monthlyDays);
-    return dailyAverage * monthlyDays;
-  }, [totalSalesRealized, workingDaysInfo]);
+  const maxFaturadoForBar = useMemo(() =>
+    Math.max(...rankedAgents.map(a => a.totalFaturado), 1),
+    [rankedAgents]);
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  // ── Teams aggregates ──────────────────────────────────────────
+  const totalTeamSalesRealized = useMemo(() =>
+    teamPerf.reduce((s, t) => s + t.totalFaturado, 0), [teamPerf]);
+
+  const totalTeamCallsRealized = useMemo(() =>
+    teamPerf.reduce((s, t) => s + t.totalLigacoes, 0), [teamPerf]);
+
+  const totalTeamMonthlyGoal = useMemo(() =>
+    teamPerf.reduce((s, t) => s + t.metaFaturamento, 0), [teamPerf]);
+
+  const teamMonthlyProgress = useMemo(() =>
+    totalTeamMonthlyGoal > 0 ? Math.round((totalTeamSalesRealized / totalTeamMonthlyGoal) * 100) : 0,
+    [totalTeamSalesRealized, totalTeamMonthlyGoal]);
+
+  const teamTargetDaily = useMemo(() =>
+    totalTeamMonthlyGoal / workingDaysInfo.monthlyDays, [totalTeamMonthlyGoal, workingDaysInfo]);
+
+  const teamDailySales = useMemo(() =>
+    workingDaysInfo.elapsedDays > 0 ? totalTeamSalesRealized / workingDaysInfo.elapsedDays : 0,
+    [totalTeamSalesRealized, workingDaysInfo]);
+
+  const teamTargetWeekly = useMemo(() =>
+    teamTargetDaily * workingDaysInfo.weeklyDays, [teamTargetDaily, workingDaysInfo]);
+
+  const teamWeeklySales = useMemo(() =>
+    teamDailySales * workingDaysInfo.weeklyDays, [teamDailySales, workingDaysInfo]);
+
+  const teamWeeklyProgress = useMemo(() =>
+    teamTargetWeekly > 0 ? Math.round((teamWeeklySales / teamTargetWeekly) * 100) : 0,
+    [teamWeeklySales, teamTargetWeekly]);
+
+  const teamDailyProgress = useMemo(() =>
+    teamTargetDaily > 0 ? Math.round((teamDailySales / teamTargetDaily) * 100) : 0,
+    [teamDailySales, teamTargetDaily]);
+
+  const teamProjectedClosure = useMemo(() =>
+    teamDailySales * workingDaysInfo.monthlyDays,
+    [teamDailySales, workingDaysInfo]);
+
+  const selectedTeam = useMemo(() =>
+    selectedTeamId !== null ? teamPerf.find(t => t.equipeId === selectedTeamId) ?? null : null,
+    [selectedTeamId, teamPerf]);
+
+  const formatCurrency = (val: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+
+  const formatCurrencyShort = (val: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
+
+  const getProgressBarColorClass = (pct: number) => {
+    if (pct >= 100) return 'progress-green';
+    if (pct >= 70) return 'progress-yellow';
+    return 'progress-red';
   };
 
-  const getProgressBarColorClass = (percent: number) => {
-    if (percent >= 100) return 'progress-green';
-    if (percent >= 70) return 'progress-yellow';
-    return 'progress-red';
+  const getStatusBadge = (pct: number) => {
+    if (pct >= 100) return { label: 'Atingida', cls: 'status-achieved' };
+    if (pct >= 70) return { label: 'No prazo', cls: 'status-on-track' };
+    return { label: 'Em risco', cls: 'status-at-risk' };
   };
 
   return (
     <div className="page-container chat-dashboard commercial-dashboard">
+      <TeamMonitoringModal
+        isOpen={selectedTeamId !== null}
+        onClose={() => setSelectedTeamId(null)}
+        teamName={selectedTeam?.equipeNome ?? ''}
+        members={teamMembers}
+        formatCurrency={formatCurrency}
+        getProgressBarColorClass={getProgressBarColorClass}
+      />
+
+      <SellerMonitoringModal
+        isOpen={selectedSeller !== null}
+        onClose={() => { setSelectedSeller(null); setSellerProjecao(null); }}
+        agent={selectedSeller}
+        projecao={sellerProjecao}
+        monitoringMonth={monitoringMonth}
+        opportunities={opportunities}
+        individualPerf={individualPerf}
+        teams={teams}
+        workingDaysInfo={workingDaysInfo}
+        formatCurrency={formatCurrency}
+        getProgressBarColorClass={getProgressBarColorClass}
+      />
+
       <div className="page-header">
-        <div>
-          <h1>Gestão operacional</h1>
-        </div>
+        <h1>Gestão operacional</h1>
       </div>
 
       <div className="dashboard-tabs">
-        <button
-          className={`dashboard-tab ${activeTab === 'monitoring' ? 'active' : ''}`}
-          onClick={() => setActiveTab('monitoring')}
-        >
-          <FaDesktop /> Monitoramento
-        </button>
         <button
           className={`dashboard-tab ${activeTab === 'analytics' ? 'active' : ''}`}
           onClick={() => setActiveTab('analytics')}
         >
           <FaChartBar /> Analytics
         </button>
+        <button
+          className={`dashboard-tab ${activeTab === 'monitoring' ? 'active' : ''}`}
+          onClick={() => setActiveTab('monitoring')}
+        >
+          <FaDesktop /> Individual
+        </button>
+        <button
+          className={`dashboard-tab ${activeTab === 'teams' ? 'active' : ''}`}
+          onClick={() => setActiveTab('teams')}
+        >
+          <FaUsers /> Equipes
+        </button>
       </div>
 
-      {activeTab === 'analytics' && <AnalyticsPage />}
+      {/* ── ANALYTICS ──────────────────────────────────────────── */}
+      {activeTab === 'analytics' && (
+        <AnalyticsPage goals={[]} selectedMonth={monitoringMonth} onMonthChange={setMonitoringMonth} />
+      )}
 
-      {activeTab === 'monitoring' && <>
-      {/* 1. Topo — 2 cards compactos lado a lado */}
-      <div className="compact-kpi-grid">
-        <div className="compact-kpi-card">
-          <div className="compact-kpi-icon"><FaDollarSign /></div>
-          <div className="compact-kpi-info">
-            <span className="compact-kpi-label">Faturamento Total</span>
-            <strong className="compact-kpi-value">{formatCurrency(totalSalesRealized)}</strong>
-          </div>
-        </div>
-        <div className="compact-kpi-card">
-          <div className="compact-kpi-icon"><FaPhoneAlt /></div>
-          <div className="compact-kpi-info">
-            <span className="compact-kpi-label">Ligações Realizadas</span>
-            <strong className="compact-kpi-value">{totalCallsRealized} / {totalMonthlyCallsGoal}</strong>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Bloco de metas do time */}
-      <div className="dashboard-card team-goals-block">
-        <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
-          <div>
-            <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho e Metas Coletivas</h3>
-            <p className="card-subtitle">Acompanhamento proporcional com base nos dias úteis configurados.</p>
-          </div>
-          <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
-            <button 
-              className={`status-pill ${goalsTimeframe === 'month' ? 'active' : ''}`}
-              onClick={() => setGoalsTimeframe('month')}
-            >
-              Mensal
-            </button>
-            <button 
-              className={`status-pill ${goalsTimeframe === 'week' ? 'active' : ''}`}
-              onClick={() => setGoalsTimeframe('week')}
-            >
-              Semanal
-            </button>
-            <button 
-              className={`status-pill ${goalsTimeframe === 'day' ? 'active' : ''}`}
-              onClick={() => setGoalsTimeframe('day')}
-            >
-              Diário
-            </button>
-          </div>
-        </div>
-
-        <div className="stacked-progress-bars">
-          {/* Meta do Mês */}
-          {goalsTimeframe === 'month' && (
-            <div className="progress-row">
-              <span className="progress-label">Meta do Mês</span>
-              <div className="progress-track-wrapper">
-                <div className="progress-track-bg">
-                  <div 
-                    className={`progress-track-fill ${getProgressBarColorClass(monthlyProgressPercent)}`} 
-                    style={{ width: `${Math.min(monthlyProgressPercent, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-              <span className="progress-values">
-                <strong>{formatCurrency(totalSalesRealized)}</strong> / {formatCurrency(totalMonthlyGoal)} ({monthlyProgressPercent}%)
-              </span>
+      {/* ── INDIVIDUAL ─────────────────────────────────────────── */}
+      {activeTab === 'monitoring' && (
+        <>
+          <div className="analytics-header" style={{ marginBottom: '1.5rem' }}>
+            <div className="header-actions">
+              <MonthPicker value={monitoringMonth} onChange={setMonitoringMonth} />
             </div>
-          )}
+          </div>
 
-          {/* Meta da Semana */}
-          {goalsTimeframe === 'week' && (
-            <div className="progress-row">
-              <span className="progress-label">Meta da Semana</span>
-              <div className="progress-track-wrapper">
-                <div className="progress-track-bg">
-                  <div 
-                    className={`progress-track-fill ${getProgressBarColorClass(weeklyProgressPercent)}`} 
-                    style={{ width: `${Math.min(weeklyProgressPercent, 100)}%` }}
-                  ></div>
-                </div>
+          {isLoadingIndividual ? (
+            <>
+              <div className="dashboard-card team-goals-block">
+                <span className="skeleton skeleton-text-md" style={{ width: '260px', marginBottom: '24px' }} />
+                <span className="skeleton" style={{ height: '10px', borderRadius: '99px', display: 'block', marginBottom: '16px' }} />
+                <span className="skeleton skeleton-text-sm" style={{ width: '55%', marginTop: '16px' }} />
               </div>
-              <span className="progress-values">
-                <strong>{formatCurrency(weeklySalesRealized)}</strong> / {formatCurrency(targetWeeklyValue)} ({weeklyProgressPercent}%)
-              </span>
-            </div>
-          )}
-
-          {/* Meta do Dia */}
-          {goalsTimeframe === 'day' && (
-            <div className="progress-row">
-              <span className="progress-label">Meta do Dia</span>
-              <div className="progress-track-wrapper">
-                <div className="progress-track-bg">
-                  <div 
-                    className={`progress-track-fill ${getProgressBarColorClass(dailyProgressPercent)}`} 
-                    style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }}
-                  ></div>
-                </div>
+              <div className="dashboard-card team-ranking-card">
+                <span className="skeleton skeleton-text-md" style={{ width: '220px', marginBottom: '20px' }} />
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="skeleton-table-row">
+                    <span className="skeleton" style={{ width: '32px', height: '32px', borderRadius: '50%', justifySelf: 'center' }} />
+                    <span className="skeleton skeleton-text-md" style={{ width: '120px' }} />
+                    <span className="skeleton skeleton-text-sm" style={{ width: '80px' }} />
+                    <span className="skeleton skeleton-text-md" style={{ width: '100px' }} />
+                    <span className="skeleton" style={{ height: '8px', borderRadius: '99px', display: 'block' }} />
+                    <span className="skeleton" style={{ height: '28px', width: '80px', borderRadius: '20px' }} />
+                  </div>
+                ))}
               </div>
-              <span className="progress-values">
-                <strong>{formatCurrency(dailySalesRealized)}</strong> / {formatCurrency(targetDailyValue)} ({dailyProgressPercent}%)
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="projection-footer">
-          <FaHourglassHalf className="projection-icon" />
-          <span>Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.</span>
-        </div>
-      </div>
-
-      {/* 3. Tabela de desempenho individual */}
-      <div className="dashboard-card team-ranking-card">
-        <div className="card-header">
-          <h3><FaTrophy /> Classificação de Vendedores (Ranking)</h3>
-        </div>
-        <div className="table-container" style={{ marginTop: '16px' }}>
-          <table className="ranking-table">
-            <thead>
-              <tr>
-                <th style={{ width: '80px', textAlign: 'center' }}>Posição</th>
-                <th>Vendedor</th>
-                <th>Total de Ligações</th>
-                <th>Total de Vendas</th>
-                <th>Meta Mensal</th>
-                <th style={{ width: '220px', textAlign: 'center' }}>Meta do Dia</th>
-              </tr>
-            </thead>
-            <tbody>
-              {teamPerformance.map((agent, index) => (
-                <tr key={agent.id}>
-                  <td style={{ textAlign: 'center' }}>
-                    <span className={`ranking-badge rank-${index + 1}`}>
-                      {index + 1}º
-                    </span>
-                  </td>
-                  <td>
-                    <span className="agent-name" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {agent.name}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="ranking-calls-col">
-                      <span className="calls-count"><strong>{agent.callsCount}</strong> / {agent.callsGoal}</span>
-                      <span className="calls-subtitle">Ligações realizadas</span>
+            </>
+          ) : (
+            <>
+              {totalMonthlyGoal > 0 && (
+                <div className="dashboard-card team-goals-block">
+                  <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
+                    <div>
+                      <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho e Metas Coletivas</h3>
+                      <p className="card-subtitle">Acompanhamento proporcional com base nos dias úteis configurados.</p>
                     </div>
-                  </td>
-                  <td>
-                    <div className="ranking-sales-col">
-                      <strong>{formatCurrency(agent.salesValue)}</strong>
-                      <span className="sales-subtitle">{agent.salesCount} vendas</span>
+                    <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
+                      {(['month', 'week', 'day'] as const).map(tf => (
+                        <button
+                          key={tf}
+                          className={`status-pill ${goalsTimeframe === tf ? 'active' : ''}`}
+                          onClick={() => setGoalsTimeframe(tf)}
+                        >
+                          {tf === 'month' ? 'Mensal' : tf === 'week' ? 'Semanal' : 'Diário'}
+                        </button>
+                      ))}
                     </div>
-                  </td>
-                  <td>
-                    <div className="ranking-progress-wrapper">
-                      <div className="ranking-progress-header">
-                        <div className="progress-bar-bg">
-                          <div className="progress-bar-fill value" style={{ width: `${agent.valueProgress}%` }}></div>
+                  </div>
+
+                  <div className="stacked-progress-bars">
+                    {goalsTimeframe === 'month' && (
+                      <div className="progress-row">
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta do Mês</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(totalMonthlyGoal)}</strong>
+                          </div>
                         </div>
-                        <span className="ranking-percent-text">{Math.round(agent.valueProgress)}%</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalSalesRealized)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(monthlyProgressPercent)}`} style={{ width: `${Math.min(monthlyProgressPercent, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{monthlyProgressPercent}%</span>
+                        </div>
                       </div>
-                      <span className="meta-target-caption">Meta: {formatCurrency(agent.valueGoal)}</span>
-                    </div>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <div className="ranking-daily-meta-col" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <span className="daily-meta-values" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                        <strong>{formatCurrency(agent.dailyValueAccomplished)}</strong> / {formatCurrency(agent.dailyValueTarget)}
+                    )}
+                    {goalsTimeframe === 'week' && (
+                      <div className="progress-row">
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta da Semana</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(targetWeeklyValue)}</strong>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(weeklySalesRealized)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(weeklyProgressPercent)}`} style={{ width: `${Math.min(weeklyProgressPercent, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{weeklyProgressPercent}%</span>
+                        </div>
+                      </div>
+                    )}
+                    {goalsTimeframe === 'day' && (
+                      <div className="progress-row">
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta do Dia</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(targetDailyValue)}</strong>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(dailySalesRealized)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(dailyProgressPercent)}`} style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{dailyProgressPercent}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="projection-footer">
+                    <FaHourglassHalf className="projection-icon" />
+                    <span>
+                      Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.
+                      <span className="info-tooltip-container">
+                        <FaQuestionCircle className="info-tooltip-trigger" />
+                        <span className="info-tooltip-text">
+                          <strong>💡 Como calculamos?</strong><br />
+                          {workingDaysInfo.elapsedDays <= 0 ? (
+                            "A projeção começará a ser calculada no primeiro dia útil do mês."
+                          ) : (
+                            <>
+                              Pegamos o faturamento atingido até hoje ({formatCurrency(totalSalesRealized)}) e dividimos pelos dias úteis decorridos ({workingDaysInfo.elapsedDays} {workingDaysInfo.elapsedDays === 1 ? 'dia útil' : 'dias úteis'}) para achar a média diária de {formatCurrency(dailySalesRealized)}. Depois, multiplicamos essa média pelos {workingDaysInfo.monthlyDays} dias úteis totais do mês.
+                            </>
+                          )}
+                        </span>
                       </span>
-                      {agent.dailyValueAcheived ? (
-                        <span className="status-badge-meta completed" title="Meta diária atingida">
-                          <FaCheckCircle /> Batida
-                        </span>
-                      ) : (
-                        <span className="status-badge-meta pending" title="Abaixo da meta diária">
-                          <FaTimesCircle /> Pendente
-                        </span>
-                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="dashboard-card team-ranking-card">
+                <div className="card-header">
+                  <h3><FaTrophy /> Classificação de Vendedores (Ranking)</h3>
+                </div>
+                <div className="table-container" style={{ marginTop: '16px' }}>
+                  <table className="ranking-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '80px', textAlign: 'center' }}>Posição</th>
+                        <th>Vendedor</th>
+                        <th>Total de Ligações</th>
+                        <th>Faturamento</th>
+                        <th>Meta Mensal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rankedAgents.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                            Nenhum dado disponível para este mês.
+                          </td>
+                        </tr>
+                      ) : rankedAgents.map((agent, index) => {
+                        return (
+                          <tr
+                            key={agent.usuarioId}
+                            onClick={() => handleSellerClick(agent)}
+                            style={{ cursor: 'pointer' }}
+                            title="Clique para ver detalhes do vendedor"
+                          >
+                            <td style={{ textAlign: 'center' }}>
+                              <span className={`ranking-badge rank-${index + 1}`}>{index + 1}º</span>
+                            </td>
+                            <td><span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{agent.usuarioNome}</span></td>
+                            <td>
+                              <div className="ranking-calls-col">
+                                <span className="calls-count"><strong>{agent.totalLigacoes}</strong> / {agent.metaLigacoes}</span>
+                                <span className="calls-subtitle">Ligações realizadas</span>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="ranking-sales-col">
+                                <strong>{formatCurrency(agent.totalFaturado)}</strong>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="ranking-progress-wrapper">
+                                <div className="ranking-progress-header">
+                                  <div className="progress-bar-bg">
+                                    <div
+                                      className={`progress-track-fill ${getProgressBarColorClass(
+                                        agent.metaFaturamento > 0
+                                          ? agent.percentualFaturamento
+                                          : Math.round((agent.totalFaturado / maxFaturadoForBar) * 100)
+                                      )}`}
+                                      style={{
+                                        width: agent.metaFaturamento > 0
+                                          ? `${Math.min(agent.percentualFaturamento, 100)}%`
+                                          : `${Math.round((agent.totalFaturado / maxFaturadoForBar) * 100)}%`
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="ranking-percent-text">
+                                    {agent.metaFaturamento > 0 ? `${agent.percentualFaturamento}%` : '—'}
+                                  </span>
+                                </div>
+                                <span className="meta-target-caption">
+                                  {agent.metaFaturamento > 0
+                                    ? `Meta: ${formatCurrency(agent.metaFaturamento)}`
+                                    : 'Sem meta definida'}
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* ── EQUIPES ────────────────────────────────────────────── */}
+      {activeTab === 'teams' && (
+        <>
+          <div className="analytics-header" style={{ marginBottom: '1.5rem' }}>
+            <div className="header-actions">
+              <MonthPicker value={monitoringMonth} onChange={setMonitoringMonth} />
+            </div>
+          </div>
+
+          {isLoadingTeams ? (
+            <>
+              <div className="dashboard-card team-goals-block">
+                <span className="skeleton skeleton-text-md" style={{ width: '240px', marginBottom: '24px' }} />
+                <span className="skeleton" style={{ height: '10px', borderRadius: '99px', display: 'block', marginBottom: '16px' }} />
+                <span className="skeleton skeleton-text-sm" style={{ width: '55%', marginTop: '16px' }} />
+              </div>
+              <div className="teams-monitoring-grid">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="team-monitoring-card" style={{ cursor: 'default', pointerEvents: 'none' }}>
+                    <div className="team-card-header">
+                      <span className="skeleton" style={{ width: '36px', height: '36px', borderRadius: '9px', flexShrink: 0 }} />
+                      <div className="team-card-header-info">
+                        <span className="skeleton skeleton-text-md" style={{ width: '120px', marginBottom: '8px' }} />
+                        <span className="skeleton" style={{ height: '20px', width: '60px', borderRadius: '20px' }} />
+                      </div>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      </>}
+                    <div className="team-card-figures">
+                      <span className="skeleton skeleton-text-xl" style={{ width: '100px' }} />
+                      <div className="team-figure-divider" />
+                      <span className="skeleton skeleton-text-lg" style={{ width: '80px' }} />
+                    </div>
+                    <div className="team-card-bar-area">
+                      <span className="skeleton skeleton-text-xs" style={{ width: '80px', marginBottom: '8px' }} />
+                      <span className="skeleton" style={{ height: '10px', borderRadius: '99px', display: 'block' }} />
+                    </div>
+                    <div className="team-card-kpis" style={{ gap: '1rem' }}>
+                      <span className="skeleton skeleton-text-sm" style={{ width: '60px' }} />
+                      <span className="skeleton skeleton-text-sm" style={{ width: '60px' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              {totalTeamMonthlyGoal > 0 && (
+                <div className="dashboard-card team-goals-block">
+                  <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
+                    <div>
+                      <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho das Equipes</h3>
+                    </div>
+                    <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
+                      {(['month', 'week', 'day'] as const).map(tf => (
+                        <button
+                          key={tf}
+                          className={`status-pill ${goalsTimeframe === tf ? 'active' : ''}`}
+                          onClick={() => setGoalsTimeframe(tf)}
+                        >
+                          {tf === 'month' ? 'Mensal' : tf === 'week' ? 'Semanal' : 'Diário'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="stacked-progress-bars">
+                    {goalsTimeframe === 'month' && (
+                      <div className="progress-row">
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta do Mês</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(totalTeamMonthlyGoal)}</strong>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalTeamSalesRealized)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(teamMonthlyProgress)}`} style={{ width: `${Math.min(teamMonthlyProgress, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamMonthlyProgress}%</span>
+                        </div>
+                      </div>
+                    )}
+                    {goalsTimeframe === 'week' && (
+                      <div className="progress-row">
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta da Semana</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(teamTargetWeekly)}</strong>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(teamWeeklySales)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(teamWeeklyProgress)}`} style={{ width: `${Math.min(teamWeeklyProgress, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamWeeklyProgress}%</span>
+                        </div>
+                      </div>
+                    )}
+                    {goalsTimeframe === 'day' && (
+                      <div className="progress-row">
+                        <div className="progress-row-header">
+                          <span className="progress-label">Meta do Dia</span>
+                          <div className="progress-values">
+                            <strong>{formatCurrency(teamTargetDaily)}</strong>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(teamDailySales)} atingido</span>
+                          <div className="progress-track-bg" style={{ flex: 1 }}>
+                            <div className={`progress-track-fill ${getProgressBarColorClass(teamDailyProgress)}`} style={{ width: `${Math.min(teamDailyProgress, 100)}%` }} />
+                          </div>
+                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamDailyProgress}%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="projection-footer">
+                    <FaHourglassHalf className="projection-icon" />
+                    <span>
+                      Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(teamProjectedClosure)}</strong> com base no ritmo atual.
+                      <span className="info-tooltip-container">
+                        <FaQuestionCircle className="info-tooltip-trigger" />
+                        <span className="info-tooltip-text">
+                          <strong>💡 Como calculamos?</strong><br />
+                          {workingDaysInfo.elapsedDays <= 0 ? (
+                            "A projeção começará a ser calculada no primeiro dia útil do mês."
+                          ) : (
+                            <>
+                              Pegamos o faturamento das equipes atingido até hoje ({formatCurrency(totalTeamSalesRealized)}) e dividimos pelos dias úteis decorridos ({workingDaysInfo.elapsedDays} {workingDaysInfo.elapsedDays === 1 ? 'dia útil' : 'dias úteis'}) para achar a média diária de {formatCurrency(teamDailySales)}. Depois, multiplicamos essa média pelos {workingDaysInfo.monthlyDays} dias úteis totais do mês.
+                            </>
+                          )}
+                        </span>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="teams-monitoring-grid">
+                {teamPerf.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d', gridColumn: '1 / -1' }}>
+                    Nenhuma equipe encontrada para este mês.
+                  </div>
+                ) : teamPerf.map(team => {
+                  const progress = team.percentualAtingido;
+                  const status = getStatusBadge(progress);
+                  const hasGoal = team.metaFaturamento > 0;
+                  return (
+                    <div
+                      key={team.equipeId}
+                      className="team-monitoring-card"
+                      onClick={() => handleTeamClick(team.equipeId, monitoringMonth)}
+                      title="Clique para ver detalhes da equipe"
+                    >
+                      <div className="team-card-header">
+                        <div className="team-card-icon"><FaUsers /></div>
+                        <div className="team-card-header-info">
+                          <h3 className="team-card-name">{team.equipeNome}</h3>
+                          <span className={`team-status-badge ${hasGoal ? status.cls : 'status-no-goal'}`}>
+                            {hasGoal ? status.label : 'Sem meta'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {hasGoal ? (
+                        <div className="team-card-figures">
+                          <div className="team-figure-block">
+                            <span className="team-figure-label">Atingido</span>
+                            <strong className="team-figure-value">{formatCurrencyShort(team.totalFaturado)}</strong>
+                          </div>
+                          <div className="team-figure-divider" />
+                          <div className="team-figure-block">
+                            <span className="team-figure-label">Meta mensal</span>
+                            <strong className="team-figure-goal">{formatCurrencyShort(team.metaFaturamento)}</strong>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="team-card-no-goal">
+                          <span>Nenhuma meta definida para este mês</span>
+                        </div>
+                      )}
+
+                      <div className="team-card-bar-area">
+                        <span className="team-bar-percent">{hasGoal ? `${Math.round(progress)}% concluído` : '—'}</span>
+                        <div className="progress-track-bg">
+                          <div
+                            className={`progress-track-fill ${getProgressBarColorClass(progress)}`}
+                            style={{ width: `${Math.min(progress, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="team-card-kpis">
+                        <div className="team-kpi-item">
+                          <FaDollarSign className="team-kpi-icon" />
+                          <div>
+                            <span className="team-kpi-label">Fat.</span>
+                            <strong className="team-kpi-value">
+                              {new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(team.totalFaturado)}
+                            </strong>
+                          </div>
+                        </div>
+                        <div className="team-kpi-item">
+                          <FaPhoneAlt className="team-kpi-icon" />
+                          <div>
+                            <span className="team-kpi-label">Ligaç.</span>
+                            <strong className="team-kpi-value">{team.totalLigacoes}</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="team-card-cta">Ver detalhes &rsaquo;</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 };

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../services/api';
-import './UserProfileModal.css';
-import { FaTimes, FaEye, FaEyeSlash, FaCheck } from 'react-icons/fa';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { apiFetch } from '../services/api';
+import { UserPhotoService } from '../services/UserPhotoService';
+import './UserProfileModal.css';
+import { FaTimes, FaEye, FaEyeSlash, FaCheck, FaUser, FaCamera } from 'react-icons/fa';
 
 interface UserData {
     id: number;
@@ -12,6 +13,7 @@ interface UserData {
     role: string;
     tipoUsuarioDescricao?: string;
     empresaDescricao?: string;
+    photoUrl?: string | null;
 }
 
 interface UserProfileModalProps {
@@ -44,6 +46,9 @@ const buscaDadosUsuario = () => {
 const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, onSave }) => {
     const [user, setUser] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     // Form States
@@ -59,8 +64,9 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
 
     useEffect(() => {
         if (isOpen) {
-            const user = buscaDadosUsuario();
-            setUser(user);
+            const userData = buscaDadosUsuario();
+            setUser(userData);
+            setPhotoUrl(userData?.photoUrl ?? null);
             setLoading(false);
             // Reset fields
             setCurrentPassword('');
@@ -72,6 +78,49 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
             setShowConfirmPassword(false);
         }
     }, [isOpen]);
+
+    const handleFotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const arquivo = e.target.files?.[0];
+        if (!arquivo) return;
+
+        setIsUploadingPhoto(true);
+        try {
+            const result = await UserPhotoService.upload(arquivo);
+            const novaUrl = result.dados.photoUrl;
+            setPhotoUrl(novaUrl);
+
+            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+            stored.photoUrl = novaUrl;
+            localStorage.setItem('user', JSON.stringify(stored));
+
+            window.dispatchEvent(new CustomEvent('userPhotoUpdated', { detail: { photoUrl: novaUrl } }));
+            toast.success('Foto de perfil atualizada com sucesso.');
+        } catch (err: any) {
+            toast.error(err.message || 'Erro ao atualizar foto.');
+        } finally {
+            setIsUploadingPhoto(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleRemoverFoto = async () => {
+        setIsUploadingPhoto(true);
+        try {
+            await UserPhotoService.remover();
+            setPhotoUrl(null);
+
+            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+            stored.photoUrl = null;
+            localStorage.setItem('user', JSON.stringify(stored));
+
+            window.dispatchEvent(new CustomEvent('userPhotoUpdated', { detail: { photoUrl: null } }));
+            toast.success('Foto de perfil removida.');
+        } catch (err: any) {
+            toast.error(err.message || 'Erro ao remover foto.');
+        } finally {
+            setIsUploadingPhoto(false);
+        }
+    };
 
     // Validation Logic
     const validationRules = [
@@ -181,6 +230,42 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
                         </div>
                     ) : (
                         <>
+                            <div className="profile-photo-section">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,.webp"
+                                    style={{ display: 'none' }}
+                                    onChange={handleFotoChange}
+                                    disabled={isUploadingPhoto}
+                                />
+                                <div
+                                    className={`profile-photo-container${isUploadingPhoto ? ' uploading' : ''}`}
+                                    onClick={() => !isUploadingPhoto && fileInputRef.current?.click()}
+                                    title="Alterar foto de perfil"
+                                >
+                                    {photoUrl ? (
+                                        <img src={photoUrl} alt="Foto de perfil" className="profile-photo-avatar" />
+                                    ) : (
+                                        <div className="profile-photo-placeholder">
+                                            <FaUser />
+                                        </div>
+                                    )}
+                                    <div className="profile-photo-overlay">
+                                        {isUploadingPhoto ? (
+                                            <span className="profile-photo-uploading-text">...</span>
+                                        ) : (
+                                            <><FaCamera /><span>Alterar</span></>
+                                        )}
+                                    </div>
+                                </div>
+                                {photoUrl && !isUploadingPhoto && (
+                                    <button className="profile-photo-remove-btn" onClick={handleRemoverFoto} type="button">
+                                        Remover foto
+                                    </button>
+                                )}
+                            </div>
+
                             <div className="profile-section">
                                 <h3>Informações Pessoais</h3>
                                 <div className="info-grid">

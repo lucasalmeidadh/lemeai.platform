@@ -30,7 +30,7 @@ const STAGE_META: Record<string, { name: string; dotColor: string }> = {
     intro:       { name: 'Em Qualificação',  dotColor: 'rgba(96,165,250,1)'  },
     proposal:    { name: 'Proposta Enviada', dotColor: 'rgba(59,130,246,1)'  },
     qualified:   { name: 'Em Negociação',    dotColor: 'rgba(37,99,235,1)'   },
-    closed:      { name: 'Venda Fechada',    dotColor: 'rgba(0,163,255,1)'   },
+    closed:      { name: 'Ganho',    dotColor: 'rgba(0,163,255,1)'   },
 };
 
 const FunnelChart: React.FC<FunnelChartProps> = ({ data, leads = [] }) => {

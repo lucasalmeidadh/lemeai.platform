@@ -26,6 +26,7 @@ export interface ConfigAgente {
     nome: string;
     descricaoCabecalho: string;
     descricaoRodape: string;
+    botAtivo: boolean;
     regras: IARule[];
 }
 
@@ -155,6 +156,20 @@ export const RegrasIAService = {
         });
         if (!response.ok) {
             throw new Error('Erro ao excluir configuração do agente');
+        }
+        return response.json();
+    },
+
+    toggleBot: async (botAtivo: boolean): Promise<ApiResponse<null>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/AlternarBot`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ botAtivo }),
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao alterar estado do bot');
         }
         return response.json();
     },

@@ -24,7 +24,15 @@ import OnboardingStepsPage from './pages/OnboardingStepsPage.tsx';
 import CampaignTemplatesPage from './pages/CampaignTemplatesPage.tsx';
 import CampaignPage from './pages/CampaignPage.tsx';
 import GoalsPage from './pages/GoalsPage.tsx';
+import TeamsPage from './pages/TeamsPage.tsx';
 import DealDetailsPage from './pages/DealDetailsPage.tsx';
+import BillingPlanPage from './pages/BillingPlanPage';
+import EmpresasPage from './pages/EmpresasPage';
+import WorkingDaysPage from './pages/WorkingDaysPage.tsx';
+import PlanManagementPage from './pages/PlanManagementPage';
+import NovidadesPage from './pages/NovidadesPage.tsx';
+import ReportsPage from './pages/ReportsPage.tsx';
+import CampaignReportsPage from './pages/CampaignReportsPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -45,15 +53,23 @@ const router = createBrowserRouter([
           { path: "analytics", element: <AnalyticsPage /> },
           { path: "contacts", element: <ContactsPage /> },
           { path: "agenda", element: <AgendaPage /> },
+          { path: "relatorios/vendas", element: <ReportsPage /> },
+          { path: "relatorios/campanhas", element: <CampaignReportsPage /> },
           { path: "users", element: <UserManagementPage /> },
           // { path: "profiles", element: <ProfileManagementPage /> },
           { path: "chat-rules", element: <SystemPromptsPage /> },
           { path: "products", element: <ProductsPage /> },
           { path: "connections", element: <ConnectionsPage /> },
+          { path: "equipes", element: <TeamsPage /> },
           { path: "metas", element: <GoalsPage /> },
           { path: "campaign-templates", element: <CampaignTemplatesPage /> },
           { path: "campanhas", element: <CampaignPage /> },
+          { path: "plano", element: <BillingPlanPage /> },
           { path: "help", element: <HelpPage /> },
+          { path: "empresas", element: <EmpresasPage /> },
+          { path: "dias-uteis", element: <WorkingDaysPage /> },
+          { path: "gerenciar-planos", element: <PlanManagementPage /> },
+          { path: "novidades", element: <NovidadesPage /> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }

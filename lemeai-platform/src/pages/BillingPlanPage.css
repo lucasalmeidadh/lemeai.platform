@@ -1,0 +1,425 @@
+.billing-page-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.billing-page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border-color-soft);
+  padding-bottom: 1.5rem;
+}
+
+.billing-page-header h1 {
+  font-size: var(--font-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.billing-page-subtitle {
+  color: var(--text-secondary);
+  font-size: var(--font-base);
+  margin: 0;
+}
+
+/* Seção */
+.billing-section {
+  margin-bottom: 3.5rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--font-xl);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+/* Card do Plano Atual */
+.current-plan-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .current-plan-card {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.current-plan-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.current-plan-label {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--petroleum-blue);
+}
+
+.current-plan-main h2 {
+  font-size: var(--font-2xl);
+  margin: 0.25rem 0 0.75rem 0;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sub-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.sub-badge-active {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
+}
+
+.sub-badge-pending {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning-border);
+}
+
+.sub-badge-expired {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger-border);
+}
+
+.current-plan-price {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.current-plan-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: var(--bg-tertiary);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--font-base);
+}
+
+.detail-item svg {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.detail-item strong {
+  display: block;
+  color: var(--text-primary);
+}
+
+.detail-item span {
+  color: var(--text-secondary);
+}
+
+.current-plan-features-list h4 {
+  margin: 0 0 1rem 0;
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.current-plan-features-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.current-plan-features-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: var(--font-base);
+}
+
+.check-icon {
+  color: var(--color-success);
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+/* Grid de Planos */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.plan-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.plan-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--petroleum-blue);
+}
+
+.plan-card-current {
+  background-color: var(--bg-tertiary);
+}
+
+.plan-card-header {
+  margin-bottom: 2rem;
+}
+
+.plan-card-header h3 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.plan-price {
+  display: flex;
+  align-items: baseline;
+}
+
+.plan-price .currency {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
+
+.plan-price .amount {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.plan-price .period {
+  color: var(--text-secondary);
+  font-size: var(--font-base);
+  margin-left: 0.25rem;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex-grow: 1;
+}
+
+.plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+}
+
+.feature-check {
+  color: var(--petroleum-blue);
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.plan-card-footer {
+  margin-top: auto;
+}
+
+.btn-plan {
+  width: 100%;
+  padding: 0.85rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: var(--font-base);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-plan-primary {
+  background-color: var(--petroleum-blue);
+  color: white;
+}
+
+.btn-plan-primary:hover:not(:disabled) {
+  background-color: var(--petroleum-blue-hover);
+  transform: translateY(-1px);
+}
+
+.btn-plan-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-plan-current {
+  background-color: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-color);
+  cursor: not-allowed;
+}
+
+/* Alerta sem assinatura */
+.no-active-subscription {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.no-sub-alert {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  color: var(--color-danger);
+}
+
+.no-sub-alert svg {
+  font-size: 2.25rem;
+  flex-shrink: 0;
+}
+
+.no-sub-alert h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: var(--font-md);
+  font-weight: 700;
+}
+
+.no-sub-alert p {
+  margin: 0;
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+}
+
+/* Ações de assinatura */
+.subscription-actions-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-pay-now-checkout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-success);
+  color: white !important;
+  text-decoration: none;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: var(--font-base);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-pay-now-checkout:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-cancel-subscription {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger-border);
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: var(--font-base);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel-subscription:hover:not(:disabled) {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+}
+
+.btn-cancel-subscription:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.no-features-text {
+  font-style: italic;
+  color: var(--text-tertiary);
+}
+
+/* Loading */
+.billing-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: var(--text-secondary);
+}
+
+.billing-spinner {
+  font-size: 2rem;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+  color: var(--petroleum-blue);
+}
+
+.billing-spinner-small {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

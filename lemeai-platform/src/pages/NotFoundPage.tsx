@@ -15,7 +15,7 @@ const NotFoundPage = () => {
         style={{ maxWidth: '400px', margin: '30px auto' }}
       />
       <p>
-        <Link to="/dashboard">Voltar para a página inicial</Link>
+        <Link to="/monitoramento">Voltar para a página inicial</Link>
       </p>
     </div>
   );

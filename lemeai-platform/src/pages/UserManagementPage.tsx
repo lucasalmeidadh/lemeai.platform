@@ -8,7 +8,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import UserManagementSkeleton from '../components/UserManagementSkeleton';
 import type { User, Profile } from '../types';
 import './UserManagementPage.css';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaBan } from 'react-icons/fa';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -194,7 +194,7 @@ const UserManagementPage = () => {
               <th>E-mail</th>
               <th>Perfil</th>
               <th>Status</th>
-              <th>Ações</th>
+              <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -205,13 +205,17 @@ const UserManagementPage = () => {
                   <td>{user.email}</td>
                   <td>{profiles.find(p => p.id === user.profileId)?.nome || 'N/A'}</td>
                   <td><span className={`status-badge status-${user.status.toLowerCase()}`}>{user.status}</span></td>
-                  <td className="actions-cell">
-                    <button className="action-button edit" onClick={() => handleOpenUserModal(user)}>Editar</button>
-                    {user.status === 'Ativo' && (
-                      <button className="action-button delete" onClick={() => setUserToDeleteId(user.id!)}>
-                        Desativar
+                  <td>
+                    <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
+                      <button className="action-icon-btn edit" onClick={() => handleOpenUserModal(user)} title="Editar">
+                        <FaEdit size={14} />
                       </button>
-                    )}
+                      {user.status === 'Ativo' && (
+                        <button className="action-icon-btn delete" onClick={() => setUserToDeleteId(user.id!)} title="Desativar">
+                          <FaBan size={14} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

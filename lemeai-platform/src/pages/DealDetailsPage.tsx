@@ -5,28 +5,33 @@ import {
   FaArrowLeft, FaPhone, FaEnvelope, FaPlus, FaPaperclip, FaTrash,
   FaImage, FaMusic, FaVideo, FaFilePdf, FaCalendarAlt, FaComments, FaEdit,
   FaMagic, FaTasks, FaTimes,
-  FaBullhorn
+  FaBullhorn, FaStickyNote, FaBoxes
 } from 'react-icons/fa';
+import { ProductService, type Product } from '../services/ProductService';
+import { ConversaProdutoService, type ConversaProduto } from '../services/ConversaProdutoService';
 import { ChatService } from '../services/ChatService';
-import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
 import ConversationWindow from '../components/ConversationWindow';
 import ConversationSkeleton from '../components/ConversationSkeleton';
 import MessageInput from '../components/MessageInput';
 import { type Message } from '../data/mockData';
 import toast from 'react-hot-toast';
-import { OpportunityService, type DetalheConversa, type Opportunity } from '../services/OpportunityService';
+import { OpportunityService, type DetalheConversa } from '../services/OpportunityService';
 import { ContactService } from '../services/ContactService';
 import { AttachmentService } from '../services/AttachmentService';
 import { AgendaService } from '../services/AgendaService';
 import { TarefaService, TipoTarefaService, type Tarefa, type TipoTarefa } from '../services/TarefaService';
 import type { ContatoAnexoResponseDTO, TipoAnexo } from '../types/Attachment';
-import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import { ptBR } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
+import '../components/DateRangeFilter.css';
+import '../components/Skeleton.css';
 import CustomSelect from '../components/CustomSelect';
 import './DealDetailsPage.css';
+
+type DealProduct = ConversaProduto;
 
 interface AttachmentPreviewProps {
   id: number;
@@ -90,6 +95,11 @@ interface Deal {
   rawValue?: number;
   phone?: string;
   details?: DetalheConversa[];
+  dataFechamentoVenda?: string | null;
+  campanha?: boolean;
+  idCampanha?: number | null;
+  nomeCampanha?: string;
+  tipoLeadId?: number;
 }
 
 interface ApiMessage {
@@ -115,7 +125,18 @@ const DealDetailsPage = () => {
   const [chatError, setChatError] = useState<string | null>(null);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
-  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda'>('notes');
+  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda' | 'products'>('agenda');
+
+  const [dealProducts, setDealProducts] = useState<DealProduct[]>([]);
+  const [isLoadingDealProducts, setIsLoadingDealProducts] = useState(false);
+  const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [productQuantity, setProductQuantity] = useState<number>(1);
+  const [productCustomPrice, setProductCustomPrice] = useState<string>('');
+  const [productSearchQuery, setProductSearchQuery] = useState<string>('');
 
   const [contactEmail, setContactEmail] = useState<string>('');
   const [contactName, setContactName] = useState<string>('');
@@ -124,6 +145,29 @@ const DealDetailsPage = () => {
   const [isEditingValue, setIsEditingValue] = useState(false);
   const [editValueInput, setEditValueInput] = useState<string>('');
 
+  const formatCurrency = (value: string | number) => {
+    if (value === '' || value === undefined || value === null) return '';
+    if (typeof value === 'number') {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    }
+    const onlyDigits = String(value).replace(/\D/g, '');
+    if (onlyDigits === '') return '';
+    const numberValue = Number(onlyDigits) / 100;
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(numberValue);
+  };
+
+  const handleValueInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const formatted = formatCurrency(rawValue);
+    setEditValueInput(formatted);
+  };
+
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [editEmailInput, setEditEmailInput] = useState<string>('');
 
@@ -131,6 +175,10 @@ const DealDetailsPage = () => {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [tipoLeadId, setTipoLeadId] = useState<number | undefined>(undefined);
   const [isUpdatingLeadType, setIsUpdatingLeadType] = useState(false);
+
+  // States for handling temperature validation on status change
+  const [isTempModalOpen, setIsTempModalOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -149,8 +197,10 @@ const DealDetailsPage = () => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [modalDescricao, setModalDescricao] = useState('');
   const [modalTipoTarefaId, setModalTipoTarefaId] = useState<number | null>(null);
-  const [modalDataRetorno, setModalDataRetorno] = useState<Date | null>(null);
+  const [modalDate, setModalDate] = useState<Date | null>(null);
+  const [modalTime, setModalTime] = useState<string>('09:00');
   const [isSavingTask, setIsSavingTask] = useState(false);
+  const [editingTask, setEditingTask] = useState<Tarefa | null>(null);
 
   const [observations, setObservations] = useState<any[]>([]);
   const [isLoadingNotes, setIsLoadingNotes] = useState(false);
@@ -184,9 +234,44 @@ const DealDetailsPage = () => {
     fetchCurrentUser();
   }, []);
 
+  const fetchDealProducts = useCallback(async () => {
+    if (!id) return;
+    setIsLoadingDealProducts(true);
+    try {
+      const res = await ConversaProdutoService.listar(Number(id));
+      if (res.sucesso) setDealProducts(res.dados ?? []);
+    } catch (err) {
+      console.error('Erro ao buscar produtos da conversa:', err);
+    } finally {
+      setIsLoadingDealProducts(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchDealProducts();
+  }, [fetchDealProducts]);
+
+  // Load available products from API (used in the add-product modal)
+  useEffect(() => {
+    const fetchAvailableProducts = async () => {
+      try {
+        setIsLoadingProducts(true);
+        const res = await ProductService.getAll();
+        if (res.sucesso && res.dados) {
+          setAvailableProducts(res.dados);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar produtos cadastrados:", err);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+    fetchAvailableProducts();
+  }, []);
+
   // Fetch Deal details
-  const fetchDealInfo = useCallback(async () => {
-    setIsLoadingDeal(true);
+  const fetchDealInfo = useCallback(async (silent = false) => {
+    if (!silent) setIsLoadingDeal(true);
     try {
       const opportunities = await OpportunityService.getAllOpportunities();
       const currentOpp = opportunities.find(opp => opp.idConversa === Number(id));
@@ -203,12 +288,20 @@ const DealDetailsPage = () => {
           contactId: currentOpp.idContato,
           statusId: currentOpp.idStauts,
           phone: currentOpp.numeroWhatsapp,
-          details: currentOpp.detalhesConversa
+          details: currentOpp.detalhesConversa,
+          dataFechamentoVenda: currentOpp.dataFechamentoVenda,
+          campanha: currentOpp.campanha,
+          idCampanha: currentOpp.idCampanha,
+          nomeCampanha: currentOpp.nomeCampanha,
+          tipoLeadId: currentOpp.tipoLeadId,
         };
         setDeal(mappedDeal);
         setStatusId(currentOpp.idStauts);
         setDetailsStatusId(currentOpp.idStauts);
         setDetailsValue(currentOpp.valor || 0);
+        
+        const resolvedTipoLeadId = mappedDeal.tipoLeadId !== undefined ? mappedDeal.tipoLeadId : 0;
+        setTipoLeadId(resolvedTipoLeadId);
       } else {
         toast.error("Oportunidade não encontrada.");
         navigate('/pipeline');
@@ -371,6 +464,45 @@ const DealDetailsPage = () => {
   const handleStatusChange = async (newStatus: string) => {
     if (!deal) return;
     const newStatusId = parseInt(newStatus);
+
+    // Check if status is 3 (Ganho) and temperature is not set to 1 (Quente)
+    if (newStatusId === 3 && tipoLeadId !== 1) {
+      setStatusId(3);
+      setIsUpdatingStatus(true);
+      try {
+        await ChatService.atualizarTipoLead(deal.id, 1);
+        setTipoLeadId(1);
+        
+        const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idStatus: 3, valor: deal.rawValue || 0 }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.sucesso) {
+          throw new Error(result.mensagem || 'Falha ao atualizar status.');
+        }
+        toast.success('Oportunidade ganha e qualificada como quente!');
+        fetchDealInfo(true);
+      } catch (error: any) {
+        toast.error(`Erro: ${error.message}`);
+        setStatusId(deal.statusId || 1);
+        setTipoLeadId(deal.tipoLeadId || 0);
+      } finally {
+        setIsUpdatingStatus(false);
+      }
+      return;
+    }
+
+    // Check if status is 4 (Proposta Enviada) or 5 (Em Negociação) and temperature is not set (0 or undefined)
+    const needsTemperature = (newStatusId === 4 || newStatusId === 5) && (!tipoLeadId || tipoLeadId === 0);
+
+    if (needsTemperature) {
+      setPendingStatusChange(newStatus);
+      setIsTempModalOpen(true);
+      return;
+    }
+
     setStatusId(newStatusId);
     setIsUpdatingStatus(true);
     try {
@@ -384,13 +516,55 @@ const DealDetailsPage = () => {
         throw new Error(result.mensagem || 'Falha ao atualizar status.');
       }
       toast.success('Status atualizado!');
-      fetchDealInfo();
+      fetchDealInfo(true);
     } catch (error: any) {
       toast.error(`Erro: ${error.message}`);
       setStatusId(deal.statusId || 1);
     } finally {
       setIsUpdatingStatus(false);
     }
+  };
+
+  const handleTempConfirm = async (selectedTipoLeadId: number) => {
+    if (!deal || !pendingStatusChange) return;
+
+    setIsTempModalOpen(false);
+    const newStatusId = parseInt(pendingStatusChange);
+    setPendingStatusChange(null);
+
+    const toastId = toast.loading('Qualificando lead...');
+    setIsUpdatingStatus(true);
+    try {
+      // 1. Update Lead Type (Temperature)
+      await ChatService.atualizarTipoLead(deal.id, selectedTipoLeadId);
+      setTipoLeadId(selectedTipoLeadId);
+
+      // 2. Update Deal Status
+      const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idStatus: newStatusId, valor: deal.rawValue || 0 }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.sucesso) {
+        throw new Error(result.mensagem || 'Falha ao atualizar status.');
+      }
+      
+      toast.success('Oportunidade qualificada e status atualizado!', { id: toastId });
+      fetchDealInfo(true);
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao qualificar lead.', { id: toastId });
+      setStatusId(deal.statusId || 1);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleTempCancel = () => {
+    setIsTempModalOpen(false);
+    setPendingStatusChange(null);
+    // Reset dropdown visually
+    setStatusId(deal?.statusId || 1);
   };
 
   // Delete
@@ -448,7 +622,7 @@ const DealDetailsPage = () => {
         toast.success('Anotação adicionada!');
         setDetailsDescription('');
         setShowAddDetails(false);
-        fetchDealInfo();
+        fetchDealInfo(true);
       } else {
         toast.error(result.mensagem || 'Erro ao salvar detalhes.');
       }
@@ -546,9 +720,28 @@ const DealDetailsPage = () => {
   }, [deal, fetchTasks]);
 
   const openTaskModal = () => {
+    setEditingTask(null);
     setModalDescricao('');
-    setModalDataRetorno(null);
+    setModalDate(null);
+    setModalTime('09:00');
     if (tiposTarefa.length > 0) setModalTipoTarefaId(tiposTarefa[0].tipoTarefaId);
+    setIsTaskModalOpen(true);
+  };
+
+  const openEditTaskModal = (task: Tarefa) => {
+    setEditingTask(task);
+    setModalDescricao(task.descricao);
+    setModalTipoTarefaId(task.tipoTarefaId);
+    if (task.dataRetorno) {
+      const d = new Date(task.dataRetorno);
+      setModalDate(d);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      setModalTime(`${hh}:${mm}`);
+    } else {
+      setModalDate(null);
+      setModalTime('09:00');
+    }
     setIsTaskModalOpen(true);
   };
 
@@ -557,7 +750,10 @@ const DealDetailsPage = () => {
   const handleReturnShortcut = (hours: number) => {
     const d = new Date();
     d.setTime(d.getTime() + hours * 60 * 60 * 1000);
-    setModalDataRetorno(d);
+    setModalDate(d);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    setModalTime(`${hh}:${mm}`);
   };
 
   const handleModalSubmit = async () => {
@@ -571,18 +767,48 @@ const DealDetailsPage = () => {
     }
     setIsSavingTask(true);
     try {
-      const res = await TarefaService.criar({
-        descricao: modalDescricao.trim(),
-        conversaId: deal?.id ?? null,
-        tipoTarefaId: modalTipoTarefaId,
-        dataRetorno: modalDataRetorno ? modalDataRetorno.toISOString() : null,
-      });
-      if (res.sucesso) {
-        toast.success('Tarefa criada com sucesso!');
-        closeTaskModal();
-        fetchTasks();
+      let dataRetornoISO: string | null = null;
+      if (modalDate) {
+        const targetDate = new Date(modalDate);
+        if (modalTime) {
+          const [hours, minutes] = modalTime.split(':').map(Number);
+          targetDate.setHours(hours || 0);
+          targetDate.setMinutes(minutes || 0);
+          targetDate.setSeconds(0);
+          targetDate.setMilliseconds(0);
+        }
+        dataRetornoISO = targetDate.toISOString();
+      }
+
+      if (editingTask) {
+        const res = await TarefaService.atualizar({
+          tarefaId: editingTask.tarefaId,
+          descricao: modalDescricao.trim(),
+          estaConcluida: editingTask.estaConcluida,
+          tipoTarefaId: modalTipoTarefaId,
+          dataRetorno: dataRetornoISO,
+        });
+        if (res.sucesso) {
+          toast.success('Tarefa atualizada com sucesso!');
+          closeTaskModal();
+          fetchTasks();
+        } else {
+          toast.error(res.mensagem || 'Erro ao atualizar tarefa.');
+        }
       } else {
-        toast.error(res.mensagem || 'Erro ao criar tarefa.');
+        const res = await TarefaService.criar({
+          descricao: modalDescricao.trim(),
+          conversaId: deal?.id ?? null,
+          tipoTarefaId: modalTipoTarefaId,
+          dataRetorno: dataRetornoISO,
+        });
+        if (res.sucesso) {
+          toast.success('Tarefa criada com sucesso!');
+          closeTaskModal();
+          fetchTasks();
+        } else {
+          toast.error(res.mensagem || 'Erro ao criar tarefa.');
+        }
       }
     } catch {
       toast.error('Erro ao conectar com o servidor.');
@@ -595,7 +821,10 @@ const DealDetailsPage = () => {
     try {
       const res = await TarefaService.atualizar({
         tarefaId: task.tarefaId,
+        descricao: task.descricao,
         estaConcluida: !task.estaConcluida,
+        tipoTarefaId: task.tipoTarefaId,
+        dataRetorno: task.dataRetorno,
       });
       if (res.sucesso) {
         setTasks(prev => prev.map(t => t.tarefaId === task.tarefaId ? { ...t, estaConcluida: !t.estaConcluida } : t));
@@ -645,7 +874,7 @@ const DealDetailsPage = () => {
       const response = await ChatService.getConversationSummary(deal.id);
       if (response.sucesso) {
         toast.success('Resumo gerado com sucesso!', { id: toastId });
-        await fetchDealInfo();
+        await fetchDealInfo(true);
       } else {
         toast.error(response.mensagem || 'Erro ao gerar resumo.', { id: toastId });
       }
@@ -709,26 +938,48 @@ const DealDetailsPage = () => {
 
   const handleSaveInlineValue = async () => {
     if (!deal) return;
-    const val = Number(editValueInput);
+    let val = 0;
+    if (typeof editValueInput === 'string') {
+      const onlyDigits = editValueInput.replace(/\D/g, '');
+      val = onlyDigits ? Number(onlyDigits) / 100 : 0;
+    } else {
+      val = Number(editValueInput) || 0;
+    }
     if (isNaN(val) || val < 0) {
       toast.error('Informe um valor válido');
       return;
     }
+
+    // Optimistic Update
+    const formattedPrevious = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(deal.rawValue || 0);
+    const formattedNew = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    
+    setDeal(prev => prev ? {
+      ...prev,
+      value: formattedNew,
+      rawValue: val
+    } : null);
+    setIsEditingValue(false);
+
     try {
-      const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idStatus: statusId, valor: val }),
+      const autoNote = `Alteração de valor: De ${formattedPrevious} para ${formattedNew}`;
+
+      const result = await OpportunityService.addDetails({
+        idConversa: deal.id,
+        descricao: autoNote,
+        statusNegociacaoId: statusId,
+        valor: val
       });
-      const result = await response.json();
-      if (!response.ok || !result.sucesso) {
+
+      if (!result.sucesso) {
         throw new Error(result.mensagem || 'Falha ao atualizar valor.');
       }
-      toast.success('Valor atualizado com sucesso!');
-      setIsEditingValue(false);
-      fetchDealInfo();
+      toast.success('Valor updated successfully!');
+      fetchDealInfo(true);
+      fetchObservations();
     } catch (e: any) {
       toast.error(`Erro: ${e.message}`);
+      fetchDealInfo(true);
     }
   };
 
@@ -757,6 +1008,17 @@ const DealDetailsPage = () => {
   useEffect(() => {
     const fetchCampaignInfo = async () => {
       if (!deal) return;
+      if (deal.campanha !== undefined) {
+        setCampaignInfo({
+          campanha: deal.campanha,
+          idCampanha: deal.idCampanha ?? null,
+          nomeCampanha: deal.nomeCampanha || ''
+        });
+        if (deal.tipoLeadId !== undefined) {
+          setTipoLeadId(deal.tipoLeadId);
+        }
+        return;
+      }
       try {
         const response = await apiFetch(`${apiUrl}/api/Chat/ConversasPorVendedor`);
         const result = await response.json();
@@ -769,10 +1031,27 @@ const DealDetailsPage = () => {
               nomeCampanha: conv.nomeCampanha || ''
             });
             setTipoLeadId(conv.tipoLeadId || 0);
+          } else {
+            setCampaignInfo({
+              campanha: false,
+              idCampanha: null,
+              nomeCampanha: ''
+            });
           }
+        } else {
+          setCampaignInfo({
+            campanha: false,
+            idCampanha: null,
+            nomeCampanha: ''
+          });
         }
       } catch (err) {
         console.error("Erro ao buscar informações de campanha:", err);
+        setCampaignInfo({
+          campanha: false,
+          idCampanha: null,
+          nomeCampanha: ''
+        });
       }
     };
     fetchCampaignInfo();
@@ -786,7 +1065,7 @@ const DealDetailsPage = () => {
       await ChatService.atualizarTipoLead(deal.id, newTipoLeadId);
       setTipoLeadId(newTipoLeadId);
       toast.success("Temperatura do lead atualizada!");
-      fetchDealInfo();
+      fetchDealInfo(true);
     } catch (error: any) {
       toast.error(error.message || "Erro ao atualizar temperatura do lead");
     } finally {
@@ -818,8 +1097,61 @@ const DealDetailsPage = () => {
 
   if (isLoadingDeal) {
     return (
-      <div className="page-container deal-details-page loading">
-        <p>Carregando informações da oportunidade...</p>
+      <div className="page-container deal-details-page">
+        {/* Header Skeleton */}
+        <div className="details-page-header">
+          <div className="skeleton" style={{ width: '180px', height: '30px', borderRadius: 'var(--btn-radius-md)' }}></div>
+          <div className="skeleton" style={{ width: '150px', height: '30px', borderRadius: 'var(--btn-radius-md)' }}></div>
+        </div>
+
+        <div className="details-page-layout">
+          {/* Sidebar Panel Skeleton */}
+          <aside className="details-sidebar-panel">
+            <div className="sidebar-deal-header">
+              <div className="skeleton" style={{ width: '80%', height: '24px', marginBottom: '8px' }}></div>
+              <div className="skeleton" style={{ width: '50%', height: '20px' }}></div>
+            </div>
+            
+            <div className="details-info-section" style={{ marginTop: '20px' }}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="info-group" style={{ marginBottom: '16px' }}>
+                  <div className="skeleton" style={{ width: '40%', height: '12px', marginBottom: '6px' }}></div>
+                  <div className="skeleton" style={{ width: '70%', height: '16px' }}></div>
+                </div>
+              ))}
+            </div>
+
+            <div className="sidebar-divider" />
+
+            <div className="sidebar-summary-section">
+              <div className="skeleton" style={{ width: '100px', height: '16px', marginBottom: '10px' }}></div>
+              <div className="skeleton" style={{ width: '100%', height: '150px', borderRadius: '0.75rem' }}></div>
+            </div>
+          </aside>
+
+          {/* Main Content Area Skeleton */}
+          <main className="details-main-area">
+            {/* Tabs skeleton */}
+            <div className="details-tab-nav" style={{ gap: '8px' }}>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="skeleton" style={{ width: '120px', height: '38px', borderRadius: '0.5rem' }}></div>
+              ))}
+            </div>
+
+            {/* Tab content skeleton */}
+            <div className="details-tab-content">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="skeleton" style={{ width: '150px', height: '24px' }}></div>
+                  <div className="skeleton" style={{ width: '120px', height: '34px', borderRadius: 'var(--btn-radius-md)' }}></div>
+                </div>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton" style={{ width: '100%', height: '70px', borderRadius: '0.75rem' }}></div>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -846,6 +1178,12 @@ const DealDetailsPage = () => {
         isConfirming={isDeleting}
       />
 
+      <TemperatureSelectionModal
+        isOpen={isTempModalOpen}
+        onClose={handleTempCancel}
+        onConfirm={handleTempConfirm}
+      />
+
       <div className="details-page-header">
         <button className="back-btn" onClick={() => navigate('/pipeline')}>
           <FaArrowLeft /> Voltar para o Pipeline
@@ -863,19 +1201,22 @@ const DealDetailsPage = () => {
           <div className="sidebar-deal-header">
             <h2>{deal.title}</h2>
             {isEditingValue ? (
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
+              <div className="inline-value-edit-container">
                 <input 
-                  type="number" 
+                  type="text" 
                   value={editValueInput} 
-                  onChange={e => setEditValueInput(e.target.value)} 
-                  className="form-input"
-                  style={{ padding: '6px 10px', fontSize: '0.9rem', width: '120px' }}
+                  onChange={handleValueInputChange} 
+                  className="inline-value-input"
+                  placeholder="R$ 0,00"
+                  autoFocus
                 />
-                <button onClick={handleSaveInlineValue} className="btn-save" style={{ padding: '6px 12px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Salvar</button>
-                <button onClick={() => setIsEditingValue(false)} className="btn-cancel" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>Cancelar</button>
+                <div className="inline-value-actions">
+                  <button onClick={handleSaveInlineValue} className="inline-btn-save">Salvar</button>
+                  <button onClick={() => setIsEditingValue(false)} className="inline-btn-cancel">Cancelar</button>
+                </div>
               </div>
             ) : (
-              <strong className="deal-price" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => { setIsEditingValue(true); setEditValueInput(String(deal.rawValue || 0)); }} title="Clique para editar o valor">
+              <strong className="deal-price" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => { setIsEditingValue(true); setEditValueInput(formatCurrency(deal.rawValue || 0)); }} title="Clique para editar o valor">
                 {deal.value} <FaEdit size={14} style={{ opacity: 0.5 }} />
               </strong>
             )}
@@ -900,7 +1241,7 @@ const DealDetailsPage = () => {
                     { value: '2', label: 'Em Qualificação' },
                     { value: '4', label: 'Proposta Enviada' },
                     { value: '5', label: 'Em Negociação' },
-                    { value: '3', label: 'Venda Fechada' },
+                    { value: '3', label: 'Ganho' },
                     { value: '6', label: 'Venda Perdida' }
                   ]}
                 />
@@ -923,6 +1264,18 @@ const DealDetailsPage = () => {
                 />
               </div>
             </div>
+
+            {deal.dataFechamentoVenda && (
+              <div className="info-group">
+                <span className="info-label">Data de Fechamento</span>
+                <div className="info-value contact-item deal-closed-date">
+                  <FaCalendarAlt className="icon" />
+                  {new Date(deal.dataFechamentoVenda).toLocaleDateString('pt-BR', {
+                    day: '2-digit', month: 'long', year: 'numeric'
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="info-group">
               <span className="info-label">Telefone</span>
@@ -1009,9 +1362,15 @@ const DealDetailsPage = () => {
         {/* Content Tabs */}
         <main className="details-main-area">
           <div className="details-tab-nav">
+            <button className={`tab-button ${activeTab === 'agenda' ? 'active' : ''}`} onClick={() => setActiveTab('agenda')}>
+              <span className="tab-text-full">Tarefas</span>
+              <span className="tab-text-short">Tarefas</span>
+              <FaCalendarAlt />
+            </button>
             <button className={`tab-button ${activeTab === 'notes' ? 'active' : ''}`} onClick={() => setActiveTab('notes')}>
-              <span className="tab-text-full">Anotações e Valor</span>
+              <span className="tab-text-full">Anotações</span>
               <span className="tab-text-short">Anotações</span>
+              <FaStickyNote />
             </button>
             <button className={`tab-button ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>
               <span className="tab-text-full">Chat do WhatsApp</span>
@@ -1023,10 +1382,10 @@ const DealDetailsPage = () => {
               <span className="tab-text-short">Anexos</span>
               <FaPaperclip />
             </button>
-            <button className={`tab-button ${activeTab === 'agenda' ? 'active' : ''}`} onClick={() => setActiveTab('agenda')}>
-              <span className="tab-text-full">Tarefas</span>
-              <span className="tab-text-short">Tarefas</span>
-              <FaCalendarAlt />
+            <button className={`tab-button ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')}>
+              <span className="tab-text-full">Produtos</span>
+              <span className="tab-text-short">Produtos</span>
+              <FaBoxes />
             </button>
           </div>
 
@@ -1045,15 +1404,6 @@ const DealDetailsPage = () => {
 
                 {showAddDetails && (
                   <div className="add-note-form-panel">
-                    <div className="form-group-val">
-                      <label>Atualizar Valor Comercial</label>
-                      <input
-                        type="number"
-                        value={detailsValue}
-                        onChange={e => setDetailsValue(parseFloat(e.target.value))}
-                        className="form-input"
-                      />
-                    </div>
                     <div className="form-group-val">
                       <label>Descrição da Anotação</label>
                       <textarea
@@ -1075,7 +1425,13 @@ const DealDetailsPage = () => {
                 )}
 
                 <div className="notes-list-pane">
-                  {filteredNotes.length > 0 ? (
+                  {isLoadingNotes ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="skeleton" style={{ width: '100%', height: '80px', borderRadius: '0.75rem' }}></div>
+                      ))}
+                    </div>
+                  ) : filteredNotes.length > 0 ? (
                     filteredNotes.map(obs => (
                       <div key={obs.id} className="note-card-item">
                         <div className="note-card-header">
@@ -1086,7 +1442,14 @@ const DealDetailsPage = () => {
                       </div>
                     ))
                   ) : (
-                    <p className="empty-pane-message">Nenhuma anotação cadastrada.</p>
+                    <div className="empty-pane-container">
+                      <FaStickyNote className="empty-pane-icon" />
+                      <p className="empty-pane-title">Nenhuma anotação cadastrada</p>
+                      <p className="empty-pane-subtitle">Adicione anotações para registrar o histórico e detalhes da negociação.</p>
+                      <button className="btn-add-action-inline" onClick={() => setShowAddDetails(true)}>
+                        <FaPlus /> Nova Anotação
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1127,8 +1490,12 @@ const DealDetailsPage = () => {
                   </label>
                 </div>
 
-                {isLoadingAttachments ? (
-                  <p className="loading-msg">Carregando anexos...</p>
+                 {isLoadingAttachments ? (
+                  <div className="attachments-grid-pane">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="skeleton" style={{ width: '100%', height: '180px', borderRadius: '0.75rem' }}></div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="attachments-grid-pane">
                     {attachments.length > 0 ? (
@@ -1146,9 +1513,17 @@ const DealDetailsPage = () => {
                           </div>
                         </div>
                       ))
-                    ) : (
-                      <p className="empty-pane-message">Nenhum anexo disponível.</p>
-                    )}
+                      ) : (
+                        <div className="empty-pane-container" style={{ gridColumn: '1 / -1' }}>
+                          <FaPaperclip className="empty-pane-icon" />
+                          <p className="empty-pane-title">Nenhum anexo disponível</p>
+                          <p className="empty-pane-subtitle">Envie documentos, imagens ou mídias compartilhadas para este negócio.</p>
+                          <label className="upload-btn-label" style={{ cursor: 'pointer' }}>
+                            <FaPaperclip /> Enviar Arquivo
+                            <input type="file" onChange={handleFileUpload} style={{ display: 'none' }} />
+                          </label>
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
@@ -1164,8 +1539,12 @@ const DealDetailsPage = () => {
                   </button>
                 </div>
 
-                {isLoadingTasks ? (
-                  <p className="loading-msg">Carregando tarefas...</p>
+                 {isLoadingTasks ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="skeleton" style={{ width: '100%', height: '62px', borderRadius: '0.75rem' }}></div>
+                    ))}
+                  </div>
                 ) : tasks.length > 0 ? (
                   <div className="appointments-list-container">
                     {tasks.map(task => {
@@ -1198,16 +1577,171 @@ const DealDetailsPage = () => {
                               </span>
                             </div>
                           </div>
-                          <button className="app-del-btn" onClick={() => handleDeleteTask(task.tarefaId)} style={{ flexShrink: 0, padding: '4px' }}>
-                            <FaTrash />
-                          </button>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                            <button className="app-edit-btn" onClick={() => openEditTaskModal(task)} style={{ padding: '4px', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                              <FaEdit />
+                            </button>
+                            <button className="app-del-btn" onClick={() => handleDeleteTask(task.tarefaId)} style={{ padding: '4px' }}>
+                              <FaTrash />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <p className="empty-pane-message">Nenhuma tarefa cadastrada. Clique em "Nova Tarefa" para começar.</p>
+                  <div className="empty-pane-container">
+                    <FaCalendarAlt className="empty-pane-icon" />
+                    <p className="empty-pane-title">Nenhuma tarefa agendada</p>
+                    <p className="empty-pane-subtitle">Crie tarefas para não perder prazos e acompanhar a evolução do negócio.</p>
+                    <button className="btn-add-action-inline" onClick={openTaskModal}>
+                      <FaPlus /> Nova Tarefa
+                    </button>
+                  </div>
                 )}
+              </div>
+            )}
+
+            {/* Products Tab */}
+            {activeTab === 'products' && (
+              <div className="tab-pane products-pane">
+                <div className="pane-header">
+                  <h3>Produtos e Serviços de Interesse</h3>
+                  <button className="btn-add-action" onClick={() => {
+                    setIsProductModalOpen(true);
+                    setSelectedProductId(null);
+                    setProductQuantity(1);
+                    setProductCustomPrice('');
+                    setProductSearchQuery('');
+                  }}>
+                    <FaPlus /> Adicionar Produto
+                  </button>
+                </div>
+
+                <div className="products-list-pane">
+                  {isLoadingDealProducts ? (
+                    <div className="notif-loading" style={{ padding: 'var(--space-8)', justifyContent: 'center' }}>
+                      <div className="notif-spinner"></div>
+                      <span>Carregando produtos...</span>
+                    </div>
+                  ) : dealProducts.length > 0 ? (
+                    <div className="deal-products-container">
+                      <div className="table-responsive">
+                        <table className="deal-products-table">
+                          <thead>
+                            <tr>
+                              <th>Código</th>
+                              <th>Nome</th>
+                              <th>Marca</th>
+                              <th style={{ textAlign: 'center' }}>Qtd</th>
+                              <th style={{ textAlign: 'right' }}>Preço Unit.</th>
+                              <th style={{ textAlign: 'right' }}>Preço Total</th>
+                              <th style={{ textAlign: 'center' }}>Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dealProducts.map(p => (
+                              <tr key={p.oportunidadeProdutoId}>
+                                <td><code>{p.codigo ?? '—'}</code></td>
+                                <td style={{ fontWeight: 600 }}>{p.nome ?? '—'}</td>
+                                <td><span className="product-brand-badge">{p.marca || 'N/A'}</span></td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <div className="quantity-control">
+                                    <button onClick={async () => {
+                                      const novaQtd = Math.max(1, p.quantidade - 1);
+                                      setDealProducts(prev => prev.map(dp =>
+                                        dp.oportunidadeProdutoId === p.oportunidadeProdutoId
+                                          ? { ...dp, quantidade: novaQtd, precoTotal: novaQtd * dp.precoUnitarioNegociado }
+                                          : dp
+                                      ));
+                                      try {
+                                        await ConversaProdutoService.atualizar(Number(id), p.oportunidadeProdutoId, {
+                                          quantidade: novaQtd,
+                                          precoUnitarioNegociado: p.precoUnitarioNegociado,
+                                        });
+                                        fetchDealInfo(true);
+                                      } catch (err: any) {
+                                        toast.error(err.message || 'Erro ao atualizar quantidade');
+                                        fetchDealProducts();
+                                      }
+                                    }}>-</button>
+                                    <span>{p.quantidade}</span>
+                                    <button onClick={async () => {
+                                      const novaQtd = p.quantidade + 1;
+                                      setDealProducts(prev => prev.map(dp =>
+                                        dp.oportunidadeProdutoId === p.oportunidadeProdutoId
+                                          ? { ...dp, quantidade: novaQtd, precoTotal: novaQtd * dp.precoUnitarioNegociado }
+                                          : dp
+                                      ));
+                                      try {
+                                        await ConversaProdutoService.atualizar(Number(id), p.oportunidadeProdutoId, {
+                                          quantidade: novaQtd,
+                                          precoUnitarioNegociado: p.precoUnitarioNegociado,
+                                        });
+                                        fetchDealInfo(true);
+                                      } catch (err: any) {
+                                        toast.error(err.message || 'Erro ao atualizar quantidade');
+                                        fetchDealProducts();
+                                      }
+                                    }}>+</button>
+                                  </div>
+                                </td>
+                                <td style={{ textAlign: 'right' }}>
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.precoUnitarioNegociado)}
+                                </td>
+                                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--petroleum-blue)' }}>
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.precoTotal)}
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <button className="product-delete-btn" onClick={async () => {
+                                    setDealProducts(prev => prev.filter(dp => dp.oportunidadeProdutoId !== p.oportunidadeProdutoId));
+                                    try {
+                                      await ConversaProdutoService.remover(Number(id), p.oportunidadeProdutoId);
+                                      toast.success('Produto removido!');
+                                      fetchDealInfo(true);
+                                    } catch (err: any) {
+                                      toast.error(err.message || 'Erro ao remover produto');
+                                      fetchDealProducts();
+                                    }
+                                  }}>
+                                    <FaTrash />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="products-summary-footer">
+                        <div className="products-total-box">
+                          <span>Total de Produtos:</span>
+                          <strong>
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                              dealProducts.reduce((sum, p) => sum + p.precoTotal, 0)
+                            )}
+                          </strong>
+                        </div>
+
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="empty-pane-container">
+                      <FaBoxes className="empty-pane-icon" />
+                      <p className="empty-pane-title">Nenhum produto vinculado</p>
+                      <p className="empty-pane-subtitle">Vincule produtos ou serviços de interesse para calcular o valor total do Deal.</p>
+                      <button className="btn-add-action-inline" onClick={() => {
+                        setIsProductModalOpen(true);
+                        setSelectedProductId(null);
+                        setProductQuantity(1);
+                        setProductCustomPrice('');
+                        setProductSearchQuery('');
+                      }}>
+                        <FaPlus /> Vincular Primeiro Produto
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -1218,7 +1752,7 @@ const DealDetailsPage = () => {
         <div className="task-modal-overlay" onClick={closeTaskModal}>
           <div className="task-modal" onClick={e => e.stopPropagation()}>
             <div className="task-modal-header">
-              <h3>Nova Tarefa</h3>
+              <h3>{editingTask ? 'Editar Tarefa' : 'Nova Tarefa'}</h3>
               <button className="task-modal-close" onClick={closeTaskModal}><FaTimes /></button>
             </div>
 
@@ -1266,20 +1800,29 @@ const DealDetailsPage = () => {
                 </div>
               </div>
 
-              <div className="form-group-val">
-                <label>Data de retorno (opcional)</label>
-                <DatePicker
-                  selected={modalDataRetorno}
-                  onChange={d => setModalDataRetorno(d)}
-                  showTimeSelect
-                  timeFormat="HH:mm"
-                  timeIntervals={15}
-                  dateFormat="dd/MM/yyyy HH:mm"
-                  locale={ptBR}
-                  className="form-input"
-                  placeholderText="Selecionar data e hora"
-                  isClearable
-                />
+              <div className="task-dates-row">
+                <div className="form-group-val" style={{ flex: 1 }}>
+                  <label>Data de retorno (opcional)</label>
+                  <DatePicker
+                    selected={modalDate}
+                    onChange={(d: Date | null) => setModalDate(d)}
+                    placeholderText="DD/MM/AAAA"
+                    dateFormat="dd/MM/yyyy"
+                    className="form-input"
+                    locale={ptBR}
+                    isClearable
+                    showPopperArrow={false}
+                  />
+                </div>
+                <div className="form-group-val" style={{ flex: 1 }}>
+                  <label>Hora de retorno</label>
+                  <input
+                    type="time"
+                    value={modalTime}
+                    onChange={e => setModalTime(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1287,6 +1830,133 @@ const DealDetailsPage = () => {
               <button className="btn-cancel" onClick={closeTaskModal} disabled={isSavingTask}>Cancelar</button>
               <button className="btn-save" onClick={handleModalSubmit} disabled={isSavingTask}>
                 {isSavingTask ? 'Salvando...' : 'Confirmar Tarefa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isProductModalOpen && (
+        <div className="task-modal-overlay" onClick={() => setIsProductModalOpen(false)}>
+          <div className="task-modal product-modal" onClick={e => e.stopPropagation()}>
+            <div className="task-modal-header">
+              <h3>Vincular Produto ao Deal</h3>
+              <button className="task-modal-close" onClick={() => setIsProductModalOpen(false)}><FaTimes /></button>
+            </div>
+
+            <div className="task-modal-body">
+              <div className="form-group-val">
+                <label>Pesquisar Produto</label>
+                <input
+                  type="text"
+                  value={productSearchQuery}
+                  onChange={e => setProductSearchQuery(e.target.value)}
+                  placeholder="Pesquise por nome, marca ou código..."
+                  className="form-input"
+                  autoFocus
+                />
+              </div>
+
+              <div className="form-group-val">
+                <label>Selecionar Produto <span style={{ color: '#dc2626' }}>*</span></label>
+                <div className="product-select-list">
+                  {isLoadingProducts ? (
+                    <p style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)' }}>Carregando produtos...</p>
+                  ) : availableProducts.length > 0 ? (
+                    (() => {
+                      const filtered = availableProducts.filter(p => 
+                        p.nome.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                        p.codigo.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                        (p.marca && p.marca.toLowerCase().includes(productSearchQuery.toLowerCase()))
+                      );
+                      
+                      if (filtered.length === 0) {
+                        return <p style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)' }}>Nenhum produto encontrado.</p>;
+                      }
+
+                      return filtered.map(p => {
+                        const isSelected = selectedProductId === p.produtoId;
+                        return (
+                          <div 
+                            key={p.produtoId} 
+                            className={`product-select-item ${isSelected ? 'selected' : ''}`}
+                            onClick={() => {
+                              setSelectedProductId(p.produtoId);
+                              setProductCustomPrice(p.preco.toString());
+                            }}
+                          >
+                            <div className="product-item-info">
+                              <span className="product-item-name">{p.nome}</span>
+                              <span className="product-item-meta">Cód: {p.codigo} | Marca: {p.marca || 'N/A'}</span>
+                            </div>
+                            <span className="product-item-price">
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.preco)}
+                            </span>
+                          </div>
+                        );
+                      });
+                    })()
+                  ) : (
+                    <p style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)' }}>Nenhum produto cadastrado no sistema.</p>
+                  )}
+                </div>
+              </div>
+
+              {selectedProductId && (
+                <div className="product-add-details-row">
+                  <div className="form-group-val" style={{ flex: 1 }}>
+                    <label>Quantidade</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={productQuantity}
+                      onChange={e => setProductQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="form-input"
+                    />
+                  </div>
+                  
+                  <div className="form-group-val" style={{ flex: 2 }}>
+                    <label>Preço Unitário Negociado (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={productCustomPrice}
+                      onChange={e => setProductCustomPrice(e.target.value)}
+                      className="form-input"
+                      placeholder="Preço padrão"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="task-modal-footer">
+              <button className="btn-cancel" onClick={() => setIsProductModalOpen(false)}>Cancelar</button>
+              <button
+                className="btn-save"
+                disabled={!selectedProductId}
+                onClick={async () => {
+                  if (!selectedProductId) return;
+                  const prod = availableProducts.find(p => p.produtoId === selectedProductId);
+                  if (!prod) return;
+                  const price = parseFloat(productCustomPrice) >= 0 ? parseFloat(productCustomPrice) : prod.preco;
+                  try {
+                    await ConversaProdutoService.vincular(Number(id), {
+                      produtoId: prod.produtoId,
+                      quantidade: productQuantity,
+                      precoUnitarioNegociado: price,
+                    });
+                    await fetchDealProducts();
+                    fetchDealInfo(true);
+                    setIsProductModalOpen(false);
+                    toast.success(`${prod.nome} vinculado ao Deal!`);
+                  } catch (err: any) {
+                    toast.error(err.message || 'Erro ao vincular produto');
+                  }
+                }}
+              >
+                Vincular Produto
               </button>
             </div>
           </div>

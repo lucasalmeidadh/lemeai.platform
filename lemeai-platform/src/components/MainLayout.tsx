@@ -10,8 +10,8 @@ import {
     FaSignOutAlt,
     FaComments,
     FaCalendarAlt,
-    FaQuestionCircle,
-    FaBullseye
+    FaBullseye,
+    FaCreditCard
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import OnboardingModal from './Onboarding/OnboardingModal';
@@ -100,6 +100,9 @@ const MainLayout = () => {
                         </Link>
                         <Link to="/metas" className={`drawer-link ${location.pathname === '/metas' ? 'active' : ''}`}>
                             <FaBullseye /> Metas
+                        </Link>
+                        <Link to="/plano" className={`drawer-link ${location.pathname === '/plano' ? 'active' : ''}`}>
+                            <FaCreditCard /> Meu Plano
                         </Link>
                         
                         <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>

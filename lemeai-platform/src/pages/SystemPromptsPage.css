@@ -825,4 +825,108 @@
     font-weight: 500;
     color: var(--text-secondary);
 }
+
+/* Bot Toggle */
+.bot-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    min-width: 190px;
+}
+
+.bot-toggle-wrapper:hover:not(:disabled) {
+    border-color: var(--petroleum-blue);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.bot-toggle-wrapper:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.bot-toggle-icon {
+    font-size: 18px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.bot-toggle-wrapper.active .bot-toggle-icon {
+    color: var(--color-ai);
+}
+
+.bot-toggle-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+    gap: 2px;
+}
+
+.bot-toggle-label {
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.bot-toggle-status {
+    font-size: var(--font-xs);
+    font-weight: 500;
+    color: var(--text-tertiary);
+    transition: color 0.2s ease;
+}
+
+.bot-toggle-wrapper.active .bot-toggle-status {
+    color: var(--color-success);
+}
+
+.bot-toggle-track {
+    width: 42px;
+    height: 24px;
+    border-radius: 99px;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bot-toggle-wrapper.active .bot-toggle-track {
+    background: var(--color-ai);
+    border-color: var(--color-ai);
+}
+
+.bot-toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bot-toggle-wrapper.active .bot-toggle-thumb {
+    transform: translateX(18px);
+}
+
+.bot-toggle-wrapper.loading .bot-toggle-thumb {
+    animation: togglePulse 0.8s ease-in-out infinite;
+}
+
+@keyframes togglePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
 

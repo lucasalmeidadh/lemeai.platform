@@ -17,11 +17,16 @@ export interface Opportunity {
     nomeContato: string;
     numeroWhatsapp: string;
     dataConversaCriada: string;
+    dataFechamentoVenda: string | null;
     idStauts: number;
     descricaoStatus: string;
     nomeUsuarioResponsavel: string;
     valor: number;
     detalhesConversa: DetalheConversa[];
+    campanha?: boolean;
+    idCampanha?: number | null;
+    nomeCampanha?: string;
+    tipoLeadId?: number;
 }
 
 export interface OpportunityResponse {

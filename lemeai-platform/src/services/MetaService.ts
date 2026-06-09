@@ -70,8 +70,8 @@ export const MetaService = {
             const response = await apiFetch(`${API_URL}/api/ConfigurarWhatsapp/Status`);
             if (response.ok) {
                 const data = await response.json();
-                return { 
-                    sucesso: true, 
+                return {
+                    sucesso: true,
                     usaAPIMeta: data.dados?.usaAPIMeta || false,
                     usaAPIEvolution: data.dados?.usaAPIEvolution || false
                 };
@@ -81,5 +81,32 @@ export const MetaService = {
         }
 
         return { sucesso: true, usaAPIMeta: false, usaAPIEvolution: false };
-    }
+    },
+
+    /**
+     * Retorna status completo: se multi-conexão está habilitado e a lista de conexões WhatsApp.
+     */
+    getWhatsappStatus: async (): Promise<{ sucesso: boolean; dados: { multiWhatsappHabilitado: boolean; conexoes: any[] } }> => {
+        try {
+            const response = await apiFetch(`${API_URL}/api/ConfigurarWhatsapp/Status`);
+            if (response.ok) {
+                return await response.json();
+            }
+        } catch (error) {
+            console.warn('Backend endpoint /Status não encontrado.');
+        }
+        return { sucesso: false, dados: { multiWhatsappHabilitado: false, conexoes: [] } };
+    },
+
+    /**
+     * Habilita ou desabilita multi-conexão. Restrito a admin (role == "1").
+     */
+    toggleMultiWhatsapp: async (habilitado: boolean): Promise<{ sucesso: boolean; mensagem: string }> => {
+        const response = await apiFetch(`${API_URL}/api/ConfigurarWhatsapp/MultiWhatsapp`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ habilitado }),
+        });
+        return response.json();
+    },
 };

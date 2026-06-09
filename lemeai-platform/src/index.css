@@ -268,6 +268,44 @@ html {
   background-color: #f1c2c6;
 }
 
+/* ─── GLOBAL ACTION ICON BUTTONS ─────────────────────────────── */
+.action-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-icon-btn.edit {
+  color: var(--petroleum-blue);
+}
+
+.action-icon-btn.edit:hover {
+  background-color: var(--petroleum-light);
+}
+
+.action-icon-btn.delete {
+  color: #dc3545;
+}
+
+.action-icon-btn.delete:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.action-icon-btn.users {
+  color: var(--petroleum-blue);
+}
+
+.action-icon-btn.users:hover {
+  background-color: var(--petroleum-light);
+}
+
 /* ─── GLOBAL LAYOUT ───────────────────────────────────────────── */
 .page-container {
   padding: var(--space-10);

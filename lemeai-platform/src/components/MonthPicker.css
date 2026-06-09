@@ -1,0 +1,92 @@
+.month-picker {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.5rem 0.875rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: nowrap;
+}
+
+.month-picker-year {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.year-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 38px;
+  text-align: center;
+}
+
+.year-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 10px;
+  transition: all 0.15s ease;
+}
+
+.year-nav-btn:hover {
+  background: var(--petroleum-blue);
+  color: white;
+  border-color: var(--petroleum-blue);
+}
+
+.month-picker-months {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.month-pill {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.month-pill:hover:not(.active) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.month-pill.active {
+  background: var(--petroleum-blue);
+  color: white;
+  font-weight: 700;
+  border-color: var(--petroleum-blue);
+}
+
+.month-short {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .month-full {
+    display: none;
+  }
+  .month-short {
+    display: inline;
+  }
+}

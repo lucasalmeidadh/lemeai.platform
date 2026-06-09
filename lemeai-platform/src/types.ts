@@ -21,7 +21,7 @@ export interface Contact {
   unread: number;
   initials: string;
   phone: string;
-  statusId?: number; // 1: Não iniciado, 2: Em negociação, 3: Proposta enviada, 4: Venda Fechada, 5: Venda Perdida
+  statusId?: number; // 1: Não iniciado, 2: Em negociação, 3: Proposta enviada, 4: Ganho, 5: Venda Perdida
   detailsValue?: number; // Saved value for the deal
   messagesByDate: {
     [date: string]: any[];

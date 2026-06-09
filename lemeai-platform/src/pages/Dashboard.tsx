@@ -1,23 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import KPICard from '../components/KPICard';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import ConversationChart from '../components/ConversationChart';
 import FunnelChart from '../components/FunnelChart';
 import HourlyActivityChart from '../components/HourlyActivityChart';
 import type { FunnelData } from '../components/FunnelChart';
 import './Dashboard.css';
-import { FaUserPlus, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 import { OpportunityService } from '../services/OpportunityService';
 import type { Opportunity } from '../services/OpportunityService';
 import DateRangeFilter from '../components/DateRangeFilter';
 import CustomSelect from '../components/CustomSelect';
 import { apiFetch } from '../services/api';
-
-interface Kpi {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-}
 
 const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState('Todos');
@@ -26,7 +18,6 @@ const Dashboard = () => {
 
   const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>([]);
   const [chatDataMap, setChatDataMap] = useState<Record<number, number>>({});
-  const [kpiData, setKpiData] = useState<Kpi[]>([]);
   const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
   const [leadsList, setLeadsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,14 +77,14 @@ const Dashboard = () => {
 
     const counts: Record<string, number> = {
       'Atendimento IA': 0, 'IA Encerrada': 0, 'Em Qualificação': 0,
-      'Em Negociação': 0, 'Proposta Enviada': 0, 'Venda Fechada': 0, 'Venda Perdida': 0,
+      'Em Negociação': 0, 'Proposta Enviada': 0, 'Ganho': 0, 'Venda Perdida': 0,
     };
 
     const processedLeads = deals.map(op => {
       switch (op.idStauts) {
         case 1: counts['Atendimento IA']++;   break;
         case 2: counts['Em Qualificação']++;  break;
-        case 3: counts['Venda Fechada']++;    break;
+        case 3: counts['Ganho']++;    break;
         case 4: counts['Proposta Enviada']++; break;
         case 5: counts['Em Negociação']++;    break;
         case 6: counts['Venda Perdida']++;    break;
@@ -113,20 +104,13 @@ const Dashboard = () => {
 
     setLeadsList(processedLeads);
 
-    setKpiData([
-      { title: 'Total / Em Qualificação', value: (counts['Em Qualificação'] + counts['Atendimento IA']).toString(), icon: <FaUserPlus /> },
-      { title: 'IA Encerrada', value: counts['IA Encerrada'].toString(), icon: <FaCheckCircle /> },
-      { title: 'Vendas Fechadas', value: counts['Venda Fechada'].toString(), icon: <FaCheckCircle /> },
-      { title: 'Vendas Perdidas', value: counts['Venda Perdida'].toString(), icon: <FaTimesCircle /> },
-    ]);
-
     setFunnelData([
       { id: 'ai_service',          name: 'Atendimento IA',   value: counts['Atendimento IA'],   color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
       { id: 'ai_service_finished', name: 'IA Encerrada',     value: counts['IA Encerrada'],     color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
       { id: 'intro',               name: 'Em Qualificação',  value: counts['Em Qualificação'],  color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
       { id: 'qualified',           name: 'Em Negociação',    value: counts['Em Negociação'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
       { id: 'proposal',            name: 'Proposta Enviada', value: counts['Proposta Enviada'], color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
-      { id: 'closed',              name: 'Venda Fechada',    value: counts['Venda Fechada'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
+      { id: 'closed',              name: 'Ganho',    value: counts['Ganho'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
       { id: 'lost',                name: 'Venda Perdida',    value: counts['Venda Perdida'],    color: 'var(--petroleum-light, rgba(0, 39, 94, 0.05))' },
     ]);
   }, [deals, chatDataMap]);
@@ -192,7 +176,7 @@ const Dashboard = () => {
               { value: 'Em Qualificação', label: 'Em Qualificação' },
               { value: 'Em Negociação', label: 'Em Negociação' },
               { value: 'Proposta Enviada', label: 'Proposta Enviada' },
-              { value: 'Venda Fechada', label: 'Venda Fechada' },
+              { value: 'Ganho', label: 'Ganho' },
               { value: 'Venda Perdida', label: 'Venda Perdida' },
               { value: 'Atendimento IA', label: 'Atendimento IA' },
               { value: 'IA Encerrada', label: 'IA Encerrada' },
@@ -207,19 +191,6 @@ const Dashboard = () => {
         <p style={{ color: 'red' }}>{error}</p>
       ) : (
         <>
-          <div className="kpi-grid">
-            {kpiData.map((kpi, index) => (
-              <KPICard
-                key={`primary-${index}`}
-                title={kpi.title}
-                value={kpi.value}
-                icon={kpi.icon}
-                isActive={statusFilter === kpi.title}
-                onClick={() => setStatusFilter(kpi.title)}
-              />
-            ))}
-          </div>
-
           <div className="dashboard-charts-area">
             <div className="dashboard-card chart-card full-width-chart">
               <h3>Funil de Vendas</h3>

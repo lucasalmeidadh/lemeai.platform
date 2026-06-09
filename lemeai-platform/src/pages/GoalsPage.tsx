@@ -1,324 +1,501 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiFetch } from '../services/api';
 import toast from 'react-hot-toast';
-import { FaPlus, FaTrash, FaCalendarAlt, FaUser, FaBullseye, FaCalendarCheck } from 'react-icons/fa';
+import { FaPlus, FaCopy, FaEdit, FaTrash, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import GoalFormModal from '../components/GoalFormModal';
+import type { Goal, MockUser, MockTeam } from '../components/GoalFormModal';
+import type { Equipe } from '../services/EquipeService';
+import ConfirmationModal from '../components/ConfirmationModal';
+import MetaGoalService from '../services/MetaGoalService';
+import EquipeService from '../services/EquipeService';
+import { apiFetch } from '../services/api';
 import './GoalsPage.css';
+import './UserManagementPage.css';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || '';
 
-interface Goal {
-  id: string;
-  userId: number;
-  userName: string;
-  type: 'value' | 'quantity' | 'calls'; // Faturamento, Quantidade de Vendas, Ligações
-  targetValue: number;
-  month: string; // YYYY-MM
-}
-
-interface WorkingDays {
-  monday: boolean;
-  tuesday: boolean;
-  wednesday: boolean;
-  thursday: boolean;
-  friday: boolean;
-  saturday: boolean;
-  sunday: boolean;
-}
-
-const DEFAULT_WORKING_DAYS: WorkingDays = {
-  monday: true,
-  tuesday: true,
-  wednesday: true,
-  thursday: true,
-  friday: true,
-  saturday: false,
-  sunday: false,
+const getCurrentMonth = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
-const MOCK_USERS = [
-  { id: 1, name: 'Lucas Almeida' },
-  { id: 2, name: 'Ana Silva' },
-  { id: 3, name: 'Roberto Santos' },
-  { id: 4, name: 'Julia Costa' },
-];
+const getPreviousMonth = (month: string) => {
+  const [year, m] = month.split('-').map(Number);
+  const prev = new Date(year, m - 2, 1);
+  return `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const formatMonth = (month: string) => {
+  const [year, m] = month.split('-');
+  const date = new Date(Number(year), Number(m) - 1, 1);
+  return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+};
+
+const formatGoalValue = (value: number, type: string) => {
+  if (type === 'value') return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  return value.toLocaleString('pt-BR');
+};
 
 const GoalsPage = () => {
-  const [users, setUsers] = useState<{ id: number; name: string }[]>(MOCK_USERS);
+  const [users, setUsers] = useState<MockUser[]>([]);
+  const [teams, setTeams] = useState<MockTeam[]>([]);
+  const [equipes, setEquipes] = useState<Equipe[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [workingDays, setWorkingDays] = useState<WorkingDays>(DEFAULT_WORKING_DAYS);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Form State
-  const [selectedUserId, setSelectedUserId] = useState<number>(0);
-  const [goalType, setGoalType] = useState<'value' | 'quantity' | 'calls'>('value');
-  const [targetValue, setTargetValue] = useState<string>('');
-  const [targetMonth, setTargetMonth] = useState<string>(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
+  const [pendingGoalSave, setPendingGoalSave] = useState<Goal | null>(null);
+  const [syncConfirmData, setSyncConfirmData] = useState<{
+    equipeNome: string;
+    valorAntigo: number;
+    valorNovo: number;
+    tipo: 'value' | 'quantity' | 'calls';
+  } | null>(null);
 
-  // Fetch users from API (fallback to mock)
-  const fetchUsers = useCallback(async () => {
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>({});
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [goalToEdit, setGoalToEdit] = useState<Goal | null>(null);
+  const [goalToDeleteId, setGoalToDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const fetchGoals = useCallback(async (mes: string) => {
     try {
-      const response = await apiFetch(`${apiUrl}/api/Usuario/BuscarTodos`);
-      if (response.ok) {
-        const result = await response.json();
-        if (result.sucesso && Array.isArray(result.dados)) {
-          const mapped = result.dados.map((u: any) => ({
-            id: u.userId,
-            name: u.userName,
-          }));
-          setUsers(mapped.length > 0 ? mapped : MOCK_USERS);
-          if (mapped.length > 0) {
-            setSelectedUserId(mapped[0].id);
-          }
-          return;
+      const metas = await MetaGoalService.buscarTodas(mes);
+      setGoals(metas.map(m => {
+        let mappedType: 'value' | 'quantity' | 'calls' = 'calls';
+        const rawTipo = String(m.tipo).toLowerCase();
+        if (rawTipo === 'valor' || rawTipo === 'value') {
+          mappedType = 'value';
+        } else if (rawTipo === 'vendas' || rawTipo === 'quantity') {
+          mappedType = 'quantity';
+        } else if (rawTipo === 'calls' || rawTipo === 'ligacoes') {
+          mappedType = 'calls';
         }
-      }
-    } catch (e) {
-      console.warn('Usando usuários mockados devido a erro na API:', e);
+
+        return {
+          id: String(m.id),
+          targetType: m.tipoAlvo,
+          targetId: m.alvoId,
+          targetName: m.alvoNome,
+          type: mappedType,
+          targetValue: m.valorAlvo,
+          realizedValue: m.valorRealizado,
+          month: m.mes,
+        };
+      }));
+    } catch (err: any) {
+      toast.error(err.message ?? 'Erro ao carregar metas.');
     }
-    setSelectedUserId(MOCK_USERS[0].id);
   }, []);
 
-  // Load goals & working days from localStorage
+  const fetchStaticData = useCallback(async () => {
+    try {
+      const [equipesData, usersRes] = await Promise.all([
+        EquipeService.buscarTodas(),
+        apiFetch(`${API_URL}/api/Usuario/BuscarTodos`),
+      ]);
+
+      setEquipes(equipesData);
+      setTeams(equipesData.map(e => ({ id: e.id, name: e.nome, memberCount: e.membros.length })));
+
+      const usersData = await usersRes.json();
+      if (usersData.sucesso && Array.isArray(usersData.dados)) {
+        setUsers(usersData.dados.map((u: any) => ({ id: u.userId, name: u.userName })));
+      }
+    } catch {
+      // keep defaults
+    }
+  }, []);
+
   useEffect(() => {
-    fetchUsers();
+    setIsLoading(true);
+    Promise.all([
+      fetchStaticData(),
+      fetchGoals(selectedMonth)
+    ]).finally(() => setIsLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const storedGoals = localStorage.getItem('lemeai_goals');
-    if (storedGoals) {
-      setGoals(JSON.parse(storedGoals));
-    } else {
-      // Mock initial goals
-      const initialGoals: Goal[] = [
-        { id: '1', userId: 1, userName: 'Lucas Almeida', type: 'value', targetValue: 50000, month: targetMonth },
-        { id: '2', userId: 1, userName: 'Lucas Almeida', type: 'calls', targetValue: 300, month: targetMonth },
-        { id: '3', userId: 2, userName: 'Ana Silva', type: 'value', targetValue: 35000, month: targetMonth },
-        { id: '4', userId: 3, userName: 'Roberto Santos', type: 'value', targetValue: 60000, month: targetMonth },
-      ];
-      setGoals(initialGoals);
-      localStorage.setItem('lemeai_goals', JSON.stringify(initialGoals));
-    }
+  useEffect(() => {
+    setIsLoading(true);
+    Promise.all([
+      fetchGoals(selectedMonth)
+    ]).finally(() => setIsLoading(false));
+  }, [selectedMonth, fetchGoals]);
 
-    const storedDays = localStorage.getItem('lemeai_working_days');
-    if (storedDays) {
-      setWorkingDays(JSON.parse(storedDays));
-    } else {
-      localStorage.setItem('lemeai_working_days', JSON.stringify(DEFAULT_WORKING_DAYS));
-    }
-  }, [fetchUsers, targetMonth]);
-
-  const handleWorkingDayChange = (day: keyof WorkingDays) => {
-    const updated = { ...workingDays, [day]: !workingDays[day] };
-    setWorkingDays(updated);
-    localStorage.setItem('lemeai_working_days', JSON.stringify(updated));
-    toast.success('Dias de funcionamento atualizados!');
+  const toggleTeam = (teamId: string) => {
+    setExpandedTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }));
   };
 
-  const handleAddGoal = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedUserId || !targetValue || Number(targetValue) <= 0) {
-      toast.error('Preencha todos os campos com valores válidos.');
-      return;
+  const syncTeamGoal = async (userId: number, type: 'value' | 'quantity' | 'calls', month: string) => {
+    try {
+      const equipe = equipes.find(e => e.membros.some(m => m.id === userId));
+      if (!equipe) return;
+
+      const todasMetas = await MetaGoalService.buscarTodas(month);
+      const metaEquipe = todasMetas.find(m => m.tipoAlvo === 'team' && m.alvoId === equipe.id && m.tipo === type);
+      if (!metaEquipe) return;
+
+      const membrosIds = equipe.membros.map(m => m.id);
+      const somaMembros = todasMetas
+        .filter(m => m.tipoAlvo === 'user' && m.tipo === type && membrosIds.includes(m.alvoId))
+        .reduce((sum, m) => sum + m.valorAlvo, 0);
+
+      await MetaGoalService.atualizar(metaEquipe.id, {
+        tipoAlvo: 'team',
+        alvoId: equipe.id,
+        tipo: type,
+        valorAlvo: somaMembros,
+        mes: month,
+      });
+
+      toast.success(`Meta da equipe ${equipe.nome} atualizada automaticamente para a soma dos vendedores (${formatGoalValue(somaMembros, type)}).`);
+    } catch (err: any) {
+      console.error('Erro ao sincronizar meta da equipe:', err);
     }
+  };
 
-    const userObj = users.find(u => u.id === selectedUserId);
-    if (!userObj) return;
-
-    // Check if goal already exists for this user, type and month
-    const exists = goals.some(g => g.userId === selectedUserId && g.type === goalType && g.month === targetMonth);
-    if (exists) {
-      toast.error('Já existe uma meta cadastrada para este usuário, tipo e mês.');
-      return;
-    }
-
-    const newGoal: Goal = {
-      id: Date.now().toString(),
-      userId: selectedUserId,
-      userName: userObj.name,
-      type: goalType,
-      targetValue: Number(targetValue),
-      month: targetMonth,
+  const executeSave = async (goal: Goal) => {
+    const dto = {
+      tipoAlvo: goal.targetType,
+      alvoId: goal.targetId,
+      tipo: goal.type,
+      valorAlvo: goal.targetValue,
+      mes: goal.month,
     };
 
-    const updatedGoals = [...goals, newGoal];
-    setGoals(updatedGoals);
-    localStorage.setItem('lemeai_goals', JSON.stringify(updatedGoals));
-    setTargetValue('');
-    toast.success('Meta cadastrada com sucesso!');
-  };
+    try {
+      const isEditing = goal.id && !goal.id.startsWith('new_');
+      if (isEditing) {
+        await MetaGoalService.atualizar(Number(goal.id), dto);
+        toast.success('Meta atualizada!');
 
-  const handleDeleteGoal = (id: string) => {
-    const updated = goals.filter(g => g.id !== id);
-    setGoals(updated);
-    localStorage.setItem('lemeai_goals', JSON.stringify(updated));
-    toast.success('Meta removida.');
-  };
+        if (goal.targetType === 'user') {
+          await syncTeamGoal(goal.targetId, goal.type, goal.month);
+        }
+      } else {
+        await MetaGoalService.criar(dto);
 
-  const formatGoalType = (type: string) => {
-    switch (type) {
-      case 'value': return 'Faturamento (R$)';
-      case 'quantity': return 'Qtd de Vendas';
-      case 'calls': return 'Qtd de Ligações';
-      default: return type;
+        if (goal.targetType === 'team') {
+          const equipe = equipes.find(e => e.id === goal.targetId);
+          const membros = equipe?.membros ?? [];
+          if (membros.length > 0 && goal.distributionType !== 'none') {
+            const valorPorMembro = goal.distributionType === 'equal'
+              ? (goal.type === 'value'
+                ? Math.round((goal.targetValue / membros.length) * 100) / 100
+                : Math.floor(goal.targetValue / membros.length))
+              : goal.targetValue; // 'full'
+
+            await Promise.allSettled(
+              membros.map(m =>
+                MetaGoalService.criar({
+                  tipoAlvo: 'user',
+                  alvoId: m.id,
+                  tipo: goal.type,
+                  valorAlvo: valorPorMembro,
+                  mes: goal.month,
+                })
+              )
+            );
+
+            const valorFormatado = goal.type === 'value'
+              ? `R$ ${valorPorMembro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+              : valorPorMembro.toLocaleString('pt-BR');
+            toast.success(`Meta da equipe criada! ${valorFormatado} atribuído para os membros.`);
+          } else {
+            toast.success('Meta da equipe cadastrada com sucesso!');
+          }
+        } else {
+          toast.success('Meta cadastrada com sucesso!');
+          await syncTeamGoal(goal.targetId, goal.type, goal.month);
+        }
+      }
+      setIsModalOpen(false);
+      setGoalToEdit(null);
+      fetchGoals(selectedMonth);
+    } catch (err: any) {
+      toast.error(err.message ?? 'Erro ao salvar meta.');
+    } finally {
+      setPendingGoalSave(null);
+      setSyncConfirmData(null);
     }
   };
 
-  const formatGoalValue = (value: number, type: string) => {
-    if (type === 'value') {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  const handleSave = async (goal: Goal) => {
+    const isEditing = goal.id && !goal.id.startsWith('new_');
+    if (isEditing && goal.targetType === 'user') {
+      const equipe = equipes.find(e => e.membros.some(m => m.id === goal.targetId));
+      if (equipe) {
+        const metaEquipe = goals.find(g => g.targetType === 'team' && g.targetId === equipe.id && g.type === goal.type);
+        if (metaEquipe) {
+          const membrosIds = equipe.membros.map(m => m.id);
+          const somaOutrosMembros = goals
+            .filter(g => g.targetType === 'user' && g.type === goal.type && g.targetId !== goal.targetId && membrosIds.includes(g.targetId))
+            .reduce((sum, g) => sum + g.targetValue, 0);
+
+          const novoValorEquipe = somaOutrosMembros + goal.targetValue;
+
+          if (novoValorEquipe !== metaEquipe.targetValue) {
+            setPendingGoalSave(goal);
+            setSyncConfirmData({
+              equipeNome: equipe.nome,
+              valorAntigo: metaEquipe.targetValue,
+              valorNovo: novoValorEquipe,
+              tipo: goal.type,
+            });
+            return;
+          }
+        }
+      }
     }
-    return value.toString();
+
+    await executeSave(goal);
   };
+
+  const handleConfirmSyncSave = async () => {
+    if (pendingGoalSave) {
+      await executeSave(pendingGoalSave);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!goalToDeleteId) return;
+    setIsDeleting(false);
+
+    const goalToDelete = goals.find(g => g.id === goalToDeleteId);
+
+    try {
+      setIsDeleting(true);
+      await MetaGoalService.excluir(Number(goalToDeleteId));
+      toast.success('Meta removida.');
+      setGoalToDeleteId(null);
+      await fetchGoals(selectedMonth);
+
+      if (goalToDelete && goalToDelete.targetType === 'user') {
+        await syncTeamGoal(goalToDelete.targetId, goalToDelete.type, goalToDelete.month);
+        await fetchGoals(selectedMonth);
+      }
+    } catch (err: any) {
+      toast.error(err.message ?? 'Erro ao remover meta.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleReplicatePreviousMonth = async () => {
+    const prevMonth = getPreviousMonth(selectedMonth);
+    try {
+      const result = await MetaGoalService.replicar({ mesOrigem: prevMonth, mesDestino: selectedMonth });
+      if (result.copiadas === 0) {
+        toast.error('Todas as metas do mês anterior já existem neste mês.');
+      } else {
+        toast.success(
+          `${result.copiadas} meta(s) copiada(s) de ${formatMonth(prevMonth)}${result.ignoradas > 0 ? ` (${result.ignoradas} já existiam e foram ignoradas)` : ''}.`
+        );
+        fetchGoals(selectedMonth);
+      }
+    } catch (err: any) {
+      toast.error(err.message ?? 'Erro ao replicar metas.');
+    }
+  };
+
+  const handleOpenEdit = (goal: Goal) => {
+    setGoalToEdit(goal);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenNew = () => {
+    setGoalToEdit(null);
+    setIsModalOpen(true);
+  };
+
+  const renderGoalCell = (targetType: 'user' | 'team', targetId: number, type: 'value' | 'quantity' | 'calls') => {
+    const goal = goals.find(g => g.targetType === targetType && g.targetId === targetId && g.type === type);
+    if (!goal) return <span className="empty-goal">-</span>;
+    return <span style={{ fontWeight: 600 }}>{formatGoalValue(goal.targetValue, type)}</span>;
+  };
+
+  const renderActionsCell = (targetType: 'user' | 'team', targetId: number) => {
+    const rowGoals = goals.filter(g => g.targetType === targetType && g.targetId === targetId);
+    if (rowGoals.length === 0) return <span className="empty-goal">-</span>;
+    const showTags = rowGoals.length > 1;
+
+    return (
+      <div className="actions-cell-wrapper">
+        {rowGoals.map(g => (
+          <div key={g.id} className="row-action-item">
+            {showTags && (
+              <span className={`type-badge type-${g.type}`} style={{ fontSize: '10px', padding: '2px 6px', lineHeight: 1 }}>
+                {g.type === 'value' ? 'Fat.' : g.type === 'quantity' ? 'Vnd.' : 'Lig.'}
+              </span>
+            )}
+            <button className="action-icon-btn edit" onClick={() => handleOpenEdit(g)} title="Editar Meta">
+              <FaEdit size={12} />
+            </button>
+            <button className="action-icon-btn delete" onClick={() => setGoalToDeleteId(g.id)} title="Remover Meta">
+              <FaTrash size={12} />
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const allTeamMemberIds = equipes.flatMap(e => e.membros.map(m => m.id));
+  const independentUsers = users.filter(u => !allTeamMemberIds.includes(u.id));
 
   return (
-    <div className="page-container goals-page">
-      <div className="page-header">
-        <h1>Cadastro de Metas</h1>
-        <p className="page-subtitle">Configure as metas do time e o calendário de funcionamento da empresa.</p>
-      </div>
+    <>
+      <GoalFormModal
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setGoalToEdit(null); }}
+        onSave={handleSave}
+        goalToEdit={goalToEdit}
+        users={users}
+        teams={teams}
+        currentMonth={selectedMonth}
+      />
+      <ConfirmationModal
+        isOpen={goalToDeleteId !== null}
+        onClose={() => setGoalToDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Remover Meta"
+        message="Tem certeza que deseja remover esta meta?"
+        confirmText="Remover"
+        isConfirming={isDeleting}
+      />
+      <ConfirmationModal
+        isOpen={syncConfirmData !== null}
+        onClose={() => { setPendingGoalSave(null); setSyncConfirmData(null); }}
+        onConfirm={handleConfirmSyncSave}
+        title="Confirmar Alteração de Meta da Equipe"
+        message={
+          syncConfirmData
+            ? `A alteração da meta deste colaborador afetará a meta da equipe ${syncConfirmData.equipeNome}. A meta da equipe será atualizada de ${formatGoalValue(syncConfirmData.valorAntigo, syncConfirmData.tipo)} para ${formatGoalValue(syncConfirmData.valorNovo, syncConfirmData.tipo)}. Deseja prosseguir com a alteração?`
+            : ''
+        }
+        confirmText="Confirmar e Salvar"
+        cancelText="Cancelar"
+      />
 
-      <div className="goals-grid">
-        {/* Calendário de Funcionamento */}
-        <div className="dashboard-card calendar-card">
-          <div className="card-header">
-            <h3><FaCalendarCheck /> Dias de Funcionamento</h3>
-            <p className="card-subtitle">Selecione os dias que a empresa opera para o cálculo de metas diárias/semanais.</p>
-          </div>
-          <div className="working-days-list">
-            {[
-              { key: 'monday', label: 'Segunda-feira' },
-              { key: 'tuesday', label: 'Terça-feira' },
-              { key: 'wednesday', label: 'Quarta-feira' },
-              { key: 'thursday', label: 'Quinta-feira' },
-              { key: 'friday', label: 'Sexta-feira' },
-              { key: 'saturday', label: 'Sábado' },
-              { key: 'sunday', label: 'Domingo' },
-            ].map(day => (
-              <label key={day.key} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={workingDays[day.key as keyof WorkingDays]}
-                  onChange={() => handleWorkingDayChange(day.key as keyof WorkingDays)}
-                />
-                <span className="checkbox-custom"></span>
-                <span className="label-text">{day.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Cadastro de Meta */}
-        <div className="dashboard-card form-card">
-          <div className="card-header">
-            <h3><FaBullseye /> Nova Meta</h3>
-          </div>
-          <form onSubmit={handleAddGoal} className="goal-form">
-            <div className="form-group">
-              <label><FaUser /> Colaborador</label>
-              <select
-                value={selectedUserId}
-                onChange={e => setSelectedUserId(Number(e.target.value))}
-                className="form-select"
-              >
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label><FaBullseye /> Tipo de Meta</label>
-              <select
-                value={goalType}
-                onChange={e => setGoalType(e.target.value as any)}
-                className="form-select"
-              >
-                <option value="value">Faturamento (R$)</option>
-                <option value="quantity">Quantidade de Vendas</option>
-                <option value="calls">Quantidade de Ligações</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label><FaCalendarAlt /> Mês de Referência</label>
-              <input
-                type="month"
-                value={targetMonth}
-                onChange={e => setTargetMonth(e.target.value)}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Valor Alvo</label>
-              <input
-                type="number"
-                placeholder={goalType === 'value' ? 'Ex: 50000' : 'Ex: 100'}
-                value={targetValue}
-                onChange={e => setTargetValue(e.target.value)}
-                className="form-input"
-                min="1"
-              />
-            </div>
-
-            <button type="submit" className="btn-primary">
-              <FaPlus /> Adicionar Meta
+      <div className="page-container goals-page">
+        <div className="page-header">
+          <h1>Metas</h1>
+          <div className="page-header-actions">
+            <button className="secondary-action-btn" onClick={handleReplicatePreviousMonth}>
+              <FaCopy /> Copiar mês anterior
             </button>
-          </form>
+            <button className="add-button" onClick={handleOpenNew}>
+              <FaPlus /> Nova Meta
+            </button>
+          </div>
         </div>
 
-        {/* Lista de Metas */}
-        <div className="dashboard-card list-card full-width-card">
-          <div className="card-header">
-            <h3>Metas Cadastradas</h3>
+        <div className="dashboard-card">
+          <div className="filters-container">
+            <input
+              type="month"
+              className="filter-input month-filter"
+              value={selectedMonth}
+              onChange={e => setSelectedMonth(e.target.value)}
+            />
           </div>
+
           <div className="table-container">
-            <table className="goals-table">
+            <table className="management-table goals-table">
               <thead>
                 <tr>
-                  <th>Vendedor</th>
-                  <th>Mês</th>
-                  <th>Tipo de Meta</th>
-                  <th>Valor Alvo</th>
-                  <th>Ações</th>
+                  <th style={{ width: '25%' }}>Equipe / Colaborador</th>
+                  <th style={{ width: '22%' }}>Faturamento</th>
+                  <th style={{ width: '18%' }}>Qtd. Vendas</th>
+                  <th style={{ width: '18%' }}>Ligações</th>
+                  <th style={{ width: '17%', textAlign: 'right', paddingRight: '20px' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {goals.length > 0 ? (
-                  goals.map(g => (
-                    <tr key={g.id}>
-                      <td>{g.userName}</td>
-                      <td>{g.month}</td>
-                      <td>
-                        <span className={`type-badge type-${g.type}`}>
-                          {formatGoalType(g.type)}
-                        </span>
-                      </td>
-                      <td><strong>{formatGoalValue(g.targetValue, g.type)}</strong></td>
-                      <td>
-                        <button
-                          className="btn-delete"
-                          onClick={() => handleDeleteGoal(g.id)}
-                          title="Excluir Meta"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="empty-state">Carregando...</td>
+                  </tr>
+                ) : (equipes.length === 0 && independentUsers.length === 0) ? (
                   <tr>
                     <td colSpan={5} className="empty-state">
-                      Nenhuma meta cadastrada para este mês.
+                      Nenhuma equipe ou colaborador cadastrado no sistema.
                     </td>
                   </tr>
+                ) : (
+                  <>
+                    {/* Renderiza as Equipes */}
+                    {equipes.map(eq => {
+                      const isExpanded = !!expandedTeams[`team-${eq.id}`];
+                      return (
+                        <div key={`team-group-${eq.id}`} style={{ display: 'contents' }}>
+                          <tr className="team-row-header">
+                            <td>
+                              <button className="expand-toggle-btn" onClick={() => toggleTeam(`team-${eq.id}`)}>
+                                {isExpanded ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
+                              </button>
+                              <span className="team-name-text">Equipe {eq.nome}</span>
+                              <span className="team-badge-members">{eq.membros.length} membros</span>
+                            </td>
+                            <td>{renderGoalCell('team', eq.id, 'value')}</td>
+                            <td>{renderGoalCell('team', eq.id, 'quantity')}</td>
+                            <td>{renderGoalCell('team', eq.id, 'calls')}</td>
+                            <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('team', eq.id)}</td>
+                          </tr>
+
+                          {/* Renderiza membros se expandido */}
+                          {isExpanded && eq.membros.map(mb => (
+                            <tr key={`member-row-${mb.id}`} className="member-row-child">
+                              <td className="member-name-td">
+                                <span className="member-indent-icon">└</span>
+                                <span className="member-name-text">{mb.nome}</span>
+                              </td>
+                              <td>{renderGoalCell('user', mb.id, 'value')}</td>
+                              <td>{renderGoalCell('user', mb.id, 'quantity')}</td>
+                              <td>{renderGoalCell('user', mb.id, 'calls')}</td>
+                              <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('user', mb.id)}</td>
+                            </tr>
+                          ))}
+                        </div>
+                      );
+                    })}
+
+                    {/* Renderiza Vendedores Sem Equipe */}
+                    {independentUsers.length > 0 && (
+                      <div style={{ display: 'contents' }}>
+                        <tr className="team-row-header independent-header">
+                          <td>
+                            <button className="expand-toggle-btn" onClick={() => toggleTeam('independent')}>
+                              {expandedTeams['independent'] ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
+                            </button>
+                            <span className="team-name-text">Colaboradores Sem Equipe</span>
+                            <span className="team-badge-members">{independentUsers.length}</span>
+                          </td>
+                          <td colSpan={4}></td>
+                        </tr>
+
+                        {expandedTeams['independent'] && independentUsers.map(u => (
+                          <tr key={`indep-row-${u.id}`} className="member-row-child">
+                            <td className="member-name-td">
+                              <span className="member-indent-icon">└</span>
+                              <span className="member-name-text">{u.name}</span>
+                            </td>
+                            <td>{renderGoalCell('user', u.id, 'value')}</td>
+                            <td>{renderGoalCell('user', u.id, 'quantity')}</td>
+                            <td>{renderGoalCell('user', u.id, 'calls')}</td>
+                            <td style={{ textAlign: 'right', paddingRight: '20px' }}>{renderActionsCell('user', u.id)}</td>
+                          </tr>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

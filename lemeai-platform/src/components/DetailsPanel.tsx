@@ -112,7 +112,7 @@ const DetailsPanel: React.FC<DetailsPanelProps> = ({ contact, onClose, onUpdate 
     { value: '2', label: 'Não Iniciado' },
     { value: '4', label: 'Proposta Enviada' },
     { value: '5', label: 'Em Negociação' },
-    { value: '3', label: 'Venda Fechada' },
+    { value: '3', label: 'Ganho' },
     { value: '6', label: 'Venda Perdida' },
   ];
 

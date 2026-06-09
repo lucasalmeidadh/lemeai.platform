@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { FaPlus, FaEdit, FaTrash, FaSave, FaLightbulb, FaBriefcase, FaTools, FaCalendarCheck, FaLock, FaEnvelope, FaBan, FaSmile, FaChevronLeft, FaChevronRight, FaComments, FaRocket } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSave, FaLightbulb, FaBriefcase, FaTools, FaCalendarCheck, FaLock, FaEnvelope, FaBan, FaSmile, FaChevronLeft, FaChevronRight, FaComments, FaRocket, FaRobot } from 'react-icons/fa';
 import './SystemPromptsPage.css';
 import { RegrasIAService, type IARule, type ConfigAgente } from '../services/RegrasIAService';
 import SystemPromptsSkeleton from '../components/SystemPromptsSkeleton';
@@ -13,6 +13,8 @@ const SystemPromptsPage = () => {
     const [headerText, setHeaderText] = useState('');
     const [footerText, setFooterText] = useState('');
     const [rules, setRules] = useState<IARule[]>([]);
+    const [botAtivo, setBotAtivo] = useState(false);
+    const [isTogglingBot, setIsTogglingBot] = useState(false);
 
     const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -202,6 +204,7 @@ const SystemPromptsPage = () => {
                 setHeaderText(data.descricaoCabecalho || '');
                 setFooterText(data.descricaoRodape || '');
                 setRules(data.regras || []);
+                setBotAtivo(data.botAtivo ?? false);
             } else {
                 // Not found handling if necessary
                 setConfigId(null);
@@ -211,6 +214,28 @@ const SystemPromptsPage = () => {
             setConfigId(null);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleToggleBot = async () => {
+        if (!configId) {
+            toast.error('Configure o agente antes de ativar o bot.');
+            return;
+        }
+        const novoEstado = !botAtivo;
+        setIsTogglingBot(true);
+        try {
+            const response = await RegrasIAService.toggleBot(novoEstado);
+            if (response.sucesso) {
+                setBotAtivo(novoEstado);
+                toast.success(novoEstado ? 'Bot de IA ativado!' : 'Bot de IA desativado.');
+            } else {
+                toast.error(response.mensagem || 'Erro ao alterar estado do bot.');
+            }
+        } catch {
+            toast.error('Erro ao comunicar com o servidor.');
+        } finally {
+            setIsTogglingBot(false);
         }
     };
 
@@ -377,6 +402,22 @@ const SystemPromptsPage = () => {
                     <h1>Regras da IA</h1>
                     <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Configure o comportamento, regras e tom de voz da inteligência artificial.</p>
                 </div>
+
+                <button
+                    className={`bot-toggle-wrapper ${botAtivo ? 'active' : ''} ${isTogglingBot ? 'loading' : ''}`}
+                    onClick={handleToggleBot}
+                    disabled={isTogglingBot}
+                    aria-label={botAtivo ? 'Desativar bot de IA' : 'Ativar bot de IA'}
+                >
+                    <FaRobot className="bot-toggle-icon" />
+                    <div className="bot-toggle-info">
+                        <span className="bot-toggle-label">Bot de IA</span>
+                        <span className="bot-toggle-status">{isTogglingBot ? 'Aguarde...' : botAtivo ? 'Ativo' : 'Inativo'}</span>
+                    </div>
+                    <div className="bot-toggle-track">
+                        <div className="bot-toggle-thumb" />
+                    </div>
+                </button>
             </div>
 
             <div className="split-view-layout">
