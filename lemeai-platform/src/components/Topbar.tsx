@@ -484,11 +484,12 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                         )}
                     </div>
 
+                    {/*
                     <div className="topbar-divider"></div>
 
                     <div className="topbar-novidades-container" ref={novidadesRef}>
-                        <button 
-                            className={`topbar-item ${isNovidadesOpen ? 'active' : ''}`} 
+                        <button
+                            className={`topbar-item ${isNovidadesOpen ? 'active' : ''}`}
                             title="Novidades"
                             onClick={() => setIsNovidadesOpen(!isNovidadesOpen)}
                         >
@@ -525,9 +526,9 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
                     <div className="topbar-divider"></div>
 
-                    <Link 
-                        id="topbar-billing" 
-                        to="/plano" 
+                    <Link
+                        id="topbar-billing"
+                        to="/plano"
                         className={`topbar-item ${location.pathname === '/plano' ? 'active' : ''}`}
                         style={{ textDecoration: 'none' }}
                     >
@@ -536,6 +537,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     </Link>
 
                     <div className="topbar-divider"></div>
+                    */}
 
                     <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
                         {photoUrl ? (

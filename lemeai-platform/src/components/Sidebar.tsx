@@ -269,10 +269,12 @@ const Sidebar: FC<SidebarProps> = () => {
                                     <FaChevronRight className="submenu-chevron" />
                                 </button>
                                 <div className="submenu-group-links">
-                                    <Link to="/empresas" className={`submenu-link ${location.pathname === '/empresas' ? 'active' : ''}`} onClick={closeSettings}>
-                                        <FaBuilding />
-                                        <span>Empresas</span>
-                                    </Link>
+                                    {isAdmin && (
+                                        <Link to="/empresas" className={`submenu-link ${location.pathname === '/empresas' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <FaBuilding />
+                                            <span>Empresas</span>
+                                        </Link>
+                                    )}
                                     <Link to="/dias-uteis" className={`submenu-link ${location.pathname === '/dias-uteis' ? 'active' : ''}`} onClick={closeSettings}>
                                         <FaCalendarCheck />
                                         <span>Dias de funcionamento</span>

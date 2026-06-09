@@ -1,28 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FaPlus, 
-  FaEdit, 
-  FaTrashAlt, 
-  FaSpinner, 
-  FaTimes, 
-  FaCheckCircle, 
-  FaTimesCircle, 
+import {
+  FaPlus,
+  FaEdit,
+  FaTrashAlt,
+  FaSpinner,
+  FaTimes,
+  FaCheckCircle,
+  FaTimesCircle,
   FaInfoCircle
 } from 'react-icons/fa';
 import { billingService } from '../services/billingService';
 import type { PlanoBackend } from '../services/billingService';
+import ConfirmationModal from '../components/ConfirmationModal';
 import toast from 'react-hot-toast';
+import './PlanManagementPage.css';
 
 const PlanManagementPage: React.FC = () => {
   const [plans, setPlans] = useState<PlanoBackend[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
-  // Modals state
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingPlan, setEditingPlan] = useState<PlanoBackend | null>(null);
+  const [deletingPlanId, setDeletingPlanId] = useState<number | null>(null);
 
-  // Form state
   const [nome, setNome] = useState<string>('');
   const [descricao, setDescricao] = useState<string>('');
   const [preco, setPreco] = useState<number>(0);
@@ -94,12 +95,7 @@ const PlanManagementPage: React.FC = () => {
           toast.error(res.mensagem || 'Erro ao atualizar plano.');
         }
       } else {
-        const res = await billingService.criarPlano({
-          nome,
-          descricao,
-          preco,
-          ciclo
-        });
+        const res = await billingService.criarPlano({ nome, descricao, preco, ciclo });
         if (res.sucesso) {
           toast.success('Plano criado com sucesso!');
           setIsModalOpen(false);
@@ -115,9 +111,14 @@ const PlanManagementPage: React.FC = () => {
     }
   };
 
-  const handleDeletePlan = async (id: number) => {
-    if (!window.confirm('Tem certeza que deseja desativar/remover este plano?')) return;
+  const handleDeletePlan = (id: number) => {
+    setDeletingPlanId(id);
+  };
 
+  const confirmDeletePlan = async () => {
+    if (deletingPlanId == null) return;
+    const id = deletingPlanId;
+    setDeletingPlanId(null);
     try {
       const res = await billingService.removerPlano(id);
       if (res.sucesso) {
@@ -147,7 +148,7 @@ const PlanManagementPage: React.FC = () => {
       <div className="page-header">
         <div>
           <h1>Gerenciamento de Planos</h1>
-          <p style={{ margin: '5px 0 0 0', color: 'var(--text-secondary)', fontSize: '14px' }}>
+          <p className="plan-management-subtitle">
             Crie, gerencie e sincronize os planos da plataforma diretamente com a AbacatePay.
           </p>
         </div>
@@ -160,7 +161,7 @@ const PlanManagementPage: React.FC = () => {
         <div className="table-container">
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '50px 0', color: 'var(--text-secondary)' }}>
-              <FaSpinner className="spin-icon" style={{ animation: 'spin 1s linear infinite', fontSize: '24px', marginBottom: '10px' }} />
+              <FaSpinner className="spin-icon" style={{ fontSize: '24px', marginBottom: '10px' }} />
               <p>Carregando planos...</p>
             </div>
           ) : plans.length === 0 ? (
@@ -194,7 +195,7 @@ const PlanManagementPage: React.FC = () => {
                       <span style={{ color: 'var(--text-secondary)', fontSize: '13.5px' }}>{plan.planoDescricao}</span>
                     </td>
                     <td>
-                      <span style={{ fontWeight: '600', color: '#16a34a' }}>R$ {plan.planoPreco.toFixed(2)}</span>
+                      <span className="plan-price-cell">R$ {plan.planoPreco.toFixed(2)}</span>
                     </td>
                     <td>
                       <span className="status-badge status-lead-frio" style={{ fontSize: '12px', fontWeight: '600' }}>
@@ -214,9 +215,7 @@ const PlanManagementPage: React.FC = () => {
                     </td>
                     <td>
                       {plan.abacateProductId ? (
-                        <code style={{ fontFamily: 'monospace', backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '12px' }}>
-                          {plan.abacateProductId}
-                        </code>
+                        <code className="plan-abacate-id">{plan.abacateProductId}</code>
                       ) : (
                         <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', fontSize: '13px' }}>Não Sincronizado</span>
                       )}
@@ -250,112 +249,103 @@ const PlanManagementPage: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSavePlan} style={{ padding: '25px' }}>
-              <p style={{ margin: '0 0 20px 0', color: 'var(--text-tertiary)', fontSize: '13px', lineHeight: '1.4' }}>
-                {editingPlan 
-                  ? 'Modifique os detalhes locais do plano. As atualizações de preço e descrição não refletem na AbacatePay automaticamente.' 
-                  : 'Crie um plano. Isso registrará automaticamente o produto correspondente na AbacatePay.'}
-              </p>
+            <form onSubmit={handleSavePlan}>
+              <div className="plan-form-body">
+                <p className="plan-form-hint">
+                  {editingPlan
+                    ? 'Modifique os detalhes locais do plano. As atualizações de preço e descrição não refletem na AbacatePay automaticamente.'
+                    : 'Crie um plano. Isso registrará automaticamente o produto correspondente na AbacatePay.'}
+                </p>
 
-              <div className="form-group" style={{ marginBottom: '15px' }}>
-                <label htmlFor="plan-nome">Nome do Plano *</label>
-                <input 
-                  id="plan-nome"
-                  type="text" 
-                  placeholder="Ex: Profissional, Starter, Pro" 
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '15px' }}>
-                <label htmlFor="plan-desc">Descrição / Recursos *</label>
-                <textarea 
-                  id="plan-desc"
-                  placeholder="Descreva o plano ou separe as características com vírgula para listar recursos." 
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  rows={3}
-                  style={{ 
-                    width: '100%', 
-                    padding: '12px 16px', 
-                    fontSize: '14px', 
-                    borderRadius: '8px', 
-                    border: '1px solid var(--border-color)', 
-                    backgroundColor: 'var(--bg-secondary)', 
-                    color: 'var(--text-primary)', 
-                    boxSizing: 'border-box',
-                    fontFamily: 'inherit'
-                  }}
-                  required
-                />
-                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                  Dica: Separe por vírgulas para destacar múltiplos benefícios no layout.
-                </span>
-              </div>
-
-              <div className="form-grid" style={{ marginBottom: '15px' }}>
-                <div className="form-group">
-                  <label htmlFor="plan-preco">Preço Mensal (R$) *</label>
-                  <input 
-                    id="plan-preco"
-                    type="number" 
-                    step="0.01"
-                    placeholder="0.00" 
-                    value={preco || ''}
-                    onChange={(e) => setPreco(parseFloat(e.target.value))}
+                <div className="form-group" style={{ marginBottom: '15px' }}>
+                  <label htmlFor="plan-nome">Nome do Plano *</label>
+                  <input
+                    id="plan-nome"
+                    type="text"
+                    placeholder="Ex: Profissional, Starter, Pro"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
                     required
                   />
                 </div>
 
-                {!editingPlan ? (
+                <div className="form-group" style={{ marginBottom: '15px' }}>
+                  <label htmlFor="plan-desc">Descrição / Recursos *</label>
+                  <textarea
+                    id="plan-desc"
+                    className="plan-textarea"
+                    placeholder="Descreva o plano ou separe as características com vírgula para listar recursos."
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value)}
+                    rows={3}
+                    required
+                  />
+                  <span className="plan-textarea-hint">
+                    Dica: Separe por vírgulas para destacar múltiplos benefícios no layout.
+                  </span>
+                </div>
+
+                <div className="plan-form-grid">
                   <div className="form-group">
-                    <label htmlFor="plan-ciclo">Ciclo de Cobrança *</label>
-                    <select 
-                      id="plan-ciclo"
-                      value={ciclo}
-                      onChange={(e) => setCiclo(e.target.value)}
+                    <label htmlFor="plan-preco">Preço (R$) *</label>
+                    <input
+                      id="plan-preco"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={preco || ''}
+                      onChange={(e) => setPreco(parseFloat(e.target.value))}
                       required
-                    >
-                      <option value="WEEKLY">Semanal</option>
-                      <option value="MONTHLY">Mensal</option>
-                      <option value="QUARTERLY">Trimestral</option>
-                      <option value="SEMIANNUALLY">Semestral</option>
-                      <option value="ANNUALLY">Anual</option>
-                    </select>
+                    />
                   </div>
-                ) : (
-                  <div className="form-group" style={{ justifyContent: 'center', paddingTop: '18px' }}>
-                    <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-primary)' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={ativo}
-                        onChange={(e) => setAtivo(e.target.checked)}
-                        style={{ width: 'auto', display: 'inline-block' }}
-                      />
-                      Plano Ativo no Sistema
-                    </label>
-                  </div>
-                )}
+
+                  {!editingPlan ? (
+                    <div className="form-group">
+                      <label htmlFor="plan-ciclo">Ciclo de Cobrança *</label>
+                      <select
+                        id="plan-ciclo"
+                        value={ciclo}
+                        onChange={(e) => setCiclo(e.target.value)}
+                        required
+                      >
+                        <option value="WEEKLY">Semanal</option>
+                        <option value="MONTHLY">Mensal</option>
+                        <option value="QUARTERLY">Trimestral</option>
+                        <option value="SEMIANNUALLY">Semestral</option>
+                        <option value="ANNUALLY">Anual</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <label className="plan-ativo-toggle">
+                        <input
+                          type="checkbox"
+                          checked={ativo}
+                          onChange={(e) => setAtivo(e.target.checked)}
+                        />
+                        Plano Ativo no Sistema
+                      </label>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="modal-footer" style={{ padding: '20px 0 0 0', borderTop: '1px solid var(--border-color)', marginTop: '20px' }}>
-                <button 
-                  type="button" 
-                  className="button secondary" 
+              <div className="plan-form-footer">
+                <button
+                  type="button"
+                  className="button secondary"
                   onClick={() => setIsModalOpen(false)}
                   disabled={submitting}
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="button primary"
                   disabled={submitting}
                 >
                   {submitting ? (
-                    <><FaSpinner className="spin-icon" style={{ animation: 'spin 1s linear infinite' }} /> Salvando...</>
+                    <><FaSpinner className="spin-icon" /> Salvando...</>
                   ) : (
                     'Salvar Plano'
                   )}
@@ -365,6 +355,16 @@ const PlanManagementPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={deletingPlanId !== null}
+        onClose={() => setDeletingPlanId(null)}
+        onConfirm={confirmDeletePlan}
+        title="Remover Plano"
+        message="Tem certeza que deseja desativar/remover este plano? Assinaturas existentes não serão afetadas."
+        confirmText="Sim, remover"
+        cancelText="Cancelar"
+      />
     </div>
   );
 };

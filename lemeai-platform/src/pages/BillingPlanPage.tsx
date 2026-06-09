@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FaCheck, 
-  FaCreditCard, 
-  FaRegCalendarAlt, 
-  FaBoxOpen, 
-  FaSpinner, 
+import {
+  FaCheck,
+  FaCreditCard,
+  FaRegCalendarAlt,
+  FaBoxOpen,
+  FaSpinner,
   FaArrowRight,
   FaExternalLinkAlt,
   FaBan,
@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa';
 import { billingService } from '../services/billingService';
 import type { PlanoBackend, AssinaturaBackend } from '../services/billingService';
+import ConfirmationModal from '../components/ConfirmationModal';
 import toast from 'react-hot-toast';
 import './BillingPlanPage.css';
 
@@ -21,6 +22,11 @@ const BillingPlanPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [processingPlanId, setProcessingPlanId] = useState<number | null>(null);
   const [cancelling, setCancelling] = useState<boolean>(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    type: 'trocar' | 'cancelar';
+    planId?: number;
+  }>({ open: false, type: 'trocar' });
 
   useEffect(() => {
     loadBillingData();
@@ -70,43 +76,48 @@ const BillingPlanPage: React.FC = () => {
     }
   };
 
-  const handleTrocarPlano = async (planId: number) => {
-    if (!window.confirm('Deseja solicitar a alteração do seu plano? A alteração será aplicada no próximo ciclo de faturamento.')) {
-      return;
-    }
-    setProcessingPlanId(planId);
-    try {
-      const res = await billingService.trocarPlano(planId);
-      if (res.sucesso) {
-        toast.success('Troca de plano solicitada! Será aplicada no início do próximo ciclo.');
-        loadBillingData();
-      } else {
-        toast.error(res.mensagem || 'Erro ao solicitar troca de plano.');
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao solicitar troca de plano.');
-    } finally {
-      setProcessingPlanId(null);
-    }
+  const handleTrocarPlano = (planId: number) => {
+    setConfirmModal({ open: true, type: 'trocar', planId });
   };
 
-  const handleCancelarAssinatura = async () => {
-    if (!window.confirm('Tem certeza que deseja cancelar sua assinatura ativa? O acesso será encerrado imediatamente e esta ação é irreversível.')) {
-      return;
-    }
-    setCancelling(true);
-    try {
-      const res = await billingService.cancelarAssinatura();
-      if (res.sucesso) {
-        toast.success('Assinatura cancelada com sucesso.');
-        loadBillingData();
-      } else {
-        toast.error(res.mensagem || 'Erro ao cancelar assinatura.');
+  const handleCancelarAssinatura = () => {
+    setConfirmModal({ open: true, type: 'cancelar' });
+  };
+
+  const executeConfirmedAction = async () => {
+    if (confirmModal.type === 'trocar' && confirmModal.planId != null) {
+      const planId = confirmModal.planId;
+      setConfirmModal({ open: false, type: 'trocar' });
+      setProcessingPlanId(planId);
+      try {
+        const res = await billingService.trocarPlano(planId);
+        if (res.sucesso) {
+          toast.success('Troca de plano solicitada! Será aplicada no início do próximo ciclo.');
+          loadBillingData();
+        } else {
+          toast.error(res.mensagem || 'Erro ao solicitar troca de plano.');
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Erro ao solicitar troca de plano.');
+      } finally {
+        setProcessingPlanId(null);
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao cancelar assinatura.');
-    } finally {
-      setCancelling(false);
+    } else if (confirmModal.type === 'cancelar') {
+      setConfirmModal({ open: false, type: 'cancelar' });
+      setCancelling(true);
+      try {
+        const res = await billingService.cancelarAssinatura();
+        if (res.sucesso) {
+          toast.success('Assinatura cancelada com sucesso.');
+          loadBillingData();
+        } else {
+          toast.error(res.mensagem || 'Erro ao cancelar assinatura.');
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Erro ao cancelar assinatura.');
+      } finally {
+        setCancelling(false);
+      }
     }
   };
 
@@ -155,9 +166,9 @@ const BillingPlanPage: React.FC = () => {
 
   return (
     <div className="billing-page-container">
-      <div className="page-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '5px', marginBottom: '2.5rem', borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '1.5rem' }}>
-        <h1 style={{ margin: 0 }}>Assinatura e Planos</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
+      <div className="billing-page-header">
+        <h1>Assinatura e Planos</h1>
+        <p className="billing-page-subtitle">
           Gerencie seu plano atual e faça upgrades para obter novos recursos.
         </p>
       </div>
@@ -244,6 +255,21 @@ const BillingPlanPage: React.FC = () => {
           </div>
         </section>
       )}
+
+      <ConfirmationModal
+        isOpen={confirmModal.open}
+        onClose={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+        onConfirm={executeConfirmedAction}
+        title={confirmModal.type === 'cancelar' ? 'Cancelar Assinatura' : 'Confirmar Troca de Plano'}
+        message={
+          confirmModal.type === 'cancelar'
+            ? 'Tem certeza? O acesso será encerrado imediatamente. Esta ação é irreversível.'
+            : 'Deseja solicitar a alteração do plano? A alteração será aplicada no próximo ciclo de faturamento.'
+        }
+        confirmText={confirmModal.type === 'cancelar' ? 'Sim, cancelar' : 'Confirmar Troca'}
+        cancelText="Voltar"
+        isConfirming={cancelling || processingPlanId !== null}
+      />
 
       {/* Cards de Opções de Planos */}
       <section className="billing-section">
