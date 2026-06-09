@@ -22,6 +22,8 @@ export interface Contact {
   detailsValue?: number;
   tipoLeadId?: number;
   tipoLeadNome?: string;
+  origem?: 'organic' | 'marketing';
+  idCampanha?: number | null;
   messagesByDate: {
     [date: string]: Message[];
   };
