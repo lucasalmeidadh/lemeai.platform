@@ -28,6 +28,7 @@ const WinDealProductModal = ({ isOpen, dealId, dealTitle, onConfirm, onCancel }:
         setQuantity(1);
         setUnitPrice('');
         setSearchQuery('');
+        setIsSaving(false);
 
         const loadProducts = async () => {
             setIsLoadingProducts(true);
