@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './ContactList.css';
 import { FaSearch } from 'react-icons/fa';
 import type { Contact } from '../data/mockData';
-import CustomSelect from './CustomSelect';
-import { CampaignService, type Campaign } from '../services/CampaignService';
 
 interface CurrentUser {
   nome: string;
@@ -19,23 +17,19 @@ interface ContactListProps {
 const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, onSelectContact, currentUser }) => {
   const [isSellerOnline, setSellerOnline] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [photoUrl, setPhotoUrl] = useState<string | null>(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user?.photoUrl ?? null;
+  });
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSource, setSelectedSource] = useState('all');
-  const [selectedCampaign, setSelectedCampaign] = useState('all');
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   useEffect(() => {
-    const loadCampaigns = async () => {
-      try {
-        const res = await CampaignService.getAll();
-        if (res.sucesso && Array.isArray(res.dados)) {
-          setCampaigns(res.dados);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar campanhas no Chat:", err);
-      }
+    const handlePhotoUpdate = (e: Event) => {
+      const detail = (e as CustomEvent<{ photoUrl: string | null }>).detail;
+      setPhotoUrl(detail.photoUrl);
     };
-    loadCampaigns();
+    window.addEventListener('userPhotoUpdated', handlePhotoUpdate);
+    return () => window.removeEventListener('userPhotoUpdated', handlePhotoUpdate);
   }, []);
 
   const toggleSellerStatus = () => setSellerOnline(!isSellerOnline);
@@ -45,24 +39,7 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
   const filteredContacts = contacts.filter(c => {
     const matchesFilter = activeFilter === 'unread' ? c.unread > 0 : true;
     const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    let matchesSource = true;
-    if (selectedSource !== 'all') {
-      const contactSource = (c as any).source || (c as any).origem;
-      if (contactSource) {
-        matchesSource = contactSource === selectedSource;
-      }
-    }
-    
-    let matchesCampaign = true;
-    if (selectedSource === 'marketing' && selectedCampaign !== 'all') {
-      const contactCampaignId = (c as any).campaignId || (c as any).idCampanha || (c as any).campanhaId;
-      if (contactCampaignId) {
-        matchesCampaign = contactCampaignId.toString() === selectedCampaign;
-      }
-    }
-    
-    return matchesFilter && matchesSearch && matchesSource && matchesCampaign;
+    return matchesFilter && matchesSearch;
   });
 
   const getInitials = (name: string) => {
@@ -87,8 +64,11 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
           </h2>
           <div className="seller-status" onClick={toggleSellerStatus} title={isSellerOnline ? 'Status: Online' : 'Status: Offline'}>
             <div className="seller-avatar">
-              { }
-              <span>{userInitials}</span>
+              {photoUrl ? (
+                <img src={photoUrl} className="seller-avatar-img" alt="Avatar" />
+              ) : (
+                <span>{userInitials}</span>
+              )}
               <div className={`status-indicator ${isSellerOnline ? 'online' : 'offline'}`}></div>
             </div>
           </div>
@@ -113,37 +93,6 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
         </button>
       </div>
 
-      <div className="chat-advanced-filters">
-        <div className="chat-filter-row">
-          <label className="chat-filter-label">Origem:</label>
-          <CustomSelect
-            value={selectedSource}
-            onChange={(val) => {
-              setSelectedSource(val);
-              setSelectedCampaign('all');
-            }}
-            options={[
-              { value: 'all', label: 'Todas' },
-              { value: 'organic', label: 'Orgânico' },
-              { value: 'marketing', label: 'Campanha de marketing' }
-            ]}
-          />
-        </div>
-
-        {selectedSource === 'marketing' && (
-          <div className="chat-filter-row secondary-filter">
-            <label className="chat-filter-label">Campanha:</label>
-            <CustomSelect
-              value={selectedCampaign}
-              onChange={(val) => setSelectedCampaign(val)}
-              options={[
-                { value: 'all', label: 'Todas as campanhas' },
-                ...campaigns.map(c => ({ value: c.campanhaId.toString(), label: c.campanhaNome }))
-              ]}
-            />
-          </div>
-        )}
-      </div>
 
       <ul className="contacts-ul">
         {filteredContacts.map(contact => (

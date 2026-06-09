@@ -190,6 +190,8 @@ const ChatPage = () => {
             responsibleName: opportunity ? opportunity.nomeUsuarioResponsavel : 'N/A',
             tipoLeadId: convo.tipoLeadId,
             tipoLeadNome: convo.tipoLeadNome,
+            origem: convo.campanha ? 'marketing' : 'organic',
+            idCampanha: convo.idCampanha ?? null,
             messagesByDate: {}
           };
         });
