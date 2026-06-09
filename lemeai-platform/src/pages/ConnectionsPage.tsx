@@ -10,7 +10,6 @@ import {
     FaMobileAlt,
     FaAward,
     FaSearch,
-    FaTrash,
     FaToggleOn,
     FaToggleOff,
     FaUsers,
@@ -24,10 +23,10 @@ import {
     getPlatformLabel,
     PlataformaEnum,
 } from '../services/ConexaoPlataformaService';
-import { InstagramService } from '../services/InstagramService';
+// import { InstagramService } from '../services/InstagramService'; // Instagram comentado — aguardando liberação
 import './ConnectionsPage.css';
 
-type ActiveTab = 'connections' | 'whatsapp' | 'instagram';
+type ActiveTab = 'connections' | 'whatsapp'; // 'instagram' comentado — aguardando liberação
 
 const getUserRole = (): string | null => {
     try {
@@ -93,7 +92,7 @@ const ConnectionsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [metaConfig, setMetaConfig] = useState<MetaConfig | null>(null);
     const [isConnectingMeta, setIsConnectingMeta] = useState(false);
-    const [isConnectingInstagram, setIsConnectingInstagram] = useState(false);
+    // const [isConnectingInstagram, setIsConnectingInstagram] = useState(false); // Instagram comentado
     const [togglingMulti, setTogglingMulti] = useState(false);
     const [removingId, setRemovingId] = useState<number | null>(null);
     const [openPrereq, setOpenPrereq] = useState<number | null>(null);
@@ -153,33 +152,34 @@ const ConnectionsPage = () => {
         );
     }, [metaConfig, enviarParaBackendMeta]);
 
-    const handleInstagramLogin = useCallback(() => {
-        if (!(window as any).FB) {
-            toast.error('SDK do Facebook não carregado.');
-            return;
-        }
-        (window as any).FB.login(
-            async (response: any) => {
-                if (response.authResponse) {
-                    const token = response.authResponse.accessToken;
-                    setIsConnectingInstagram(true);
-                    try {
-                        const res = await InstagramService.conectar(token);
-                        if (res.sucesso) {
-                            toast.success('Instagram conectado com sucesso!');
-                            await loadConexoes();
-                            setActiveTab('connections');
-                        } else {
-                            toast.error(res.mensagem || 'Erro ao conectar Instagram.');
-                        }
-                    } finally {
-                        setIsConnectingInstagram(false);
-                    }
-                }
-            },
-            { scope: 'instagram_basic,instagram_manage_messages,pages_show_list,pages_read_engagement,pages_manage_metadata' }
-        );
-    }, [loadConexoes]);
+    // Instagram comentado — aguardando liberação da integração
+    // const handleInstagramLogin = useCallback(() => {
+    //     if (!(window as any).FB) {
+    //         toast.error('SDK do Facebook não carregado.');
+    //         return;
+    //     }
+    //     (window as any).FB.login(
+    //         async (response: any) => {
+    //             if (response.authResponse) {
+    //                 const token = response.authResponse.accessToken;
+    //                 setIsConnectingInstagram(true);
+    //                 try {
+    //                     const res = await InstagramService.conectar(token);
+    //                     if (res.sucesso) {
+    //                         toast.success('Instagram conectado com sucesso!');
+    //                         await loadConexoes();
+    //                         setActiveTab('connections');
+    //                     } else {
+    //                         toast.error(res.mensagem || 'Erro ao conectar Instagram.');
+    //                     }
+    //                 } finally {
+    //                     setIsConnectingInstagram(false);
+    //                 }
+    //             }
+    //         },
+    //         { scope: 'instagram_basic,instagram_manage_messages,pages_show_list,pages_read_engagement,pages_manage_metadata' }
+    //     );
+    // }, [loadConexoes]);
 
     const handleToggleMulti = async () => {
         setTogglingMulti(true);
@@ -323,13 +323,12 @@ const ConnectionsPage = () => {
                     </div>
                 </div>
                 <button
-                    className={`multi-toggle-btn ${multiEnabled ? 'on' : 'off'}`}
-                    onClick={handleToggleMulti}
-                    disabled={togglingMulti}
-                    aria-label={multiEnabled ? 'Desativar multi-contas' : 'Ativar multi-contas'}
+                    className="multi-toggle-btn off"
+                    disabled
+                    aria-label="Multi-contas desativado"
                 >
-                    {multiEnabled ? <FaToggleOn /> : <FaToggleOff />}
-                    <span>{togglingMulti ? 'Salvando...' : multiEnabled ? 'Ativado' : 'Desativado'}</span>
+                    <FaToggleOff />
+                    <span>Desativado</span>
                 </button>
             </div>
         );
@@ -363,14 +362,15 @@ const ConnectionsPage = () => {
                         </div>
                     )}
                 </div>
-                <button
+                {/* Botão de desconexão desabilitado — aguardando implementação dos endpoints no backend */}
+                {/* <button
                     className="conn-card-remove"
                     aria-label="Remover conexão"
                     onClick={() => handleRemoverConexao(conexao.conexaoPlataformaId)}
                     disabled={isRemoving}
                 >
                     {isRemoving ? <span className="conn-spinner" /> : <FaTrash />}
-                </button>
+                </button> */}
             </div>
         );
     };
@@ -391,11 +391,7 @@ const ConnectionsPage = () => {
                     </p>
                     <div className="conn-blocked-notice">
                         <FaLock className="conn-blocked-notice-icon" />
-                        <span>
-                            {isAdmin
-                                ? 'Para adicionar mais contas, ative o modo multi-contas no painel acima.'
-                                : 'Para adicionar mais contas, solicite ao administrador que habilite o modo multi-contas.'}
-                        </span>
+                        <span>Para adicionar mais contas, solicite ao administrador que habilite o modo multi-contas.</span>
                     </div>
                     <button
                         className="conn-blocked-link"
@@ -564,52 +560,8 @@ const ConnectionsPage = () => {
         );
     };
 
-    const renderTabInstagram = () => {
-        if (!canConnectInstagram) {
-            return (
-                <div className="tab-pane">
-                    {renderBlockedState('Instagram')}
-                </div>
-            );
-        }
-
-        return (
-        <div className="tab-pane">
-            <div className="instagram-connect-card">
-                <div className="instagram-connect-card-icon"><FaInstagram /></div>
-                <div className="instagram-connect-card-body">
-                    <h3>Instagram Business</h3>
-                    <p>
-                        Conecte sua conta Instagram Business para receber mensagens diretas e leads
-                        de anúncios diretamente no CRM. A conta precisa estar vinculada a uma Página do Facebook.
-                    </p>
-                    <div className="instagram-connect-benefits">
-                        <div className="instagram-connect-benefit"><FaCheckCircle /><span>Receba DMs no CRM</span></div>
-                        <div className="instagram-connect-benefit"><FaCheckCircle /><span>Capture leads de anúncios automaticamente</span></div>
-                        <div className="instagram-connect-benefit"><FaCheckCircle /><span>Responda sem sair da plataforma</span></div>
-                    </div>
-                    <div className="instagram-connect-warning">
-                        <FaExclamationTriangle />
-                        <span>
-                            A conta Instagram precisa ser do tipo <strong>Business ou Creator</strong> e estar
-                            vinculada a uma Página do Facebook para funcionar corretamente.
-                        </span>
-                    </div>
-                </div>
-                <div className="instagram-connect-card-action">
-                    <button
-                        className="conn-btn-instagram"
-                        onClick={handleInstagramLogin}
-                        disabled={isConnectingInstagram}
-                    >
-                        <FaInstagram />
-                        {isConnectingInstagram ? 'Conectando...' : 'Conectar via Facebook'}
-                    </button>
-                </div>
-            </div>
-        </div>
-        );
-    };
+    // renderTabInstagram comentado — integração Instagram ainda não liberada
+    // const renderTabInstagram = () => { ... };
 
     return (
         <div className="page-container connections-page">
@@ -642,18 +594,20 @@ const ConnectionsPage = () => {
                     <FaWhatsapp />
                     WhatsApp
                 </button>
-                <button
+                {/* Instagram comentado — integração ainda não liberada */}
+                {/* <button
                     className={`tab-btn ${activeTab === 'instagram' ? 'active' : ''}`}
                     onClick={() => setActiveTab('instagram')}
                 >
                     <FaInstagram />
                     Instagram
-                </button>
+                </button> */}
             </div>
 
             {activeTab === 'connections' && renderTabConnections()}
             {activeTab === 'whatsapp' && renderTabWhatsapp()}
-            {activeTab === 'instagram' && renderTabInstagram()}
+            {/* Instagram comentado — integração ainda não liberada */}
+            {/* {activeTab === 'instagram' && renderTabInstagram()} */}
         </div>
     );
 };
