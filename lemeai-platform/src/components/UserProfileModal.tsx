@@ -49,6 +49,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Form States
     const [currentPassword, setCurrentPassword] = useState('');
@@ -130,9 +131,19 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
         { label: "Pelo menos um caractere especial", valid: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword) }
     ];
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        if (!currentPassword) {
+            setError("A senha atual é obrigatória.");
+            return;
+        }
+
+        if (!newPassword) {
+            setError("A nova senha é obrigatória.");
+            return;
+        }
 
         // Basic validation: Check if passwords match
         if (newPassword !== confirmPassword) {
@@ -140,12 +151,63 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
             return;
         }
 
-        if (onSave) {
-            onSave({
-                currentPassword,
-                newPassword,
-                userData: user
+        // Password rules validation
+        const allRulesValid = validationRules.every(rule => rule.valid);
+        if (!allRulesValid) {
+            setError("A nova senha não atende a todos os requisitos de segurança.");
+            return;
+        }
+
+        setIsSaving(true);
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+
+        try {
+            const response = await apiFetch(`${apiUrl}/api/Usuario/AtualizarSenha/${user?.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: user?.email,
+                    senhaAtual: currentPassword,
+                    novaSenha: newPassword
+                })
             });
+
+            let result;
+            const text = await response.text();
+            if (text) {
+                result = JSON.parse(text);
+            }
+
+            if (!response.ok || (result && !result.sucesso)) {
+                throw new Error((result && result.mensagem) || "Erro ao atualizar a senha.");
+            }
+
+            toast.success("Senha atualizada com sucesso!");
+
+            // Reset fields
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+
+            if (onSave) {
+                onSave({
+                    currentPassword,
+                    newPassword,
+                    userData: user
+                });
+            }
+
+            setTimeout(() => {
+                onClose();
+            }, 1000);
+        } catch (err: any) {
+            console.error("Erro ao atualizar senha:", err);
+            setError(err.message || "Erro de conexão ao atualizar a senha.");
+            toast.error(err.message || "Erro ao atualizar a senha.");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -156,7 +218,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
             <div className="profile-modal-content" onClick={e => e.stopPropagation()}>
                 <header className="profile-modal-header">
                     <h2>Meu Perfil</h2>
-                    <button onClick={onClose} className="close-modal-button" aria-label="Fechar">
+                    <button onClick={onClose} className="close-modal-button" aria-label="Fechar" disabled={isSaving}>
                         <FaTimes />
                     </button>
                 </header>
@@ -240,11 +302,13 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
                                                 placeholder="Digite sua senha atual"
                                                 value={currentPassword}
                                                 onChange={e => setCurrentPassword(e.target.value)}
+                                                disabled={isSaving}
                                             />
                                             <button
                                                 type="button"
                                                 className="password-toggle-btn"
                                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                disabled={isSaving}
                                             >
                                                 {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
                                             </button>
@@ -261,11 +325,13 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
                                                 placeholder="Digite a nova senha"
                                                 value={newPassword}
                                                 onChange={e => setNewPassword(e.target.value)}
+                                                disabled={isSaving}
                                             />
                                             <button
                                                 type="button"
                                                 className="password-toggle-btn"
                                                 onClick={() => setShowNewPassword(!showNewPassword)}
+                                                disabled={isSaving}
                                             >
                                                 {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                                             </button>
@@ -294,11 +360,13 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
                                                 placeholder="Confirme a nova senha"
                                                 value={confirmPassword}
                                                 onChange={e => setConfirmPassword(e.target.value)}
+                                                disabled={isSaving}
                                             />
                                             <button
                                                 type="button"
                                                 className="password-toggle-btn"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                disabled={isSaving}
                                             >
                                                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                                             </button>
@@ -308,8 +376,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, on
                                     {error && <div className="error-message" style={{ color: '#fa5252', fontSize: '14px', marginBottom: '10px', textAlign: 'right' }}>{error}</div>}
 
                                     <div style={{ textAlign: 'right', marginTop: '10px' }}>
-                                        <button type="submit" className="button primary" style={{ width: '100%' }}>
-                                            Atualizar Senha
+                                        <button type="submit" className="button primary" style={{ width: '100%' }} disabled={isSaving}>
+                                            {isSaving ? 'Atualizando...' : 'Atualizar Senha'}
                                         </button>
                                     </div>
                                 </form>
