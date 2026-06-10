@@ -5,7 +5,7 @@ import {
   FaArrowLeft, FaPhone, FaEnvelope, FaPlus, FaPaperclip, FaTrash,
   FaImage, FaMusic, FaVideo, FaFilePdf, FaCalendarAlt, FaComments, FaEdit,
   FaMagic, FaTasks, FaTimes,
-  FaBullhorn, FaStickyNote, FaBoxes
+  FaBullhorn, FaStickyNote, FaBoxes, FaUserPlus
 } from 'react-icons/fa';
 import { ProductService, type Product } from '../services/ProductService';
 import { ConversaProdutoService, type ConversaProduto } from '../services/ConversaProdutoService';
@@ -100,6 +100,7 @@ interface Deal {
   idCampanha?: number | null;
   nomeCampanha?: string;
   tipoLeadId?: number;
+  ownerId?: number;
 }
 
 interface ApiMessage {
@@ -182,6 +183,8 @@ const DealDetailsPage = () => {
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isAssuming, setIsAssuming] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<{ id: number, nome: string } | null>(null);
   const [campaignInfo, setCampaignInfo] = useState<{ campanha: boolean; idCampanha: number | null; nomeCampanha: string } | null>(null);
@@ -294,6 +297,7 @@ const DealDetailsPage = () => {
           idCampanha: currentOpp.idCampanha,
           nomeCampanha: currentOpp.nomeCampanha,
           tipoLeadId: currentOpp.tipoLeadId,
+          ownerId: currentOpp.idUsuarioResponsavel,
         };
         setDeal(mappedDeal);
         setStatusId(currentOpp.idStauts);
@@ -316,6 +320,33 @@ const DealDetailsPage = () => {
   useEffect(() => {
     fetchDealInfo();
   }, [fetchDealInfo]);
+
+  const handleAssumeDeal = async () => {
+    if (!deal || !currentUser || isAssuming) return;
+
+    setIsAssuming(true);
+    const toastId = toast.loading('Assumindo conversa...');
+    try {
+      const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/TranferirConversa`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          IdResponsavelAtual: deal.ownerId || 0,
+          IdNovoResponsavel: currentUser.id
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.mensagem || 'Falha ao assumir conversa.');
+      }
+      toast.success('Conversa assumida com sucesso!', { id: toastId });
+      fetchDealInfo(true);
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`, { id: toastId });
+    } finally {
+      setIsAssuming(false);
+    }
+  };
 
   // Messages fetcher
   const fetchMessages = useCallback(async () => {
@@ -1189,6 +1220,15 @@ const DealDetailsPage = () => {
           <FaArrowLeft /> Voltar para o Pipeline
         </button>
         <div style={{ display: 'flex', gap: '12px' }}>
+          {currentUser && deal.owner !== currentUser.nome && (
+            <button
+              className="assume-deal-btn"
+              onClick={handleAssumeDeal}
+              disabled={isAssuming}
+            >
+              <FaUserPlus /> {isAssuming ? 'Assumindo...' : 'Assumir Conversa'}
+            </button>
+          )}
           <button className="delete-deal-btn" onClick={() => setIsDeleteConfirmOpen(true)}>
             <FaTrash /> Excluir Oportunidade
           </button>
