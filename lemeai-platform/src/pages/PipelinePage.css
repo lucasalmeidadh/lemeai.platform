@@ -141,6 +141,37 @@ select.pipeline-filter-input {
   font-weight: 600;
 }
 
+.column-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.column-sort-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.column-sort-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--petroleum-blue);
+}
+
+.column-sort-btn.active {
+  background: var(--petroleum-light);
+  color: var(--petroleum-blue);
+}
+
 /* column total value */
 .column-total {
   font-size: var(--font-xs);

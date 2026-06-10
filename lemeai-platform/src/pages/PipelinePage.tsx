@@ -12,7 +12,7 @@ import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
-import { FaMagic, FaFilter } from 'react-icons/fa';
+import { FaMagic, FaFilter, FaSort, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
 import { CampaignService, type Campaign } from '../services/CampaignService';
 import { ConversaProdutoService } from '../services/ConversaProdutoService';
@@ -65,6 +65,7 @@ const PipelinePage = () => {
     const [columns, setColumns] = useState<Column[]>(INITIAL_COLUMNS);
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [columnSortOrders, setColumnSortOrders] = useState<Record<string, 'asc' | 'desc' | null>>({});
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOwner, setSelectedOwner] = useState('all');
@@ -87,11 +88,20 @@ const PipelinePage = () => {
     const [pendingWonDeal, setPendingWonDeal] = useState<Deal | null>(null);
 
     const handleTemperatureClick = (temp: string) => {
-        setSelectedTemperatures(prev => 
-            prev.includes(temp) 
-                ? prev.filter(t => t !== temp) 
+        setSelectedTemperatures(prev =>
+            prev.includes(temp)
+                ? prev.filter(t => t !== temp)
                 : [...prev, temp]
         );
+    };
+
+    const toggleColumnSort = (columnId: string) => {
+        setColumnSortOrders(prev => {
+            const current = prev[columnId] ?? null;
+            if (current === null) return { ...prev, [columnId]: 'desc' };
+            if (current === 'desc') return { ...prev, [columnId]: 'asc' };
+            return { ...prev, [columnId]: null };
+        });
     };
 
     useEffect(() => {
@@ -647,9 +657,9 @@ const PipelinePage = () => {
         return Array.from(owners).sort();
     };
 
-    const filteredColumns = columns.map(col => ({
-        ...col,
-        deals: col.deals.filter(deal => {
+    const filteredColumns = columns.map(col => {
+        const sortOrder = columnSortOrders[col.id] ?? null;
+        const filtered = col.deals.filter(deal => {
             const matchesSearch = deal.title.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesOwner = selectedOwner === 'all' || deal.owner === selectedOwner;
             
@@ -695,8 +705,17 @@ const PipelinePage = () => {
             }
 
             return matchesSearch && matchesOwner && matchesDate && matchesTemperature && matchesSource && matchesCampaign;
-        })
-    }));
+        });
+
+        if (sortOrder) {
+            filtered.sort((a, b) => {
+                const diff = a.rawDate.getTime() - b.rawDate.getTime();
+                return sortOrder === 'asc' ? diff : -diff;
+            });
+        }
+
+        return { ...col, deals: filtered };
+    });
 
     return (
         <div className="page-container pipeline-page-wrapper" style={isMobile ? { paddingTop: '30px' } : {}}>
@@ -820,7 +839,27 @@ const PipelinePage = () => {
                                         <div className="column-header">
                                             <div className="column-header-top">
                                                 <span>{column.title}</span>
-                                                <span className="column-count">{column.deals.length}</span>
+                                                <div className="column-header-actions">
+                                                    <button
+                                                        className={`column-sort-btn ${columnSortOrders[column.id] ? 'active' : ''}`}
+                                                        onClick={() => toggleColumnSort(column.id)}
+                                                        aria-label="Ordenar por data"
+                                                        title={
+                                                            columnSortOrders[column.id] === 'desc'
+                                                                ? 'Mais recentes primeiro — clique para mais antigos'
+                                                                : columnSortOrders[column.id] === 'asc'
+                                                                ? 'Mais antigos primeiro — clique para remover ordenação'
+                                                                : 'Ordenar por data de criação'
+                                                        }
+                                                    >
+                                                        {columnSortOrders[column.id] === 'desc'
+                                                            ? <FaSortAmountDown size={14} />
+                                                            : columnSortOrders[column.id] === 'asc'
+                                                            ? <FaSortAmountUp size={14} />
+                                                            : <FaSort size={14} />}
+                                                    </button>
+                                                    <span className="column-count">{column.deals.length}</span>
+                                                </div>
                                             </div>
                                             <div className="column-total">
                                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
