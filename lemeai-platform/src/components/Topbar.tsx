@@ -539,6 +539,16 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     <div className="topbar-divider"></div>
                     */}
 
+                     <Link
+                        id="topbar-billing"
+                        to="/plano"
+                        className={`topbar-item ${location.pathname === '/plano' ? 'active' : ''}`}
+                        style={{ textDecoration: 'none' }}
+                    >
+                        <FaCreditCard />
+                        <span>Meu Plano</span>
+                    </Link>
+
                     <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
                         {photoUrl ? (
                             <img src={photoUrl} className="topbar-avatar-img" alt="Avatar" />

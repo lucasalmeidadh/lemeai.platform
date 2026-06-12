@@ -393,6 +393,61 @@
   cursor: not-allowed;
 }
 
+.btn-new-subscription {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--petroleum-blue);
+  color: white;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: var(--font-base);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-new-subscription:hover:not(:disabled) {
+  background: var(--petroleum-blue-hover);
+  transform: translateY(-1px);
+}
+
+.btn-new-subscription:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Alerta de assinatura expirada */
+.subscription-expired-alert {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background-color: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  color: var(--color-warning);
+}
+
+.subscription-expired-alert svg {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.subscription-expired-alert strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 0.15rem;
+}
+
+.subscription-expired-alert p {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
 .no-features-text {
   font-style: italic;
   color: var(--text-tertiary);

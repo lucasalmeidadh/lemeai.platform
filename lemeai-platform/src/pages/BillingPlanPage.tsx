@@ -151,9 +151,16 @@ const BillingPlanPage: React.FC = () => {
 
   // Encontra o plano atual baseado no planoId da assinatura
   const currentPlan = plans.find(p => p.planoId === subscription?.planoId);
-  const currentPlanFeatures = currentPlan?.planoDescricao 
-    ? currentPlan.planoDescricao.split(',').map(f => f.trim()) 
+  const currentPlanFeatures = currentPlan?.planoDescricao
+    ? currentPlan.planoDescricao.split(',').map(f => f.trim())
     : [];
+
+  // Assinatura cancelada ou com prazo de renovação/expiração já vencido: usuário pode iniciar uma nova assinatura
+  const isSubscriptionCancelled = subscription?.assinaturaStatus === 'CANCELLED';
+  const isSubscriptionExpired = subscription?.assinaturaExpiraEm
+    ? new Date(subscription.assinaturaExpiraEm) < new Date()
+    : false;
+  const canStartNewSubscription = isSubscriptionCancelled || isSubscriptionExpired;
 
   if (loading) {
     return (
@@ -207,25 +214,48 @@ const BillingPlanPage: React.FC = () => {
               </div>
             </div>
 
+            {isSubscriptionExpired && (
+              <div className="subscription-expired-alert">
+                <FaExclamationTriangle />
+                <div>
+                  <strong>Sua assinatura expirou</strong>
+                  <p>A data de renovação/expiração já passou. Inicie uma nova assinatura para manter o acesso aos recursos do plano.</p>
+                </div>
+              </div>
+            )}
+
             {/* Ações de Assinatura */}
             <div className="subscription-actions-row">
               {subscription.assinaturaStatus === 'PENDING' && subscription.assinaturaCheckoutUrl && (
-                <a 
-                  href={subscription.assinaturaCheckoutUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={subscription.assinaturaCheckoutUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-pay-now-checkout"
                 >
                   <FaCreditCard /> Concluir Pagamento <FaExternalLinkAlt />
                 </a>
               )}
-              {subscription.assinaturaStatus === 'PAID' && (
-                <button 
-                  onClick={handleCancelarAssinatura} 
+              {subscription.assinaturaStatus === 'PAID' && !isSubscriptionExpired && (
+                <button
+                  onClick={handleCancelarAssinatura}
                   className="btn-cancel-subscription"
                   disabled={cancelling}
                 >
                   {cancelling ? <FaSpinner className="billing-spinner-small" /> : <><FaBan /> Cancelar Assinatura</>}
+                </button>
+              )}
+              {canStartNewSubscription && (
+                <button
+                  onClick={() => handleSubscribe(subscription.planoId)}
+                  className="btn-new-subscription"
+                  disabled={processingPlanId !== null}
+                >
+                  {processingPlanId === subscription.planoId ? (
+                    <FaSpinner className="billing-spinner-small" />
+                  ) : (
+                    <><FaArrowRight /> Iniciar Nova Assinatura</>
+                  )}
                 </button>
               )}
             </div>
@@ -278,7 +308,7 @@ const BillingPlanPage: React.FC = () => {
           {plans.map((plan) => {
             const isCurrent = subscription?.planoId === plan.planoId;
             const features = plan.planoDescricao ? plan.planoDescricao.split(',').map(f => f.trim()) : [];
-            
+
             return (
               <div key={plan.planoId} className={`plan-card ${isCurrent ? 'plan-card-current' : ''}`}>
                 <div className="plan-card-header">
@@ -300,13 +330,13 @@ const BillingPlanPage: React.FC = () => {
                 </ul>
 
                 <div className="plan-card-footer">
-                  {isCurrent ? (
+                  {isCurrent && !canStartNewSubscription ? (
                     <button className="btn-plan btn-plan-current" disabled>
                       Plano Atual
                     </button>
                   ) : (
-                    <button 
-                      onClick={() => subscription ? handleTrocarPlano(plan.planoId) : handleSubscribe(plan.planoId)}
+                    <button
+                      onClick={() => (subscription && !canStartNewSubscription) ? handleTrocarPlano(plan.planoId) : handleSubscribe(plan.planoId)}
                       className="btn-plan btn-plan-primary"
                       disabled={processingPlanId !== null}
                     >
@@ -314,7 +344,7 @@ const BillingPlanPage: React.FC = () => {
                         <FaSpinner className="billing-spinner-small" />
                       ) : (
                         <>
-                          {subscription ? 'Mudar para este Plano' : 'Contratar Plano'} <FaArrowRight />
+                          {subscription && !canStartNewSubscription ? 'Mudar para este Plano' : 'Contratar Plano'} <FaArrowRight />
                         </>
                       )}
                     </button>
