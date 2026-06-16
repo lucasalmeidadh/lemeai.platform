@@ -32,6 +32,14 @@ const Login = () => {
   const isErasing   = useRef(false);
 
   useEffect(() => {
+    const previousTheme = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', 'light');
+    return () => {
+      if (previousTheme) document.documentElement.setAttribute('data-theme', previousTheme);
+    };
+  }, []);
+
+  useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
 
     const tick = () => {
