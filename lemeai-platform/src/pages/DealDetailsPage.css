@@ -54,6 +54,33 @@
   background: rgba(239, 68, 68, 0.2);
 }
 
+/* assume conversation button */
+.assume-deal-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--petroleum-light);
+  border: 1px solid var(--petroleum-blue);
+  color: var(--petroleum-blue);
+  border-radius: var(--btn-radius-md);
+  padding: var(--btn-pad-sm);
+  font-weight: 600;
+  font-size: var(--btn-font-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.assume-deal-btn:hover:not(:disabled) {
+  background: var(--petroleum-blue);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.assume-deal-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 /* ─── PAGE LAYOUT ─────────────────────────────────────────────── */
 .details-page-layout {
   display: grid;
@@ -998,7 +1025,7 @@
   .details-page-header {
     margin-bottom: 0;
   }
-  .back-btn, .delete-deal-btn {
+  .back-btn, .delete-deal-btn, .assume-deal-btn {
     padding: 6px 12px !important;
     font-size: 11px !important;
     height: 30px !important;

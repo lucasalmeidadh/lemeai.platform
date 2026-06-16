@@ -275,7 +275,7 @@ const ChatDashboard = () => {
       />
 
       <div className="page-header">
-        <h1>Gestão operacional</h1>
+        <h1>Gestão de vendas</h1>
       </div>
 
       <div className="dashboard-tabs">

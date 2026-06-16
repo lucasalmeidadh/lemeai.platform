@@ -27,8 +27,7 @@ import {
 } from 'react-icons/fa';
 import './Sidebar.css';
 
-// Import logos (Using the light logo for contrast against dark blue)
-import logoLight from '../assets/logo-light.png';
+import logoCrm from '../assets/logocrm.png';
 
 interface SidebarProps {
     onViewProfile: () => void;
@@ -100,7 +99,7 @@ const Sidebar: FC<SidebarProps> = () => {
     return (
         <aside className="sidebar" ref={settingsRef}>
             <div className="sidebar-logo">
-                <img src={logoLight} alt="Leme AI Logo" />
+                <img src={logoCrm} alt="Brik CRM" />
             </div>
 
             <nav className="sidebar-nav">
@@ -110,7 +109,7 @@ const Sidebar: FC<SidebarProps> = () => {
                 </Link>
                 <Link to="/monitoramento" className={`sidebar-link ${location.pathname === '/monitoramento' ? 'active' : ''}`}>
                     <FaUserFriends />
-                    <span>Gestão operacional</span>
+                    <span>Gestão de vendas</span>
                 </Link>
                 <Link to="/dashboard" className={`sidebar-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
                     <FaTachometerAlt />
