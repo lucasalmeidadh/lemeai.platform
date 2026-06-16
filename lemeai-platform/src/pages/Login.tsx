@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Login.css';
 import { FaLock, FaEnvelope, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import logoBrik from '../assets/Logo.png';
+import logoBrik from '../assets/logo.png';
 
 const PHRASES = [
   'Vender mais todo dia.',
