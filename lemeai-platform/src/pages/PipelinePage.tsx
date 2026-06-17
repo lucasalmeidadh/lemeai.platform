@@ -12,11 +12,12 @@ import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
-import { FaMagic, FaFilter, FaSort, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
+import { FaMagic, FaFilter, FaSort, FaSortAmountDown, FaSortAmountUp, FaPlus } from 'react-icons/fa';
 import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
 import { CampaignService, type Campaign } from '../services/CampaignService';
 import { ConversaProdutoService } from '../services/ConversaProdutoService';
 import WinDealProductModal from '../components/WinDealProductModal';
+import CreateOpportunityModal from '../components/CreateOpportunityModal';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -74,6 +75,7 @@ const PipelinePage = () => {
     const [selectedCampaign, setSelectedCampaign] = useState('all');
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     // States for handling mandatory temperature selection during drag
     const [isTempModalOpen, setIsTempModalOpen] = useState(false);
@@ -813,6 +815,15 @@ const PipelinePage = () => {
                                         </button>
                                     </div>
                                 </div>
+
+                                <button
+                                    type="button"
+                                    className="pipeline-btn-create"
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                >
+                                    <FaPlus size={11} />
+                                    <span>Criar</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -972,6 +983,12 @@ const PipelinePage = () => {
                         isOpen={isTempModalOpen}
                         onClose={handleTempCancel}
                         onConfirm={handleTempConfirm}
+                    />
+
+                    <CreateOpportunityModal
+                        isOpen={isCreateModalOpen}
+                        onClose={() => setIsCreateModalOpen(false)}
+                        onCreated={() => fetchOpportunities(true)}
                     />
 
                     {isFiltersModalOpen && (

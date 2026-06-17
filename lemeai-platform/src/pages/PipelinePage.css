@@ -395,6 +395,29 @@ select.pipeline-filter-input {
   color: #ffffff;
 }
 
+/* create opportunity button */
+.pipeline-btn-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.125rem;
+  border-radius: 9999px;
+  border: none;
+  background-color: var(--petroleum-blue);
+  color: #ffffff;
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pipeline-btn-create:hover {
+  background-color: var(--petroleum-blue-hover);
+  transform: translateY(-1px);
+}
+
 /* main filter toggle button */
 .pipeline-btn-filters {
   display: inline-flex;

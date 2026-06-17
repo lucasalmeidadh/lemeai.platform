@@ -21,6 +21,7 @@ export interface AssinaturaBackend {
   assinaturaStatus: 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
   assinaturaCiclo: 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'ANNUALLY';
   assinaturaValor: number;
+  assinaturaMetodo: 'CARD' | 'PIX';
   assinaturaCheckoutUrl: string | null;
   assinaturaInicioEm: string | null;
   assinaturaExpiraEm: string | null;
@@ -33,7 +34,14 @@ export interface ApiResponse<T> {
 }
 
 export const billingService = {
-  // Planos (User & Admin)
+  // Planos disponíveis para contratação (User)
+  buscarPlanosDisponiveis: async (): Promise<ApiResponse<PlanoBackend[]>> => {
+    const response = await apiFetch(`${API_URL}/api/assinatura/PlanosDisponiveis`);
+    if (!response.ok) throw new Error('Erro ao carregar planos disponíveis');
+    return response.json();
+  },
+
+  // Planos (Admin only)
   buscarTodosPlanos: async (): Promise<ApiResponse<PlanoBackend[]>> => {
     const response = await apiFetch(`${API_URL}/api/plano/BuscarTodos`);
     if (!response.ok) throw new Error('Erro ao carregar planos');
@@ -94,7 +102,23 @@ export const billingService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ planoId }),
     });
-    if (!response.ok) throw new Error('Erro ao iniciar a contratação do plano');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.mensagem || 'Erro ao iniciar a contratação do plano');
+    }
+    return response.json();
+  },
+
+  criarCheckoutPix: async (planoId: number): Promise<ApiResponse<AssinaturaBackend>> => {
+    const response = await apiFetch(`${API_URL}/api/assinatura/CriarCheckoutPix`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ planoId }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.mensagem || 'Erro ao iniciar o checkout PIX');
+    }
     return response.json();
   },
 
