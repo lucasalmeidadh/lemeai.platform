@@ -12,6 +12,7 @@ import type { Opportunity } from '../services/OpportunityService';
 import RelatorioService from '../services/RelatorioService';
 import type { PerformanceIndividual, PerformanceEquipe, FaturamentoMensal } from '../services/RelatorioService';
 import { useTheme } from '../contexts/ThemeContext';
+import { Link } from 'react-router-dom';
 import './AnalyticsPage.css';
 
 interface AnalyticsPageProps {
@@ -257,67 +258,77 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
             </header>
 
             <div className="analytics-grid">
-                {/* Desempenho e Metas Coletivas */}
-                {metaGeralTotal > 0 && (
-                    <div className="chart-card analytics-goals-block">
-                        <div className="analytics-goals-header">
-                            <h3><FaChartLine /> Desempenho e Metas Coletivas</h3>
-                            <p className="chart-description">Acompanhamento mensal com base nos dados do período selecionado.</p>
-                        </div>
+                <div className="chart-card analytics-goals-block">
+                    {metaGeralTotal > 0 ? (
+                        <>
+                            <div className="analytics-goals-header">
+                                <h3><FaChartLine /> Desempenho e Metas Coletivas</h3>
+                                <p className="chart-description">Acompanhamento mensal com base nos dados do período selecionado.</p>
+                            </div>
 
-                        <div className="analytics-kpi-tags">
-                            <div className="analytics-kpi-tag">
-                                <FaDollarSign className="tag-icon" />
-                                <span className="tag-label">Valor em Pipeline</span>
-                                <strong className="tag-value">{formatCurrency(stats.totalValue)}</strong>
-                            </div>
-                            <div className="analytics-kpi-tag">
-                                <FaPercent className="tag-icon" />
-                                <span className="tag-label">Taxa de Conversão</span>
-                                <strong className="tag-value">{stats.winRate.toFixed(1)}%</strong>
-                            </div>
-                        </div>
-
-                        <div className="ag-progress-row">
-                            <div className="ag-progress-header">
-                                <span className="ag-progress-label">Meta do Mês</span>
-                                <strong className="ag-progress-meta-value">{formatCurrency(metaGeralTotal)}</strong>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-                                <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalRealized)} atingido</span>
-                                <div className="ag-progress-track-bg" style={{ flex: 1 }}>
-                                    <div
-                                        className={`ag-progress-track-fill ${getProgressBarColorClass(globalAchievement)}`}
-                                        style={{ width: `${Math.min(globalAchievement, 100)}%` }}
-                                    />
+                            <div className="analytics-kpi-tags">
+                                <div className="analytics-kpi-tag">
+                                    <FaDollarSign className="tag-icon" />
+                                    <span className="tag-label">Valor em Pipeline</span>
+                                    <strong className="tag-value">{formatCurrency(stats.totalValue)}</strong>
                                 </div>
-                                <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{globalAchievement}%</span>
+                                <div className="analytics-kpi-tag">
+                                    <FaPercent className="tag-icon" />
+                                    <span className="tag-label">Taxa de Conversão</span>
+                                    <strong className="tag-value">{stats.winRate.toFixed(1)}%</strong>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="projection-footer">
-                            <FaHourglassHalf className="projection-icon" />
-                            <span>
-                                Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.
-                                <span className="info-tooltip-container">
-                                    <FaQuestionCircle className="info-tooltip-trigger" />
-                                    <span className="info-tooltip-text">
-                                        <strong>💡 Como calculamos?</strong><br />
-                                        {!projectionInfo.isCurrentMonth ? (
-                                            `Para meses que já terminaram, a projeção é igual ao faturamento total final do período: ${formatCurrency(totalRealized)}.`
-                                        ) : totalRealized <= 0 ? (
-                                            "A projeção começará a ser calculada assim que houver o primeiro faturamento realizado no mês."
-                                        ) : (
-                                            <>
-                                                Como este é o mês atual, pegamos o faturamento coletivo até hoje ({formatCurrency(totalRealized)}) e dividimos pelo dia atual ({projectionInfo.today}) para achar a média de {formatCurrency(projectionInfo.dailyAverage)} por dia. Depois, multiplicamos pelos {projectionInfo.totalDays} dias totais do mês.
-                                            </>
-                                        )}
+                            <div className="ag-progress-row">
+                                <div className="ag-progress-header">
+                                    <span className="ag-progress-label">Meta do Mês</span>
+                                    <strong className="ag-progress-meta-value">{formatCurrency(metaGeralTotal)}</strong>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalRealized)} atingido</span>
+                                    <div className="ag-progress-track-bg" style={{ flex: 1 }}>
+                                        <div
+                                            className={`ag-progress-track-fill ${getProgressBarColorClass(globalAchievement)}`}
+                                            style={{ width: `${Math.min(globalAchievement, 100)}%` }}
+                                        />
+                                    </div>
+                                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{globalAchievement}%</span>
+                                </div>
+                            </div>
+
+                            <div className="projection-footer">
+                                <FaHourglassHalf className="projection-icon" />
+                                <span>
+                                    Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.
+                                    <span className="info-tooltip-container">
+                                        <FaQuestionCircle className="info-tooltip-trigger" />
+                                        <span className="info-tooltip-text">
+                                            <strong>💡 Como calculamos?</strong><br />
+                                            {!projectionInfo.isCurrentMonth ? (
+                                                `Para meses que já terminaram, a projeção é igual ao faturamento total final do período: ${formatCurrency(totalRealized)}.`
+                                            ) : totalRealized <= 0 ? (
+                                                "A projeção começará a ser calculada assim que houver o primeiro faturamento realizado no mês."
+                                            ) : (
+                                                <>
+                                                    Como este é o mês atual, pegamos o faturamento coletivo até hoje ({formatCurrency(totalRealized)}) e dividimos pelo dia atual ({projectionInfo.today}) para achar a média de {formatCurrency(projectionInfo.dailyAverage)} por dia. Depois, multiplicamos pelos {projectionInfo.totalDays} dias totais do mês.
+                                                </>
+                                            )}
+                                        </span>
                                     </span>
                                 </span>
-                            </span>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="empty-goals-state">
+                            <FaChartLine className="empty-goals-icon" />
+                            <h4>Nenhuma meta cadastrada</h4>
+                            <p>Defina metas de faturamento para acompanhar o progresso coletivo, ritmo diário e projeção de fechamento.</p>
+                            <Link to="/metas" className="btn-create-goals">
+                                Cadastrar Metas
+                            </Link>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {/* Row 1: Funil de Vendas */}
                 <div className="chart-card">

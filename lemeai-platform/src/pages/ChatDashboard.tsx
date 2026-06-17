@@ -13,6 +13,7 @@ import { OpportunityService, type Opportunity } from '../services/OpportunitySer
 import EquipeService, { type Equipe } from '../services/EquipeService';
 import ConfiguracaoService from '../services/ConfiguracaoService';
 import type { DiasUteis } from '../services/ConfiguracaoService';
+import { Link } from 'react-router-dom';
 import './ChatDashboard.css';
 
 const DEFAULT_WORKING_DAYS: DiasUteis = {
@@ -336,101 +337,112 @@ const ChatDashboard = () => {
             </>
           ) : (
             <>
-              {totalMonthlyGoal > 0 && (
-                <div className="dashboard-card team-goals-block">
-                  <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
-                    <div>
-                      <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho e Metas Coletivas</h3>
-                      <p className="card-subtitle">Acompanhamento proporcional com base nos dias úteis configurados.</p>
+              <div className="dashboard-card team-goals-block">
+                {totalMonthlyGoal > 0 ? (
+                  <>
+                    <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
+                      <div>
+                        <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho e Metas Coletivas</h3>
+                        <p className="card-subtitle">Acompanhamento proporcional com base nos dias úteis configurados.</p>
+                      </div>
+                      <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
+                        {(['month', 'week', 'day'] as const).map(tf => (
+                          <button
+                            key={tf}
+                            className={`status-pill ${goalsTimeframe === tf ? 'active' : ''}`}
+                            onClick={() => setGoalsTimeframe(tf)}
+                          >
+                            {tf === 'month' ? 'Mensal' : tf === 'week' ? 'Semanal' : 'Diário'}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
-                      {(['month', 'week', 'day'] as const).map(tf => (
-                        <button
-                          key={tf}
-                          className={`status-pill ${goalsTimeframe === tf ? 'active' : ''}`}
-                          onClick={() => setGoalsTimeframe(tf)}
-                        >
-                          {tf === 'month' ? 'Mensal' : tf === 'week' ? 'Semanal' : 'Diário'}
-                        </button>
-                      ))}
+
+                    <div className="stacked-progress-bars">
+                      {goalsTimeframe === 'month' && (
+                        <div className="progress-row">
+                          <div className="progress-row-header">
+                            <span className="progress-label">Meta do Mês</span>
+                            <div className="progress-values">
+                              <strong>{formatCurrency(totalMonthlyGoal)}</strong>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalSalesRealized)} atingido</span>
+                            <div className="progress-track-bg" style={{ flex: 1 }}>
+                              <div className={`progress-track-fill ${getProgressBarColorClass(monthlyProgressPercent)}`} style={{ width: `${Math.min(monthlyProgressPercent, 100)}%` }} />
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{monthlyProgressPercent}%</span>
+                          </div>
+                        </div>
+                      )}
+                      {goalsTimeframe === 'week' && (
+                        <div className="progress-row">
+                          <div className="progress-row-header">
+                            <span className="progress-label">Meta da Semana</span>
+                            <div className="progress-values">
+                              <strong>{formatCurrency(targetWeeklyValue)}</strong>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(weeklySalesRealized)} atingido</span>
+                            <div className="progress-track-bg" style={{ flex: 1 }}>
+                              <div className={`progress-track-fill ${getProgressBarColorClass(weeklyProgressPercent)}`} style={{ width: `${Math.min(weeklyProgressPercent, 100)}%` }} />
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{weeklyProgressPercent}%</span>
+                          </div>
+                        </div>
+                      )}
+                      {goalsTimeframe === 'day' && (
+                        <div className="progress-row">
+                          <div className="progress-row-header">
+                            <span className="progress-label">Meta do Dia</span>
+                            <div className="progress-values">
+                              <strong>{formatCurrency(targetDailyValue)}</strong>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(dailySalesRealized)} atingido</span>
+                            <div className="progress-track-bg" style={{ flex: 1 }}>
+                              <div className={`progress-track-fill ${getProgressBarColorClass(dailyProgressPercent)}`} style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }} />
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{dailyProgressPercent}%</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
 
-                  <div className="stacked-progress-bars">
-                    {goalsTimeframe === 'month' && (
-                      <div className="progress-row">
-                        <div className="progress-row-header">
-                          <span className="progress-label">Meta do Mês</span>
-                          <div className="progress-values">
-                            <strong>{formatCurrency(totalMonthlyGoal)}</strong>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalSalesRealized)} atingido</span>
-                          <div className="progress-track-bg" style={{ flex: 1 }}>
-                            <div className={`progress-track-fill ${getProgressBarColorClass(monthlyProgressPercent)}`} style={{ width: `${Math.min(monthlyProgressPercent, 100)}%` }} />
-                          </div>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{monthlyProgressPercent}%</span>
-                        </div>
-                      </div>
-                    )}
-                    {goalsTimeframe === 'week' && (
-                      <div className="progress-row">
-                        <div className="progress-row-header">
-                          <span className="progress-label">Meta da Semana</span>
-                          <div className="progress-values">
-                            <strong>{formatCurrency(targetWeeklyValue)}</strong>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(weeklySalesRealized)} atingido</span>
-                          <div className="progress-track-bg" style={{ flex: 1 }}>
-                            <div className={`progress-track-fill ${getProgressBarColorClass(weeklyProgressPercent)}`} style={{ width: `${Math.min(weeklyProgressPercent, 100)}%` }} />
-                          </div>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{weeklyProgressPercent}%</span>
-                        </div>
-                      </div>
-                    )}
-                    {goalsTimeframe === 'day' && (
-                      <div className="progress-row">
-                        <div className="progress-row-header">
-                          <span className="progress-label">Meta do Dia</span>
-                          <div className="progress-values">
-                            <strong>{formatCurrency(targetDailyValue)}</strong>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(dailySalesRealized)} atingido</span>
-                          <div className="progress-track-bg" style={{ flex: 1 }}>
-                            <div className={`progress-track-fill ${getProgressBarColorClass(dailyProgressPercent)}`} style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }} />
-                          </div>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{dailyProgressPercent}%</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="projection-footer">
-                    <FaHourglassHalf className="projection-icon" />
-                    <span>
-                      Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.
-                      <span className="info-tooltip-container">
-                        <FaQuestionCircle className="info-tooltip-trigger" />
-                        <span className="info-tooltip-text">
-                          <strong>💡 Como calculamos?</strong><br />
-                          {workingDaysInfo.elapsedDays <= 0 ? (
-                            "A projeção começará a ser calculada no primeiro dia útil do mês."
-                          ) : (
-                            <>
-                              Pegamos o faturamento atingido até hoje ({formatCurrency(totalSalesRealized)}) e dividimos pelos dias úteis decorridos ({workingDaysInfo.elapsedDays} {workingDaysInfo.elapsedDays === 1 ? 'dia útil' : 'dias úteis'}) para achar a média diária de {formatCurrency(dailySalesRealized)}. Depois, multiplicamos essa média pelos {workingDaysInfo.monthlyDays} dias úteis totais do mês.
-                            </>
-                          )}
+                    <div className="projection-footer">
+                      <FaHourglassHalf className="projection-icon" />
+                      <span>
+                        Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(projectedClosure)}</strong> com base no ritmo atual.
+                        <span className="info-tooltip-container">
+                          <FaQuestionCircle className="info-tooltip-trigger" />
+                          <span className="info-tooltip-text">
+                            <strong>💡 Como calculamos?</strong><br />
+                            {workingDaysInfo.elapsedDays <= 0 ? (
+                              "A projeção começará a ser calculada no primeiro dia útil do mês."
+                            ) : (
+                              <>
+                                Pegamos o faturamento atingido até hoje ({formatCurrency(totalSalesRealized)}) e dividimos pelos dias úteis decorridos ({workingDaysInfo.elapsedDays} {workingDaysInfo.elapsedDays === 1 ? 'dia útil' : 'dias úteis'}) para achar a média diária de {formatCurrency(dailySalesRealized)}. Depois, multiplicamos essa média pelos {workingDaysInfo.monthlyDays} dias úteis totais do mês.
+                              </>
+                            )}
+                          </span>
                         </span>
                       </span>
-                    </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="empty-goals-state">
+                    <FaChartLine className="empty-goals-icon" />
+                    <h4>Nenhuma meta cadastrada</h4>
+                    <p>Defina metas de faturamento para acompanhar o progresso coletivo, ritmo diário e projeção de fechamento.</p>
+                    <Link to="/metas" className="btn-create-goals">
+                      Cadastrar Metas
+                    </Link>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="dashboard-card team-ranking-card">
                 <div className="card-header">
@@ -562,100 +574,111 @@ const ChatDashboard = () => {
             </>
           ) : (
             <>
-              {totalTeamMonthlyGoal > 0 && (
-                <div className="dashboard-card team-goals-block">
-                  <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
-                    <div>
-                      <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho das Equipes</h3>
+              <div className="dashboard-card team-goals-block">
+                {totalTeamMonthlyGoal > 0 ? (
+                  <>
+                    <div className="card-header-row" style={{ borderBottom: '1px solid var(--border-color-soft)', paddingBottom: '16px', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
+                      <div>
+                        <h3 style={{ justifyContent: 'center' }}><FaChartLine /> Desempenho das Equipes</h3>
+                      </div>
+                      <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
+                        {(['month', 'week', 'day'] as const).map(tf => (
+                          <button
+                            key={tf}
+                            className={`status-pill ${goalsTimeframe === tf ? 'active' : ''}`}
+                            onClick={() => setGoalsTimeframe(tf)}
+                          >
+                            {tf === 'month' ? 'Mensal' : tf === 'week' ? 'Semanal' : 'Diário'}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="goals-timeframe-selector" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)', width: 'max-content' }}>
-                      {(['month', 'week', 'day'] as const).map(tf => (
-                        <button
-                          key={tf}
-                          className={`status-pill ${goalsTimeframe === tf ? 'active' : ''}`}
-                          onClick={() => setGoalsTimeframe(tf)}
-                        >
-                          {tf === 'month' ? 'Mensal' : tf === 'week' ? 'Semanal' : 'Diário'}
-                        </button>
-                      ))}
+
+                    <div className="stacked-progress-bars">
+                      {goalsTimeframe === 'month' && (
+                        <div className="progress-row">
+                          <div className="progress-row-header">
+                            <span className="progress-label">Meta do Mês</span>
+                            <div className="progress-values">
+                              <strong>{formatCurrency(totalTeamMonthlyGoal)}</strong>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalTeamSalesRealized)} atingido</span>
+                            <div className="progress-track-bg" style={{ flex: 1 }}>
+                              <div className={`progress-track-fill ${getProgressBarColorClass(teamMonthlyProgress)}`} style={{ width: `${Math.min(teamMonthlyProgress, 100)}%` }} />
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamMonthlyProgress}%</span>
+                          </div>
+                        </div>
+                      )}
+                      {goalsTimeframe === 'week' && (
+                        <div className="progress-row">
+                          <div className="progress-row-header">
+                            <span className="progress-label">Meta da Semana</span>
+                            <div className="progress-values">
+                              <strong>{formatCurrency(teamTargetWeekly)}</strong>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(teamWeeklySales)} atingido</span>
+                            <div className="progress-track-bg" style={{ flex: 1 }}>
+                              <div className={`progress-track-fill ${getProgressBarColorClass(teamWeeklyProgress)}`} style={{ width: `${Math.min(teamWeeklyProgress, 100)}%` }} />
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamWeeklyProgress}%</span>
+                          </div>
+                        </div>
+                      )}
+                      {goalsTimeframe === 'day' && (
+                        <div className="progress-row">
+                          <div className="progress-row-header">
+                            <span className="progress-label">Meta do Dia</span>
+                            <div className="progress-values">
+                              <strong>{formatCurrency(teamTargetDaily)}</strong>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(teamDailySales)} atingido</span>
+                            <div className="progress-track-bg" style={{ flex: 1 }}>
+                              <div className={`progress-track-fill ${getProgressBarColorClass(teamDailyProgress)}`} style={{ width: `${Math.min(teamDailyProgress, 100)}%` }} />
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamDailyProgress}%</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
 
-                  <div className="stacked-progress-bars">
-                    {goalsTimeframe === 'month' && (
-                      <div className="progress-row">
-                        <div className="progress-row-header">
-                          <span className="progress-label">Meta do Mês</span>
-                          <div className="progress-values">
-                            <strong>{formatCurrency(totalTeamMonthlyGoal)}</strong>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(totalTeamSalesRealized)} atingido</span>
-                          <div className="progress-track-bg" style={{ flex: 1 }}>
-                            <div className={`progress-track-fill ${getProgressBarColorClass(teamMonthlyProgress)}`} style={{ width: `${Math.min(teamMonthlyProgress, 100)}%` }} />
-                          </div>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamMonthlyProgress}%</span>
-                        </div>
-                      </div>
-                    )}
-                    {goalsTimeframe === 'week' && (
-                      <div className="progress-row">
-                        <div className="progress-row-header">
-                          <span className="progress-label">Meta da Semana</span>
-                          <div className="progress-values">
-                            <strong>{formatCurrency(teamTargetWeekly)}</strong>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(teamWeeklySales)} atingido</span>
-                          <div className="progress-track-bg" style={{ flex: 1 }}>
-                            <div className={`progress-track-fill ${getProgressBarColorClass(teamWeeklyProgress)}`} style={{ width: `${Math.min(teamWeeklyProgress, 100)}%` }} />
-                          </div>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamWeeklyProgress}%</span>
-                        </div>
-                      </div>
-                    )}
-                    {goalsTimeframe === 'day' && (
-                      <div className="progress-row">
-                        <div className="progress-row-header">
-                          <span className="progress-label">Meta do Dia</span>
-                          <div className="progress-values">
-                            <strong>{formatCurrency(teamTargetDaily)}</strong>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-                          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', minWidth: '150px', textAlign: 'right', whiteSpace: 'nowrap' }}>{formatCurrency(teamDailySales)} atingido</span>
-                          <div className="progress-track-bg" style={{ flex: 1 }}>
-                            <div className={`progress-track-fill ${getProgressBarColorClass(teamDailyProgress)}`} style={{ width: `${Math.min(teamDailyProgress, 100)}%` }} />
-                          </div>
-                          <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)', minWidth: '50px', textAlign: 'left' }}>{teamDailyProgress}%</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="projection-footer">
-                    <FaHourglassHalf className="projection-icon" />
-                    <span>
-                      Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(teamProjectedClosure)}</strong> com base no ritmo atual.
-                      <span className="info-tooltip-container">
-                        <FaQuestionCircle className="info-tooltip-trigger" />
-                        <span className="info-tooltip-text">
-                          <strong>💡 Como calculamos?</strong><br />
-                          {workingDaysInfo.elapsedDays <= 0 ? (
-                            "A projeção começará a ser calculada no primeiro dia útil do mês."
-                          ) : (
-                            <>
-                              Pegamos o faturamento das equipes atingido até hoje ({formatCurrency(totalTeamSalesRealized)}) e dividimos pelos dias úteis decorridos ({workingDaysInfo.elapsedDays} {workingDaysInfo.elapsedDays === 1 ? 'dia útil' : 'dias úteis'}) para achar a média diária de {formatCurrency(teamDailySales)}. Depois, multiplicamos essa média pelos {workingDaysInfo.monthlyDays} dias úteis totais do mês.
-                            </>
-                          )}
+                    <div className="projection-footer">
+                      <FaHourglassHalf className="projection-icon" />
+                      <span>
+                        Projeção de fechamento do mês: <strong className="projection-value">{formatCurrency(teamProjectedClosure)}</strong> com base no ritmo atual.
+                        <span className="info-tooltip-container">
+                          <FaQuestionCircle className="info-tooltip-trigger" />
+                          <span className="info-tooltip-text">
+                            <strong>💡 Como calculamos?</strong><br />
+                            {workingDaysInfo.elapsedDays <= 0 ? (
+                              "A projeção começará a ser calculada no primeiro dia útil do mês."
+                            ) : (
+                              <>
+                                Pegamos o faturamento das equipes atingido até hoje ({formatCurrency(totalTeamSalesRealized)}) e dividimos pelos dias úteis decorridos ({workingDaysInfo.elapsedDays} {workingDaysInfo.elapsedDays === 1 ? 'dia útil' : 'dias úteis'}) para achar a média diária de {formatCurrency(teamDailySales)}. Depois, multiplicamos essa média pelos {workingDaysInfo.monthlyDays} dias úteis totais do mês.
+                              </>
+                            )}
+                          </span>
                         </span>
                       </span>
-                    </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="empty-goals-state">
+                    <FaChartLine className="empty-goals-icon" />
+                    <h4>Nenhuma meta cadastrada</h4>
+                    <p>Defina metas de faturamento para acompanhar o progresso das equipes, ritmo diário e projeção de fechamento.</p>
+                    <Link to="/metas" className="btn-create-goals">
+                      Cadastrar Metas
+                    </Link>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="teams-monitoring-grid">
                 {teamPerf.length === 0 ? (
