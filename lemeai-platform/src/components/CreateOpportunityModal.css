@@ -169,38 +169,68 @@
   gap: 20px;
 }
 
-/* Toggle novo / existente */
-.com-toggle-row {
+/* ── Type Selection ── */
+.com-type-selection {
   display: flex;
-  background-color: var(--bg-tertiary);
-  border-radius: 10px;
-  padding: 4px;
-  gap: 4px;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
 }
 
-.com-toggle-btn {
-  flex: 1;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  font-size: var(--font-base);
-  font-weight: 500;
-  cursor: pointer;
-  background: transparent;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.com-toggle-btn.active {
-  background-color: var(--bg-secondary);
-  color: var(--petroleum-blue);
+.com-type-selection-label {
+  font-size: var(--font-lg);
   font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+}
+
+.com-type-selection-cards {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.com-type-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.com-type-card:hover {
+  border-color: var(--petroleum-blue);
+  background-color: var(--petroleum-light);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
 }
 
-.com-toggle-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+.com-type-card-icon {
+  font-size: 32px;
+  color: var(--petroleum-blue);
+  margin-bottom: 12px;
+}
+
+.com-type-card-title {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.com-type-card-desc {
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+  line-height: 1.4;
 }
 
 /* Form grid */
@@ -210,11 +240,10 @@
   gap: 16px;
 }
 
-/* Grid de 2 colunas para os campos personalizados — encolhe para 1 coluna
-   automaticamente quando o drawer/viewport não tem espaço suficiente */
+/* Grid de 2 colunas fixas para os campos personalizados no desktop */
 .com-campos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -271,61 +300,7 @@
   min-height: 72px;
 }
 
-/* Lista de contatos existentes */
-.com-contact-list {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow-y: auto;
-  max-height: 180px;
-  background-color: var(--bg-primary);
-}
 
-.com-contact-empty {
-  margin: 0;
-  padding: 16px;
-  text-align: center;
-  color: var(--text-tertiary);
-  font-size: var(--font-sm);
-}
-
-.com-contact-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border-color-soft);
-  transition: background-color 0.15s ease;
-}
-
-.com-contact-item:last-child {
-  border-bottom: none;
-}
-
-.com-contact-item:hover {
-  background-color: var(--bg-tertiary);
-}
-
-.com-contact-item.selected {
-  background-color: var(--petroleum-light);
-  border-color: transparent;
-}
-
-.com-contact-item.selected .com-contact-name {
-  color: var(--petroleum-blue);
-  font-weight: 600;
-}
-
-.com-contact-name {
-  font-size: var(--font-base);
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.com-contact-phone {
-  font-size: var(--font-sm);
-  color: var(--text-tertiary);
-}
 
 /* ── Footer ── */
 .com-footer {
@@ -399,9 +374,12 @@
     max-width: 100%;
   }
 
-  .com-toggle-btn {
-    font-size: var(--font-sm);
-    padding: 8px 6px;
+  .com-type-selection-cards {
+    flex-direction: column;
+  }
+
+  .com-campos-grid {
+    grid-template-columns: 1fr;
   }
 
   .com-step-label {

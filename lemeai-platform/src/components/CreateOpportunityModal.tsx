@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { FaTimes, FaRocket, FaArrowLeft, FaCheck } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { OpportunityService, type CreateOpportunityPayload, type CreateOpportunityCampoPersonalizado } from '../services/OpportunityService';
-import { ContactService, type Contact } from '../services/ContactService';
 import CampoPersonalizadoService, { TipoCampoPersonalizado, type CampoPersonalizado } from '../services/CampoPersonalizadoService';
 import CustomSelect from './CustomSelect';
+import SearchableContactSelect from './SearchableContactSelect';
+import { FaUserPlus, FaUser } from 'react-icons/fa';
 import './CreateOpportunityModal.css';
 
 interface CreateOpportunityModalProps {
@@ -29,10 +30,7 @@ type Step = 'contato' | 'geral';
 const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunityModalProps) => {
     const [step, setStep] = useState<Step>('contato');
 
-    const [contatoNovo, setContatoNovo] = useState(true);
-    const [contacts, setContacts] = useState<Contact[]>([]);
-    const [contactSearch, setContactSearch] = useState('');
-    const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+    const [tipoCadastro, setTipoCadastro] = useState<'novo' | 'existente' | null>(null);
 
     const [nomeContato, setNomeContato] = useState('');
     const [telefone, setTelefone] = useState('');
@@ -52,14 +50,12 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
     useEffect(() => {
         if (!isOpen) return;
         resetForm();
-        loadContacts();
         loadCamposPersonalizados();
     }, [isOpen]);
 
     const resetForm = () => {
         setStep('contato');
-        setContatoNovo(true);
-        setContactSearch('');
+        setTipoCadastro(null);
         setNomeContato('');
         setTelefone('');
         setEmail('');
@@ -69,18 +65,6 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
         setObservacao('');
         setValoresCampos({});
         setIsSaving(false);
-    };
-
-    const loadContacts = async () => {
-        setIsLoadingContacts(true);
-        try {
-            const res = await ContactService.getAll();
-            if (res.sucesso) setContacts(res.dados ?? []);
-        } catch {
-            // silencioso — lista de contatos é opcional
-        } finally {
-            setIsLoadingContacts(false);
-        }
     };
 
     const loadCamposPersonalizados = async () => {
@@ -95,21 +79,21 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
         }
     };
 
-    const filteredContacts = contacts.filter(c =>
-        c.nome.toLowerCase().includes(contactSearch.toLowerCase()) ||
-        c.telefone?.includes(contactSearch)
-    );
 
     const handleCampoValorChange = (campoPersonalizadoId: number, value: string) => {
         setValoresCampos(prev => ({ ...prev, [campoPersonalizadoId]: value }));
     };
 
     const validateStepContato = (): boolean => {
-        if (contatoNovo && !nomeContato.trim()) {
+        if (!tipoCadastro) {
+            toast.error('Selecione o tipo de cadastro.');
+            return false;
+        }
+        if (tipoCadastro === 'novo' && !nomeContato.trim()) {
             toast.error('Informe o nome do contato.');
             return false;
         }
-        if (!contatoNovo && !contatoId) {
+        if (tipoCadastro === 'existente' && !contatoId) {
             toast.error('Selecione um contato existente.');
             return false;
         }
@@ -136,9 +120,9 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
             }));
 
         return {
-            contatoNovo,
-            contatoId: contatoNovo ? null : contatoId,
-            contato: contatoNovo
+            contatoNovo: tipoCadastro === 'novo',
+            contatoId: tipoCadastro === 'novo' ? null : contatoId,
+            contato: tipoCadastro === 'novo'
                 ? {
                       nome: nomeContato.trim(),
                       telefone: telefone.trim() || undefined,
@@ -287,143 +271,137 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
                 {step === 'contato' && (
                     <form className="com-form" onSubmit={handleSubmitContato}>
                         <div className="com-body">
-                            <div className="com-toggle-row">
-                                <button
-                                    type="button"
-                                    className={`com-toggle-btn ${contatoNovo ? 'active' : ''}`}
-                                    onClick={() => setContatoNovo(true)}
-                                    disabled={isSaving}
-                                >
-                                    Novo contato
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`com-toggle-btn ${!contatoNovo ? 'active' : ''}`}
-                                    onClick={() => setContatoNovo(false)}
-                                    disabled={isSaving}
-                                >
-                                    Contato existente
-                                </button>
-                            </div>
-
-                            {contatoNovo ? (
-                                <div className="com-form-grid">
-                                    <div className="com-form-group com-full">
-                                        <label>Nome <span className="com-required">*</span></label>
-                                        <input
-                                            type="text"
-                                            className="com-input"
-                                            value={nomeContato}
-                                            onChange={e => setNomeContato(e.target.value)}
-                                            placeholder="Nome do contato"
-                                            disabled={isSaving}
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <div className="com-form-group com-full">
-                                        <label>Telefone</label>
-                                        <input
-                                            type="text"
-                                            className="com-input"
-                                            value={telefone}
-                                            onChange={e => setTelefone(e.target.value)}
-                                            placeholder="5511999990000"
-                                            disabled={isSaving}
-                                        />
-                                    </div>
-                                    <div className="com-form-group com-full">
-                                        <label>E-mail</label>
-                                        <input
-                                            type="email"
-                                            className="com-input"
-                                            value={email}
-                                            onChange={e => setEmail(e.target.value)}
-                                            placeholder="email@exemplo.com"
-                                            disabled={isSaving}
-                                        />
+                            {!tipoCadastro ? (
+                                <div className="com-type-selection">
+                                    <p className="com-type-selection-label">O que você deseja cadastrar?</p>
+                                    <div className="com-type-selection-cards">
+                                        <button
+                                            type="button"
+                                            className="com-type-card"
+                                            onClick={() => setTipoCadastro('novo')}
+                                        >
+                                            <FaUserPlus className="com-type-card-icon" />
+                                            <span className="com-type-card-title">Novo Contato</span>
+                                            <span className="com-type-card-desc">Cadastrar um cliente do zero</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="com-type-card"
+                                            onClick={() => setTipoCadastro('existente')}
+                                        >
+                                            <FaUser className="com-type-card-icon" />
+                                            <span className="com-type-card-title">Contato Existente</span>
+                                            <span className="com-type-card-desc">Selecionar um cliente da base</span>
+                                        </button>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="com-form-group com-full">
-                                    <label>Buscar contato <span className="com-required">*</span></label>
-                                    <input
-                                        type="text"
-                                        className="com-input"
-                                        value={contactSearch}
-                                        onChange={e => {
-                                            setContactSearch(e.target.value);
-                                            setContatoId(null);
-                                        }}
-                                        placeholder="Pesquisar por nome ou telefone..."
-                                        disabled={isSaving}
-                                        autoFocus
-                                    />
-                                    <div className="com-contact-list">
-                                        {isLoadingContacts ? (
-                                            <p className="com-contact-empty">Carregando contatos...</p>
-                                        ) : filteredContacts.length === 0 ? (
-                                            <p className="com-contact-empty">Nenhum contato encontrado.</p>
-                                        ) : (
-                                            filteredContacts.slice(0, 6).map(c => (
-                                                <div
-                                                    key={c.contatoId}
-                                                    className={`com-contact-item ${contatoId === c.contatoId ? 'selected' : ''}`}
-                                                    onClick={() => !isSaving && setContatoId(c.contatoId)}
-                                                >
-                                                    <span className="com-contact-name">{c.nome}</span>
-                                                    <span className="com-contact-phone">{c.telefone}</span>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+                                <>
+                                    {tipoCadastro === 'novo' ? (
+                                        <div className="com-form-grid">
+                                            <div className="com-form-group com-full">
+                                                <label>Nome <span className="com-required">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    className="com-input"
+                                                    value={nomeContato}
+                                                    onChange={e => setNomeContato(e.target.value)}
+                                                    placeholder="Nome do contato"
+                                                    disabled={isSaving}
+                                                    autoFocus
+                                                />
+                                            </div>
+                                            <div className="com-form-group com-full">
+                                                <label>Telefone</label>
+                                                <input
+                                                    type="text"
+                                                    className="com-input"
+                                                    value={telefone}
+                                                    onChange={e => setTelefone(e.target.value)}
+                                                    placeholder="5511999990000"
+                                                    disabled={isSaving}
+                                                />
+                                            </div>
+                                            <div className="com-form-group com-full">
+                                                <label>E-mail</label>
+                                                <input
+                                                    type="email"
+                                                    className="com-input"
+                                                    value={email}
+                                                    onChange={e => setEmail(e.target.value)}
+                                                    placeholder="email@exemplo.com"
+                                                    disabled={isSaving}
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="com-form-grid">
+                                            <div className="com-form-group com-full" style={{ position: 'relative', zIndex: 10 }}>
+                                                <label>Selecionar Contato <span className="com-required">*</span></label>
+                                                <SearchableContactSelect
+                                                    value={contatoId?.toString() || ''}
+                                                    onChange={(val) => setContatoId(Number(val))}
+                                                    placeholder="Buscar cliente..."
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
 
-                            <div className="com-form-grid">
-                                <div className="com-form-group com-full">
-                                    <label>Temperatura do lead</label>
-                                    <CustomSelect
-                                        value={tipoLeadId}
-                                        onChange={setTipoLeadId}
-                                        placeholder="Selecionar temperatura"
-                                        options={TIPO_LEAD_OPTIONS}
-                                        disabled={isSaving}
-                                    />
-                                </div>
-                                <div className="com-form-group com-full">
-                                    <label>Valor estimado (R$)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        className="com-input"
-                                        value={valor}
-                                        onChange={e => setValor(e.target.value)}
-                                        placeholder="0,00"
-                                        disabled={isSaving}
-                                    />
-                                </div>
-                                <div className="com-form-group com-full">
-                                    <label>Observação</label>
-                                    <textarea
-                                        className="com-input com-textarea"
-                                        value={observacao}
-                                        onChange={e => setObservacao(e.target.value)}
-                                        placeholder="Detalhe como surgiu essa oportunidade..."
-                                        rows={3}
-                                        disabled={isSaving}
-                                    />
-                                </div>
-                            </div>
+                                    <div className="com-form-grid">
+                                        <div className="com-form-group com-full">
+                                            <label>Temperatura do lead</label>
+                                            <CustomSelect
+                                                value={tipoLeadId}
+                                                onChange={setTipoLeadId}
+                                                placeholder="Selecionar temperatura"
+                                                options={TIPO_LEAD_OPTIONS}
+                                                disabled={isSaving}
+                                            />
+                                        </div>
+                                        <div className="com-form-group com-full">
+                                            <label>Valor estimado (R$)</label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                className="com-input"
+                                                value={valor}
+                                                onChange={e => setValor(e.target.value)}
+                                                placeholder="0,00"
+                                                disabled={isSaving}
+                                            />
+                                        </div>
+                                        <div className="com-form-group com-full">
+                                            <label>Observação</label>
+                                            <textarea
+                                                className="com-input com-textarea"
+                                                value={observacao}
+                                                onChange={e => setObservacao(e.target.value)}
+                                                placeholder="Detalhe como surgiu essa oportunidade..."
+                                                rows={3}
+                                                disabled={isSaving}
+                                            />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
-                        <div className="com-footer">
-                            <button type="button" className="com-btn-cancel" onClick={onClose} disabled={isSaving}>
-                                Cancelar
-                            </button>
-                            <button type="submit" className="com-btn-confirm" disabled={isSaving || isLoadingCampos}>
-                                {isSaving ? 'Criando...' : hasCamposPersonalizados ? 'Continuar' : 'Criar Oportunidade'}
-                            </button>
+                        <div className={`com-footer ${tipoCadastro ? 'com-footer-split' : ''}`}>
+                            {tipoCadastro ? (
+                                <>
+                                    <button type="button" className="com-btn-cancel" onClick={() => setTipoCadastro(null)} disabled={isSaving}>
+                                        <FaArrowLeft size={12} /> Voltar
+                                    </button>
+                                    <button type="submit" className="com-btn-confirm" disabled={isSaving || isLoadingCampos}>
+                                        {isSaving ? 'Criando...' : hasCamposPersonalizados ? 'Continuar' : 'Criar Oportunidade'}
+                                    </button>
+                                </>
+                            ) : (
+                                <button type="button" className="com-btn-cancel" onClick={onClose} disabled={isSaving}>
+                                    Cancelar
+                                </button>
+                            )}
                         </div>
                     </form>
                 )}
