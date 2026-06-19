@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Login.css';
 import { FaLock, FaEnvelope, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import logoDark from '../assets/logo-dark.png';
+import logoBrik from '../assets/logo.png';
 
 const PHRASES = [
   'Vender mais todo dia.',
@@ -11,44 +11,10 @@ const PHRASES = [
   'Do lead ao negócio ganho.',
 ];
 
-const TYPING_SPEED   = 60;
-const DELETING_SPEED = 35;
-const PAUSE_AFTER    = 1800;
-const PAUSE_BEFORE   = 400;
-
-function useTypewriter(phrases: string[]) {
-  const [displayed, setDisplayed] = useState('');
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = phrases[phraseIdx];
-
-    if (!isDeleting && displayed === current) {
-      const t = setTimeout(() => setIsDeleting(true), PAUSE_AFTER);
-      return () => clearTimeout(t);
-    }
-    if (isDeleting && displayed === '') {
-      const t = setTimeout(() => {
-        setIsDeleting(false);
-        setPhraseIdx((i) => (i + 1) % phrases.length);
-      }, PAUSE_BEFORE);
-      return () => clearTimeout(t);
-    }
-
-    const speed = isDeleting ? DELETING_SPEED : TYPING_SPEED;
-    const t = setTimeout(() => {
-      setDisplayed(isDeleting
-        ? current.slice(0, displayed.length - 1)
-        : current.slice(0, displayed.length + 1)
-      );
-    }, speed);
-
-    return () => clearTimeout(t);
-  }, [displayed, isDeleting, phraseIdx, phrases]);
-
-  return displayed;
-}
+const TYPING_SPEED  = 75;
+const ERASING_SPEED = 35;
+const PAUSE_AFTER   = 1800;
+const PAUSE_BEFORE  = 400;
 
 const Login = () => {
   const apiUrl        = import.meta.env.VITE_API_URL;
@@ -60,7 +26,52 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError]         = useState<string | null>(null);
 
-  const typed = useTypewriter(PHRASES);
+  const [displayed, setDisplayed] = useState<string>('');
+  const phraseIndex = useRef(0);
+  const charIndex   = useRef(0);
+  const isErasing   = useRef(false);
+
+  useEffect(() => {
+    const previousTheme = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', 'light');
+    return () => {
+      if (previousTheme) document.documentElement.setAttribute('data-theme', previousTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      const current = PHRASES[phraseIndex.current];
+
+      if (!isErasing.current) {
+        if (charIndex.current < current.length) {
+          charIndex.current++;
+          setDisplayed(current.slice(0, charIndex.current));
+          timeout = setTimeout(tick, TYPING_SPEED);
+        } else {
+          timeout = setTimeout(() => {
+            isErasing.current = true;
+            tick();
+          }, PAUSE_AFTER);
+        }
+      } else {
+        if (charIndex.current > 0) {
+          charIndex.current--;
+          setDisplayed(current.slice(0, charIndex.current));
+          timeout = setTimeout(tick, ERASING_SPEED);
+        } else {
+          isErasing.current = false;
+          phraseIndex.current = (phraseIndex.current + 1) % PHRASES.length;
+          timeout = setTimeout(tick, PAUSE_BEFORE);
+        }
+      }
+    };
+
+    timeout = setTimeout(tick, PAUSE_BEFORE);
+    return () => clearTimeout(timeout);
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -94,35 +105,28 @@ const Login = () => {
 
   return (
     <div className="login-root">
+      <div className="login-central-container">
 
-      {/* ── Painel esquerdo — brand + typewriter ── */}
-      <div className="login-brand-panel">
-        <div className="mesh-orb mesh-orb-1" aria-hidden="true" />
-        <div className="mesh-orb mesh-orb-2" aria-hidden="true" />
-        <div className="mesh-orb mesh-orb-3" aria-hidden="true" />
-
-        <div className="brand-panel-inner">
-          <img src={logoDark} alt="LemeIA" className="brand-logo" />
-
-          <div className="brand-typewriter-block">
-            <p className="brand-pre">Plataforma de vendas que faz você</p>
-            <h1 className="brand-typed">
-              <span>{typed}</span><span className="cursor" aria-hidden="true" />
-            </h1>
+        {/* ── Lado esquerdo — Brand ── */}
+        <div className="login-brand-side">
+          <div className="brand-panel-inner">
+            <img src={logoBrik} alt="Brik CRM" className="login-brand-logo" />
+            <div className="brand-slogan-block">
+              <h1 className="brand-slogan">
+                Mais que um sistema, <br />um conceito.
+              </h1>
+              <p className="brand-typewriter" aria-live="polite">
+                {displayed}<span className="typewriter-cursor" aria-hidden="true" />
+              </p>
+            </div>
           </div>
-
-          <p className="brand-description">
-            Gestão comercial com inteligência artificial integrada. Do lead ao fechamento, tudo em um só lugar.
-          </p>
         </div>
-      </div>
 
-      {/* ── Painel direito — formulário ── */}
-      <div className="login-form-panel">
-        <div className="login-form-card">
-          <img src={logoDark} alt="LemeIA" className="form-logo-mobile" />
+        {/* ── Lado direito — Formulário ── */}
+        <div className="login-form-side">
+          <img src={logoBrik} alt="Brik CRM" className="form-logo-mobile" />
 
-          <div className="form-header">
+          <div className="form-header stagger-1">
             <h2>Acesse sua conta</h2>
           </div>
 
@@ -134,7 +138,7 @@ const Login = () => {
               </div>
             )}
 
-            <div className="input-group">
+            <div className="input-group stagger-2">
               <label htmlFor="login-email">E-mail</label>
               <div className="input-wrapper">
                 <FaEnvelope className="input-icon" aria-hidden="true" />
@@ -149,10 +153,9 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="input-group">
+            <div className="input-group stagger-3">
               <div className="input-group-row">
                 <label htmlFor="login-password">Senha</label>
-                {/* <a href="#" className="forgot-link">Esqueci minha senha</a> */}
               </div>
               <div className="input-wrapper">
                 <FaLock className="input-icon" aria-hidden="true" />
@@ -167,7 +170,7 @@ const Login = () => {
               </div>
             </div>
 
-            <button type="submit" className="btn-submit" disabled={isLoading}>
+            <button type="submit" className="btn-submit stagger-4" disabled={isLoading}>
               {isLoading
                 ? <><FaSpinner className="fa-spin" /> Verificando...</>
                 : 'Entrar agora'
@@ -175,11 +178,12 @@ const Login = () => {
             </button>
           </form>
 
-          <p className="powered-by">
+          <p className="powered-by stagger-5">
             Powered by{' '}
             <a href="https://gbcode.com.br/" target="_blank" rel="noopener noreferrer">GBCode</a>
           </p>
         </div>
+
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ export interface Opportunity {
     idStauts: number;
     descricaoStatus: string;
     nomeUsuarioResponsavel: string;
+    idUsuarioResponsavel?: number;
     valor: number;
     detalhesConversa: DetalheConversa[];
     campanha?: boolean;

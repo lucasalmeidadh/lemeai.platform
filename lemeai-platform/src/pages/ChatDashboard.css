@@ -727,3 +727,60 @@
   opacity: 1;
 }
 
+/* ─── EMPTY GOALS STATE ────────────────────────────────────────── */
+.empty-goals-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.empty-goals-icon {
+  font-size: 3rem;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-goals-state h4 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-goals-state p {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0 0 1.5rem 0;
+  line-height: 1.4;
+}
+
+.btn-create-goals {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  background-color: var(--petroleum-blue);
+  color: white !important;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  border-radius: var(--btn-radius-md, 8px);
+  text-decoration: none !important;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-create-goals:hover {
+  background-color: #004559;
+  transform: translateY(-1px);
+}
+
+.btn-create-goals:active {
+  transform: translateY(0);
+}
+
+

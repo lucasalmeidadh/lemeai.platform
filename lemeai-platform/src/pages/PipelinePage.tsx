@@ -12,7 +12,7 @@ import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
-import { FaMagic, FaFilter, FaSort, FaSortAmountDown, FaSortAmountUp, FaPlus } from 'react-icons/fa';
+import { FaMagic, FaFilter, FaSort, FaSortAmountDown, FaSortAmountUp, FaUserPlus, FaPlus } from 'react-icons/fa';
 import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
 import { CampaignService, type Campaign } from '../services/CampaignService';
 import { ConversaProdutoService } from '../services/ConversaProdutoService';
@@ -38,6 +38,7 @@ interface Deal {
     campanha?: boolean;
     idCampanha?: number | null;
     nomeCampanha?: string;
+    ownerId?: number;
 }
 
 interface Column {
@@ -258,7 +259,8 @@ const PipelinePage = () => {
                     idCampanha: opp.idCampanha !== undefined ? opp.idCampanha : chatDataMap[opp.idConversa]?.idCampanha,
                     nomeCampanha: opp.nomeCampanha !== undefined ? opp.nomeCampanha : (chatDataMap[opp.idConversa]?.nomeCampanha || ''),
                     phone: opp.numeroWhatsapp,
-                    details: opp.detalhesConversa
+                    details: opp.detalhesConversa,
+                    ownerId: opp.idUsuarioResponsavel
                 };
 
                 // Map tag based on status and tipoLeadId
@@ -618,6 +620,36 @@ const PipelinePage = () => {
     }
 
 
+    const [assumingDealId, setAssumingDealId] = useState<number | null>(null);
+
+    const handleAssumeDeal = async (deal: Deal, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!currentUser || assumingDealId === deal.id) return;
+
+        setAssumingDealId(deal.id);
+        const toastId = toast.loading('Assumindo conversa...');
+        try {
+            const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/TranferirConversa`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    IdResponsavelAtual: deal.ownerId || 0,
+                    IdNovoResponsavel: currentUser.id
+                }),
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData?.mensagem || 'Falha ao assumir conversa.');
+            }
+            toast.success('Conversa assumida com sucesso!', { id: toastId });
+            fetchOpportunities(true);
+        } catch (err: any) {
+            toast.error(`Erro: ${err.message}`, { id: toastId });
+        } finally {
+            setAssumingDealId(null);
+        }
+    };
+
     const handleAiSummaryClick = (e: React.MouseEvent, dealId: number) => {
         e.stopPropagation(); // Prevent opening the deal details modal
         if (summarizingDealId) return;
@@ -914,6 +946,17 @@ const PipelinePage = () => {
                                                                                 <FaMagic size={10} className={summarizingDealId === deal.id ? 'spin' : ''} />
                                                                                 <span>{summarizingDealId === deal.id ? 'Gerando...' : 'Resumo IA'}</span>
                                                                             </button>
+                                                                            {currentUser && deal.owner !== currentUser.nome && (
+                                                                                <button
+                                                                                    className="assume-btn"
+                                                                                    onClick={(e) => handleAssumeDeal(deal, e)}
+                                                                                    title={assumingDealId === deal.id ? 'Assumindo...' : 'Assumir esta conversa'}
+                                                                                    aria-label="Assumir esta conversa"
+                                                                                    disabled={assumingDealId === deal.id}
+                                                                                >
+                                                                                    <FaUserPlus size={10} />
+                                                                                </button>
+                                                                            )}
                                                                         </div>
 
                                                                         <div className="card-footer-right">
