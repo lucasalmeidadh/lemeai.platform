@@ -5,7 +5,7 @@ import {
   FaArrowLeft, FaPhone, FaEnvelope, FaPlus, FaPaperclip, FaTrash,
   FaImage, FaMusic, FaVideo, FaFilePdf, FaCalendarAlt, FaComments, FaEdit,
   FaMagic, FaTasks, FaTimes,
-  FaBullhorn, FaStickyNote, FaBoxes, FaUserPlus
+  FaBullhorn, FaStickyNote, FaBoxes, FaUserPlus, FaListAlt, FaSave
 } from 'react-icons/fa';
 import { ProductService, type Product } from '../services/ProductService';
 import { ConversaProdutoService, type ConversaProduto } from '../services/ConversaProdutoService';
@@ -23,6 +23,8 @@ import { AttachmentService } from '../services/AttachmentService';
 import { AgendaService } from '../services/AgendaService';
 import { TarefaService, TipoTarefaService, type Tarefa, type TipoTarefa } from '../services/TarefaService';
 import type { ContatoAnexoResponseDTO, TipoAnexo } from '../types/Attachment';
+import CampoPersonalizadoValorService, { type CampoPersonalizadoValor, type PreencherValorItem } from '../services/CampoPersonalizadoValorService';
+import { TipoCampoPersonalizado } from '../services/CampoPersonalizadoService';
 import DatePicker from 'react-datepicker';
 import { ptBR } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -126,7 +128,7 @@ const DealDetailsPage = () => {
   const [chatError, setChatError] = useState<string | null>(null);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
-  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda' | 'products'>('agenda');
+  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda' | 'products' | 'customFields'>('customFields');
 
   const [dealProducts, setDealProducts] = useState<DealProduct[]>([]);
   const [isLoadingDealProducts, setIsLoadingDealProducts] = useState(false);
@@ -218,6 +220,12 @@ const DealDetailsPage = () => {
   const [tasks, setTasks] = useState<Tarefa[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [tiposTarefa, setTiposTarefa] = useState<TipoTarefa[]>([]);
+
+  const [customFields, setCustomFields] = useState<CampoPersonalizadoValor[]>([]);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<number, string>>({});
+  const [isLoadingCustomFields, setIsLoadingCustomFields] = useState(false);
+  const [isSavingCustomFields, setIsSavingCustomFields] = useState(false);
+  const [isEditingCustomFields, setIsEditingCustomFields] = useState(false);
 
   // Load Current User
   useEffect(() => {
@@ -454,6 +462,49 @@ const DealDetailsPage = () => {
       setIsLoadingAgenda(false);
     }
   }, [deal]);
+
+  // Custom Fields fetcher
+  const fetchCustomFields = useCallback(async () => {
+    if (!deal) return;
+    setIsLoadingCustomFields(true);
+    try {
+      const data = await CampoPersonalizadoValorService.buscarPorConversa(deal.id);
+      setCustomFields(data);
+      const initialValues: Record<number, string> = {};
+      data.forEach(field => {
+        initialValues[field.campoPersonalizadoId] = field.valor ?? '';
+      });
+      setCustomFieldValues(initialValues);
+      setIsEditingCustomFields(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao carregar campos personalizados.');
+    } finally {
+      setIsLoadingCustomFields(false);
+    }
+  }, [deal]);
+
+  const handleCustomFieldChange = (campoPersonalizadoId: number, value: string) => {
+    setCustomFieldValues(prev => ({ ...prev, [campoPersonalizadoId]: value }));
+  };
+
+  const handleSaveCustomFields = async () => {
+    if (!deal) return;
+    setIsSavingCustomFields(true);
+    try {
+      const valores: PreencherValorItem[] = customFields.map(field => ({
+        campoPersonalizadoId: field.campoPersonalizadoId,
+        valor: customFieldValues[field.campoPersonalizadoId]?.trim() ? customFieldValues[field.campoPersonalizadoId] : null,
+      }));
+      await CampoPersonalizadoValorService.preencherValores(deal.id, valores);
+      toast.success('Campos personalizados salvos com sucesso!');
+      setIsEditingCustomFields(false);
+      fetchCustomFields();
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar campos personalizados.');
+    } finally {
+      setIsSavingCustomFields(false);
+    }
+  };
 
   // Send Message
   const handleSendMessage = async (text: string) => {
@@ -895,7 +946,8 @@ const DealDetailsPage = () => {
     if (activeTab === 'chat' && deal.contactId) fetchMessages();
     else if (activeTab === 'attachments') fetchAttachments();
     else if (activeTab === 'agenda') fetchAppointments();
-  }, [activeTab, deal, fetchMessages, fetchAttachments, fetchAppointments]);
+    else if (activeTab === 'customFields') fetchCustomFields();
+  }, [activeTab, deal, fetchMessages, fetchAttachments, fetchAppointments, fetchCustomFields]);
 
   const handleGenerateSummary = async () => {
     if (!deal) return;
@@ -1402,6 +1454,11 @@ const DealDetailsPage = () => {
         {/* Content Tabs */}
         <main className="details-main-area">
           <div className="details-tab-nav">
+            <button className={`tab-button ${activeTab === 'customFields' ? 'active' : ''}`} onClick={() => setActiveTab('customFields')}>
+              <span className="tab-text-full">Dados Gerais</span>
+              <span className="tab-text-short">Dados</span>
+              <FaListAlt />
+            </button>
             <button className={`tab-button ${activeTab === 'agenda' ? 'active' : ''}`} onClick={() => setActiveTab('agenda')}>
               <span className="tab-text-full">Tarefas</span>
               <span className="tab-text-short">Tarefas</span>
@@ -1782,6 +1839,92 @@ const DealDetailsPage = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Custom Fields Tab */}
+            {activeTab === 'customFields' && (
+              <div className="tab-pane custom-fields-pane">
+                <div className="pane-header">
+                  <h3>Dados Gerais</h3>
+                  {customFields.length > 0 && (
+                    isEditingCustomFields ? (
+                      <button className="btn-add-action" onClick={handleSaveCustomFields} disabled={isSavingCustomFields}>
+                        <FaSave /> {isSavingCustomFields ? 'Salvando...' : 'Salvar'}
+                      </button>
+                    ) : (
+                      <button className="btn-add-action" onClick={() => setIsEditingCustomFields(true)}>
+                        <FaEdit /> Editar
+                      </button>
+                    )
+                  )}
+                </div>
+
+                {isLoadingCustomFields ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="skeleton" style={{ width: '100%', height: '60px', borderRadius: '0.75rem' }}></div>
+                    ))}
+                  </div>
+                ) : customFields.length > 0 ? (
+                  <div className="custom-fields-form-grid">
+                    {customFields.map(field => (
+                      <div className="form-group-val" key={field.campoPersonalizadoId}>
+                        <label>
+                          {field.nome} {field.obrigatorio && <span style={{ color: '#dc2626' }}>*</span>}
+                        </label>
+                        {field.tipo === TipoCampoPersonalizado.Selecao ? (
+                          <CustomSelect
+                            value={customFieldValues[field.campoPersonalizadoId] ?? ''}
+                            onChange={value => handleCustomFieldChange(field.campoPersonalizadoId, value)}
+                            disabled={!isEditingCustomFields}
+                            options={(field.opcoes ?? []).map(op => ({ value: op, label: op }))}
+                          />
+                        ) : field.tipo === TipoCampoPersonalizado.Booleano ? (
+                          <CustomSelect
+                            value={customFieldValues[field.campoPersonalizadoId] ?? ''}
+                            onChange={value => handleCustomFieldChange(field.campoPersonalizadoId, value)}
+                            disabled={!isEditingCustomFields}
+                            options={[
+                              { value: 'true', label: 'Sim' },
+                              { value: 'false', label: 'Não' },
+                            ]}
+                          />
+                        ) : field.tipo === TipoCampoPersonalizado.Data ? (
+                          <input
+                            type="date"
+                            className="form-input"
+                            value={customFieldValues[field.campoPersonalizadoId] ?? ''}
+                            onChange={e => handleCustomFieldChange(field.campoPersonalizadoId, e.target.value)}
+                            disabled={!isEditingCustomFields}
+                          />
+                        ) : field.tipo === TipoCampoPersonalizado.Numero ? (
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={customFieldValues[field.campoPersonalizadoId] ?? ''}
+                            onChange={e => handleCustomFieldChange(field.campoPersonalizadoId, e.target.value)}
+                            disabled={!isEditingCustomFields}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={customFieldValues[field.campoPersonalizadoId] ?? ''}
+                            onChange={e => handleCustomFieldChange(field.campoPersonalizadoId, e.target.value)}
+                            disabled={!isEditingCustomFields}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-pane-container">
+                    <FaListAlt className="empty-pane-icon" />
+                    <p className="empty-pane-title">Nenhum campo personalizado cadastrado</p>
+                    <p className="empty-pane-subtitle">Cadastre campos personalizados em Gestão &gt; Campos Personalizados para preenchê-los aqui.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

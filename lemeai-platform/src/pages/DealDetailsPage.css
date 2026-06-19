@@ -1177,6 +1177,62 @@
   height: 100%;
 }
 
+/* ─── CUSTOM FIELDS TAB STYLING ──────────────────────────────── */
+.custom-fields-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.custom-fields-form-grid .form-group-val label {
+  font-size: var(--font-xs);
+}
+
+.custom-fields-form-grid .form-input {
+  height: 2.125rem;
+  padding: 0.375rem 0.625rem;
+  font-size: var(--font-sm);
+}
+
+.custom-fields-form-grid .custom-select-container {
+  min-width: 0;
+}
+
+.custom-fields-form-grid .custom-select-trigger {
+  height: 2.125rem;
+  padding: 0.375rem 0.875rem;
+  font-size: var(--font-sm);
+}
+
+.custom-fields-form-grid .form-input:disabled {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color-soft);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.custom-fields-form-grid .custom-select-container.disabled .custom-select-trigger {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color-soft);
+  color: var(--text-tertiary);
+}
+
+.custom-fields-form-grid .custom-select-container.disabled .custom-select-arrow {
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 1300px) {
+  .custom-fields-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .custom-fields-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .deal-products-container {
   display: flex;
   flex-direction: column;

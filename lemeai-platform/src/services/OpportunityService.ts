@@ -36,6 +36,11 @@ export interface OpportunityResponse {
     dados: Opportunity[];
 }
 
+export interface CreateOpportunityCampoPersonalizado {
+    campoPersonalizadoId: number;
+    valor: string | null;
+}
+
 export interface CreateOpportunityPayload {
     contatoNovo: boolean;
     contatoId: number | null;
@@ -48,6 +53,7 @@ export interface CreateOpportunityPayload {
     tipoLeadId: number | null;
     valor: number | null;
     observacao: string | null;
+    camposPersonalizados?: CreateOpportunityCampoPersonalizado[] | null;
 }
 
 export const OpportunityService = {

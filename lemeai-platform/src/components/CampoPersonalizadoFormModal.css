@@ -1,0 +1,80 @@
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--petroleum-blue);
+  cursor: pointer;
+}
+
+.opcoes-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.opcoes-input-row input {
+  flex: 1;
+}
+
+.opcoes-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  border-radius: var(--btn-radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--petroleum-blue);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.opcoes-add-btn:hover {
+  background-color: var(--petroleum-blue-hover);
+}
+
+.opcoes-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.opcoes-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: var(--bg-tertiary);
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+}
+
+.opcoes-list-item button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.opcoes-empty-hint {
+  margin: 10px 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+}

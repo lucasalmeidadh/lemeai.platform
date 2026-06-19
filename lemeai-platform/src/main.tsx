@@ -33,6 +33,7 @@ import PlanManagementPage from './pages/PlanManagementPage';
 import NovidadesPage from './pages/NovidadesPage.tsx';
 import ReportsPage from './pages/ReportsPage.tsx';
 import CampaignReportsPage from './pages/CampaignReportsPage.tsx';
+import CamposPersonalizadosPage from './pages/CamposPersonalizadosPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -62,6 +63,7 @@ const router = createBrowserRouter([
           { path: "connections", element: <ConnectionsPage /> },
           { path: "equipes", element: <TeamsPage /> },
           { path: "metas", element: <GoalsPage /> },
+          { path: "campos-personalizados", element: <CamposPersonalizadosPage /> },
           { path: "campaign-templates", element: <CampaignTemplatesPage /> },
           { path: "campanhas", element: <CampaignPage /> },
           { path: "plano", element: <BillingPlanPage /> },

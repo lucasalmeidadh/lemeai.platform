@@ -104,6 +104,10 @@ A oportunidade criada é, internamente, uma `Conversa` com `PlatformType = Manua
 - `usuarioResponsavelId` é opcional — se não informado, o vendedor responsável é o próprio usuário autenticado.
 - Não há campo de status inicial: toda oportunidade manual é criada com `StatusId = NaoIniciado (2)`.
 - Se `observacao` for informada, cria automaticamente um `DetalheConversa` vinculado à oportunidade.
+- `camposPersonalizados` é opcional — permite preencher os valores dos [Campos Personalizados](../campos-personalizados/especificacao.md) da empresa no mesmo payload da criação, evitando uma segunda chamada a `PUT /api/campopersonalizadovalor/PreencherValores/{conversaId}`. Cada item segue o mesmo formato usado em `PreencherValores`: `{ "campoPersonalizadoId": int, "valor": string }`.
+  - A validação (obrigatoriedade, formato, opção válida) ocorre **antes** de criar o `Contato`/`Conversa` — se algum valor for inválido, a requisição retorna erro e **nada é criado** (nem contato, nem conversa).
+  - Se a validação passar, o preenchimento dos valores ocorre **depois** da conversa já estar criada. Numa falha de preenchimento nesse ponto (cenário raro de corrida, ex: campo removido entre a validação e o preenchimento), a oportunidade **não é desfeita** — o erro é apenas logado, e o vendedor pode preencher os campos depois pelo endpoint `PreencherValores` já existente.
+  - Se omitido ou vazio, o comportamento é idêntico ao atual: nenhum campo personalizado é preenchido na criação.
 
 #### Request Body — `ContatoNovo = true` (criando um novo contato)
 
@@ -119,7 +123,11 @@ A oportunidade criada é, internamente, uma `Conversa` com `PlatformType = Manua
   "usuarioResponsavelId": null,
   "tipoLeadId": 1,
   "valor": 2500.0,
-  "observacao": "Cliente conhecido pessoalmente em evento, demonstrou interesse no plano premium."
+  "observacao": "Cliente conhecido pessoalmente em evento, demonstrou interesse no plano premium.",
+  "camposPersonalizados": [
+    { "campoPersonalizadoId": 3, "valor": "Indicação" },
+    { "campoPersonalizadoId": 7, "valor": "2026-06-18" }
+  ]
 }
 ```
 
@@ -133,7 +141,8 @@ A oportunidade criada é, internamente, uma `Conversa` com `PlatformType = Manua
   "usuarioResponsavelId": 8,
   "tipoLeadId": 2,
   "valor": 800.0,
-  "observacao": null
+  "observacao": null,
+  "camposPersonalizados": null
 }
 ```
 
@@ -171,6 +180,15 @@ A oportunidade criada é, internamente, uma `Conversa` com `PlatformType = Manua
 {
   "sucesso": false,
   "mensagem": "Contato não encontrado.",
+  "dados": null
+}
+```
+
+**Response 400 — campo personalizado inválido (validado antes de criar contato/conversa):**
+```json
+{
+  "sucesso": false,
+  "mensagem": "O campo \"Origem do Lead\" é obrigatório.",
   "dados": null
 }
 ```

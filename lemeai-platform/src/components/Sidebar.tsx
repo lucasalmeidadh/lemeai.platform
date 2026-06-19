@@ -22,7 +22,8 @@ import {
     FaBuilding,
     FaChevronRight,
     FaCalendarCheck,
-    FaFileAlt
+    FaFileAlt,
+    FaListAlt
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -82,7 +83,7 @@ const Sidebar: FC<SidebarProps> = () => {
     // Active Checks
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
     const isReportsActive = location.pathname.startsWith('/relatorios');
-    const isGestaoActive = ['/users', '/equipes', '/metas'].includes(location.pathname);
+    const isGestaoActive = ['/users', '/equipes', '/metas', '/campos-personalizados'].includes(location.pathname);
     const isChatbotActive = ['/chat-rules', '/products', '/connections'].includes(location.pathname);
     const isEmpresaActive = ['/dias-uteis', '/empresas', '/gerenciar-planos'].includes(location.pathname);
 
@@ -227,6 +228,10 @@ const Sidebar: FC<SidebarProps> = () => {
                                 <Link to="/metas" className={`sidebar-sub-link ${location.pathname === '/metas' ? 'active' : ''}`} onClick={closeSettings}>
                                     <FaBullseye />
                                     <span>Metas</span>
+                                </Link>
+                                <Link to="/campos-personalizados" className={`sidebar-sub-link ${location.pathname === '/campos-personalizados' ? 'active' : ''}`} onClick={closeSettings}>
+                                    <FaListAlt />
+                                    <span>Campos Personalizados</span>
                                 </Link>
                             </div>
                         </div>
