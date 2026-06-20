@@ -176,7 +176,8 @@
   gap: 20px;
   align-items: center;
   justify-content: center;
-  margin-top: 20px;
+  margin: auto;
+  width: 100%;
 }
 
 .com-type-selection-label {
@@ -191,6 +192,8 @@
   display: flex;
   gap: 16px;
   width: 100%;
+  max-width: 400px;
+  justify-content: center;
 }
 
 .com-type-card {
@@ -198,7 +201,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 16px;
+  padding: 20px 12px;
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -215,7 +218,7 @@
 }
 
 .com-type-card-icon {
-  font-size: 32px;
+  font-size: 28px;
   color: var(--petroleum-blue);
   margin-bottom: 12px;
 }
