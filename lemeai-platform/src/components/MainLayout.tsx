@@ -56,8 +56,16 @@ const MainLayout = () => {
     }, [setSteps]);
 
     // Handlers
-    const handleLogout = () => {
-        localStorage.removeItem('authToken');
+    const handleLogout = async () => {
+        try {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+        } catch {
+            // ignora erro de rede — prossegue com limpeza local
+        }
+        localStorage.removeItem('user');
         navigate('/login');
     };
 

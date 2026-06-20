@@ -1,93 +1,248 @@
+/* ============================================================
+   Layout principal — 2 colunas em desktops reais (≥ 1500px viewport)
+   Com sidebar de 256px, 1500px → ~1244px de conteúdo disponível
+   ============================================================ */
+
 .profile-layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 30px;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
   align-items: start;
 }
 
+/* ============================================================
+   Tabs de navegação — linha própria abaixo do page-header
+   ============================================================ */
+
+.profile-tabs-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-color-soft);
+  padding-bottom: 0;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  padding: 10px 18px;
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+  border-radius: 0;
+  margin-bottom: -1px;
+}
+
+.tab-button:hover {
+  color: var(--text-primary);
+}
+
+.tab-button.active {
+  color: var(--petroleum-blue);
+  border-bottom-color: var(--petroleum-blue);
+}
+
+/* ============================================================
+   Cartão: Lista de Perfis (sidebar esquerda)
+   ============================================================ */
+
 .profile-list-card {
-  padding: 25px;
+  padding: 20px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  position: sticky;
+  top: 0;
 }
 
 .profile-list-card h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 18px;
-  color: #343a40;
+  margin: 0 0 16px 0;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
 }
 
 .profile-list-card ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.profile-list-card ul::-webkit-scrollbar {
+  width: 4px;
+}
+
+.profile-list-card ul::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
 }
 
 .profile-list-card li {
-  padding: 15px;
+  padding: 12px 14px;
   border-radius: 8px;
-  margin-bottom: 10px;
+  font-size: var(--font-base);
   font-weight: 500;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
+  user-select: none;
 }
 
 .profile-list-card li:hover {
-  background-color: #f8f9fa;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .profile-list-card li.active {
-  background-color: #e0f7ff;
+  background-color: var(--petroleum-light);
   color: var(--petroleum-blue);
   font-weight: 700;
 }
 
+/* ============================================================
+   Cartão: Detalhes do Perfil
+   ============================================================ */
+
 .profile-details-card {
-  padding: 25px;
+  padding: 24px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
 }
 
-.profile-details-card h3 {
-  margin-top: 0;
-  margin-bottom: 30px;
-  font-size: 18px;
-}
-
-.permissions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.permission-item {
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 20px;
+.details-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 24px;
+  gap: var(--space-3);
+}
+
+.details-header h3 {
+  margin: 0;
+  font-size: var(--font-lg);
+  color: var(--text-primary);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.details-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.permissions-counter {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color-soft);
+  padding: 4px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.profile-badge {
+  background-color: var(--petroleum-light);
+  color: var(--petroleum-blue);
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Grid de permissões
+   ============================================================ */
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.permission-item {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+}
+
+.permission-item:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--petroleum-blue);
 }
 
 .permission-label {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   font-weight: 500;
-  color: #495057;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .permission-label svg {
   color: var(--petroleum-blue);
   font-size: 18px;
+  flex-shrink: 0;
 }
+
+.permission-label strong {
+  display: block;
+  font-size: var(--font-base);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.technical-code {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  font-family: monospace;
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+/* ============================================================
+   Toggle switch
+   ============================================================ */
 
 .switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 28px;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
-.switch input { 
+.switch input {
   opacity: 0;
   width: 0;
   height: 0;
@@ -100,19 +255,19 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
+  background-color: var(--border-color);
+  transition: 0.3s;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 20px;
-  width: 20px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--bg-secondary);
+  transition: 0.3s;
 }
 
 input:checked + .slider {
@@ -120,7 +275,7 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
-  transform: translateX(22px);
+  transform: translateX(16px);
 }
 
 .slider.round {
@@ -131,27 +286,543 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
+/* ============================================================
+   Ações do perfil
+   ============================================================ */
+
 .profile-actions {
-  margin-top: 30px;
+  margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #f0f2f5;
+  border-top: 1px solid var(--border-color-soft);
   display: flex;
   justify-content: flex-end;
 }
 
 .save-button-profile {
-  background-color: var(--accent-color);
+  background-color: var(--petroleum-blue);
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 12px 25px;
-  font-size: 15px;
+  padding: 10px 24px;
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.save-button-profile:hover {
-  background-color: #d48c00;
-  box-shadow: 0 4px 10px rgba(238, 155, 0, 0.2);
+.save-button-profile:hover:not(:disabled) {
+  background-color: var(--petroleum-blue-hover);
+  transform: translateY(-1px);
+}
+
+.save-button-profile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Catálogo Global
+   ============================================================ */
+
+.global-catalogue-card {
+  padding: 24px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.catalogue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.catalogue-header h3 {
+  margin: 0;
+  font-size: var(--font-lg);
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.catalogue-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.catalogue-search {
+  padding: 9px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-base);
+  width: 220px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.catalogue-search::placeholder {
+  color: var(--text-tertiary);
+}
+
+.catalogue-search:focus {
+  border-color: var(--petroleum-blue);
+  box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.08);
+  background-color: var(--bg-secondary);
+}
+
+/* ============================================================
+   Tabela do Catálogo
+   ============================================================ */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-secondary);
+  -webkit-overflow-scrolling: touch;
+}
+
+.management-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px;
+}
+
+.management-table th,
+.management-table td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color-soft);
+}
+
+.management-table th {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.management-table td {
+  color: var(--text-primary);
+  font-size: var(--font-base);
+}
+
+.management-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.management-table tbody tr:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 10px;
+}
+
+.catalogue-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ============================================================
+   Modal
+   ============================================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  padding: var(--space-4);
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color-soft);
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-secondary);
+  z-index: 1;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: var(--font-xl);
+  color: var(--text-primary);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.close-button:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal-body .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-body label {
+  font-weight: 600;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.modal-body input {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  font-size: var(--font-base);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-body input:focus {
+  border-color: var(--petroleum-blue);
+  box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.1);
+}
+
+.modal-body .help-text {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color-soft);
+  background-color: var(--bg-secondary);
+  position: sticky;
+  bottom: 0;
+}
+
+.modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal-btn-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.modal-btn-secondary:hover:not(:disabled) {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.modal-btn-primary {
+  background-color: var(--petroleum-blue);
+  color: white;
+}
+
+.modal-btn-primary:hover:not(:disabled) {
+  background-color: var(--petroleum-blue-hover);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   Utilitários
+   ============================================================ */
+
+.no-data {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 30px;
+}
+
+.error-container {
+  background-color: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  color: var(--color-danger);
+  font-size: var(--font-base);
+  margin-bottom: 20px;
+}
+
+/* ============================================================
+   Responsividade — 1500px
+   Grid colapsa: lista de perfis vira chips horizontais
+   (Com sidebar 256px, viewport 1500px = ~1244px de conteúdo)
+   ============================================================ */
+
+@media (max-width: 1500px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .profile-list-card {
+    position: static;
+    padding: 16px 20px;
+  }
+
+  .profile-list-card h3 {
+    margin-bottom: 12px;
+  }
+
+  /* Converte lista vertical em chips horizontais scrolláveis */
+  .profile-list-card ul {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    max-height: none;
+    overflow-y: visible;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+  }
+
+  .profile-list-card ul::-webkit-scrollbar {
+    height: 4px;
+    width: auto;
+  }
+
+  .profile-list-card li {
+    padding: 7px 16px;
+    border-radius: 99px;
+    border: 1px solid var(--border-color);
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: var(--font-sm);
+  }
+
+  .profile-list-card li:hover {
+    border-color: var(--petroleum-blue);
+  }
+
+  .profile-list-card li.active {
+    border-color: var(--petroleum-blue);
+    background-color: var(--petroleum-light);
+    color: var(--petroleum-blue);
+  }
+}
+
+/* ============================================================
+   Responsividade — 1100px
+   ============================================================ */
+
+@media (max-width: 1100px) {
+  .profile-details-card,
+  .global-catalogue-card {
+    padding: 18px;
+  }
+
+  .permissions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+}
+
+/* ============================================================
+   Responsividade — 900px (tablet)
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .permissions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .permission-item {
+    padding: 14px;
+  }
+
+  .details-header {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .details-header h3 {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+}
+
+/* ============================================================
+   Responsividade — 768px (mobile landscape / tablet portrait)
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .catalogue-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .catalogue-header-actions {
+    width: 100%;
+  }
+
+  .catalogue-search {
+    width: 100%;
+    flex: 1;
+  }
+
+  .catalogue-header .add-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .switch {
+    width: 32px;
+    height: 18px;
+  }
+
+  .slider:before {
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    bottom: 3px;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(14px);
+  }
+}
+
+/* ============================================================
+   Responsividade — 600px (mobile)
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .permissions-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .permission-item {
+    padding: 12px 14px;
+  }
+
+  .profile-actions {
+    padding-top: 16px;
+  }
+
+  .save-button-profile {
+    width: 100%;
+    text-align: center;
+  }
+
+  .management-table th,
+  .management-table td {
+    padding: 12px 14px;
+  }
+
+  .profile-tabs-nav {
+    gap: 0;
+  }
+
+  .tab-button {
+    flex: 1;
+    text-align: center;
+    font-size: var(--font-sm);
+    padding: 10px 12px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-btn {
+    width: 100%;
+  }
+
+  .details-header-meta {
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================================================
+   Responsividade — 480px (mobile pequeno)
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .profile-details-card,
+  .global-catalogue-card,
+  .profile-list-card {
+    padding: 14px;
+  }
+
+  .permission-label svg {
+    font-size: 16px;
+  }
 }
