@@ -21,7 +21,7 @@ import {
     FaRobot,
     FaBuilding,
     FaChevronRight,
-    FaCalendarCheck,
+    FaUserCog,
     FaFileAlt,
     FaListAlt
 } from 'react-icons/fa';
@@ -90,7 +90,7 @@ const Sidebar: FC<SidebarProps> = () => {
     const isReportsActive = location.pathname.startsWith('/relatorios');
     const isGestaoActive = ['/users', '/equipes', '/metas', '/profiles', '/campos-personalizados'].includes(location.pathname);
     const isChatbotActive = ['/chat-rules', '/products', '/connections'].includes(location.pathname);
-    const isEmpresaActive = ['/dias-uteis', '/empresas', '/gerenciar-planos'].includes(location.pathname);
+    const isEmpresaActive = ['/gerenciar-empresa', '/empresas', '/gerenciar-planos'].includes(location.pathname);
 
     // Toggles
     const toggleMarketing = () => { setIsMarketingOpen(!isMarketingOpen); setIsReportsOpen(false); setIsGestaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
@@ -339,9 +339,9 @@ const Sidebar: FC<SidebarProps> = () => {
                                 <div className={`sidebar-accordion ${isEmpresaOpen ? 'open' : ''}`}>
                                     <div className="sidebar-accordion-content">
                                         {can('dias_funcionamento') && (
-                                            <Link to="/dias-uteis" className={`sidebar-sub-link ${location.pathname === '/dias-uteis' ? 'active' : ''}`} onClick={closeSettings}>
-                                                <FaCalendarCheck />
-                                                <span>Dias de func.</span>
+                                            <Link to="/gerenciar-empresa" className={`sidebar-sub-link ${location.pathname === '/gerenciar-empresa' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaUserCog />
+                                                <span>Gerenciar Empresa</span>
                                             </Link>
                                         )}
                                         {can('gestao_empresas') && (

@@ -16,7 +16,8 @@ import {
     FaTasks,
     FaExternalLinkAlt,
     FaSearch,
-    FaTimes
+    FaTimes,
+    FaBuilding
 } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import { novidadesData } from '../data/novidadesMock';
@@ -35,6 +36,7 @@ interface TopbarProps {
 const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }) => {
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const companyLogoUrl = user?.logoEmpresa || '';
     const companyName = user?.empresaDescricao || '';
     const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
@@ -284,8 +286,13 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                 <button className="topbar-menu-btn mobile-only" onClick={onToggleMobileMenu} title="Menu">
                     <FaBars />
                 </button>
-                {companyName && (
-                    <span className="topbar-company-name">{companyName}</span>
+                {companyLogoUrl ? (
+                    <img src={companyLogoUrl} alt="Logo da empresa" className="topbar-company-logo" />
+                ) : (
+                    <div className="topbar-company-fallback">
+                        <FaBuilding className="topbar-company-fallback-icon" />
+                        {companyName && <span className="topbar-company-fallback-name">{companyName}</span>}
+                    </div>
                 )}
             </div>
 

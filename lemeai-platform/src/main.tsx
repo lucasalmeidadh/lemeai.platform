@@ -26,7 +26,7 @@ import TeamsPage from './pages/TeamsPage.tsx';
 import DealDetailsPage from './pages/DealDetailsPage.tsx';
 import BillingPlanPage from './pages/BillingPlanPage';
 import EmpresasPage from './pages/EmpresasPage';
-import WorkingDaysPage from './pages/WorkingDaysPage.tsx';
+import GerenciarEmpresaPage from './pages/GerenciarEmpresaPage.tsx';
 import PlanManagementPage from './pages/PlanManagementPage';
 import NovidadesPage from './pages/NovidadesPage.tsx';
 import ReportsPage from './pages/ReportsPage.tsx';
@@ -66,7 +66,7 @@ const router = createBrowserRouter([
           { path: "campaign-templates", element: <PermissionGuard><CampaignTemplatesPage /></PermissionGuard> },
           { path: "campanhas", element: <PermissionGuard><CampaignPage /></PermissionGuard> },
           { path: "empresas", element: <PermissionGuard><EmpresasPage /></PermissionGuard> },
-          { path: "dias-uteis", element: <PermissionGuard><WorkingDaysPage /></PermissionGuard> },
+          { path: "gerenciar-empresa", element: <PermissionGuard><GerenciarEmpresaPage /></PermissionGuard> },
           { path: "gerenciar-planos", element: <PermissionGuard><PlanManagementPage /></PermissionGuard> },
           { path: "campos-personalizados", element: <PermissionGuard><CamposPersonalizadosPage /></PermissionGuard> },
         ]

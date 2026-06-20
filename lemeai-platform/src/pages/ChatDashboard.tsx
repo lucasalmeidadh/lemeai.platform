@@ -12,8 +12,8 @@ import RelatorioService from '../services/RelatorioService';
 import type { PerformanceIndividual, PerformanceEquipe, ProjecaoFechamento } from '../services/RelatorioService';
 import { OpportunityService, type Opportunity } from '../services/OpportunityService';
 import EquipeService, { type Equipe } from '../services/EquipeService';
-import ConfiguracaoService from '../services/ConfiguracaoService';
-import type { DiasUteis } from '../services/ConfiguracaoService';
+import GerenciarEmpresaService from '../services/GerenciarEmpresaService';
+import type { DiasUteis } from '../services/GerenciarEmpresaService';
 import { Link } from 'react-router-dom';
 import { getUserPermissions } from '../config/permissions';
 import './ChatDashboard.css';
@@ -79,7 +79,7 @@ const ChatDashboard = () => {
   }, [workingDays]);
 
   useEffect(() => {
-    ConfiguracaoService.getDiasUteis()
+    GerenciarEmpresaService.getDiasUteis()
       .then(setWorkingDays)
       .catch(() => {/* keep default */ });
     OpportunityService.getAllOpportunities()

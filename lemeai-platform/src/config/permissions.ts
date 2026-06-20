@@ -16,7 +16,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/chat-rules': ['regras_chatbot'],
   '/products': ['gestao_produtos'],
   '/connections': ['gestao_conexoes'],
-  '/dias-uteis': ['dias_funcionamento'],
+  '/gerenciar-empresa': ['dias_funcionamento'],
   '/empresas': ['gestao_empresas'],
   '/gerenciar-planos': ['gerenciar_planos'],
   '/campos-personalizados': ['gestao_campos_personalizados', 'gestão_campos_personalizados'],

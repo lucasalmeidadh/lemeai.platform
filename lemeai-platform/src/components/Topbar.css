@@ -350,15 +350,44 @@
   }
 }
 
-.topbar-company-name {
-  font-weight: 600;
-  font-size: var(--font-base);
-  color: var(--text-primary);
-  background-color: var(--bg-tertiary);
-  padding: 0.375rem 0.75rem;
+.topbar-company-logo {
+  height: 2rem;
+  max-width: 8rem;
+  object-fit: contain;
   border-radius: 6px;
-  border: 1px solid var(--border-color);
-  letter-spacing: -0.01em;
+}
+
+.topbar-company-fallback {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 12rem;
+}
+
+.topbar-company-fallback-icon {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: var(--petroleum-light);
+  color: var(--petroleum-blue);
+  box-sizing: border-box;
+}
+
+.topbar-company-fallback-name {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1000px) {
+  .topbar-company-fallback-name {
+    display: none;
+  }
 }
 
 /* ─── NOVIDADES POPOVER ────────────────────────────────────────── */
