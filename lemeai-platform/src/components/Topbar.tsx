@@ -539,6 +539,8 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     <div className="topbar-divider"></div>
                     */}
 
+                    <div className="topbar-divider"></div>
+
                      <Link
                         id="topbar-billing"
                         to="/plano"
@@ -548,6 +550,8 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                         <FaCreditCard />
                         <span>Meu Plano</span>
                     </Link>
+
+                    <div className="topbar-divider"></div>
 
                     <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
                         {photoUrl ? (
