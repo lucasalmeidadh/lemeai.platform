@@ -4,34 +4,50 @@
   flex-direction: column;
   height: calc(100vh - 6.5625rem) !important;
   gap: 1.25rem;
-  padding: 0.625rem 1.5rem 1.25rem 1.5rem !important;
+  padding: 1.25rem 1.5rem !important;
 }
 
-.details-page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* back navigation button */
-.back-btn {
+/* sidebar back navigation button */
+.sidebar-back-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: var(--btn-pad-sm);
-  border-radius: var(--btn-radius-md);
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
   font-weight: 600;
-  font-size: var(--btn-font-sm);
+  font-size: var(--font-sm);
   cursor: pointer;
+  padding: 0;
   transition: all 0.2s;
+  align-self: flex-start;
+  margin-bottom: 0.25rem;
 }
 
-.back-btn:hover {
-  background: var(--border-color);
+.sidebar-back-btn:hover {
+  color: var(--text-primary);
   transform: translateX(-2px);
+}
+
+/* sidebar action buttons */
+.sidebar-assume-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  justify-content: center;
+  padding: var(--btn-pad-md);
+}
+
+.sidebar-footer-actions {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color-soft);
+}
+
+.sidebar-delete-btn {
+  width: 100%;
+  justify-content: center;
+  font-size: var(--font-xs);
+  padding: 0.5rem;
 }
 
 /* danger action button */
@@ -42,10 +58,8 @@
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.2);
   color: #ef4444;
-  padding: var(--btn-pad-sm);
   border-radius: var(--btn-radius-md);
   font-weight: 600;
-  font-size: var(--btn-font-sm);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -63,7 +77,6 @@
   border: 1px solid var(--petroleum-blue);
   color: var(--petroleum-blue);
   border-radius: var(--btn-radius-md);
-  padding: var(--btn-pad-sm);
   font-weight: 600;
   font-size: var(--btn-font-sm);
   cursor: pointer;
@@ -100,6 +113,21 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.details-sidebar-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.details-sidebar-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.details-sidebar-panel::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
 }
 
 /* deal name */
@@ -175,17 +203,21 @@
 
 .details-tab-nav {
   display: flex;
+  align-items: center;
   background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  margin: 1.25rem 1.25rem 0 1.25rem;
+  border: 1px solid var(--border-color-soft);
+  gap: 0.25rem;
   overflow: hidden;
 }
 
 /* tab button */
 .tab-button {
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
   color: var(--text-tertiary);
   font-weight: 600;
   font-size: var(--font-sm);
@@ -194,8 +226,9 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: all 0.2s;
-  flex: none;
+  transition: all 0.2s ease-in-out;
+  flex: 1;
+  border-radius: 0.5rem;
 }
 
 .tab-text-short { display: none; }
@@ -203,12 +236,13 @@
 
 .tab-button:hover {
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .tab-button.active {
-  border-bottom-color: var(--petroleum-blue);
-  color: var(--text-primary);
   background: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08), var(--shadow-sm);
 }
 
 .details-tab-content {

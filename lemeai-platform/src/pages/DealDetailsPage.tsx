@@ -1275,29 +1275,13 @@ const DealDetailsPage = () => {
         onConfirm={handleTempConfirm}
       />
 
-      <div className="details-page-header">
-        <button className="back-btn" onClick={() => navigate('/pipeline')}>
-          <FaArrowLeft /> Voltar para o Pipeline
-        </button>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {currentUser && deal.owner !== currentUser.nome && (
-            <button
-              className="assume-deal-btn"
-              onClick={handleAssumeDeal}
-              disabled={isAssuming}
-            >
-              <FaUserPlus /> {isAssuming ? 'Assumindo...' : 'Assumir Conversa'}
-            </button>
-          )}
-          <button className="delete-deal-btn" onClick={() => setIsDeleteConfirmOpen(true)}>
-            <FaTrash /> Excluir Oportunidade
-          </button>
-        </div>
-      </div>
-
       <div className="details-page-layout">
         {/* Sidebar */}
         <aside className="details-sidebar-panel">
+          <button className="sidebar-back-btn" onClick={() => navigate('/pipeline')}>
+            <FaArrowLeft /> Voltar ao Pipeline
+          </button>
+
           <div className="sidebar-deal-header">
             <h2>{deal.title}</h2>
             {isEditingValue ? (
@@ -1321,6 +1305,16 @@ const DealDetailsPage = () => {
               </strong>
             )}
           </div>
+
+          {currentUser && deal.owner !== currentUser.nome && (
+            <button
+              className="assume-deal-btn sidebar-assume-btn"
+              onClick={handleAssumeDeal}
+              disabled={isAssuming}
+            >
+              <FaUserPlus /> {isAssuming ? 'Assumindo...' : 'Assumir Conversa'}
+            </button>
+          )}
 
           <div className="details-info-section">
             <div className="info-group">
@@ -1465,6 +1459,12 @@ const DealDetailsPage = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="sidebar-footer-actions">
+            <button className="delete-deal-btn sidebar-delete-btn" onClick={() => setIsDeleteConfirmOpen(true)}>
+              <FaTrash /> Excluir Oportunidade
+            </button>
           </div>
         </aside>
 
