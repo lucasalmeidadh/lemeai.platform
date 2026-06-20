@@ -22,6 +22,7 @@ import { ContactService } from '../services/ContactService';
 import { AttachmentService } from '../services/AttachmentService';
 import { AgendaService } from '../services/AgendaService';
 import { TarefaService, TipoTarefaService, type Tarefa, type TipoTarefa } from '../services/TarefaService';
+import OriginBadge from '../components/OriginBadge';
 import type { ContatoAnexoResponseDTO, TipoAnexo } from '../types/Attachment';
 import CampoPersonalizadoValorService, { type CampoPersonalizadoValor, type PreencherValorItem } from '../services/CampoPersonalizadoValorService';
 import { TipoCampoPersonalizado } from '../services/CampoPersonalizadoService';
@@ -103,6 +104,8 @@ interface Deal {
   nomeCampanha?: string;
   tipoLeadId?: number;
   ownerId?: number;
+  idOrigemOportunidade?: number;
+  descricaoOrigemOportunidade?: string;
 }
 
 interface ApiMessage {
@@ -237,6 +240,9 @@ const DealDetailsPage = () => {
         if (result.sucesso && result.dados) {
           const userId = result.dados.id || result.dados.userId || 0;
           setCurrentUser({ id: userId, nome: result.dados.userName || result.dados.nome });
+        } else if (result.id) {
+          const userId = Number(result.id) || 0;
+          setCurrentUser({ id: userId, nome: result.userName || result.nome });
         }
       } catch (err) {
         console.error("Erro ao buscar usuário logado:", err);
@@ -306,6 +312,8 @@ const DealDetailsPage = () => {
           nomeCampanha: currentOpp.nomeCampanha,
           tipoLeadId: currentOpp.tipoLeadId,
           ownerId: currentOpp.idUsuarioResponsavel,
+          idOrigemOportunidade: currentOpp.idOrigemOportunidade,
+          descricaoOrigemOportunidade: currentOpp.descricaoOrigemOportunidade,
         };
         setDeal(mappedDeal);
         setStatusId(currentOpp.idStauts);
@@ -1396,6 +1404,15 @@ const DealDetailsPage = () => {
                 </div>
               )}
             </div>
+
+            {deal.idOrigemOportunidade && (
+              <div className="info-group">
+                <span className="info-label">Canal de Origem</span>
+                <div className="info-value">
+                  <OriginBadge idOrigem={deal.idOrigemOportunidade} descricao={deal.descricaoOrigemOportunidade} />
+                </div>
+              </div>
+            )}
 
             <div className="info-group">
               <span className="info-label">Origem</span>

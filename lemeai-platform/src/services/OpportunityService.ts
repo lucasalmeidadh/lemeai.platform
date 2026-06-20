@@ -28,6 +28,8 @@ export interface Opportunity {
     idCampanha?: number | null;
     nomeCampanha?: string;
     tipoLeadId?: number;
+    idOrigemOportunidade?: number;
+    descricaoOrigemOportunidade?: string;
 }
 
 export interface OpportunityResponse {

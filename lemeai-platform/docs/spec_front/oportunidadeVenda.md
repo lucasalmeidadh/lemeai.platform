@@ -63,7 +63,8 @@ Filtros aplicados internamente:
       "nomeCampanha": "",
       "tipoLeadId": 1,
       "dataFechamentoVenda": null,
-      "ehManual": true,
+      "idOrigemOportunidade": 1,
+      "descricaoOrigemOportunidade": "Whatsapp"
       "detalhesConversa": [
         {
           "idDetalhe": 5,
@@ -222,6 +223,6 @@ Após criar a oportunidade manual e obter o `ConversationId` (campo `dados` da r
 
 ## Observações para o Front-end
 
-- Quando `ehManual = true`, ocultar a aba de "Conversa/Chat" do card de oportunidade (não há mensagens), exibindo apenas Detalhes, Produtos, Documentos, Tarefas e Ligações.
+- Quando `idOportunidadeVenda = 6`, ocultar a aba de "Conversa/Chat" do card de oportunidade (não há mensagens), exibindo apenas Detalhes, Produtos, Documentos, Tarefas e Ligações.
 - Oportunidades manuais **não aparecem** em `GET /api/chat/ConversasPorVendedor` (caixa de entrada de conversas) — apenas em `GET /api/oportunidadevenda/BuscarTodas`.
 - `numeroWhatsapp` reflete `CustomerPhoneNumber` da conversa (telefone do contato resolvido na criação), não o `ExternalSenderId` sintético.

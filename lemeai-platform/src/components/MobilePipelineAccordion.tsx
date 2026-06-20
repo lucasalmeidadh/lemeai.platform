@@ -9,6 +9,7 @@ import './MobilePipelineAccordion.css';
 import CustomSelect from './CustomSelect';
 import { ChatService } from '../services/ChatService';
 import TemperatureSelectionModal from './TemperatureSelectionModal';
+import OriginBadge from './OriginBadge';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -24,6 +25,8 @@ interface Deal {
     tipoLeadId?: number;
     rawValue?: number;
     phone?: string;
+    idOrigemOportunidade?: number;
+    descricaoOrigemOportunidade?: string;
 }
 
 interface Column {
@@ -291,6 +294,7 @@ const MobileOpportunityCard: React.FC<{ deal: Deal, columnStatusId: number, curr
                 <div className="mobile-opp-row">
                     <FaUser className="mobile-opp-icon" />
                     <span className="mobile-opp-owner">{deal.owner || 'Sem responsável'}</span>
+                    <OriginBadge idOrigem={deal.idOrigemOportunidade} descricao={deal.descricaoOrigemOportunidade} />
                 </div>
 
                 {(!isExpanded) && (

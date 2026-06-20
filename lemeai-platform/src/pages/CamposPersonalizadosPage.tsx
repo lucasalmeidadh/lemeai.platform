@@ -134,7 +134,6 @@ const CamposPersonalizadosPage = () => {
               <thead>
                 <tr>
                   <th>Nome</th>
-                  <th>Chave</th>
                   <th>Tipo</th>
                   <th>Obrigatório</th>
                   <th>Ordem</th>
@@ -152,7 +151,6 @@ const CamposPersonalizadosPage = () => {
                   filteredCampos.map(campo => (
                     <tr key={campo.campoPersonalizadoId}>
                       <td className="campo-name-cell">{campo.nome}</td>
-                      <td><code>{campo.chave}</code></td>
                       <td>{tipoLabels[campo.tipo]}</td>
                       <td>
                         <span className={`status-badge ${campo.obrigatorio ? 'status-ativo' : 'status-inativo'}`}>
