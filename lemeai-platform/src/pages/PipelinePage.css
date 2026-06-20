@@ -17,7 +17,7 @@
 /* search / filter input */
 .pipeline-filter-input {
   padding: 0.625rem var(--space-4);
-  border-radius: 9999px;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
   font-size: var(--font-base);
   color: var(--text-primary);
@@ -405,7 +405,7 @@ select.pipeline-filter-input {
 /* preset filter pill */
 .preset-btn {
   padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  border-radius: 6px;
   border: 1px solid var(--border-color);
   background-color: transparent;
   color: var(--text-secondary);
@@ -434,7 +434,7 @@ select.pipeline-filter-input {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1.125rem;
-  border-radius: 9999px;
+  border-radius: 8px;
   border: none;
   background-color: var(--petroleum-blue);
   color: #ffffff;
@@ -457,7 +457,7 @@ select.pipeline-filter-input {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1.125rem;
-  border-radius: 9999px;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   color: var(--text-primary);
@@ -513,7 +513,7 @@ select.pipeline-filter-input {
   gap: 0.625rem;
   padding: 0.25rem 0.75rem 0.25rem 0.875rem;
   border: 1px solid var(--border-color);
-  border-radius: 9999px;
+  border-radius: 8px;
   background-color: var(--bg-secondary);
   height: 2.25rem;
   box-sizing: border-box;
@@ -686,7 +686,7 @@ select.pipeline-filter-input {
 
 .temp-pill-btn {
   padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  border-radius: 6px;
   border: 1px solid var(--border-color);
   background-color: transparent;
   color: var(--text-secondary);
