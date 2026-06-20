@@ -78,7 +78,12 @@ const Sidebar: FC<SidebarProps> = () => {
     }, []);
 
     const permissions = getUserPermissions();
-    const can = (perm: string) => hasPermission(permissions, [perm]);
+    const can = (perm: string) => {
+        if (perm === 'gestao_campos_personalizados') {
+            return hasPermission(permissions, ['gestao_campos_personalizados', 'gestão_campos_personalizados']);
+        }
+        return hasPermission(permissions, [perm]);
+    };
 
     // Active Checks
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);

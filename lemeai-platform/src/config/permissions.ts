@@ -19,7 +19,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/dias-uteis': ['dias_funcionamento'],
   '/empresas': ['gestao_empresas'],
   '/gerenciar-planos': ['gerenciar_planos'],
-  '/campos-personalizados': ['gestao_campos_personalizados'],
+  '/campos-personalizados': ['gestao_campos_personalizados', 'gestão_campos_personalizados'],
 };
 
 export const PUBLIC_ROUTES = [
