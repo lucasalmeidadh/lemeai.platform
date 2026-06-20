@@ -9,11 +9,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 20px;
+    padding: 12px;
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 99px;
-    /* Pill shape */
+    border-radius: 8px;
+    /* Matches standard inputs */
     color: var(--text-primary);
     font-size: 0.9rem;
     font-weight: 500;
