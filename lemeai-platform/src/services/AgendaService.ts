@@ -10,6 +10,8 @@ export interface AgendaEvent {
     contatoId?: number;
     detalhes?: string;
     dataCriacao?: string;
+    googleEventId?: string | null;
+    sincronizadoGoogle?: boolean;
 }
 
 export interface CreateEventDTO {
@@ -18,16 +20,29 @@ export interface CreateEventDTO {
     dataFim: string;
     contatoId?: number;
     detalhes?: string;
+    sincronizarGoogle?: boolean;
 }
 
-export interface UpdateEventDTO extends CreateEventDTO {
+export interface UpdateEventDTO {
     agendaId: number;
+    descricao: string;
+    dataInicio: string;
+    dataFim: string;
+    contatoId?: number;
+    detalhes?: string;
 }
 
 export interface AgendaResponse<T> {
     sucesso: boolean;
     mensagem: string;
     dados: T;
+}
+
+export interface SincronizarAgendaResultado {
+    eventosCriadosNoGoogle: number;
+    eventosCriadosNaAgenda: number;
+    eventosAtualizados: number;
+    eventosRemovidos: number;
 }
 
 export const AgendaService = {
@@ -76,6 +91,15 @@ export const AgendaService = {
     async remove(id: number): Promise<AgendaResponse<null>> {
         const response = await apiFetch(`${apiUrl}/api/Agenda/Remover/${id}`, {
             method: 'DELETE'
+        });
+        return await response.json();
+    },
+
+    async sincronizar(dataInicio: string, dataFim: string): Promise<AgendaResponse<SincronizarAgendaResultado>> {
+        const response = await apiFetch(`${apiUrl}/api/Agenda/Sincronizar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dataInicio, dataFim })
         });
         return await response.json();
     },

@@ -32,6 +32,7 @@ import NovidadesPage from './pages/NovidadesPage.tsx';
 import ReportsPage from './pages/ReportsPage.tsx';
 import CampaignReportsPage from './pages/CampaignReportsPage.tsx';
 import CamposPersonalizadosPage from './pages/CamposPersonalizadosPage.tsx';
+import GoogleCalendarCallbackPage from './pages/GoogleCalendarCallbackPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -40,6 +41,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Login /> },
       { path: "login", element: <Login /> },
+      { path: "integracoes/google/callback", element: <GoogleCalendarCallbackPage /> },
       {
         element: <MainLayout />,
         children: [
