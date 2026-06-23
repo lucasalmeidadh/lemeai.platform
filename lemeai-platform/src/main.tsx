@@ -4,6 +4,7 @@ import App from './App.tsx';
 import PermissionGuard from './components/PermissionGuard.tsx';
 import MainLayout from './components/MainLayout.tsx';
 import Login from './pages/Login.tsx';
+import OnboardingPage from './pages/OnboardingPage.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import ContactsPage from './pages/ContactsPage.tsx';
 import PipelinePage from './pages/PipelinePage.tsx';
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Login /> },
       { path: "login", element: <Login /> },
+      { path: "cadastro", element: <OnboardingPage /> },
       { path: "integracoes/google/callback", element: <GoogleCalendarCallbackPage /> },
       {
         element: <MainLayout />,

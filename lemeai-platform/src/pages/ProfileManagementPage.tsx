@@ -36,6 +36,32 @@ interface Permission {
   nomeTela: string;
 }
 
+const PERMISSION_LABELS: Record<string, string> = {
+  gbcode_admin_sistema: 'Administrador do Sistema',
+  gestao_vendas: 'Gestão de Vendas - Admin',
+  painel_operacional: 'Painel Operacional',
+  agenda: 'Agenda',
+  chat: 'Chat',
+  fluxo_vendas: 'Fluxo de Vendas',
+  contatos: 'Contatos',
+  marketing_disparador: 'Marketing Disparador',
+  marketing_templates: 'Marketing Templates',
+  relatorio_vendas: 'Relatórios Vendas',
+  relatorio_campanhas: 'Relatório Campanhas',
+  gestao_usuarios: 'Gestão de Usuários',
+  gestao_perfis: 'Gestão de Perfis',
+  gestao_equipes: 'Gestão de Equipes',
+  gestao_metas: 'Gestão de Metas',
+  regras_chatbot: 'Gestão de Regras',
+  gestao_produtos: 'Gestão de Produtos',
+  gestao_conexoes: 'Gestão de Conexões',
+  dias_funcionamento: 'Dias de Funcionamento',
+  gestao_empresas: 'Gestão de Empresas',
+  gerenciar_planos: 'Gerenciar Planos',
+  gestao_vendas_vendedor: 'Gestão de Vendas - Vendedor',
+  gestão_campos_personalizados: 'Campos Personalizados',
+};
+
 const getPermissionIcon = (name: string) => {
   const lowerName = name.toLowerCase();
   if (lowerName.includes('painel') || lowerName.includes('dashboard')) return <FaTachometerAlt />;
@@ -407,7 +433,7 @@ const ProfileManagementPage = () => {
                       <div className="permission-label">
                         {getPermissionIcon(perm.nomePermissao)}
                         <div>
-                          <strong>{perm.nomeTela}</strong>
+                          <strong>{PERMISSION_LABELS[perm.nomePermissao] || perm.nomeTela || perm.nomePermissao}</strong>
                           <span className="technical-code">{perm.nomePermissao}</span>
                         </div>
                       </div>
@@ -476,7 +502,7 @@ const ProfileManagementPage = () => {
                         <td>
                           <div className="catalogue-name-cell">
                             {getPermissionIcon(perm.nomePermissao)}
-                            <span>{perm.nomeTela}</span>
+                            <span>{PERMISSION_LABELS[perm.nomePermissao] || perm.nomeTela || perm.nomePermissao}</span>
                           </div>
                         </td>
                         <td><code>{perm.nomePermissao}</code></td>

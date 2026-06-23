@@ -164,6 +164,35 @@ body, html {
 .btn-submit:active:not(:disabled) { transform: translateY(0); }
 .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; }
 
+/* ── Lembrar-me ── */
+.login-options-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-me-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border-color);
+  accent-color: var(--petroleum-blue);
+  cursor: pointer;
+}
+
 /* ── Erro ── */
 .error-alert {
   padding: 12px 16px;
@@ -360,3 +389,21 @@ body, html {
     padding: 2rem 1.25rem;
   }
 }
+
+.login-onboarding-link {
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin-top: 1.25rem;
+}
+
+.login-onboarding-link a {
+  color: var(--petroleum-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-onboarding-link a:hover {
+  text-decoration: underline;
+}
+
