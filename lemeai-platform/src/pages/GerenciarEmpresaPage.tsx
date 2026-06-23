@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { FaCalendarCheck, FaCheckCircle, FaTimesCircle, FaCalendarWeek, FaBuilding, FaCamera, FaPen, FaTimes } from 'react-icons/fa';
 import GerenciarEmpresaService, { DEFAULT_DIAS_UTEIS, getMidiaUrl, type DiasUteis, type DadosGeraisEmpresa, type AtualizarDadosGeraisDTO } from '../services/GerenciarEmpresaService';
 import LogoCropModal from '../components/LogoCropModal';
+import LandingPageConfigTab from '../components/LandingPageConfigTab';
 import './GerenciarEmpresaPage.css';
 
 const LOGO_MIN_DIMENSION = 64;
@@ -358,6 +359,20 @@ const GerenciarEmpresaPage = () => {
             })}
           </div>
         )}
+      </div>
+
+      {/* Página de Captura Card */}
+      <div className="gerenciar-empresa-card">
+        <div className="gerenciar-empresa-card-header">
+          <div className="gerenciar-empresa-card-header-icon">
+            <FaBuilding />
+          </div>
+          <div className="gerenciar-empresa-card-header-text">
+            <h3>Página de Captura e QR Code</h3>
+            <p>Configure a página pública e o cupom de desconto para capturar contatos na loja física.</p>
+          </div>
+        </div>
+        <LandingPageConfigTab />
       </div>
 
       {pendingLogoFile && (

@@ -84,6 +84,44 @@ const GerenciarEmpresaService = {
     if (!data.sucesso) throw new Error(data.mensagem);
     return data.dados;
   },
+
+  getLandingPageConfig: async (): Promise<any> => {
+    const res = await apiFetch(`${API_URL}/api/empresa/landing-page-config`);
+    const data = await res.json();
+    if (!data.sucesso) throw new Error(data.mensagem);
+    return data.dados;
+  },
+
+  updateLandingPageConfig: async (dados: any): Promise<void> => {
+    const res = await apiFetch(`${API_URL}/api/empresa/landing-page-config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados),
+    });
+    const data = await res.json();
+    if (!data.sucesso) throw new Error(data.mensagem);
+  },
+
+  updateLandingPageLogo: async (arquivo: File): Promise<{ caminhoRelativo: string }> => {
+    const formData = new FormData();
+    formData.append('logo', arquivo);
+    const res = await apiFetch(`${API_URL}/api/empresa/landing-page-config/logo`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (!data.sucesso) throw new Error(data.mensagem);
+    return data.dados;
+  },
+
+  generateLandingPageToken: async (): Promise<any> => {
+    const res = await apiFetch(`${API_URL}/api/empresa/landing-page-config/generate-token`, {
+      method: 'POST',
+    });
+    const data = await res.json();
+    if (!data.sucesso) throw new Error(data.mensagem);
+    return data.dados;
+  },
 };
 
 export default GerenciarEmpresaService;

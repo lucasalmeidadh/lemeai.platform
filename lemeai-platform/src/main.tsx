@@ -34,6 +34,7 @@ import ReportsPage from './pages/ReportsPage.tsx';
 import CampaignReportsPage from './pages/CampaignReportsPage.tsx';
 import CamposPersonalizadosPage from './pages/CamposPersonalizadosPage.tsx';
 import GoogleCalendarCallbackPage from './pages/GoogleCalendarCallbackPage.tsx';
+import PublicLandingPage from './pages/PublicLandingPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -43,6 +44,7 @@ const router = createBrowserRouter([
       { path: "/", element: <Login /> },
       { path: "login", element: <Login /> },
       { path: "cadastro", element: <OnboardingPage /> },
+      { path: "p/:token", element: <PublicLandingPage /> },
       { path: "integracoes/google/callback", element: <GoogleCalendarCallbackPage /> },
       {
         element: <MainLayout />,
