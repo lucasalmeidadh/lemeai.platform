@@ -1,43 +1,54 @@
 /* ARQUIVO: src/components/ContactModal.css */
 
-.modal-overlay {
+.contact-drawer-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.6);
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-end;
+    align-items: stretch;
     z-index: 1000;
     animation: fadeIn 0.3s ease;
 }
 
-.contact-modal-content {
+.contact-drawer-content {
     background-color: var(--bg-secondary);
-    border-radius: 16px;
     width: 100%;
-    max-width: 600px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    animation: slideIn 0.4s ease;
+    max-width: min(32rem, 94vw);
+    height: 100vh;
+    height: 100dvh;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.25);
+    animation: comSlideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-.contact-modal-header {
+@keyframes comSlideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.contact-drawer-header {
     padding: 20px 30px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
-.contact-modal-header h2 {
+.contact-drawer-header h2 {
     margin: 0;
     font-size: 20px;
     color: var(--text-primary);
 }
 
-.contact-close-button {
+.contact-drawer-close-button {
     background: transparent;
     border: none;
     font-size: 20px;
@@ -51,23 +62,26 @@
     border-radius: 8px;
 }
 
-.contact-close-button svg {
+.contact-drawer-close-button svg {
     fill: currentColor;
     color: inherit;
 }
 
-.contact-close-button:hover {
+.contact-drawer-close-button:hover {
     color: var(--text-primary);
     background-color: var(--bg-tertiary);
 }
 
-.contact-modal-content form {
-    padding: 30px;
+.contact-drawer-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 20px;
 }
 
@@ -111,13 +125,13 @@
     box-shadow: 0 0 0 3px rgba(0, 95, 115, 0.1);
 }
 
-.modal-footer {
+.contact-drawer-footer {
     padding: 20px 30px;
     border-top: 1px solid var(--border-color);
-    /* Was #e9ecef */
     display: flex;
     justify-content: flex-end;
     gap: 15px;
+    flex-shrink: 0;
 }
 
 .button {
@@ -177,10 +191,17 @@
     }
 }
 
+.contact-drawer-body {
+    padding: 24px 30px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .form-fieldset {
-    border: 1px solid var(--border-color-soft);
-    border-radius: 8px;
-    padding: 20px;
+    border: none;
+    padding: 0;
     margin: 0;
 }
 
@@ -189,8 +210,8 @@
     opacity: 0.7;
 }
 
-/* Contact Modal Tabs */
-.contact-modal-tabs {
+/* Contact Drawer Tabs */
+.contact-drawer-tabs {
     display: flex;
     padding: 10px 30px 0;
     border-bottom: 1px solid var(--border-color);
@@ -222,8 +243,10 @@
 /* Modal Attachments Content */
 .modal-attachments-content {
     padding: 30px;
-    max-height: 400px;
+    flex: 1;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .contact-attachments-grid {

@@ -27,6 +27,14 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSave, co
         nome: '',
         telefone: '',
         email: '',
+        segment: '',
+        cep: '',
+        street: '',
+        number: '',
+        complement: '',
+        neighborhood: '',
+        city: '',
+        state: '',
     });
 
     const [formData, setFormData] = useState<CreateContactDTO>(getInitialState());
@@ -37,6 +45,14 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSave, co
                 nome: contactToEdit.nome,
                 telefone: contactToEdit.telefone,
                 email: contactToEdit.email || '',
+                segment: contactToEdit.segment || '',
+                cep: contactToEdit.cep || '',
+                street: contactToEdit.street || '',
+                number: contactToEdit.number || '',
+                complement: contactToEdit.complement || '',
+                neighborhood: contactToEdit.neighborhood || '',
+                city: contactToEdit.city || '',
+                state: contactToEdit.state || '',
             });
             if (activeTab === 'attachments') {
                 fetchAttachments();
@@ -128,7 +144,34 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSave, co
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawCep = e.target.value.replace(/\D/g, '');
+        setFormData(prev => ({ ...prev, cep: rawCep }));
+
+        if (rawCep.length === 8) {
+            const toastId = toast.loading('Buscando CEP...');
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${rawCep}/json/`);
+                const data = await response.json();
+                if (data.erro) {
+                    toast.error('CEP não encontrado.', { id: toastId });
+                    return;
+                }
+                setFormData(prev => ({
+                    ...prev,
+                    street: data.logradouro || '',
+                    neighborhood: data.bairro || '',
+                    city: data.localidade || '',
+                    state: data.uf || '',
+                }));
+                toast.success('Endereço preenchido!', { id: toastId });
+            } catch (err) {
+                toast.error('Erro ao buscar CEP.', { id: toastId });
+            }
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -145,17 +188,17 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSave, co
     if (!isOpen) return null;
 
     return (
-        <div className="modal-overlay">
-            <div className="contact-modal-content">
-                <header className="contact-modal-header">
+        <div className="contact-drawer-overlay" onClick={onClose}>
+            <div className="contact-drawer-content" onClick={e => e.stopPropagation()}>
+                <header className="contact-drawer-header">
                     <h2>{contactToEdit ? 'Editar Contato' : 'Adicionar Novo Contato'}</h2>
-                    <button onClick={onClose} className="contact-close-button" disabled={isSaving} type="button">
+                    <button onClick={onClose} className="contact-drawer-close-button" disabled={isSaving} type="button">
                         <FaTimes />
                     </button>
                 </header>
 
                 {contactToEdit && (
-                    <div className="contact-modal-tabs">
+                    <div className="contact-drawer-tabs">
                         <button 
                             className={`modal-tab-btn ${activeTab === 'info' ? 'active' : ''}`}
                             onClick={() => setActiveTab('info')}
@@ -174,34 +217,76 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSave, co
                 )}
 
                 {activeTab === 'info' ? (
-                    <form onSubmit={handleSubmit}>
-                    <fieldset disabled={isSaving} className="form-fieldset">
-                        <div className="form-grid">
-                            <div className="form-group full-width">
-                                <label htmlFor="nome">Nome Completo</label>
-                                <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} required />
-                            </div>
+                    <form onSubmit={handleSubmit} className="contact-drawer-form">
+                        <div className="contact-drawer-body">
+                            <fieldset disabled={isSaving} className="form-fieldset">
+                                <div className="form-grid">
+                                    <div className="form-group full-width">
+                                        <label htmlFor="nome">Nome Completo</label>
+                                        <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} required />
+                                    </div>
 
-                            <div className="form-group full-width">
-                                <label htmlFor="telefone">Telefone</label>
-                                <input type="text" id="telefone" name="telefone" value={formData.telefone} onChange={handleChange} required />
-                            </div>
+                                    <div className="form-group full-width">
+                                        <label htmlFor="telefone">Telefone</label>
+                                        <input type="text" id="telefone" name="telefone" value={formData.telefone} onChange={handleChange} required />
+                                    </div>
 
-                            <div className="form-group full-width">
-                                <label htmlFor="email">E-mail</label>
-                                <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} />
-                            </div>
+                                    <div className="form-group full-width">
+                                        <label htmlFor="email">E-mail</label>
+                                        <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} />
+                                    </div>
+
+                                    <div className="form-group full-width">
+                                        <label htmlFor="segment">Segmento</label>
+                                        <input type="text" id="segment" name="segment" value={formData.segment || ''} onChange={handleChange} placeholder="Ex: Varejo" />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="cep">CEP</label>
+                                        <input type="text" id="cep" name="cep" value={formData.cep || ''} onChange={handleCepChange} maxLength={9} placeholder="00000-000" />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="street">Rua</label>
+                                        <input type="text" id="street" name="street" value={formData.street || ''} onChange={handleChange} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="number">Número</label>
+                                        <input type="text" id="number" name="number" value={formData.number || ''} onChange={handleChange} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="complement">Complemento</label>
+                                        <input type="text" id="complement" name="complement" value={formData.complement || ''} onChange={handleChange} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="neighborhood">Bairro</label>
+                                        <input type="text" id="neighborhood" name="neighborhood" value={formData.neighborhood || ''} onChange={handleChange} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="city">Cidade</label>
+                                        <input type="text" id="city" name="city" value={formData.city || ''} onChange={handleChange} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="state">Estado (UF)</label>
+                                        <input type="text" id="state" name="state" value={formData.state || ''} onChange={handleChange} maxLength={2} />
+                                    </div>
+                                </div>
+                            </fieldset>
                         </div>
-                    </fieldset>
-                    <footer className="modal-footer">
-                        <button type="button" className="button secondary" onClick={onClose} disabled={isSaving}>
-                            Cancelar
-                        </button>
-                        <button type="submit" className="button primary" disabled={isSaving}>
-                            {isSaving ? 'Salvando...' : 'Salvar Contato'}
-                        </button>
-                    </footer>
-                </form>
+                        <footer className="contact-drawer-footer">
+                            <button type="button" className="button secondary" onClick={onClose} disabled={isSaving}>
+                                Cancelar
+                            </button>
+                            <button type="submit" className="button primary" disabled={isSaving}>
+                                {isSaving ? 'Salvando...' : 'Salvar Contato'}
+                            </button>
+                        </footer>
+                    </form>
                 ) : (
                     <div className="modal-attachments-content">
                         <div className="modal-upload-section">
