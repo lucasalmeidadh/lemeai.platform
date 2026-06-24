@@ -437,13 +437,13 @@ const ProfileManagementPage = () => {
                           <span className="technical-code">{perm.nomePermissao}</span>
                         </div>
                       </div>
-                      <label className="switch">
+                      <label className="profile-switch">
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handlePermissionToggle(perm.idPermissao)}
                         />
-                        <span className="slider round"></span>
+                        <span className="profile-slider round"></span>
                       </label>
                     </div>
                   );
