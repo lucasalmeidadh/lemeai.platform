@@ -249,15 +249,20 @@ const LandingPageConfigTab = () => {
           <p className="section-description">Defina o prêmio ou incentivo para quem realizar o cadastro completo na loja.</p>
 
           <div className="form-group checkbox-group">
-            <label className="switch-label">
-              <input
-                type="checkbox"
-                checked={promoActive}
-                onChange={(e) => setPromoActive(e.target.checked)}
-              />
-              <span className="slider"></span>
-              Ativar exibição de cupom / desconto
-            </label>
+            <div className="landing-page-switch-container">
+              <label className="landing-page-switch">
+                <input
+                  type="checkbox"
+                  className="landing-page-switch-input"
+                  checked={promoActive}
+                  onChange={(e) => setPromoActive(e.target.checked)}
+                />
+                <span className="landing-page-switch-slider"></span>
+              </label>
+              <span className="landing-page-switch-text" onClick={() => setPromoActive(!promoActive)}>
+                Ativar exibição de cupom / desconto
+              </span>
+            </div>
           </div>
 
           {promoActive && (

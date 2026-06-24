@@ -226,31 +226,50 @@ h3 {
   margin-bottom: 1.5rem;
 }
 
-.switch-label {
+/* Switch styling */
+.checkbox-group {
+  margin-bottom: 1.5rem;
+}
+
+.landing-page-switch-container {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  cursor: pointer;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
   user-select: none;
 }
 
-.switch-label input {
-  display: none;
-}
-
-.slider {
+.landing-page-switch {
+  position: relative;
+  display: inline-block;
   width: 44px;
   height: 24px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.landing-page-switch-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.landing-page-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  position: relative;
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-.slider::before {
+.landing-page-switch-slider::before {
   content: "";
   position: absolute;
   width: 18px;
@@ -262,14 +281,20 @@ h3 {
   transition: transform 0.2s, background-color 0.2s;
 }
 
-.switch-label input:checked + .slider {
+.landing-page-switch-input:checked + .landing-page-switch-slider {
   background-color: var(--petroleum-blue);
   border-color: var(--petroleum-blue);
 }
 
-.switch-label input:checked + .slider::before {
+.landing-page-switch-input:checked + .landing-page-switch-slider::before {
   transform: translateX(20px);
   background-color: #ffffff;
+}
+
+.landing-page-switch-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  cursor: pointer;
 }
 
 .promo-fields {

@@ -34,6 +34,21 @@ const PublicLandingPage = () => {
     }
   }, [token]);
 
+  useEffect(() => {
+    // Permite scroll no body nesta pagina publica
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.overflow = 'auto';
+    
+    return () => {
+      // Restaura o overflow original ao desmontar
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, []);
+
   const loadPageConfig = async () => {
     try {
       const data = await PublicLandingPageService.getPageDetails(token!);

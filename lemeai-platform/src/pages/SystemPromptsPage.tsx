@@ -158,6 +158,18 @@ const SystemPromptsPage = () => {
     };
 
     const addSuggestedRule = async (text: string) => {
+        if (!configId) {
+            setRules(prev => [
+                ...prev,
+                {
+                    id: -Date.now() - Math.random(),
+                    descricaoRegra: text,
+                    ordem: prev.length + 1
+                }
+            ]);
+            toast.success('Regra adicionada localmente!');
+            return;
+        }
         try {
             const response = await RegrasIAService.create({
                 descricaoRegra: text,
@@ -197,6 +209,7 @@ const SystemPromptsPage = () => {
         setIsLoading(true);
         try {
             const response = await RegrasIAService.getConfigAgente();
+            console.log("loadConfig response:", response);
             if (response.sucesso && response.dados) {
                 const data = response.dados;
                 setConfigId(data.id);
@@ -323,6 +336,32 @@ const SystemPromptsPage = () => {
         }
 
         try {
+            if (!configId) {
+                if (currentRule) {
+                    // Editando localmente
+                    setRules(prev => prev.map(r => r.id === currentRule.id ? { ...r, descricaoRegra: ruleText } : r));
+                    toast.success('Regra atualizada localmente!');
+                } else {
+                    // Criando localmente
+                    setRules(prev => [
+                        ...prev,
+                        {
+                            id: -Date.now() - Math.random(),
+                            descricaoRegra: ruleText,
+                            ordem: prev.length + 1
+                        }
+                    ]);
+                    toast.success('Regra adicionada localmente!');
+                    
+                    // Ir para a última página
+                    setTimeout(() => {
+                        setRulesPage(Math.ceil((rules.length + 1) / rulesPerPage));
+                    }, 0);
+                }
+                handleCloseModal();
+                return;
+            }
+
             if (currentRule) {
                 // Edit
                 const response = await RegrasIAService.update({
