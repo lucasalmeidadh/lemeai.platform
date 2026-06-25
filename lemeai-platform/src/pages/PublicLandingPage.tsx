@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { FaBuilding, FaTicketAlt, FaCheckCircle, FaUser, FaPhone, FaEnvelope, FaMapMarkerAlt, FaBookmark } from 'react-icons/fa';
 import PublicLandingPageService, { type PublicPageDetails } from '../services/PublicLandingPageService';
 import { getMidiaUrl } from '../services/GerenciarEmpresaService';
+import CustomSelect from '../components/CustomSelect';
 import './PublicLandingPage.css';
 
 const PublicLandingPage = () => {
@@ -19,7 +20,8 @@ const PublicLandingPage = () => {
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
-  const [segment, setSegment] = useState('');
+  const [comoConheceu, setComoConheceu] = useState('');
+  const [comoConheceuOutros, setComoConheceuOutros] = useState('');
   const [cep, setCep] = useState('');
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
@@ -49,13 +51,21 @@ const PublicLandingPage = () => {
     };
   }, []);
 
+  const defaultSegments = [
+    'Hotéis / Pousada',
+    'Instagram',
+    'Já conhecia a loja',
+    'CAT',
+    'Pontos turísticos da cidade',
+    'Outros'
+  ];
+
   const loadPageConfig = async () => {
     try {
       const data = await PublicLandingPageService.getPageDetails(token!);
       setConfig(data);
-      if (data.configuredSegments && data.configuredSegments.length > 0) {
-        setSegment(data.configuredSegments[0]);
-      }
+      const segmentsList = data.configuredSegments && data.configuredSegments.length > 0 ? data.configuredSegments : defaultSegments;
+      setComoConheceu(segmentsList[0] || '');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao carregar a página.');
     } finally {
@@ -114,18 +124,19 @@ const PublicLandingPage = () => {
 
     setSubmitting(true);
     try {
+      const segmentValue = comoConheceu === 'Outros' ? comoConheceuOutros : comoConheceu;
       const result = await PublicLandingPageService.registerContact(token!, {
         nome,
         telefone,
         email: email || undefined,
-        segment: segment || undefined,
-        cep: cep || undefined,
-        street: street || undefined,
-        number: number || undefined,
-        complement: complement || undefined,
-        neighborhood: neighborhood || undefined,
+        segment: segmentValue || undefined,
+        cep: undefined,
+        street: undefined,
+        number: undefined,
+        complement: undefined,
+        neighborhood: undefined,
         city: city || undefined,
-        state: state || undefined
+        state: undefined
       });
 
       setPromoCode(result.promoCode);
@@ -165,8 +176,8 @@ const PublicLandingPage = () => {
     '--primary-hover-color': config.primaryColor ? `${config.primaryColor}dd` : '#0a5c5add'
   } as React.CSSProperties;
 
-  const defaultSegments = ['Varejo', 'Tecnologia', 'Alimentos', 'Serviços', 'Outros'];
-  const segmentsList = config.configuredSegments.length > 0 ? config.configuredSegments : defaultSegments;
+  const segmentsList = config.configuredSegments && config.configuredSegments.length > 0 ? config.configuredSegments : defaultSegments;
+  const selectOptions = segmentsList.map(seg => ({ value: seg, label: seg }));
 
   return (
     <div className="public-landing-container" style={themeStyles}>
@@ -217,21 +228,6 @@ const PublicLandingPage = () => {
               </div>
 
               <div className="form-field">
-                <label htmlFor="segmento-select"><FaBookmark /> Segmento de Interesse</label>
-                <select
-                  id="segmento-select"
-                  value={segment}
-                  onChange={(e) => setSegment(e.target.value)}
-                >
-                  {segmentsList.map((seg, idx) => (
-                    <option key={idx} value={seg}>{seg}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group-row">
-              <div className="form-field">
                 <label htmlFor="email-input"><FaEnvelope /> E-mail (Opcional)</label>
                 <input
                   id="email-input"
@@ -243,89 +239,49 @@ const PublicLandingPage = () => {
               </div>
             </div>
 
+            <div className="form-group-row">
+              <div className="form-field">
+                <label htmlFor="como-conheceu-select"><FaBookmark /> Como conheceu a {config.branchName}?</label>
+                <CustomSelect
+                  options={selectOptions}
+                  value={comoConheceu}
+                  onChange={setComoConheceu}
+                  placeholder="Selecione uma opção..."
+                />
+              </div>
+            </div>
+
+            {comoConheceu === 'Outros' && (
+              <div className="form-group-row fade-in">
+                <div className="form-field">
+                  <label htmlFor="como-conheceu-outros-input">Digite aqui como nos conheceu</label>
+                  <input
+                    id="como-conheceu-outros-input"
+                    type="text"
+                    placeholder="Especifique..."
+                    value={comoConheceuOutros}
+                    onChange={(e) => setComoConheceuOutros(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Seção de Endereço */}
             <div className="address-section-header">
               <FaMapMarkerAlt />
-              <span>Endereço de Entrega/Contato</span>
+              <span>Cidade</span>
             </div>
 
-            <div className="form-group-row triple-fields">
+            <div className="form-group-row">
               <div className="form-field">
-                <label htmlFor="cep-input">CEP</label>
-                <input
-                  id="cep-input"
-                  type="text"
-                  placeholder="00000-000"
-                  value={cep}
-                  maxLength={9}
-                  onChange={handleCepChange}
-                />
-              </div>
-              <div className="form-field span-2">
-                <label htmlFor="rua-input">Rua / Logradouro</label>
-                <input
-                  id="rua-input"
-                  type="text"
-                  placeholder="Rua, Avenida..."
-                  value={street}
-                  onChange={(e) => setStreet(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="form-group-row double-fields">
-              <div className="form-field">
-                <label htmlFor="numero-input">Número</label>
-                <input
-                  id="numero-input"
-                  type="text"
-                  placeholder="Nº"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="complemento-input">Complemento</label>
-                <input
-                  id="complemento-input"
-                  type="text"
-                  placeholder="Apto, Bloco..."
-                  value={complement}
-                  onChange={(e) => setComplement(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="form-group-row triple-fields">
-              <div className="form-field">
-                <label htmlFor="bairro-input">Bairro</label>
-                <input
-                  id="bairro-input"
-                  type="text"
-                  placeholder="Bairro"
-                  value={neighborhood}
-                  onChange={(e) => setNeighborhood(e.target.value)}
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="cidade-input">Cidade</label>
+                <label htmlFor="cidade-input">Cidade onde reside</label>
                 <input
                   id="cidade-input"
                   type="text"
-                  placeholder="Cidade"
+                  placeholder="Digite sua cidade"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="estado-input">Estado</label>
-                <input
-                  id="estado-input"
-                  type="text"
-                  placeholder="UF"
-                  value={state}
-                  maxLength={2}
-                  onChange={(e) => setState(e.target.value)}
                 />
               </div>
             </div>

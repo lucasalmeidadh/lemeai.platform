@@ -403,3 +403,62 @@ h3 {
 .fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
+
+.segments-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  min-height: 48px;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.segment-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color-soft);
+  color: var(--text-primary);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.segment-tag:hover {
+  border-color: var(--border-color);
+}
+
+.remove-tag-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.remove-tag-btn:hover {
+  color: var(--color-danger);
+}
+
+.add-segment-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.add-segment-wrapper input {
+  flex: 1;
+}

@@ -32,6 +32,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import '../components/DateRangeFilter.css';
 import '../components/Skeleton.css';
 import CustomSelect from '../components/CustomSelect';
+import { getUserPermissions, hasPermission } from '../config/permissions';
 import './DealDetailsPage.css';
 
 type DealProduct = ConversaProduto;
@@ -124,6 +125,9 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const DealDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const permissions = getUserPermissions();
+  const canManageCustomFields = hasPermission(permissions, ['gestao_campos_personalizados', 'gestão_campos_personalizados']);
 
   const [deal, setDeal] = useState<Deal | null>(null);
   const [isLoadingDeal, setIsLoadingDeal] = useState(true);
@@ -1940,6 +1944,15 @@ const DealDetailsPage = () => {
                     <FaListAlt className="empty-pane-icon" />
                     <p className="empty-pane-title">Nenhum campo personalizado cadastrado</p>
                     <p className="empty-pane-subtitle">Cadastre campos personalizados em Gestão &gt; Campos Personalizados para preenchê-los aqui.</p>
+                    {canManageCustomFields && (
+                      <button 
+                        className="btn-add-action-inline" 
+                        onClick={() => navigate('/campos-personalizados')}
+                        style={{ marginTop: '16px' }}
+                      >
+                        Criar Campo Personalizado
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

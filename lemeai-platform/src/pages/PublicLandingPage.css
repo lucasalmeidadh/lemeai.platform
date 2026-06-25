@@ -318,3 +318,52 @@
 .fade-in {
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* CustomSelect overrides inside the public landing page */
+.public-landing-container .custom-select-container {
+  width: 100%;
+}
+
+.public-landing-container .custom-select-trigger {
+  background: color-mix(in srgb, var(--text-color) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
+  color: var(--text-color);
+  height: 46px;
+  font-size: 0.95rem;
+}
+
+.public-landing-container .custom-select-trigger:hover {
+  background: color-mix(in srgb, var(--text-color) 10%, transparent);
+}
+
+.public-landing-container .custom-select-trigger.open {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--primary-color);
+  background: color-mix(in srgb, var(--text-color) 8%, transparent);
+}
+
+.public-landing-container .custom-select-dropdown {
+  background-color: color-mix(in srgb, var(--text-color) 8%, var(--bg-color));
+  border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+}
+
+.public-landing-container .custom-select-option {
+  color: color-mix(in srgb, var(--text-color) 80%, transparent);
+  background: transparent;
+}
+
+.public-landing-container .custom-select-option:hover {
+  background: color-mix(in srgb, var(--text-color) 10%, transparent);
+  color: var(--text-color);
+}
+
+.public-landing-container .custom-select-option.selected {
+  background-color: var(--primary-color);
+  color: #ffffff;
+}
+
+.public-landing-container .custom-select-arrow.open {
+  color: var(--primary-color);
+}

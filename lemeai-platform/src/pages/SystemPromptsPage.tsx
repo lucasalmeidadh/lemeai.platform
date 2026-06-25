@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaTrash, FaSave, FaLightbulb, FaBriefcase, FaTools, FaCalendarCheck, FaLock, FaEnvelope, FaBan, FaSmile, FaChevronLeft, FaChevronRight, FaComments, FaRocket, FaRobot } from 'react-icons/fa';
 import './SystemPromptsPage.css';
-import { RegrasIAService, type IARule, type ConfigAgente } from '../services/RegrasIAService';
+import { RegrasIAService, type IARule } from '../services/RegrasIAService';
 import SystemPromptsSkeleton from '../components/SystemPromptsSkeleton';
 import { TestAgentChat } from '../components/TestAgentChat';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -258,6 +258,7 @@ const SystemPromptsPage = () => {
             nome,
             descricaoCabecalho: headerText,
             descricaoRodape: footerText,
+            botAtivo,
             regras: rules
         };
 

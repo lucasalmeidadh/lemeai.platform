@@ -85,6 +85,8 @@ const ProfileManagementPage = () => {
   // Autenticação e Permissão de Admin de Sistema
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isSystemAdmin = user?.permissoes?.some((p: string) => p.includes('gbcode_admin_sistema')) || false;
+  const isGbCode = user?.empresaDescricao?.trim().toLowerCase() === 'gb code' || user?.empresaDescricao?.trim().toLowerCase() === 'gbcode';
+  const showCatalogueTab = isSystemAdmin && isGbCode;
 
   // Estados de navegação local
   const [activeTab, setActiveTab] = useState<'profiles' | 'catalogue'>('profiles');
@@ -225,10 +227,10 @@ const ProfileManagementPage = () => {
 
   // Monitora mudança de aba
   useEffect(() => {
-    if (activeTab === 'catalogue' && isSystemAdmin) {
+    if (activeTab === 'catalogue' && showCatalogueTab) {
       fetchGlobalCatalogue();
     }
-  }, [activeTab, isSystemAdmin, fetchGlobalCatalogue]);
+  }, [activeTab, showCatalogueTab, fetchGlobalCatalogue]);
 
   // Manipulador de mudança de checkbox de permissão
   const handlePermissionToggle = (permissionId: number) => {
@@ -368,7 +370,7 @@ const ProfileManagementPage = () => {
         <h1>Gestão de Perfis e Permissões</h1>
       </div>
 
-      {isSystemAdmin && (
+      {showCatalogueTab && (
         <div className="profile-tabs-nav">
           <button
             className={`tab-button ${activeTab === 'profiles' ? 'active' : ''}`}
@@ -394,7 +396,7 @@ const ProfileManagementPage = () => {
         </div>
       )}
 
-      {activeTab === 'profiles' ? (
+      {activeTab === 'profiles' || !showCatalogueTab ? (
         <div className="profile-layout">
           {/* Lista de Perfis */}
           <div className="profile-list-card">

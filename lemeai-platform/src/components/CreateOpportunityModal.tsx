@@ -41,6 +41,31 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
     const [observacao, setObservacao] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
+    const formatCurrency = (value: string | number) => {
+        if (value === '' || value === undefined || value === null) return '';
+
+        if (typeof value === 'number') {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        const onlyDigits = String(value).replace(/\D/g, '');
+        if (onlyDigits === '') return '';
+
+        const numberValue = Number(onlyDigits) / 100;
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(numberValue);
+    };
+
+    const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawValue = e.target.value;
+        setValor(formatCurrency(rawValue));
+    };
+
     const [camposPersonalizados, setCamposPersonalizados] = useState<CampoPersonalizado[]>([]);
     const [valoresCampos, setValoresCampos] = useState<Record<number, string>>({});
     const [isLoadingCampos, setIsLoadingCampos] = useState(false);
@@ -131,7 +156,11 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
                 : null,
             usuarioResponsavelId: null,
             tipoLeadId: tipoLeadId ? Number(tipoLeadId) : null,
-            valor: valor ? parseFloat(valor) : null,
+            valor: (() => {
+                if (!valor) return null;
+                const onlyDigits = valor.replace(/\D/g, '');
+                return onlyDigits ? Number(onlyDigits) / 100 : null;
+            })(),
             observacao: observacao.trim() || null,
             camposPersonalizados: camposPreenchidos.length > 0 ? camposPreenchidos : null,
         };
@@ -359,15 +388,13 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
                                             />
                                         </div>
                                         <div className="com-form-group com-full">
-                                            <label>Valor estimado (R$)</label>
+                                            <label>Valor estimado</label>
                                             <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
+                                                type="text"
                                                 className="com-input"
                                                 value={valor}
-                                                onChange={e => setValor(e.target.value)}
-                                                placeholder="0,00"
+                                                onChange={handleValorChange}
+                                                placeholder="R$ 0,00"
                                                 disabled={isSaving}
                                             />
                                         </div>

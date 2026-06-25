@@ -16,7 +16,8 @@ const LandingPageConfigTab = () => {
   const [promoCode, setPromoCode] = useState('');
   const [promoText, setPromoText] = useState('');
   const [promoActive, setPromoActive] = useState(false);
-  const [segmentsText, setSegmentsText] = useState('');
+  const [segmentsList, setSegmentsList] = useState<string[]>([]);
+  const [newSegmentInput, setNewSegmentInput] = useState('');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const qrRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,12 @@ const LandingPageConfigTab = () => {
       setPromoCode(data.promoCode || '');
       setPromoText(data.promoText || '');
       setPromoActive(data.promoActive || false);
-      setSegmentsText(data.configuredSegments || '');
+      
+      const defaultOptions = ['Hotéis / Pousada', 'Instagram', 'Já conhecia a loja', 'CAT', 'Pontos turísticos da cidade', 'Outros'];
+      const initialSegments = data.configuredSegments
+        ? data.configuredSegments.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : defaultOptions;
+      setSegmentsList(initialSegments);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao carregar configurações da página pública.');
     } finally {
@@ -45,9 +51,32 @@ const LandingPageConfigTab = () => {
     }
   };
 
+  const handleAddSegment = () => {
+    const value = newSegmentInput.trim();
+    if (!value) return;
+    if (segmentsList.includes(value)) {
+      toast.error('Esta opção já existe na lista!');
+      return;
+    }
+    setSegmentsList([...segmentsList, value]);
+    setNewSegmentInput('');
+  };
+
+  const handleKeyDownSegment = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSegment();
+    }
+  };
+
+  const handleRemoveSegment = (indexToRemove: number) => {
+    setSegmentsList(segmentsList.filter((_, idx) => idx !== indexToRemove));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
+      const segmentsText = segmentsList.join(', ');
       await GerenciarEmpresaService.updateLandingPageConfig({
         publicPagePrimaryColor: primaryColor,
         publicPageBackgroundColor: bgColor,
@@ -232,15 +261,39 @@ const LandingPageConfigTab = () => {
           </div>
 
           <div className="form-group segments-group">
-            <label htmlFor="segments-input">Segmentos para Seleção (Separados por vírgula)</label>
-            <input
-              id="segments-input"
-              type="text"
-              placeholder="Ex: Varejo, Tecnologia, Vestuário, Alimentos"
-              value={segmentsText}
-              onChange={(e) => setSegmentsText(e.target.value)}
-            />
-            <p className="input-hint">Estes segmentos aparecerão como um dropdown para o cliente escolher na página.</p>
+            <label>Opções de 'Como conheceu a empresa'</label>
+            <div className="segments-tags-container">
+              {segmentsList.map((seg, idx) => (
+                <span key={idx} className="segment-tag">
+                  {seg}
+                  <button
+                    type="button"
+                    className="remove-tag-btn"
+                    onClick={() => handleRemoveSegment(idx)}
+                    title="Remover opção"
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="add-segment-wrapper">
+              <input
+                type="text"
+                placeholder="Adicionar nova opção (ex: Facebook)"
+                value={newSegmentInput}
+                onChange={(e) => setNewSegmentInput(e.target.value)}
+                onKeyDown={handleKeyDownSegment}
+              />
+              <button
+                type="button"
+                className="button secondary btn-sm"
+                onClick={handleAddSegment}
+              >
+                + Adicionar
+              </button>
+            </div>
+            <p className="input-hint">Estas opções aparecerão em um dropdown de "Como conheceu" para o cliente escolher na página de captura.</p>
           </div>
 
           <hr className="divider" />
