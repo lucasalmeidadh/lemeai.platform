@@ -14,6 +14,27 @@ export interface TipoUsuarioDto {
   canReceiveLead: boolean;
 }
 
+export interface ImpactoExclusaoUsuario {
+  userId: number;
+  userName: string;
+  userEmail: string;
+}
+
+export interface ImpactoExclusaoPermissao {
+  idPermissao: number;
+  nomePermissao: string;
+  nomeTela: string;
+}
+
+export interface ImpactoExclusao {
+  tipoUsuarioId: number;
+  tipoUsuarioNome: string;
+  podeExcluir: boolean;
+  motivoBloqueio: string | null;
+  usuarios: ImpactoExclusaoUsuario[];
+  permissoes: ImpactoExclusaoPermissao[];
+}
+
 const TipoUsuarioService = {
   buscarTodos: async (): Promise<TipoUsuario[]> => {
     const res = await apiFetch(`${API_URL}/api/TipoUsuario/BuscarTodos`);
@@ -39,6 +60,13 @@ const TipoUsuarioService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dto),
     });
+    const data = await res.json();
+    if (!data.sucesso) throw new Error(data.mensagem);
+    return data.dados;
+  },
+
+  impactoExclusao: async (id: number): Promise<ImpactoExclusao> => {
+    const res = await apiFetch(`${API_URL}/api/TipoUsuario/ImpactoExclusao/${id}`);
     const data = await res.json();
     if (!data.sucesso) throw new Error(data.mensagem);
     return data.dados;

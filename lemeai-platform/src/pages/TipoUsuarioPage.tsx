@@ -5,8 +5,10 @@ import {
   FaCheckCircle, FaTimesCircle, FaUserShield, FaRobot, FaUserTag,
 } from 'react-icons/fa';
 import TipoUsuarioFormModal from '../components/TipoUsuarioFormModal';
-import ConfirmationModal from '../components/ConfirmationModal';
-import TipoUsuarioService, { type TipoUsuario, type TipoUsuarioDto } from '../services/TipoUsuarioService';
+import TipoUsuarioDeleteImpactModal from '../components/TipoUsuarioDeleteImpactModal';
+import TipoUsuarioService, {
+  type TipoUsuario, type TipoUsuarioDto, type ImpactoExclusao,
+} from '../services/TipoUsuarioService';
 import '../pages/UserManagementPage.css';
 import './TipoUsuarioPage.css';
 
@@ -23,7 +25,9 @@ const TipoUsuarioPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tipoToEdit, setTipoToEdit] = useState<TipoUsuario | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [tipoToDeleteId, setTipoToDeleteId] = useState<number | null>(null);
+  const [tipoToDelete, setTipoToDelete] = useState<TipoUsuario | null>(null);
+  const [impacto, setImpacto] = useState<ImpactoExclusao | null>(null);
+  const [isLoadingImpacto, setIsLoadingImpacto] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -73,13 +77,33 @@ const TipoUsuarioPage = () => {
     }
   };
 
+  const handleCloseDeleteModal = () => {
+    setTipoToDelete(null);
+    setImpacto(null);
+  };
+
+  const handleDeleteClick = async (tipo: TipoUsuario) => {
+    setTipoToDelete(tipo);
+    setImpacto(null);
+    setIsLoadingImpacto(true);
+    try {
+      const data = await TipoUsuarioService.impactoExclusao(tipo.id);
+      setImpacto(data);
+    } catch (err: any) {
+      toast.error(err.message ?? 'Erro ao verificar impacto da exclusão.');
+      handleCloseDeleteModal();
+    } finally {
+      setIsLoadingImpacto(false);
+    }
+  };
+
   const handleConfirmDelete = async () => {
-    if (tipoToDeleteId === null) return;
+    if (!tipoToDelete) return;
     setIsDeleting(true);
     try {
-      await TipoUsuarioService.deletar(tipoToDeleteId);
+      await TipoUsuarioService.deletar(tipoToDelete.id);
       toast.success('Perfil removido com sucesso!');
-      setTipoToDeleteId(null);
+      handleCloseDeleteModal();
       fetchData();
     } catch (err: any) {
       toast.error(err.message ?? 'Erro ao remover perfil.');
@@ -97,14 +121,13 @@ const TipoUsuarioPage = () => {
         tipoToEdit={tipoToEdit}
         isSaving={isSaving}
       />
-      <ConfirmationModal
-        isOpen={tipoToDeleteId !== null}
-        onClose={() => setTipoToDeleteId(null)}
+      <TipoUsuarioDeleteImpactModal
+        isOpen={tipoToDelete !== null}
+        onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
-        title="Excluir Tipo de Usuário"
-        message="Tem certeza que deseja excluir este perfil? Não será possível excluir se houver usuários vinculados a ele."
-        confirmText="Excluir"
-        isConfirming={isDeleting}
+        impacto={impacto}
+        isLoadingImpacto={isLoadingImpacto}
+        isDeleting={isDeleting}
       />
 
       <div className="page-container">
@@ -198,7 +221,7 @@ const TipoUsuarioPage = () => {
                             <button className="action-icon-btn edit" onClick={() => handleOpenModal(tipo)} title="Editar">
                               <FaEdit size={14} />
                             </button>
-                            <button className="action-icon-btn delete" onClick={() => setTipoToDeleteId(tipo.id)} title="Excluir">
+                            <button className="action-icon-btn delete" onClick={() => handleDeleteClick(tipo)} title="Excluir">
                               <FaTrash size={14} />
                             </button>
                           </div>

@@ -153,11 +153,109 @@ Atualiza o nome e/ou a flag `canReceiveLead` de um tipo de usuário existente. E
 
 ---
 
+## GET `/api/TipoUsuario/ImpactoExclusao/{id}`
+
+Retorna os usuários e as permissões que serão afetados caso este tipo de usuário seja excluído, além de indicar se a exclusão é permitida. **Deve ser chamado pelo frontend antes de confirmar a exclusão**, para montar uma tela de confirmação (ex.: "Ao excluir este perfil, X usuário(s) e Y permissão(ões) também serão removidos") ou desabilitar a ação quando `podeExcluir` for `false`. Exige que o tipo pertença à empresa do usuário autenticado.
+
+**Path param:**
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `id` | `int` | ID do tipo de usuário (`TypeuserId`) |
+
+**Request:** sem body.
+
+**Response 200 (com impacto, exclusão permitida):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Impacto da exclusão calculado com sucesso.",
+  "dados": {
+    "tipoUsuarioId": 7,
+    "tipoUsuarioNome": "Vendedor",
+    "podeExcluir": true,
+    "motivoBloqueio": null,
+    "usuarios": [
+      { "userId": 12, "userName": "Maria Silva", "userEmail": "maria@empresa.com" },
+      { "userId": 15, "userName": "João Souza", "userEmail": "joao@empresa.com" }
+    ],
+    "permissoes": [
+      { "idPermissao": 3, "nomePermissao": "chat", "nomeTela": "Chat" },
+      { "idPermissao": 5, "nomePermissao": "painel", "nomeTela": "Painel" }
+    ]
+  }
+}
+```
+
+**Response 200 (sem nenhum impacto — tipo sem usuários/permissões vinculados):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Impacto da exclusão calculado com sucesso.",
+  "dados": {
+    "tipoUsuarioId": 9,
+    "tipoUsuarioNome": "Suporte",
+    "podeExcluir": true,
+    "motivoBloqueio": null,
+    "usuarios": [],
+    "permissoes": []
+  }
+}
+```
+
+> Listas vazias **não** são tratadas como erro — é o caso normal de um tipo de usuário recém-criado, sem ninguém vinculado ainda.
+
+**Response 200 (perfil Administrador — exclusão bloqueada):**
+```json
+{
+  "sucesso": true,
+  "mensagem": "Impacto da exclusão calculado com sucesso.",
+  "dados": {
+    "tipoUsuarioId": 4,
+    "tipoUsuarioNome": "Administrador",
+    "podeExcluir": false,
+    "motivoBloqueio": "O perfil Administrador não pode ser excluído. Toda empresa precisa manter pelo menos um.",
+    "usuarios": [
+      { "userId": 1, "userName": "Dono da Conta", "userEmail": "dono@empresa.com" }
+    ],
+    "permissoes": [
+      { "idPermissao": 1, "nomePermissao": "gerenciar_usuarios", "nomeTela": "Usuários" }
+    ]
+  }
+}
+```
+
+> O bloqueio é identificado pelo campo `codigo`/`TypeuserCodigo` (`1` = Administrador), não pelo nome — o nome do perfil pode ter sido alterado via `PUT /api/TipoUsuario/Atualizar/{id}`. Mesmo bloqueada, a resposta continua trazendo `usuarios`/`permissoes` (informativo); o frontend deve usar `podeExcluir` para decidir se habilita a ação.
+
+**Response 400 (não encontrado):**
+```json
+{
+  "sucesso": false,
+  "mensagem": "Perfil não encontrado.",
+  "dados": null
+}
+```
+
+**Response 400 (pertence a outra empresa):**
+```json
+{
+  "sucesso": false,
+  "mensagem": "Acesso não autorizado.",
+  "dados": null
+}
+```
+
+---
+
 ## DELETE `/api/TipoUsuario/Deletar/{id}`
 
-Remove um tipo de usuário. Exige que o tipo pertença à empresa do usuário autenticado.
+Remove um tipo de usuário **e cascateia a exclusão** sobre os usuários e permissões vinculados a ele. Exige que o tipo pertença à empresa do usuário autenticado. **O perfil Administrador nunca pode ser excluído** — toda empresa deve manter pelo menos esse perfil sempre.
 
-> Remoção é física (`DELETE`), não soft delete — diverge do padrão do projeto, é um bug pré-existente e conhecido (fora do escopo da feature de multi-tenancy). Falha com erro genérico se houver usuários vinculados (`UserTypeuserid`) por violação de FK.
+Ordem da cascata (quando não é o Administrador):
+1. Todos os `Usuario` com esse `TypeuserId` (na mesma empresa, ainda não deletados) são **soft-deletados** (`UserDeleted = true`) e perdem o vínculo com o tipo (`UserTypeuserid = null`).
+2. Todos os vínculos de permissão (`PermissaoUsuario`/`user_permission`) desse tipo são removidos fisicamente (tabela de junção, sem soft delete).
+3. O `TipoUsuario` é removido (remoção física — divergência conhecida do padrão de soft delete do projeto, documentada em `docs/tipo-usuario-por-empresa/especificacao.md`).
+
+> Recomenda-se sempre chamar `GET /api/TipoUsuario/ImpactoExclusao/{id}` antes deste endpoint — além de mostrar o impacto, ele já indica antecipadamente (`podeExcluir`) se a exclusão será bloqueada.
 
 **Path param:**
 | Parâmetro | Tipo | Descrição |
@@ -171,6 +269,15 @@ Remove um tipo de usuário. Exige que o tipo pertença à empresa do usuário au
 {
   "sucesso": true,
   "mensagem": "Perfil removido com sucesso.",
+  "dados": null
+}
+```
+
+**Response 400 (é o perfil Administrador):**
+```json
+{
+  "sucesso": false,
+  "mensagem": "O perfil Administrador não pode ser excluído. Toda empresa precisa manter pelo menos um.",
   "dados": null
 }
 ```
@@ -214,4 +321,5 @@ Campo somente leitura: não existe no body de `Criar`/`Atualizar`. Representado 
 | `GET` | `/api/TipoUsuario/BuscarTodos` | Lista os tipos de usuário da empresa do token | Autenticado |
 | `POST` | `/api/TipoUsuario/Criar` | Cria um tipo de usuário na empresa do token | Autenticado |
 | `PUT` | `/api/TipoUsuario/Atualizar/{id}` | Atualiza nome/`canReceiveLead`, validando que pertence à empresa do token | Autenticado |
-| `DELETE` | `/api/TipoUsuario/Deletar/{id}` | Remove (hard delete) um tipo de usuário, validando que pertence à empresa do token | Autenticado |
+| `GET` | `/api/TipoUsuario/ImpactoExclusao/{id}` | Lista os usuários e permissões que serão afetados ao excluir o tipo — chamar antes de `Deletar` | Autenticado |
+| `DELETE` | `/api/TipoUsuario/Deletar/{id}` | Remove o tipo de usuário cascateando: soft delete dos usuários vinculados + remoção dos vínculos de permissão | Autenticado |
