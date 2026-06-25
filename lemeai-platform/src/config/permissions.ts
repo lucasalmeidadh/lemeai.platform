@@ -13,6 +13,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/profiles': ['gestao_perfis'],
   '/equipes': ['gestao_equipes'],
   '/metas': ['gestao_metas'],
+  '/tipos-usuario': ['gestao_tipos_usuario'],
   '/chat-rules': ['regras_chatbot'],
   '/products': ['gestao_produtos'],
   '/connections': ['gestao_conexoes'],

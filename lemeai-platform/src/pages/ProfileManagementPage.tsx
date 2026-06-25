@@ -60,6 +60,7 @@ const PERMISSION_LABELS: Record<string, string> = {
   gerenciar_planos: 'Gerenciar Planos',
   gestao_vendas_vendedor: 'Gestão de Vendas - Vendedor',
   gestão_campos_personalizados: 'Campos Personalizados',
+  gestao_tipos_usuario: 'Gestão de Tipos de Usuário',
 };
 
 const getPermissionIcon = (name: string) => {
