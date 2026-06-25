@@ -1,0 +1,118 @@
+/* ─── SUMMARY CARDS ───────────────────────────────────────────── */
+.tipo-usuario-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.summary-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--border-color-soft);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.summary-card-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.summary-card-icon.neutral {
+  background: var(--petroleum-light);
+  color: var(--petroleum-blue);
+}
+
+.summary-card-icon.active {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.summary-card-icon.inactive {
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral);
+}
+
+.summary-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-card-value {
+  font-size: var(--font-2xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.summary-card-label {
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* ─── SEARCH ──────────────────────────────────────────────────── */
+.tipo-usuario-search {
+  position: relative;
+  flex-grow: 1;
+  min-width: 250px;
+}
+
+.tipo-usuario-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  font-size: var(--font-sm);
+}
+
+.tipo-usuario-search-input {
+  width: 100%;
+  padding-left: 42px !important;
+}
+
+/* ─── TABLE ───────────────────────────────────────────────────── */
+.tipo-usuario-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tipo-usuario-name-cell svg {
+  color: var(--petroleum-blue);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .tipo-usuario-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .tipo-usuario-summary {
+    grid-template-columns: 1fr;
+  }
+}

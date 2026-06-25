@@ -24,6 +24,7 @@ import CampaignTemplatesPage from './pages/CampaignTemplatesPage.tsx';
 import CampaignPage from './pages/CampaignPage.tsx';
 import GoalsPage from './pages/GoalsPage.tsx';
 import TeamsPage from './pages/TeamsPage.tsx';
+import TipoUsuarioPage from './pages/TipoUsuarioPage.tsx';
 import DealDetailsPage from './pages/DealDetailsPage.tsx';
 import BillingPlanPage from './pages/BillingPlanPage';
 import EmpresasPage from './pages/EmpresasPage';
@@ -69,6 +70,7 @@ const router = createBrowserRouter([
           { path: "connections", element: <PermissionGuard><ConnectionsPage /></PermissionGuard> },
           { path: "equipes", element: <PermissionGuard><TeamsPage /></PermissionGuard> },
           { path: "metas", element: <PermissionGuard><GoalsPage /></PermissionGuard> },
+          { path: "tipos-usuario", element: <PermissionGuard><TipoUsuarioPage /></PermissionGuard> },
           { path: "campaign-templates", element: <PermissionGuard><CampaignTemplatesPage /></PermissionGuard> },
           { path: "campanhas", element: <PermissionGuard><CampaignPage /></PermissionGuard> },
           { path: "empresas", element: <PermissionGuard><EmpresasPage /></PermissionGuard> },
