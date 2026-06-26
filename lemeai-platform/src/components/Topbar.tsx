@@ -38,6 +38,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const companyLogoUrl = user?.logoEmpresa || '';
     const companyName = user?.empresaDescricao || '';
+    const isEmpresa4Or8 = user?.empresaId === 4 || user?.empresaId === 8;
     const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
     useEffect(() => {
@@ -548,17 +549,20 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
                     <div className="topbar-divider"></div>
 
-                     <Link
-                        id="topbar-billing"
-                        to="/plano"
-                        className={`topbar-item ${location.pathname === '/plano' ? 'active' : ''}`}
-                        style={{ textDecoration: 'none' }}
-                    >
-                        <FaCreditCard />
-                        <span>Meu Plano</span>
-                    </Link>
-
-                    <div className="topbar-divider"></div>
+                    {!isEmpresa4Or8 && (
+                        <>
+                            <Link
+                                id="topbar-billing"
+                                to="/plano"
+                                className={`topbar-item ${location.pathname === '/plano' ? 'active' : ''}`}
+                                style={{ textDecoration: 'none' }}
+                            >
+                                <FaCreditCard />
+                                <span>Meu Plano</span>
+                            </Link>
+                            <div className="topbar-divider"></div>
+                        </>
+                    )}
 
                     <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
                         {photoUrl ? (

@@ -15,6 +15,8 @@ import {
   FaEyeSlash
 } from 'react-icons/fa';
 import logoBrik from '../assets/logo.png';
+import { apiFetch } from '../services/api';
+import toast from 'react-hot-toast';
 import './OnboardingPage.css';
 
 const OnboardingPage = () => {
@@ -45,8 +47,6 @@ const OnboardingPage = () => {
   const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
   const [isValidatingOtp, setIsValidatingOtp] = useState<boolean>(false);
   const [otpCooldown, setOtpCooldown] = useState<number>(0);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const previousTheme = document.documentElement.getAttribute('data-theme');
@@ -57,7 +57,7 @@ const OnboardingPage = () => {
   }, []);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
     if (otpCooldown > 0) {
       timer = setTimeout(() => {
         setOtpCooldown(prev => prev - 1);
@@ -68,15 +68,13 @@ const OnboardingPage = () => {
 
   const handleValidateOtp = async () => {
     if (otpCode.length !== 6) {
-      setError('Por favor, insira o código de 6 dígitos.');
+      toast.error('Por favor, insira o código de 6 dígitos.');
       return;
     }
-    setError(null);
-    setSuccess(null);
     setIsValidatingOtp(true);
 
     try {
-      const response = await fetch(`${apiUrl}/api/Auth/ValidateOtp`, {
+      const response = await apiFetch(`${apiUrl}/api/Auth/ValidateOtp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, codigoOtp: otpCode }),
@@ -84,16 +82,15 @@ const OnboardingPage = () => {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || data.sucesso === false) {
         throw new Error(data.mensagem || data.message || 'Código de verificação incorreto.');
       }
 
       setOtpValidated(true);
-      setSuccess('Código verificado com sucesso!');
+      toast.success('Código verificado com sucesso!');
     } catch (err: any) {
-      console.error(err);
       setOtpValidated(false);
-      setError(err.message || 'Código de verificação incorreto.');
+      toast.error(err.message || 'Código de verificação incorreto.');
     } finally {
       setIsValidatingOtp(false);
     }
@@ -119,15 +116,13 @@ const OnboardingPage = () => {
 
   const handleSendOtp = async () => {
     if (!email) {
-      setError('Por favor, preencha o e-mail corporativo para enviar o código.');
+      toast.error('Por favor, preencha o e-mail corporativo para enviar o código.');
       return;
     }
-    setError(null);
-    setSuccess(null);
     setIsSendingOtp(true);
 
     try {
-      const response = await fetch(`${apiUrl}/api/Auth/SendOtp`, {
+      const response = await apiFetch(`${apiUrl}/api/Auth/SendOtp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -135,48 +130,52 @@ const OnboardingPage = () => {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || data.sucesso === false) {
         throw new Error(data.mensagem || data.message || 'Falha ao enviar o código de verificação.');
       }
 
-      setSuccess('Código de verificação enviado para o seu e-mail!');
+      toast.success('Código de verificação enviado para o seu e-mail!');
       setOtpSent(true);
       setOtpCooldown(60);
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Erro ao enviar o código de verificação.');
+      toast.error(err.message || 'Erro ao enviar o código de verificação.');
     } finally {
       setIsSendingOtp(false);
     }
   };
 
+  const hasMinMax = password.length >= 8 && password.length <= 16;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const isPasswordValid = hasMinMax && hasUpper && hasLower && hasSpecial;
+
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     // Simple validation for Step 1
     if (!name || !email || !password || !confirmPassword || !otpCode) {
-      setError('Por favor, preencha todos os campos, incluindo o código de verificação.');
+      toast.error('Por favor, preencha todos os campos, incluindo o código de verificação.');
       return;
     }
 
     if (!otpValidated) {
-      setError('Código de verificação inválido ou incorreto.');
+      toast.error('Código de verificação inválido ou incorreto.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem.');
+      toast.error('As senhas não coincidem.');
       return;
     }
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.');
+    if (!isPasswordValid) {
+      toast.error('A senha não atende aos requisitos mínimos.');
       return;
     }
 
     if (otpCode.length !== 6) {
-      setError('O código de verificação deve ter 6 dígitos.');
+      toast.error('O código de verificação deve ter 6 dígitos.');
       return;
     }
 
@@ -185,24 +184,23 @@ const OnboardingPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
 
     const cleanCnpj = cnpj.replace(/\D/g, '');
     if (cleanCnpj.length !== 14) {
-      setError('Por favor, insira um CNPJ válido com 14 dígitos.');
+      toast.error('Por favor, insira um CNPJ válido com 14 dígitos.');
       setIsLoading(false);
       return;
     }
 
     if (!companyName) {
-      setError('Por favor, insira o nome da sua empresa.');
+      toast.error('Por favor, insira o nome da sua empresa.');
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await fetch(`${apiUrl}/api/Auth/Register`, {
+      const response = await apiFetch(`${apiUrl}/api/Auth/Register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -217,12 +215,12 @@ const OnboardingPage = () => {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || data.sucesso === false) {
         throw new Error(data.mensagem || 'Falha ao realizar cadastro.');
       }
 
       setRegistrationSuccess(true);
-      setSuccess('Sua empresa e conta foram criadas com sucesso!');
+      toast.success('Sua empresa e conta foram criadas com sucesso!');
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
@@ -230,8 +228,7 @@ const OnboardingPage = () => {
       }, 3000);
 
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Erro de conexão com o servidor.');
+      toast.error(err.message || 'Erro de conexão com o servidor.');
     } finally {
       setIsLoading(false);
     }
@@ -250,23 +247,8 @@ const OnboardingPage = () => {
           </div>
 
           {registrationSuccess && (
-            <div className="success-alert" role="alert">
-              <FaCheckCircle />
-              <span>{success} Redirecionando para o login...</span>
-            </div>
-          )}
-
-          {success && !registrationSuccess && (
-            <div className="success-alert" role="alert">
-              <FaCheckCircle />
-              <span>{success}</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="error-alert" role="alert">
-              <FaExclamationCircle />
-              <span>{error}</span>
+            <div style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+              <FaSpinner className="fa-spin" /> Redirecionando para o login...
             </div>
           )}
 
@@ -285,6 +267,7 @@ const OnboardingPage = () => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
+                        disabled={otpValidated}
                       />
                     </div>
                   </div>
@@ -308,6 +291,7 @@ const OnboardingPage = () => {
                           }}
                           required
                           autoComplete="off"
+                          disabled={otpValidated || isSendingOtp}
                         />
                       </div>
                       <button
@@ -390,6 +374,20 @@ const OnboardingPage = () => {
                           >
                             {showPassword ? <FaEyeSlash /> : <FaEye />}
                           </button>
+                        </div>
+                        <div className="password-requirements">
+                          <div className={`req-item ${hasMinMax ? 'valid' : 'invalid'}`}>
+                            {hasMinMax ? <FaCheckCircle /> : <FaExclamationCircle />} Entre 8 e 16 caracteres
+                          </div>
+                          <div className={`req-item ${hasUpper ? 'valid' : 'invalid'}`}>
+                            {hasUpper ? <FaCheckCircle /> : <FaExclamationCircle />} 1 letra maiúscula
+                          </div>
+                          <div className={`req-item ${hasLower ? 'valid' : 'invalid'}`}>
+                            {hasLower ? <FaCheckCircle /> : <FaExclamationCircle />} 1 letra minúscula
+                          </div>
+                          <div className={`req-item ${hasSpecial ? 'valid' : 'invalid'}`}>
+                            {hasSpecial ? <FaCheckCircle /> : <FaExclamationCircle />} 1 caractere especial
+                          </div>
                         </div>
                       </div>
 

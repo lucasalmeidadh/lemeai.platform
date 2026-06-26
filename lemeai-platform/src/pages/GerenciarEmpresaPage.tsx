@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { FaCalendarCheck, FaCheckCircle, FaTimesCircle, FaCalendarWeek, FaBuilding, FaCamera, FaPen, FaTimes } from 'react-icons/fa';
+import { FaCalendarCheck, FaCheckCircle, FaTimesCircle, FaCalendarWeek, FaBuilding, FaCamera, FaPen, FaTimes, FaQrcode } from 'react-icons/fa';
 import GerenciarEmpresaService, { DEFAULT_DIAS_UTEIS, getMidiaUrl, type DiasUteis, type DadosGeraisEmpresa, type AtualizarDadosGeraisDTO } from '../services/GerenciarEmpresaService';
 import LogoCropModal from '../components/LogoCropModal';
 import LandingPageConfigTab from '../components/LandingPageConfigTab';
@@ -55,6 +55,7 @@ const GerenciarEmpresaPage = () => {
   const [workingDays, setWorkingDays] = useState<DiasUteis>(DEFAULT_DIAS_UTEIS);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingDias, setIsLoadingDias] = useState(true);
+  const [activeTab, setActiveTab] = useState<'dados' | 'funcionamento' | 'captura'>('dados');
 
   useEffect(() => {
     GerenciarEmpresaService.getDadosGerais()
@@ -174,205 +175,231 @@ const GerenciarEmpresaPage = () => {
         </div>
       </div>
 
-      {/* Dados Gerais Card */}
-      <div className="gerenciar-empresa-card">
-        <div className="gerenciar-empresa-card-header">
-          <div className="gerenciar-empresa-card-header-icon">
-            <FaBuilding />
-          </div>
-          <div className="gerenciar-empresa-card-header-text">
-            <h3>Dados da Empresa</h3>
-            <p>Informações gerais cadastradas para a sua empresa.</p>
-          </div>
-          {!isLoadingDados && !isEditingDados && (
-            <button
-              type="button"
-              className="button secondary dados-gerais-edit-toggle"
-              onClick={handleHabilitarEdicaoDados}
-            >
-              <FaPen />
-              Editar
-            </button>
-          )}
-        </div>
+      <div className="ge-tab-nav">
+        <button
+          className={`ge-tab-button ${activeTab === 'dados' ? 'active' : ''}`}
+          onClick={() => setActiveTab('dados')}
+        >
+          <FaBuilding />
+          <span className="ge-tab-text-full">Dados Gerais</span>
+          <span className="ge-tab-text-short">Dados</span>
+        </button>
+        <button
+          className={`ge-tab-button ${activeTab === 'funcionamento' ? 'active' : ''}`}
+          onClick={() => setActiveTab('funcionamento')}
+        >
+          <FaCalendarCheck />
+          <span className="ge-tab-text-full">Funcionamento</span>
+          <span className="ge-tab-text-short">Dias</span>
+        </button>
+        <button
+          className={`ge-tab-button ${activeTab === 'captura' ? 'active' : ''}`}
+          onClick={() => setActiveTab('captura')}
+        >
+          <FaQrcode />
+          <span className="ge-tab-text-full">Página de Captura</span>
+          <span className="ge-tab-text-short">Captura</span>
+        </button>
+      </div>
 
-        {isLoadingDados ? (
-          <div className="gerenciar-empresa-loading">Carregando dados...</div>
-        ) : (
-          <div className="dados-gerais-body">
-            <div className="logo-uploader">
-              <button
-                type="button"
-                className="logo-uploader-preview"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingLogo}
-                aria-label="Alterar logo da empresa"
-              >
-                {logoUrl ? (
-                  <img src={logoUrl} alt="Logo da empresa" />
-                ) : (
-                  <FaBuilding className="logo-uploader-placeholder-icon" />
-                )}
-                <div className="logo-uploader-overlay">
-                  <FaCamera />
+      <div className="ge-tab-content">
+        {activeTab === 'dados' && (
+          <div className="ge-tab-pane">
+            <div className="gerenciar-empresa-card">
+              <div className="gerenciar-empresa-card-header">
+                <div className="gerenciar-empresa-card-header-icon">
+                  <FaBuilding />
                 </div>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp"
-                hidden
-                onChange={handleLogoChange}
-              />
-              <span className="logo-uploader-hint">
-                {isUploadingLogo
-                  ? 'Enviando logo...'
-                  : 'JPG, PNG ou WebP — até 5MB. Use formato horizontal ou quadrado.'}
-              </span>
-            </div>
+                <div className="gerenciar-empresa-card-header-text">
+                  <h3>Dados da Empresa</h3>
+                  <p>Informações gerais cadastradas para a sua empresa.</p>
+                </div>
+                {!isLoadingDados && !isEditingDados && (
+                  <button
+                    type="button"
+                    className="button secondary dados-gerais-edit-toggle"
+                    onClick={handleHabilitarEdicaoDados}
+                  >
+                    <FaPen />
+                    Editar
+                  </button>
+                )}
+              </div>
 
-            <div className="dados-gerais-fields form-grid">
-              <div className="form-group">
-                <label htmlFor="nomeEmpresa">Nome da empresa</label>
-                <input
-                  id="nomeEmpresa"
-                  type="text"
-                  value={dadosGerais?.nomeEmpresa || ''}
-                  onChange={e => handleDadosGeraisChange('nomeEmpresa', e.target.value)}
-                  disabled={!isEditingDados || isSavingDados}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="ramoAtividade">Ramo de atividade</label>
-                <input
-                  id="ramoAtividade"
-                  type="text"
-                  value={dadosGerais?.ramoAtividade || ''}
-                  onChange={e => handleDadosGeraisChange('ramoAtividade', e.target.value)}
-                  disabled={!isEditingDados || isSavingDados}
-                />
-              </div>
-              <div className="form-group full-width">
-                <label htmlFor="cnpj">CNPJ</label>
-                <input
-                  id="cnpj"
-                  type="text"
-                  value={dadosGerais?.cnpj || ''}
-                  onChange={e => handleDadosGeraisChange('cnpj', e.target.value)}
-                  disabled={!isEditingDados || isSavingDados}
-                />
-              </div>
-              {isEditingDados && (
-                <div className="form-group full-width dados-gerais-actions">
-                  <button
-                    type="button"
-                    className="button secondary"
-                    onClick={handleCancelarEdicaoDados}
-                    disabled={isSavingDados}
-                  >
-                    <FaTimes />
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    className="button primary"
-                    onClick={handleSalvarDadosGerais}
-                    disabled={isSavingDados}
-                  >
-                    {isSavingDados ? 'Salvando...' : 'Salvar alterações'}
-                  </button>
+              {isLoadingDados ? (
+                <div className="gerenciar-empresa-loading">Carregando dados...</div>
+              ) : (
+                <div className="dados-gerais-body">
+                  <div className="logo-uploader">
+                    <button
+                      type="button"
+                      className="logo-uploader-preview"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingLogo}
+                      aria-label="Alterar logo da empresa"
+                    >
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="Logo da empresa" />
+                      ) : (
+                        <FaBuilding className="logo-uploader-placeholder-icon" />
+                      )}
+                      <div className="logo-uploader-overlay">
+                        <FaCamera />
+                      </div>
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      hidden
+                      onChange={handleLogoChange}
+                    />
+                    <span className="logo-uploader-hint">
+                      {isUploadingLogo
+                        ? 'Enviando logo...'
+                        : 'JPG, PNG ou WebP — até 5MB. Use formato horizontal ou quadrado.'}
+                    </span>
+                  </div>
+
+                  <div className="dados-gerais-fields form-grid">
+                    <div className="form-group">
+                      <label htmlFor="nomeEmpresa">Nome da empresa</label>
+                      <input
+                        id="nomeEmpresa"
+                        type="text"
+                        value={dadosGerais?.nomeEmpresa || ''}
+                        onChange={e => handleDadosGeraisChange('nomeEmpresa', e.target.value)}
+                        disabled={!isEditingDados || isSavingDados}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="ramoAtividade">Ramo de atividade</label>
+                      <input
+                        id="ramoAtividade"
+                        type="text"
+                        value={dadosGerais?.ramoAtividade || ''}
+                        onChange={e => handleDadosGeraisChange('ramoAtividade', e.target.value)}
+                        disabled={!isEditingDados || isSavingDados}
+                      />
+                    </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="cnpj">CNPJ</label>
+                      <input
+                        id="cnpj"
+                        type="text"
+                        value={dadosGerais?.cnpj || ''}
+                        onChange={e => handleDadosGeraisChange('cnpj', e.target.value)}
+                        disabled={!isEditingDados || isSavingDados}
+                      />
+                    </div>
+                    {isEditingDados && (
+                      <div className="form-group full-width dados-gerais-actions">
+                        <button
+                          type="button"
+                          className="button secondary"
+                          onClick={handleCancelarEdicaoDados}
+                          disabled={isSavingDados}
+                        >
+                          <FaTimes />
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          className="button primary"
+                          onClick={handleSalvarDadosGerais}
+                          disabled={isSavingDados}
+                        >
+                          {isSavingDados ? 'Salvando...' : 'Salvar alterações'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           </div>
         )}
-      </div>
 
-      {/* Summary Cards */}
-      <div className="gerenciar-empresa-summary">
-        <div className="summary-card">
-          <div className="summary-card-icon active">
-            <FaCheckCircle />
-          </div>
-          <div className="summary-card-info">
-            <span className="summary-card-value">{activeDays}</span>
-            <span className="summary-card-label">Dias ativos por semana</span>
-          </div>
-        </div>
-        <div className="summary-card">
-          <div className="summary-card-icon inactive">
-            <FaTimesCircle />
-          </div>
-          <div className="summary-card-info">
-            <span className="summary-card-value">{inactiveDays}</span>
-            <span className="summary-card-label">Dias sem operação</span>
-          </div>
-        </div>
-        <div className="summary-card">
-          <div className="summary-card-icon weekend">
-            <FaCalendarWeek />
-          </div>
-          <div className="summary-card-info">
-            <span className="summary-card-value">{weekendDays}</span>
-            <span className="summary-card-label">Fins de semana ativos</span>
-          </div>
-        </div>
-      </div>
+        {activeTab === 'funcionamento' && (
+          <div className="ge-tab-pane">
+            <div className="gerenciar-empresa-summary">
+              <div className="summary-card">
+                <div className="summary-card-icon active">
+                  <FaCheckCircle />
+                </div>
+                <div className="summary-card-info">
+                  <span className="summary-card-value">{activeDays}</span>
+                  <span className="summary-card-label">Dias ativos por semana</span>
+                </div>
+              </div>
+              <div className="summary-card">
+                <div className="summary-card-icon inactive">
+                  <FaTimesCircle />
+                </div>
+                <div className="summary-card-info">
+                  <span className="summary-card-value">{inactiveDays}</span>
+                  <span className="summary-card-label">Dias sem operação</span>
+                </div>
+              </div>
+              <div className="summary-card">
+                <div className="summary-card-icon weekend">
+                  <FaCalendarWeek />
+                </div>
+                <div className="summary-card-info">
+                  <span className="summary-card-value">{weekendDays}</span>
+                  <span className="summary-card-label">Fins de semana ativos</span>
+                </div>
+              </div>
+            </div>
 
-      {/* Dias de Funcionamento Card */}
-      <div className="gerenciar-empresa-card">
-        <div className="gerenciar-empresa-card-header">
-          <div className="gerenciar-empresa-card-header-icon">
-            <FaCalendarCheck />
-          </div>
-          <div className="gerenciar-empresa-card-header-text">
-            <h3>Dias de Funcionamento</h3>
-            <p>Ative ou desative cada dia da semana conforme a operação da empresa.</p>
-          </div>
-        </div>
+            <div className="gerenciar-empresa-card">
+              <div className="gerenciar-empresa-card-header">
+                <div className="gerenciar-empresa-card-header-icon">
+                  <FaCalendarCheck />
+                </div>
+                <div className="gerenciar-empresa-card-header-text">
+                  <h3>Dias de Funcionamento</h3>
+                  <p>Ative ou desative cada dia da semana conforme a operação da empresa.</p>
+                </div>
+              </div>
 
-        {isLoadingDias ? (
-          <div className="gerenciar-empresa-loading">Carregando configurações...</div>
-        ) : (
-          <div className="working-days-calendar">
-            {DAY_CONFIG.map(day => {
-              const isActive = workingDays[day.key];
-              return (
-                <label
-                  key={day.key}
-                  className={`calendar-day-cell ${isActive ? 'active' : 'inactive'}`}
-                  title={day.label}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={() => handleToggle(day.key)}
-                    disabled={isSaving}
-                    aria-label={`Ativar ${day.label}`}
-                  />
-                  <span className="calendar-day-abbr">{day.abbr}</span>
-                  <span className="calendar-day-check">
-                    {isActive ? <FaCheckCircle /> : <FaTimesCircle />}
-                  </span>
-                </label>
-              );
-            })}
+              {isLoadingDias ? (
+                <div className="gerenciar-empresa-loading">Carregando configurações...</div>
+              ) : (
+                <div className="working-days-calendar">
+                  {DAY_CONFIG.map(day => {
+                    const isActive = workingDays[day.key];
+                    return (
+                      <label
+                        key={day.key}
+                        className={`calendar-day-cell ${isActive ? 'active' : 'inactive'}`}
+                        title={day.label}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isActive}
+                          onChange={() => handleToggle(day.key)}
+                          disabled={isSaving}
+                          aria-label={`Ativar ${day.label}`}
+                        />
+                        <span className="calendar-day-abbr">{day.abbr}</span>
+                        <span className="calendar-day-check">
+                          {isActive ? <FaCheckCircle /> : <FaTimesCircle />}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Página de Captura Card */}
-      <div className="gerenciar-empresa-card">
-        <div className="gerenciar-empresa-card-header">
-          <div className="gerenciar-empresa-card-header-icon">
-            <FaBuilding />
+        {activeTab === 'captura' && (
+          <div className="ge-tab-pane">
+            <LandingPageConfigTab />
           </div>
-          <div className="gerenciar-empresa-card-header-text">
-            <h3>Página de Captura e QR Code</h3>
-            <p>Configure a página pública e o cupom de desconto para capturar contatos na loja física.</p>
-          </div>
-        </div>
-        <LandingPageConfigTab />
+        )}
       </div>
 
       {pendingLogoFile && (

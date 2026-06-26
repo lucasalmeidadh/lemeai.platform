@@ -246,3 +246,21 @@ import ConfirmationModal from '../components/ConfirmationModal';
     isConfirming={isDeleting}
 />
 ```
+
+---
+
+## 7. Regras de Navegação e Menus (Sidebar e Topbar)
+
+Sempre que a estrutura de menus for modificada ou testada, siga estas definições:
+
+### 7.1. Estrutura Padrão do Menu Lateral
+* **Gestão de usuários**: Deve conter as opções `Usuários`, `Perfis` e `Equipes`.
+* **Administração**: Deve conter as opções `Metas` e `Campos Personalizados`.
+* **Chatbot**: Deve conter as opções `Regras do Chat` e `Produtos`.
+* **Empresa**: Deve conter as opções `Gerenciar Empresa`, `Empresas`, `Conexões` e `Gerenciar Planos` (Meu Plano).
+
+### 7.2. Regras de Exibição de Plano (empresaId)
+* **Ocultação do menu "Meu Plano" / "Gerenciar Planos"**: O acesso à gestão de planos (rotas `/plano` ou `/gerenciar-planos`) deve ser **obrigatoriamente** ocultado para usuários que pertencem às empresas de ID **4** ou **8**.
+* A verificação desta regra deve considerar o campo `empresaId` do objeto do usuário salvo em `localStorage` (ex: `user.empresaId`).
+* Essa verificação condicional deve ser mantida na **Sidebar**, na **Top Bar** e no **Drawer Mobile** (MainLayout).
+

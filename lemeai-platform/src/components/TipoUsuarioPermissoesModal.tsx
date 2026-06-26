@@ -164,7 +164,6 @@ const TipoUsuarioPermissoesModal: React.FC<TipoUsuarioPermissoesModalProps> = ({
                             {getPermissionIcon(perm.nomePermissao)}
                             <div>
                               <strong>{PERMISSION_LABELS[perm.nomePermissao] || perm.nomeTela || perm.nomePermissao}</strong>
-                              <span className="permissao-technical-code">{perm.nomePermissao}</span>
                             </div>
                           </div>
                           <label className="permissao-switch">

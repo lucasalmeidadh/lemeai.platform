@@ -8,6 +8,7 @@ import { TestAgentChat } from '../components/TestAgentChat';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 const SystemPromptsPage = () => {
+    const [chatOpen, setChatOpen] = useState(false);
     const [configId, setConfigId] = useState<number | null>(null);
     const [nome, setNome] = useState('Configuração Gb Code');
     const [headerText, setHeaderText] = useState('');
@@ -460,7 +461,7 @@ const SystemPromptsPage = () => {
                 </button>
             </div>
 
-            <div className="split-view-layout">
+            <div className="config-full-layout">
                 <div className="config-side">
                     {isLoading ? (
                         <SystemPromptsSkeleton />
@@ -487,14 +488,16 @@ const SystemPromptsPage = () => {
                                 {/* ETAPA 1 - Cabeçalho */}
                                 {currentStep === 1 && (
                                     <>
-                                        <div className="card-header-wizard" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div className="card-header-wizard">
                                             <div>
                                                 <h3>1. Personalidade e Objetivos</h3>
                                                 <p>Defina quem é o agente, seu tom de voz e como ele deve conduzir os primeiros contatos.</p>
                                             </div>
-                                            <button className="secondary-button" onClick={() => setShowSuggestionsModal(true)} style={{ fontSize: '13px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                                <FaLightbulb /> Sugestões
-                                            </button>
+                                            <div className="card-header-wizard-actions">
+                                                <button className="secondary-button wizard-btn-sm" onClick={() => setShowSuggestionsModal(true)}>
+                                                    <FaLightbulb /> Sugestões
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <textarea
@@ -509,16 +512,16 @@ const SystemPromptsPage = () => {
                                 {/* ETAPA 2 - Regras */}
                                 {currentStep === 2 && (
                                     <>
-                                        <div className="card-header-wizard" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div className="card-header-wizard">
                                             <div>
                                                 <h3>2. Regras de Conduta</h3>
                                                 <p>Diretrizes específicas passo a passo para o comportamento da IA.</p>
                                             </div>
-                                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                                                <button className="secondary-button" onClick={() => setShowSuggestionsModal(true)} style={{ fontSize: '13px' }}>
+                                            <div className="card-header-wizard-actions">
+                                                <button className="secondary-button wizard-btn-sm" onClick={() => setShowSuggestionsModal(true)}>
                                                     <FaLightbulb /> Sugestões
                                                 </button>
-                                                <button className="primary-button" onClick={() => handleOpenModal()} style={{ fontSize: '13px' }}>
+                                                <button className="primary-button wizard-btn-sm" onClick={() => handleOpenModal()}>
                                                     <FaPlus /> Adicionar Regra
                                                 </button>
                                             </div>
@@ -600,14 +603,16 @@ const SystemPromptsPage = () => {
                                 {/* ETAPA 3 - Rodapé */}
                                 {currentStep === 3 && (
                                     <>
-                                        <div className="card-header-wizard" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div className="card-header-wizard">
                                             <div>
                                                 <h3>3. Formatação e Segurança</h3>
                                                 <p>Regras para finalização, estilo do texto (negritos, listas) e tratamento de dados.</p>
                                             </div>
-                                            <button className="secondary-button" onClick={() => setShowSuggestionsModal(true)} style={{ fontSize: '13px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                                <FaLightbulb /> Sugestões
-                                            </button>
+                                            <div className="card-header-wizard-actions">
+                                                <button className="secondary-button wizard-btn-sm" onClick={() => setShowSuggestionsModal(true)}>
+                                                    <FaLightbulb /> Sugestões
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <textarea
@@ -618,11 +623,10 @@ const SystemPromptsPage = () => {
                                         />
 
                                         {configId && (
-                                            <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-color-soft)', paddingTop: '20px' }}>
+                                            <div className="delete-config-section">
                                                 <button
-                                                    className="secondary-button"
+                                                    className="secondary-button wizard-btn-sm wizard-btn-danger"
                                                     onClick={handleDeleteConfig}
-                                                    style={{ borderColor: '#dc3545', color: '#dc3545', padding: '8px 16px', fontSize: '13px' }}
                                                 >
                                                     <FaTrash /> Excluir Toda Configuração
                                                 </button>
@@ -632,45 +636,28 @@ const SystemPromptsPage = () => {
                                 )}
 
                                 {/* Navegação do Wizard */}
-                                <div className="wizard-actions" style={{ marginTop: 'auto' }}>
+                                <div className="wizard-actions">
                                     <button
-                                        className="secondary-button"
+                                        className="secondary-button wizard-nav-btn"
                                         onClick={prevStep}
                                         disabled={currentStep === 1}
-                                        style={{ 
-                                            visibility: currentStep === 1 ? 'hidden' : 'visible',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px'
-                                        }}
+                                        style={{ visibility: currentStep === 1 ? 'hidden' : 'visible' }}
                                     >
-                                        <FaChevronLeft size={14} /> Voltar
+                                        <FaChevronLeft size={12} /> Voltar
                                     </button>
 
                                     {currentStep < 3 ? (
-                                        <button 
-                                            className="primary-button" 
-                                            onClick={nextStep} 
-                                            style={{ 
-                                                padding: '12px 40px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px'
-                                            }}
+                                        <button
+                                            className="primary-button wizard-nav-btn wizard-nav-btn-main"
+                                            onClick={nextStep}
                                         >
-                                            Próximo <FaChevronRight size={14} />
+                                            Próximo <FaChevronRight size={12} />
                                         </button>
                                     ) : (
                                         <button
-                                            className="primary-button"
+                                            className="primary-button wizard-nav-btn wizard-nav-btn-main"
                                             onClick={handleSaveConfig}
                                             disabled={isSavingConfig}
-                                            style={{ 
-                                                padding: '12px 40px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px'
-                                            }}
                                         >
                                             <FaSave /> {isSavingConfig ? 'Salvando...' : 'Finalizar e Salvar'}
                                         </button>
@@ -681,10 +668,21 @@ const SystemPromptsPage = () => {
                     )}
                 </div>
 
-                <div className="chat-side">
+            </div>
+
+            <button
+                className={`chat-fab ${chatOpen ? 'active' : ''}`}
+                onClick={() => setChatOpen(!chatOpen)}
+                aria-label="Testar ChatBot"
+            >
+                <FaRobot />
+            </button>
+
+            {chatOpen && (
+                <div className="chat-floating-panel">
                     <TestAgentChat />
                 </div>
-            </div>
+            )}
 
             {isModalOpen && (
                 <div className="modal-overlay">

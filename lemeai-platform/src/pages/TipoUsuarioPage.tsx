@@ -153,16 +153,13 @@ const TipoUsuarioPage = () => {
 
         <div className="dashboard-card">
           <div className="filters-container">
-            <div className="tipo-usuario-search">
-              <FaSearch className="tipo-usuario-search-icon" />
-              <input
-                type="text"
-                placeholder="Buscar por nome..."
-                className="filter-input tipo-usuario-search-input"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Buscar por nome..."
+              className="filter-input"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
           </div>
 
           <div className="table-container">

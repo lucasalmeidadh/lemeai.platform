@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 import UserFormModal from '../components/UserFormModal';
+import UserCredentialsModal from '../components/UserCredentialsModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import UserManagementSkeleton from '../components/UserManagementSkeleton';
 import type { User, Profile } from '../types';
@@ -30,6 +31,7 @@ const UserManagementPage = () => {
 
   const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [credentialsModal, setCredentialsModal] = useState<{ name: string; email: string; password: string } | null>(null);
 
 
   const mapApiUserToFrontend = (apiUser: any): User => ({
@@ -135,7 +137,11 @@ const UserManagementPage = () => {
         throw new Error(result.mensagem || `Falha ao ${action} usuário.`);
       }
 
-      toast.success(`Usuário ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
+      if (isEditing) {
+        toast.success('Usuário atualizado com sucesso!');
+      } else {
+        setCredentialsModal({ name: user.name, email: user.email, password: password || '' });
+      }
       handleCloseUserModal();
       fetchData();
 
@@ -241,6 +247,13 @@ const UserManagementPage = () => {
         userToEdit={userToEdit}
         profiles={profiles}
         isSaving={isSaving}
+      />
+      <UserCredentialsModal
+        isOpen={credentialsModal !== null}
+        onClose={() => setCredentialsModal(null)}
+        userName={credentialsModal?.name || ''}
+        userEmail={credentialsModal?.email || ''}
+        userPassword={credentialsModal?.password || ''}
       />
       <ConfirmationModal
         isOpen={userToDeleteId !== null}

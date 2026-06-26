@@ -34,10 +34,18 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.config-qr-section {
+.config-preview-section {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.preview-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color-soft);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .qr-card {

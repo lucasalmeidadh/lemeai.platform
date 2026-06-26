@@ -48,6 +48,7 @@ O agente revisor deve cruzar o código analisado com os itens abaixo. **Qualquer
 ## Como Executar a Revisão (Prompt para IA):
 
 Se você for o Agente de IA realizando a revisão deste código, aja da seguinte forma:
+0. **Análise de problemas**: Verifique se houve algum problema no código e corrija, como por exemplo os "Problems" que aparecem no VsCode
 1. **Analise o Diff**: Verifique todas as adições e edições de código em relação a este checklist.
 2. **Apontamento de Violações**: Para cada regra violada, liste o nome do arquivo, a linha (se aplicável), qual regra do `IA-instructions.md` foi quebrada e apresente o trecho de código corrigido usando os componentes/padrões da LemeAI.
 3. **Decisão Final**: 

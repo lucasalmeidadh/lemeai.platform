@@ -26,6 +26,15 @@ const MainLayout = () => {
     const location = useLocation();
     const { setSteps } = useOnboarding();
 
+    let userEmpresaId: number | null = null;
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        userEmpresaId = user?.empresaId || null;
+    } catch (e) {
+        // ignore
+    }
+    const isEmpresa4Or8 = userEmpresaId === 4 || userEmpresaId === 8;
+
     // Close mobile menu on route change
     useEffect(() => {
         setIsMobileMenuOpen(false);
@@ -109,9 +118,11 @@ const MainLayout = () => {
                         <Link to="/metas" className={`drawer-link ${location.pathname === '/metas' ? 'active' : ''}`}>
                             <FaBullseye /> Metas
                         </Link>
-                        <Link to="/plano" className={`drawer-link ${location.pathname === '/plano' ? 'active' : ''}`}>
-                            <FaCreditCard /> Meu Plano
-                        </Link>
+                        {!isEmpresa4Or8 && (
+                            <Link to="/plano" className={`drawer-link ${location.pathname === '/plano' ? 'active' : ''}`}>
+                                <FaCreditCard /> Meu Plano
+                            </Link>
+                        )}
                         
                         <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                             <div style={{ padding: '10px 16px' }}>

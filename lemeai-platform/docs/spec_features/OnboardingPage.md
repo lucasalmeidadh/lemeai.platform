@@ -8,6 +8,8 @@ A página de **Onboarding** (Cadastro) é o formulário público onde novos clie
 - **Rotas:** `/cadastro`
 - **Fluxo em Duas Etapas (Wizard):**
   - **Passo 1 (Dados do Usuário):** Coleta de Nome, E-mail, Senha e Validação de OTP. 
+    - **Regras Dinâmicas**: Os campos de Nome e E-mail tornam-se inativos (`disabled`) após a validação com sucesso do OTP.
+    - **Validação de Senha**: Validação inline em tempo real contendo exigências de tamanho (8-16 caracteres), uma letra maiúscula, uma minúscula e um caractere especial, bloqueando o avanço ao Passo 2 caso não seja atendido. A mensagem de sucesso do OTP some automaticamente após 3 segundos.
   - **Passo 2 (Dados da Empresa):** Coleta Nome da Empresa e CNPJ (com máscara automática baseada em Regex).
 - **Validação OTP (One-Time Password):**
   - Chamada a `POST /api/Auth/SendOtp`: Envia um código de 6 dígitos para o e-mail preenchido. Possui cooldown de reenvio de 60 segundos gerenciado localmente via timer de estado (`otpCooldown`).

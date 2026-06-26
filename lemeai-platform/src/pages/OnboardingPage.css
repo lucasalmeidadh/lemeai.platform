@@ -14,9 +14,9 @@
 /* ── Container central ── */
 .onboarding-central-container {
   display: flex;
-  width: 1000px;
+  width: 1500px;
   max-width: 100%;
-  height: 640px;
+  height: 800px;
   max-height: calc(100vh - 4rem);
   background-color: var(--bg-secondary);
   border-radius: 24px;
@@ -66,6 +66,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+  align-items: start;
 }
 
 /* For full width inputs inside grid */
@@ -113,7 +114,9 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.input-wrapper input::placeholder { color: var(--text-tertiary); }
+.input-wrapper input::placeholder {
+  color: var(--text-tertiary);
+}
 
 .input-wrapper input:focus {
   outline: none;
@@ -122,7 +125,9 @@
   box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.08);
 }
 
-.input-wrapper:focus-within .input-icon { color: var(--petroleum-blue); }
+.input-wrapper:focus-within .input-icon {
+  color: var(--petroleum-blue);
+}
 
 .password-toggle-btn {
   position: absolute;
@@ -196,35 +201,16 @@
   box-shadow: 0 6px 20px rgba(0, 39, 94, 0.3);
 }
 
-.btn-submit:active:not(:disabled) { transform: translateY(0); }
-.btn-submit:disabled { opacity: 0.65; cursor: not-allowed; }
-
-.error-alert {
-  padding: 12px 16px;
-  background-color: var(--color-danger-bg);
-  color: var(--color-danger);
-  border-radius: 10px;
-  font-size: var(--font-sm);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--color-danger-border);
+.btn-submit:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-.success-alert {
-  padding: 12px 16px;
-  background-color: var(--color-success-bg);
-  color: var(--color-success);
-  border-radius: 10px;
-  font-size: var(--font-sm);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--color-success-bg);
-  margin-bottom: 1rem;
+.btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
+
+
 
 .onboarding-link {
   text-align: center;
@@ -303,27 +289,41 @@
 .onboarding-brand-side::after {
   content: '';
   position: absolute;
-  top: 0; left: 0;
-  width: 1px; height: 100%;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    var(--border-color) 20%,
-    var(--border-color) 80%,
-    transparent 100%
-  );
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(to bottom,
+      transparent 0%,
+      var(--border-color) 20%,
+      var(--border-color) 80%,
+      transparent 100%);
   z-index: 2;
 }
 
 /* Animações */
 @keyframes gsapFadeUp {
-  from { opacity: 0; transform: translateY(28px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes gsapFadeLeft {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* Responsividade */
@@ -331,6 +331,7 @@
   .onboarding-root {
     padding: 1rem;
   }
+
   .onboarding-central-container {
     flex-direction: column;
     width: 100%;
@@ -339,15 +340,19 @@
     max-height: 90vh;
     border-radius: 16px;
   }
+
   .onboarding-brand-side {
     display: none;
   }
+
   .onboarding-form-side {
     padding: 2.5rem 2rem;
   }
+
   .onboarding-form-grid {
     grid-template-columns: 1fr;
   }
+
   .grid-full-width {
     grid-column: span 1;
   }
@@ -357,4 +362,33 @@
   .onboarding-form-side {
     padding: 2rem 1.25rem;
   }
+}
+
+/* ── Password Requirements ── */
+.password-requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding: 10px 14px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.req-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.req-item.valid {
+  color: var(--color-success);
+}
+
+.req-item.invalid {
+  color: var(--text-tertiary);
 }

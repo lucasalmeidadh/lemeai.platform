@@ -35,7 +35,8 @@
 
 .header-icon {
     color: var(--petroleum-blue);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
 }
 
 .reset-btn {
@@ -76,36 +77,36 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 40px 30px;
+    padding: 30px 24px;
     text-align: center;
     background-color: var(--bg-secondary);
 }
 
 .start-icon-wrapper {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background-color: var(--petroleum-light);
     color: var(--petroleum-blue);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    margin-bottom: 20px;
+    font-size: 20px;
+    margin-bottom: 16px;
 }
 
 .start-session-view h4 {
-    margin: 0 0 10px 0;
-    font-size: 1.2rem;
+    margin: 0 0 8px 0;
+    font-size: 1.05rem;
     color: var(--text-primary);
 }
 
 .start-session-view p {
     color: var(--text-secondary);
-    margin-bottom: 25px;
-    font-size: 0.95rem;
+    margin-bottom: 20px;
+    font-size: 0.88rem;
     line-height: 1.5;
-    max-width: 300px;
+    max-width: 260px;
 }
 
 .start-btn {
@@ -318,21 +319,101 @@
     }
 
     .start-icon-wrapper {
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-        margin-bottom: 12px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        margin-bottom: 10px;
     }
 
     .start-session-view h4 {
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         margin-bottom: 6px;
     }
 
     .start-session-view p {
-        font-size: 0.88rem;
-        margin-bottom: 16px;
+        font-size: 0.82rem;
+        margin-bottom: 14px;
         line-height: 1.4;
+    }
+}
+
+@media (max-width: 1300px) {
+    .test-agent-header {
+        padding: 10px 14px;
+    }
+
+    .header-title h3 {
+        font-size: 0.9rem;
+    }
+
+    .header-icon {
+        font-size: 0.95rem;
+    }
+
+    .reset-btn {
+        padding: 4px 10px;
+        font-size: 0.78rem;
+        gap: 4px;
+    }
+
+    .start-session-view {
+        padding: 20px 16px;
+    }
+
+    .start-icon-wrapper {
+        width: 36px;
+        height: 36px;
+        font-size: 15px;
+        margin-bottom: 10px;
+    }
+
+    .start-session-view h4 {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    .start-session-view p {
+        font-size: 0.78rem;
+        max-width: 200px;
+        margin-bottom: 14px;
+        line-height: 1.4;
+    }
+
+    .start-btn {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        gap: 6px;
+    }
+
+    .test-chat-messages {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .test-message-bubble {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .test-message-avatar {
+        width: 26px;
+        height: 26px;
+        font-size: 11px;
+    }
+
+    .test-chat-input-area {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .test-chat-input-area input {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .send-btn {
+        width: 36px;
+        height: 36px;
     }
 }
 

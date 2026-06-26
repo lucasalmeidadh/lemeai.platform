@@ -1,4 +1,4 @@
-/* Reuse variables and styles from other pages where possible, or define local ones */
+/* ─── PAGE SHELL ─────────────────────────────────────────────── */
 
 .page-system-prompts {
     height: calc(100vh - 64px) !important;
@@ -15,18 +15,25 @@
     margin-bottom: 10px !important;
 }
 
+.page-system-prompts .page-header h1 {
+    margin: 0;
+}
+
+.page-system-prompts .page-header p {
+    margin: 4px 0 0;
+}
+
 /* Override .dashboard-card defaults when used as wizard-card */
 .page-system-prompts .wizard-card.dashboard-card {
     min-height: 0;
     padding: 20px 30px 15px 30px !important;
 }
 
+/* ─── MODAL ──────────────────────────────────────────────────── */
+
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
@@ -45,7 +52,7 @@
 }
 
 .modal-header {
-    padding: 20px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
@@ -54,7 +61,7 @@
 
 .modal-header h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     color: var(--text-primary);
 }
 
@@ -64,7 +71,6 @@
     font-size: 1.5rem;
     cursor: pointer;
     color: var(--text-primary);
-    /* Was var(--text-secondary) */
     opacity: 0.8;
     transition: opacity 0.2s;
 }
@@ -74,37 +80,28 @@
 }
 
 .modal-body {
-    padding: 20px;
+    padding: 16px 20px;
 }
 
 .modal-footer {
-    padding: 20px;
+    padding: 16px 20px;
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
     gap: 10px;
 }
 
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
+/* ─── BUTTONS ────────────────────────────────────────────────── */
 
 .primary-button {
     background-color: var(--petroleum-blue);
     color: white;
     border: none;
-    padding: 10px 24px;
+    padding: 8px 20px;
     border-radius: 999px;
-    /* Pill shape */
     cursor: pointer;
     font-weight: 600;
+    font-size: 13px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-sm);
 }
@@ -119,11 +116,11 @@
     background-color: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    padding: 10px 24px;
+    padding: 8px 20px;
     border-radius: 999px;
-    /* Pill shape */
     cursor: pointer;
     font-weight: 600;
+    font-size: 13px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -132,12 +129,60 @@
     color: var(--text-primary);
 }
 
-/* Textareas custom styling */
+.page-system-prompts .wizard-btn-sm {
+    font-size: 12.5px;
+    white-space: nowrap;
+    padding: 7px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.wizard-btn-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.wizard-btn-danger:hover {
+    background-color: rgba(220, 53, 69, 0.08);
+    color: #dc3545;
+}
+
+.wizard-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+}
+
+.wizard-nav-btn-main {
+    padding: 8px 24px;
+}
+
+.delete-config-section {
+    margin-top: 16px;
+    border-top: 1px solid var(--border-color-soft);
+    padding-top: 16px;
+}
+
+/* ─── FORM ───────────────────────────────────────────────────── */
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
 .premium-textarea {
     width: 100%;
-    padding: 16px;
+    padding: 14px;
     box-sizing: border-box;
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
     resize: vertical;
     font-family: inherit;
@@ -145,7 +190,7 @@
     background-color: var(--bg-primary);
     color: var(--text-primary);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 14.5px;
+    font-size: 13.5px;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
@@ -156,42 +201,305 @@
     box-shadow: 0 0 0 3px rgba(0, 95, 115, 0.1);
 }
 
-/* Number badges for rules */
+/* ─── LAYOUT ─────────────────────────────────────────────────── */
+
+.config-full-layout {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.config-full-layout .config-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.config-hamburger-layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ─── FLOATING CHAT ──────────────────────────────────────────── */
+
+.chat-fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--petroleum-blue);
+    color: white;
+    border: none;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+.chat-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+}
+
+.chat-fab.active {
+    background: var(--text-tertiary);
+}
+
+.chat-floating-panel {
+    position: fixed;
+    bottom: 72px;
+    right: 20px;
+    width: min(360px, calc(100vw - 40px));
+    height: min(480px, calc(100vh - 140px));
+    z-index: 99;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    animation: chatPanelIn 0.2s ease-out;
+}
+
+@keyframes chatPanelIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── WIZARD STEPPER ─────────────────────────────────────────── */
+
+.wizard-stepper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 0 10px;
+    flex-shrink: 0;
+}
+
+.step-wrapper {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.step-wrapper:last-child {
+    flex: 0;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+    min-width: 70px;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    border: 2px solid var(--border-color-soft);
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-number {
+    background: var(--petroleum-blue);
+    color: white;
+    border-color: var(--petroleum-blue);
+    box-shadow: 0 0 0 3px var(--petroleum-light);
+}
+
+.step-item.completed .step-number {
+    background: var(--success-color);
+    color: white;
+    border-color: var(--success-color);
+}
+
+.step-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+}
+
+.step-item.active .step-label {
+    color: var(--petroleum-blue);
+}
+
+.step-connector {
+    flex: 1;
+    height: 2px;
+    background: var(--border-color-soft);
+    margin: 0 10px;
+    margin-top: -20px;
+    border-radius: 4px;
+}
+
+.step-connector.active {
+    background: var(--success-color);
+}
+
+/* ─── WIZARD CARD ────────────────────────────────────────────── */
+
+.wizard-card {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 20px 24px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color-soft);
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.wizard-card .premium-textarea {
+    flex: 1;
+    min-height: 80px;
+    resize: none;
+    overflow-y: auto;
+}
+
+.wizard-card .table-container {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.wizard-card .management-table {
+    border-spacing: 0 4px;
+}
+
+.wizard-card .management-table th,
+.wizard-card .management-table td {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.rule-description-cell {
+    white-space: pre-wrap;
+    font-size: 13px;
+}
+
+.wizard-card .management-table th {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.wizard-card .actions-cell {
+    gap: 4px;
+}
+
+.wizard-card .action-icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+}
+
+.wizard-card .action-icon-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.card-header-wizard {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.card-header-wizard h3 {
+    font-size: 1.15rem;
+    margin: 0 0 3px 0;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.card-header-wizard p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.card-header-wizard-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.wizard-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color-soft);
+    flex-shrink: 0;
+}
+
+/* ─── RULES TABLE ────────────────────────────────────────────── */
+
 .rule-number-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background-color: var(--petroleum-light);
     color: var(--petroleum-blue);
     font-weight: 700;
-    font-size: 13px;
+    font-size: 11px;
 }
 
-/* Emtpy state */
 .rules-empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 20px;
+    padding: 40px 20px;
     color: var(--text-tertiary);
-    gap: 15px;
+    gap: 10px;
 }
 
 .rules-empty-icon {
-    font-size: 40px;
+    font-size: 32px;
     opacity: 0.5;
 }
 
-/* Ensure management table row separate styling */
 .section-regras .management-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0 8px;
-    /* Space between rows */
 }
 
 .section-regras .management-table th,
@@ -231,247 +539,19 @@
     padding-bottom: 8px;
 }
 
-/* Split View Layout */
-.split-view-layout {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    gap: 24px;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-}
+/* ─── ANIMATIONS ─────────────────────────────────────────────── */
 
-.split-view-layout .config-side {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-    height: 100%;
-}
-
-.config-hamburger-layout {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    flex-grow: 1 !important;
-    min-height: 0;
-    overflow: hidden;
-    height: 100%;
-}
-
-.split-view-layout .chat-side {
-    width: clamp(300px, 30%, 400px);
-    flex-shrink: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Wizard Stepper Styles */
-.wizard-stepper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 0 10px;
-    flex-shrink: 0;
-}
-
-.step-wrapper {
-    display: flex;
-    align-items: center;
-    flex: 1;
-}
-
-.step-wrapper:last-child {
-    flex: 0;
-}
-
-.step-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    position: relative;
-    z-index: 2;
-    transition: all 0.3s ease;
-    min-width: 100px;
-}
-
-.step-number {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--bg-tertiary);
-    color: var(--text-tertiary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 15px;
-    border: 2px solid var(--border-color-soft);
-    transition: all 0.3s ease;
-}
-
-.step-item.active .step-number {
-    background: var(--petroleum-blue);
-    color: white;
-    border-color: var(--petroleum-blue);
-    box-shadow: 0 0 0 4px var(--petroleum-light);
-}
-
-.step-item.completed .step-number {
-    background: var(--success-color);
-    color: white;
-    border-color: var(--success-color);
-}
-
-.step-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    white-space: nowrap;
-}
-
-.step-item.active .step-label {
-    color: var(--petroleum-blue);
-}
-
-.step-connector {
-    flex: 1;
-    height: 3px;
-    background: var(--border-color-soft);
-    margin: 0 10px;
-    margin-top: -24px; /* Adjust to align with circle center */
-    border-radius: 4px;
-}
-
-.step-connector.active {
-    background: var(--success-color);
-}
-
-/* Wizard Card Styles */
-.wizard-card {
-    background: var(--bg-secondary);
-    border-radius: 20px;
-    padding: 25px 30px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border-color-soft);
-    flex: 1;
-    flex-grow: 1 !important;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.wizard-card .premium-textarea {
-    flex: 1;
-    min-height: 120px;
-    resize: none;
-    overflow-y: auto;
-}
-
-.wizard-card .table-container {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-.wizard-card .management-table {
-    border-spacing: 0 5px;
-}
-
-.wizard-card .management-table th,
-.wizard-card .management-table td {
-    padding: 10px 14px;
-}
-
-.rule-description-cell {
-    white-space: pre-wrap;
-    font-size: 14px;
-}
-
-.card-header-wizard {
-    margin-bottom: 15px;
-    flex-shrink: 0;
-}
-
-.card-header-wizard h3 {
-    font-size: 1.6rem;
-    margin-bottom: 10px;
-    color: var(--text-primary);
-    font-weight: 700;
-}
-
-.card-header-wizard p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.wizard-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color-soft);
-    flex-shrink: 0;
-}
-
-/* Animations */
 .animate-in {
     animation: wizardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes wizardFadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(10px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 768px) {
-    .wizard-stepper {
-        padding: 0;
-    }
-    .step-label {
-        font-size: 11px;
-    }
-    .step-connector {
-        margin: 0 5px;
-        margin-top: -22px;
-    }
-}
+/* ─── SUGGESTIONS MODAL ─────────────────────────────────────── */
 
-@media (min-width: 1025px) and (max-width: 1300px) {
-    .split-view-layout .chat-side {
-        width: clamp(260px, 28%, 340px);
-    }
-}
-
-@media (max-width: 1024px) {
-    .split-view-layout {
-        flex-direction: column;
-    }
-
-    .split-view-layout .chat-side {
-        width: 100%;
-        height: 600px;
-        margin-top: 30px;
-        position: static;
-    }
-}
-
-/* Suggestions Modal */
 .suggestions-modal {
     max-width: 520px;
     width: 90%;
@@ -480,14 +560,14 @@
 .suggestions-modal-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .suggestion-modal-card {
     display: flex;
     align-items: flex-start;
-    gap: 14px;
-    padding: 14px 16px;
+    gap: 12px;
+    padding: 12px 14px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color-soft);
     border-radius: 10px;
@@ -505,7 +585,7 @@
 
 .suggestion-modal-card-icon {
     color: var(--petroleum-blue);
-    font-size: 18px;
+    font-size: 16px;
     flex-shrink: 0;
     margin-top: 2px;
 }
@@ -513,221 +593,22 @@
 .suggestion-modal-card-text {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
 }
 
 .suggestion-modal-card-text strong {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
 }
 
 .suggestion-modal-card-text span {
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--text-secondary);
     line-height: 1.4;
 }
 
-/* ===== Compact layout for small height monitors ===== */
+/* ─── SUGGESTIONS CHIPS ──────────────────────────────────────── */
 
-/* Telas médias: 750–900px de altura */
-@media (max-height: 900px) {
-    .page-system-prompts {
-        padding: 14px 30px 8px 30px !important;
-    }
-
-    .page-system-prompts .page-header {
-        margin-bottom: 8px !important;
-    }
-
-    .page-system-prompts .page-header h1 {
-        font-size: 1.4rem;
-        margin-bottom: 2px;
-    }
-
-    .page-system-prompts .page-header p {
-        font-size: 0.85rem;
-    }
-
-    .wizard-stepper {
-        margin-bottom: 10px;
-    }
-
-    .step-number {
-        width: 30px;
-        height: 30px;
-        font-size: 13px;
-    }
-
-    .step-label {
-        font-size: 12px;
-    }
-
-    .step-connector {
-        margin-top: -20px;
-    }
-
-    .page-system-prompts .wizard-card.dashboard-card {
-        padding: 16px 24px 10px 24px !important;
-    }
-
-    .card-header-wizard {
-        margin-bottom: 10px;
-    }
-
-    .card-header-wizard h3 {
-        font-size: 1.25rem;
-        margin-bottom: 3px;
-    }
-
-    .card-header-wizard p {
-        font-size: 0.85rem;
-    }
-
-    .wizard-actions {
-        margin-top: 10px;
-        padding-top: 10px;
-    }
-
-    .wizard-card .management-table {
-        border-spacing: 0 4px;
-    }
-
-    .wizard-card .management-table th,
-    .wizard-card .management-table td {
-        padding: 9px 12px;
-        font-size: 13px;
-    }
-}
-
-/* Telas pequenas: até 750px de altura */
-@media (max-height: 750px) {
-    .page-system-prompts {
-        padding: 8px 28px 4px 28px !important;
-    }
-
-    .page-system-prompts .page-header {
-        margin-bottom: 4px !important;
-    }
-
-    .page-system-prompts .page-header h1 {
-        font-size: 1.2rem;
-        margin-bottom: 1px;
-    }
-
-    .page-system-prompts .page-header p {
-        font-size: 0.78rem;
-        line-height: 1.3;
-    }
-
-    .wizard-stepper {
-        margin-bottom: 8px;
-        padding: 0 8px;
-    }
-
-    .step-item {
-        gap: 3px;
-    }
-
-    .step-number {
-        width: 26px;
-        height: 26px;
-        font-size: 12px;
-    }
-
-    .step-label {
-        font-size: 11px;
-    }
-
-    .step-connector {
-        margin-top: -16px;
-        height: 2px;
-    }
-
-    .page-system-prompts .wizard-card.dashboard-card {
-        padding: 10px 20px 8px 20px !important;
-    }
-
-    .card-header-wizard {
-        margin-bottom: 6px;
-    }
-
-    .card-header-wizard h3 {
-        font-size: 1.05rem;
-        margin-bottom: 2px;
-    }
-
-    .card-header-wizard p {
-        font-size: 0.78rem;
-        line-height: 1.3;
-    }
-
-    .wizard-actions {
-        margin-top: 6px;
-        padding-top: 6px;
-    }
-
-    .wizard-actions .primary-button,
-    .wizard-actions .secondary-button {
-        padding: 7px 14px;
-        font-size: 13px;
-    }
-
-    .wizard-card .management-table {
-        border-spacing: 0 3px;
-    }
-
-    .wizard-card .management-table th {
-        padding: 4px 10px;
-        font-size: 10px;
-    }
-
-    .wizard-card .management-table td {
-        padding: 7px 10px;
-        font-size: 12px;
-    }
-
-    .split-view-layout {
-        gap: 16px;
-    }
-}
-
-/* Telas muito pequenas: até 600px de altura */
-@media (max-height: 600px) {
-    .page-system-prompts .page-header h1 {
-        font-size: 1.05rem;
-    }
-
-    .page-system-prompts .page-header p {
-        display: none;
-    }
-
-    .step-number {
-        width: 22px;
-        height: 22px;
-        font-size: 10px;
-    }
-
-    .step-label {
-        font-size: 10px;
-    }
-
-    .card-header-wizard h3 {
-        font-size: 0.95rem;
-    }
-
-    .card-header-wizard p {
-        display: none;
-    }
-
-    .wizard-card .management-table td {
-        padding: 5px 10px;
-        font-size: 11px;
-    }
-}
-
-/* ===== End compact layout ===== */
-
-/* Suggestions Section */
 .suggestions-section {
     margin-bottom: 15px;
     background: var(--petroleum-light);
@@ -760,20 +641,20 @@
 .suggestion-chip {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 999px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     transition: all 0.2s ease;
 }
 
 .suggestion-chip svg {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--petroleum-blue);
 }
 
@@ -784,7 +665,8 @@
     transform: translateY(-1px);
 }
 
-/* Pagination Styles */
+/* ─── PAGINATION ─────────────────────────────────────────────── */
+
 .page-system-prompts .pagination-container {
     display: flex;
     justify-content: flex-end;
@@ -826,19 +708,19 @@
     color: var(--text-secondary);
 }
 
-/* Bot Toggle */
+/* ─── BOT TOGGLE ─────────────────────────────────────────────── */
+
 .bot-toggle-wrapper {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    border-radius: 12px;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     background: var(--bg-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: var(--shadow-sm);
-    min-width: 190px;
 }
 
 .bot-toggle-wrapper:hover:not(:disabled) {
@@ -853,7 +735,7 @@
 }
 
 .bot-toggle-icon {
-    font-size: 18px;
+    font-size: 14px;
     color: var(--text-tertiary);
     flex-shrink: 0;
     transition: color 0.2s ease;
@@ -868,18 +750,18 @@
     flex-direction: column;
     align-items: flex-start;
     flex: 1;
-    gap: 2px;
+    gap: 1px;
 }
 
 .bot-toggle-label {
-    font-size: var(--font-sm);
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1;
 }
 
 .bot-toggle-status {
-    font-size: var(--font-xs);
+    font-size: 0.65rem;
     font-weight: 500;
     color: var(--text-tertiary);
     transition: color 0.2s ease;
@@ -890,11 +772,11 @@
 }
 
 .bot-toggle-track {
-    width: 42px;
-    height: 24px;
+    width: 34px;
+    height: 18px;
     border-radius: 99px;
     background: var(--bg-tertiary);
-    border: 2px solid var(--border-color);
+    border: 1.5px solid var(--border-color);
     position: relative;
     flex-shrink: 0;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -909,8 +791,8 @@
     position: absolute;
     top: 2px;
     left: 2px;
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: white;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -918,7 +800,7 @@
 }
 
 .bot-toggle-wrapper.active .bot-toggle-thumb {
-    transform: translateX(18px);
+    transform: translateX(15px);
 }
 
 .bot-toggle-wrapper.loading .bot-toggle-thumb {
@@ -929,4 +811,130 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
 }
-
+
+/* ─── RESPONSIVE: small height ───────────────────────────────── */
+
+@media (max-height: 750px) {
+    .page-system-prompts {
+        padding: 8px 20px 4px 20px !important;
+    }
+
+    .page-system-prompts .page-header {
+        margin-bottom: 4px !important;
+    }
+
+    .page-system-prompts .page-header h1 {
+        font-size: 1.15rem;
+    }
+
+    .page-system-prompts .page-header p {
+        font-size: 0.78rem;
+    }
+
+    .page-system-prompts .wizard-card.dashboard-card {
+        padding: 10px 18px 8px 18px !important;
+    }
+
+    .wizard-stepper {
+        margin-bottom: 6px;
+    }
+
+    .step-number {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+
+    .step-label {
+        font-size: 10.5px;
+    }
+
+    .step-item {
+        gap: 3px;
+        min-width: 50px;
+    }
+
+    .step-connector {
+        margin-top: -14px;
+    }
+
+    .card-header-wizard {
+        margin-bottom: 6px;
+    }
+
+    .card-header-wizard h3 {
+        font-size: 1rem;
+        margin-bottom: 1px;
+    }
+
+    .card-header-wizard p {
+        font-size: 0.75rem;
+    }
+
+    .page-system-prompts .wizard-btn-sm {
+        padding: 4px 8px;
+        font-size: 10.5px;
+        gap: 3px;
+    }
+
+    .wizard-nav-btn {
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .wizard-nav-btn-main {
+        padding: 6px 16px;
+    }
+
+    .wizard-actions {
+        padding-top: 6px;
+    }
+
+    .wizard-card .management-table th,
+    .wizard-card .management-table td {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .premium-textarea {
+        padding: 10px;
+        font-size: 12.5px;
+    }
+
+    .rules-empty-state {
+        padding: 24px 16px;
+    }
+
+    .rules-empty-icon {
+        font-size: 24px;
+    }
+
+    .delete-config-section {
+        margin-top: 8px;
+        padding-top: 8px;
+    }
+}
+
+@media (max-height: 650px) {
+    .page-system-prompts .page-header p {
+        display: none;
+    }
+
+    .card-header-wizard p {
+        display: none;
+    }
+
+    .step-number {
+        width: 22px;
+        height: 22px;
+        font-size: 10px;
+    }
+
+    .step-label {
+        font-size: 10px;
+    }
+
+    .card-header-wizard h3 {
+        font-size: 0.92rem;
+    }
+}

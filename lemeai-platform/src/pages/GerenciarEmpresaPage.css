@@ -31,6 +31,64 @@
   margin: 0;
 }
 
+/* ─── TABS ────────────────────────────────────────────────────── */
+.ge-tab-nav {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--border-color-soft);
+  gap: 0.25rem;
+}
+
+.ge-tab-button {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  font-size: var(--font-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease-in-out;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+}
+
+.ge-tab-text-short { display: none; }
+.ge-tab-text-full  { display: inline; }
+
+.ge-tab-button:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ge-tab-button.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08), var(--shadow-sm);
+}
+
+.ge-tab-content {
+  flex: 1;
+  min-height: 0;
+}
+
+.ge-tab-pane {
+  animation: geTabFadeIn 0.25s ease-out;
+}
+
+@keyframes geTabFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ─── CARD ────────────────────────────────────────────────────── */
 .gerenciar-empresa-card {
   background: var(--bg-secondary);
@@ -421,6 +479,13 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .ge-tab-text-full { display: none; }
+  .ge-tab-text-short { display: inline; }
+
+  .ge-tab-button svg {
+    display: none;
+  }
 }
 
 @media (max-width: 600px) {
@@ -430,5 +495,10 @@
 
   .gerenciar-empresa-summary {
     grid-template-columns: 1fr;
+  }
+
+  .ge-tab-button {
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-xs);
   }
 }

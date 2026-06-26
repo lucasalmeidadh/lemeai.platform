@@ -24,7 +24,8 @@ import {
     FaUserCog,
     FaFileAlt,
     FaListAlt,
-    FaIdBadge
+    FaIdBadge,
+    FaCogs
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -42,7 +43,8 @@ const Sidebar: FC<SidebarProps> = () => {
     // Accordion States
     const [isMarketingOpen, setIsMarketingOpen] = useState(false);
     const [isReportsOpen, setIsReportsOpen] = useState(false);
-    const [isGestaoOpen, setIsGestaoOpen] = useState(false);
+    const [isGestaoUsuariosOpen, setIsGestaoUsuariosOpen] = useState(false);
+    const [isAdministracaoOpen, setIsAdministracaoOpen] = useState(false);
     const [isChatbotOpen, setIsChatbotOpen] = useState(false);
     const [isEmpresaOpen, setIsEmpresaOpen] = useState(false);
 
@@ -57,7 +59,8 @@ const Sidebar: FC<SidebarProps> = () => {
     useEffect(() => {
         setIsMarketingOpen(false);
         setIsReportsOpen(false);
-        setIsGestaoOpen(false);
+        setIsGestaoUsuariosOpen(false);
+        setIsAdministracaoOpen(false);
         setIsChatbotOpen(false);
         setIsEmpresaOpen(false);
     }, [location.pathname]);
@@ -67,7 +70,8 @@ const Sidebar: FC<SidebarProps> = () => {
             if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
                 setIsMarketingOpen(false);
                 setIsReportsOpen(false);
-                setIsGestaoOpen(false);
+                setIsGestaoUsuariosOpen(false);
+                setIsAdministracaoOpen(false);
                 setIsChatbotOpen(false);
                 setIsEmpresaOpen(false);
             }
@@ -86,24 +90,36 @@ const Sidebar: FC<SidebarProps> = () => {
         return hasPermission(permissions, [perm]);
     };
 
+    let userEmpresaId: number | null = null;
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        userEmpresaId = user?.empresaId || null;
+    } catch (e) {
+        // ignore
+    }
+    const isEmpresa4Or8 = userEmpresaId === 4 || userEmpresaId === 8;
+
     // Active Checks
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
     const isReportsActive = location.pathname.startsWith('/relatorios');
-    const isGestaoActive = ['/users', '/equipes', '/metas', '/campos-personalizados', '/tipos-usuario'].includes(location.pathname);
-    const isChatbotActive = ['/chat-rules', '/products', '/connections'].includes(location.pathname);
-    const isEmpresaActive = ['/gerenciar-empresa', '/empresas', '/gerenciar-planos'].includes(location.pathname);
+    const isGestaoUsuariosActive = ['/users', '/equipes', '/tipos-usuario'].includes(location.pathname);
+    const isAdministracaoActive = ['/metas', '/campos-personalizados'].includes(location.pathname);
+    const isChatbotActive = ['/chat-rules', '/products'].includes(location.pathname);
+    const isEmpresaActive = ['/gerenciar-empresa', '/empresas', '/gerenciar-planos', '/connections'].includes(location.pathname);
 
     // Toggles
-    const toggleMarketing = () => { setIsMarketingOpen(!isMarketingOpen); setIsReportsOpen(false); setIsGestaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
-    const toggleReports = () => { setIsReportsOpen(!isReportsOpen); setIsMarketingOpen(false); setIsGestaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
-    const toggleGestao = () => { setIsGestaoOpen(!isGestaoOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
-    const toggleChatbot = () => { setIsChatbotOpen(!isChatbotOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoOpen(false); setIsEmpresaOpen(false); };
-    const toggleEmpresa = () => { setIsEmpresaOpen(!isEmpresaOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoOpen(false); setIsChatbotOpen(false); };
+    const toggleMarketing = () => { setIsMarketingOpen(!isMarketingOpen); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
+    const toggleReports = () => { setIsReportsOpen(!isReportsOpen); setIsMarketingOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
+    const toggleGestaoUsuarios = () => { setIsGestaoUsuariosOpen(!isGestaoUsuariosOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
+    const toggleAdministracao = () => { setIsAdministracaoOpen(!isAdministracaoOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
+    const toggleChatbot = () => { setIsChatbotOpen(!isChatbotOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsEmpresaOpen(false); };
+    const toggleEmpresa = () => { setIsEmpresaOpen(!isEmpresaOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); };
 
     const closeSettings = () => {
         setIsMarketingOpen(false);
         setIsReportsOpen(false);
-        setIsGestaoOpen(false);
+        setIsGestaoUsuariosOpen(false);
+        setIsAdministracaoOpen(false);
         setIsChatbotOpen(false);
         setIsEmpresaOpen(false);
     };
@@ -235,23 +251,23 @@ const Sidebar: FC<SidebarProps> = () => {
                     </div>
                 )}
 
-                {(can('gestao_usuarios') || can('gestao_equipes') || can('gestao_metas') || can('gestao_campos_personalizados') || can('gestao_tipos_usuario') || can('regras_chatbot') || can('gestao_produtos') || can('gestao_conexoes') || can('dias_funcionamento') || can('gestao_empresas') || can('gerenciar_planos')) && (
+                {(can('gestao_usuarios') || can('gestao_equipes') || can('gestao_metas') || can('gestao_campos_personalizados') || can('gestao_tipos_usuario') || can('regras_chatbot') || can('gestao_produtos') || can('gestao_conexoes') || can('dias_funcionamento') || can('gestao_empresas') || (can('gerenciar_planos') && !isEmpresa4Or8)) && (
                     <div className="sidebar-group">
                         <div className="sidebar-group-title">Administração</div>
 
-                        {/* Gestão */}
-                        {(can('gestao_usuarios') || can('gestao_equipes') || can('gestao_metas') || can('gestao_campos_personalizados') || can('gestao_tipos_usuario')) && (
+                        {/* Gestão de usuários */}
+                        {(can('gestao_usuarios') || can('gestao_equipes') || can('gestao_tipos_usuario')) && (
                             <div className="sidebar-item-wrapper">
                                 <button
-                                    id="sidebar-gestao-admin"
-                                    className={`sidebar-btn ${isGestaoActive || isGestaoOpen ? 'active' : ''} ${isGestaoOpen ? 'open' : ''}`}
-                                    onClick={toggleGestao}
+                                    id="sidebar-gestao-usuarios-admin"
+                                    className={`sidebar-btn ${isGestaoUsuariosActive || isGestaoUsuariosOpen ? 'active' : ''} ${isGestaoUsuariosOpen ? 'open' : ''}`}
+                                    onClick={toggleGestaoUsuarios}
                                 >
                                     <FaUsersCog />
-                                    <span>Gestão</span>
+                                    <span>Gestão de usuários</span>
                                     <FaChevronRight className="chevron-icon" />
                                 </button>
-                                <div className={`sidebar-accordion ${isGestaoOpen ? 'open' : ''}`}>
+                                <div className={`sidebar-accordion ${isGestaoUsuariosOpen ? 'open' : ''}`}>
                                     <div className="sidebar-accordion-content">
                                         {can('gestao_usuarios') && (
                                             <Link id="sidebar-users" to="/users" className={`sidebar-sub-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
@@ -271,6 +287,25 @@ const Sidebar: FC<SidebarProps> = () => {
                                                 <span>Equipes</span>
                                             </Link>
                                         )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Administração */}
+                        {(can('gestao_metas') || can('gestao_campos_personalizados')) && (
+                            <div className="sidebar-item-wrapper">
+                                <button
+                                    id="sidebar-administracao-admin"
+                                    className={`sidebar-btn ${isAdministracaoActive || isAdministracaoOpen ? 'active' : ''} ${isAdministracaoOpen ? 'open' : ''}`}
+                                    onClick={toggleAdministracao}
+                                >
+                                    <FaCogs />
+                                    <span>Administração</span>
+                                    <FaChevronRight className="chevron-icon" />
+                                </button>
+                                <div className={`sidebar-accordion ${isAdministracaoOpen ? 'open' : ''}`}>
+                                    <div className="sidebar-accordion-content">
                                         {can('gestao_metas') && (
                                             <Link to="/metas" className={`sidebar-sub-link ${location.pathname === '/metas' ? 'active' : ''}`} onClick={closeSettings}>
                                                 <FaBullseye />
@@ -289,7 +324,7 @@ const Sidebar: FC<SidebarProps> = () => {
                         )}
 
                         {/* Chatbot */}
-                        {(can('regras_chatbot') || can('gestao_produtos') || can('gestao_conexoes')) && (
+                        {(can('regras_chatbot') || can('gestao_produtos')) && (
                             <div className="sidebar-item-wrapper">
                                 <button
                                     id="sidebar-chatbot-admin"
@@ -314,19 +349,13 @@ const Sidebar: FC<SidebarProps> = () => {
                                                 <span>Produtos</span>
                                             </Link>
                                         )}
-                                        {can('gestao_conexoes') && (
-                                            <Link to="/connections" className={`sidebar-sub-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
-                                                <FaPlug />
-                                                <span>Conexões</span>
-                                            </Link>
-                                        )}
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Empresa */}
-                        {(can('dias_funcionamento') || can('gestao_empresas') || can('gerenciar_planos')) && (
+                        {(can('dias_funcionamento') || can('gestao_empresas') || (can('gerenciar_planos') && !isEmpresa4Or8) || can('gestao_conexoes')) && (
                             <div className="sidebar-item-wrapper">
                                 <button
                                     id="sidebar-empresa-admin"
@@ -351,7 +380,13 @@ const Sidebar: FC<SidebarProps> = () => {
                                                 <span>Empresas</span>
                                             </Link>
                                         )}
-                                        {can('gerenciar_planos') && (
+                                        {can('gestao_conexoes') && (
+                                            <Link to="/connections" className={`sidebar-sub-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaPlug />
+                                                <span>Conexões</span>
+                                            </Link>
+                                        )}
+                                        {can('gerenciar_planos') && !isEmpresa4Or8 && (
                                             <Link to="/gerenciar-planos" className={`sidebar-sub-link ${location.pathname === '/gerenciar-planos' ? 'active' : ''}`} onClick={closeSettings}>
                                                 <FaCreditCard />
                                                 <span>Gerenciar Planos</span>

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useDeferredValue, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { FaCopy, FaDownload, FaSync, FaSave, FaImage, FaTrash } from 'react-icons/fa';
 import { QRCodeSVG } from 'qrcode.react';
 import GerenciarEmpresaService, { getMidiaUrl } from '../services/GerenciarEmpresaService';
+import LandingPagePreview from './LandingPagePreview';
 import './LandingPageConfigTab.css';
 
 const LandingPageConfigTab = () => {
@@ -18,12 +19,20 @@ const LandingPageConfigTab = () => {
   const [promoActive, setPromoActive] = useState(false);
   const [segmentsList, setSegmentsList] = useState<string[]>([]);
   const [newSegmentInput, setNewSegmentInput] = useState('');
-  
+  const [branchName, setBranchName] = useState('Sua Empresa');
+
+  const deferredPrimaryColor = useDeferredValue(primaryColor);
+  const deferredBgColor = useDeferredValue(bgColor);
+  const deferredTextColor = useDeferredValue(textColor);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchConfig();
+    GerenciarEmpresaService.getDadosGerais()
+      .then(dados => { if (dados.nomeEmpresa) setBranchName(dados.nomeEmpresa); })
+      .catch(() => {});
   }, []);
 
   const fetchConfig = async () => {
@@ -356,7 +365,23 @@ const LandingPageConfigTab = () => {
           </div>
         </div>
 
-        <div className="config-qr-section">
+        <div className="config-preview-section">
+          <div className="preview-card">
+            <h3>Pré-visualização</h3>
+            <p className="section-description text-center">Visualização em tempo real da página de captura.</p>
+            <LandingPagePreview
+              primaryColor={deferredPrimaryColor}
+              bgColor={deferredBgColor}
+              textColor={deferredTextColor}
+              logoPath={logoPath}
+              segmentsList={segmentsList}
+              promoActive={promoActive}
+              promoCode={promoCode}
+              promoText={promoText}
+              branchName={branchName}
+            />
+          </div>
+
           <div className="qr-card">
             <h3>QR Code & Link Público</h3>
             <p className="section-description text-center">Disponibilize este QR Code na sua loja física.</p>
