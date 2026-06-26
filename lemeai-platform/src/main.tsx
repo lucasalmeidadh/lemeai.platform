@@ -10,7 +10,6 @@ import ContactsPage from './pages/ContactsPage.tsx';
 import PipelinePage from './pages/PipelinePage.tsx';
 import ChatPage from './pages/ChatPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
-import ProfileManagementPage from './pages/ProfileManagementPage.tsx';
 import SystemPromptsPage from './pages/SystemPromptsPage.tsx';
 import ProductsPage from './pages/ProductsPage.tsx';
 import ConnectionsPage from './pages/ConnectionsPage.tsx';
@@ -64,7 +63,6 @@ const router = createBrowserRouter([
           { path: "relatorios/vendas", element: <PermissionGuard><ReportsPage /></PermissionGuard> },
           { path: "relatorios/campanhas", element: <PermissionGuard><CampaignReportsPage /></PermissionGuard> },
           { path: "users", element: <PermissionGuard><UserManagementPage /></PermissionGuard> },
-          { path: "profiles", element: <PermissionGuard><ProfileManagementPage /></PermissionGuard> },
           { path: "chat-rules", element: <PermissionGuard><SystemPromptsPage /></PermissionGuard> },
           { path: "products", element: <PermissionGuard><ProductsPage /></PermissionGuard> },
           { path: "connections", element: <PermissionGuard><ConnectionsPage /></PermissionGuard> },

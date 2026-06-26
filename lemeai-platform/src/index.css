@@ -323,6 +323,14 @@ html {
   background-color: var(--petroleum-light);
 }
 
+.action-icon-btn.permissions {
+  color: var(--color-ai);
+}
+
+.action-icon-btn.permissions:hover {
+  background-color: var(--color-ai-bg);
+}
+
 /* ─── GLOBAL LAYOUT ───────────────────────────────────────────── */
 .page-container {
   padding: var(--space-10);

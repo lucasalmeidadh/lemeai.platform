@@ -12,6 +12,7 @@ export interface TipoUsuario {
 export interface TipoUsuarioDto {
   nome: string;
   canReceiveLead: boolean;
+  permissoesIds?: number[];
 }
 
 export interface ImpactoExclusaoUsuario {

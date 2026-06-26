@@ -59,7 +59,8 @@ Cria um novo tipo de usuário (perfil) na empresa do usuário autenticado.
 ```json
 {
   "nome": "Vendedor",
-  "canReceiveLead": true
+  "canReceiveLead": true,
+  "permissoesIds": [1, 3, 5]
 }
 ```
 
@@ -67,6 +68,7 @@ Cria um novo tipo de usuário (perfil) na empresa do usuário autenticado.
 |-------|------|-------------|-----------|
 | `nome` | `string` | sim | Nome do perfil (`TypeuserNome`). Único por empresa. |
 | `canReceiveLead` | `bool` | sim | Se usuários desse tipo participam do rodízio de leads (`UsuariosVendedores`) |
+| `permissoesIds` | `array<int>` | não | IDs de permissões do catálogo global a vincular ao perfil já na criação. Vazio/omitido = perfil nasce sem nenhuma permissão. IDs inexistentes no catálogo retornam erro e nada é persistido. |
 
 > Não existe campo `codigo` no request. `TypeuserCodigo` nasce sempre `null` em tipos criados pela API — só é definido como `1` (Administrador) pelo seed automático ao criar a empresa, ou manualmente no banco para `2` (Serviço).
 
@@ -93,6 +95,15 @@ Cria um novo tipo de usuário (perfil) na empresa do usuário autenticado.
 }
 ```
 
+**Response 400 (id de permissão inexistente no catálogo):**
+```json
+{
+  "sucesso": false,
+  "mensagem": "Permissão(ões) inexistente(s) no catálogo: 99, 100",
+  "dados": null
+}
+```
+
 ---
 
 ## PUT `/api/TipoUsuario/Atualizar/{id}`
@@ -108,7 +119,8 @@ Atualiza o nome e/ou a flag `canReceiveLead` de um tipo de usuário existente. E
 ```json
 {
   "nome": "Vendedor Sênior",
-  "canReceiveLead": false
+  "canReceiveLead": false,
+  "permissoesIds": [1, 3]
 }
 ```
 
@@ -116,6 +128,7 @@ Atualiza o nome e/ou a flag `canReceiveLead` de um tipo de usuário existente. E
 |-------|------|-------------|-----------|
 | `nome` | `string` | sim | Novo nome do perfil |
 | `canReceiveLead` | `bool` | sim | Novo valor da flag de rodízio de leads |
+| `permissoesIds` | `array<int>` | não | Lista final de permissões do perfil — substitui (diff) o conjunto atual de vínculos, na empresa do token. Vazio/omitido remove todas as permissões vinculadas. IDs inexistentes no catálogo retornam erro e nada é alterado. |
 
 **Response 200:**
 ```json
@@ -145,6 +158,15 @@ Atualiza o nome e/ou a flag `canReceiveLead` de um tipo de usuário existente. E
 {
   "sucesso": false,
   "mensagem": "Acesso não autorizado.",
+  "dados": null
+}
+```
+
+**Response 400 (id de permissão inexistente no catálogo):**
+```json
+{
+  "sucesso": false,
+  "mensagem": "Permissão(ões) inexistente(s) no catálogo: 99, 100",
   "dados": null
 }
 ```

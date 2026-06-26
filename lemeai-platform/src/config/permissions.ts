@@ -10,7 +10,6 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   '/relatorios/vendas': ['relatorio_vendas'],
   '/relatorios/campanhas': ['relatorio_campanhas'],
   '/users': ['gestao_usuarios'],
-  '/profiles': ['gestao_perfis'],
   '/equipes': ['gestao_equipes'],
   '/metas': ['gestao_metas'],
   '/tipos-usuario': ['gestao_tipos_usuario'],

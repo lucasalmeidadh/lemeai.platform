@@ -4,10 +4,10 @@ import {
   FaPlus, FaEdit, FaTrash, FaSearch, FaUsersCog,
   FaCheckCircle, FaTimesCircle, FaUserShield, FaRobot, FaUserTag,
 } from 'react-icons/fa';
-import TipoUsuarioFormModal from '../components/TipoUsuarioFormModal';
 import TipoUsuarioDeleteImpactModal from '../components/TipoUsuarioDeleteImpactModal';
+import TipoUsuarioPermissoesModal from '../components/TipoUsuarioPermissoesModal';
 import TipoUsuarioService, {
-  type TipoUsuario, type TipoUsuarioDto, type ImpactoExclusao,
+  type TipoUsuario, type ImpactoExclusao,
 } from '../services/TipoUsuarioService';
 import '../pages/UserManagementPage.css';
 import './TipoUsuarioPage.css';
@@ -24,7 +24,6 @@ const TipoUsuarioPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tipoToEdit, setTipoToEdit] = useState<TipoUsuario | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [tipoToDelete, setTipoToDelete] = useState<TipoUsuario | null>(null);
   const [impacto, setImpacto] = useState<ImpactoExclusao | null>(null);
   const [isLoadingImpacto, setIsLoadingImpacto] = useState(false);
@@ -57,24 +56,9 @@ const TipoUsuarioPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = async (dto: TipoUsuarioDto) => {
-    setIsSaving(true);
-    try {
-      if (tipoToEdit) {
-        await TipoUsuarioService.atualizar(tipoToEdit.id, dto);
-        toast.success('Perfil atualizado com sucesso!');
-      } else {
-        await TipoUsuarioService.criar(dto);
-        toast.success('Perfil criado com sucesso!');
-      }
-      setIsModalOpen(false);
-      setTipoToEdit(null);
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.message ?? 'Erro ao salvar perfil.');
-    } finally {
-      setIsSaving(false);
-    }
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTipoToEdit(null);
   };
 
   const handleCloseDeleteModal = () => {
@@ -114,12 +98,11 @@ const TipoUsuarioPage = () => {
 
   return (
     <>
-      <TipoUsuarioFormModal
+      <TipoUsuarioPermissoesModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
+        onClose={handleCloseModal}
+        onSaved={fetchData}
         tipoToEdit={tipoToEdit}
-        isSaving={isSaving}
       />
       <TipoUsuarioDeleteImpactModal
         isOpen={tipoToDelete !== null}
@@ -132,9 +115,9 @@ const TipoUsuarioPage = () => {
 
       <div className="page-container">
         <div className="page-header">
-          <h1>Tipos de Usuário</h1>
+          <h1>Perfis</h1>
           <button className="add-button" onClick={() => handleOpenModal()}>
-            <FaPlus /> Novo Tipo
+            <FaPlus /> Novo Perfil
           </button>
         </div>
 
