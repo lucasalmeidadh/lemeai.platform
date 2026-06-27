@@ -8,7 +8,10 @@ import {
   FaArrowRight,
   FaExternalLinkAlt,
   FaBan,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaQrcode,
+  FaTimes,
+  FaExchangeAlt
 } from 'react-icons/fa';
 import { billingService } from '../services/billingService';
 import type { PlanoBackend, AssinaturaBackend } from '../services/billingService';
@@ -27,6 +30,10 @@ const BillingPlanPage: React.FC = () => {
     type: 'trocar' | 'cancelar';
     planId?: number;
   }>({ open: false, type: 'trocar' });
+  const [paymentModal, setPaymentModal] = useState<{ open: boolean; planId: number | null }>({
+    open: false,
+    planId: null,
+  });
 
   useEffect(() => {
     loadBillingData();
@@ -35,15 +42,12 @@ const BillingPlanPage: React.FC = () => {
   const loadBillingData = async () => {
     try {
       setLoading(true);
-      
-      // Buscar todos os planos ativos
-      const plansRes = await billingService.buscarTodosPlanos();
+
+      const plansRes = await billingService.buscarPlanosDisponiveis();
       if (plansRes.sucesso) {
-        // Filtrar apenas planos ativos
-        setPlans(plansRes.dados.filter(p => p.planoAtivo));
+        setPlans(plansRes.dados);
       }
 
-      // Buscar assinatura ativa da empresa
       const subRes = await billingService.buscarAssinaturaAtiva();
       if (subRes && subRes.sucesso) {
         setSubscription(subRes.dados);
@@ -57,13 +61,22 @@ const BillingPlanPage: React.FC = () => {
     }
   };
 
-  const handleSubscribe = async (planId: number) => {
+  const handleSubscribeChoice = (planId: number) => {
+    setPaymentModal({ open: true, planId });
+  };
+
+  const handleCheckout = async (method: 'CARD' | 'PIX') => {
+    const planId = paymentModal.planId!;
+    setPaymentModal({ open: false, planId: null });
     setProcessingPlanId(planId);
     try {
-      const checkoutRes = await billingService.criarCheckout(planId);
+      const checkoutRes =
+        method === 'PIX'
+          ? await billingService.criarCheckoutPix(planId)
+          : await billingService.criarCheckout(planId);
+
       if (checkoutRes.sucesso && checkoutRes.dados.assinaturaCheckoutUrl) {
         toast.success('Checkout gerado com sucesso!');
-        // Redireciona o usuário para a página de pagamento externa segura da AbacatePay
         window.open(checkoutRes.dados.assinaturaCheckoutUrl, '_blank', 'noopener,noreferrer');
         loadBillingData();
       } else {
@@ -77,6 +90,10 @@ const BillingPlanPage: React.FC = () => {
   };
 
   const handleTrocarPlano = (planId: number) => {
+    if (subscription?.assinaturaMetodo === 'PIX') {
+      toast.error('Troca automática não disponível para PIX. Cancele a assinatura e crie um novo checkout.');
+      return;
+    }
     setConfirmModal({ open: true, type: 'trocar', planId });
   };
 
@@ -108,7 +125,7 @@ const BillingPlanPage: React.FC = () => {
       try {
         const res = await billingService.cancelarAssinatura();
         if (res.sucesso) {
-          toast.success('Assinatura cancelada com sucesso.');
+          toast.success('Assinatura cancelada. O acesso permanece ativo até o fim do período pago.');
           loadBillingData();
         } else {
           toast.error(res.mensagem || 'Erro ao cancelar assinatura.');
@@ -149,11 +166,16 @@ const BillingPlanPage: React.FC = () => {
     }
   };
 
-  // Encontra o plano atual baseado no planoId da assinatura
   const currentPlan = plans.find(p => p.planoId === subscription?.planoId);
-  const currentPlanFeatures = currentPlan?.planoDescricao 
-    ? currentPlan.planoDescricao.split(',').map(f => f.trim()) 
+  const currentPlanFeatures = currentPlan?.planoDescricao
+    ? currentPlan.planoDescricao.split(',').map(f => f.trim())
     : [];
+
+  const isSubscriptionCancelled = subscription?.assinaturaStatus === 'CANCELLED';
+  const isSubscriptionExpired = subscription?.assinaturaExpiraEm
+    ? new Date(subscription.assinaturaExpiraEm) < new Date()
+    : false;
+  const canStartNewSubscription = isSubscriptionCancelled || isSubscriptionExpired;
 
   if (loading) {
     return (
@@ -173,13 +195,13 @@ const BillingPlanPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Seção da assinatura ativa */}
+      {/* Assinatura ativa */}
       {subscription ? (
         <section className="billing-section current-plan-card">
           <div className="current-plan-info">
             <div className="current-plan-main">
               <span className="current-plan-label">ASSINATURA ATUAL</span>
-              <h2>{currentPlan ? currentPlan.planoNome : 'Carregando plano...'}</h2>
+              <h2>{currentPlan ? currentPlan.planoNome : 'Plano Desconhecido'}</h2>
               <div className="status-row">
                 {getSubscriptionStatusBadge(subscription.assinaturaStatus)}
                 <span className="current-plan-price">
@@ -187,7 +209,7 @@ const BillingPlanPage: React.FC = () => {
                 </span>
               </div>
             </div>
-            
+
             <div className="current-plan-details">
               {subscription.assinaturaExpiraEm && (
                 <div className="detail-item">
@@ -199,38 +221,64 @@ const BillingPlanPage: React.FC = () => {
                 </div>
               )}
               <div className="detail-item">
-                <FaCreditCard />
+                {subscription.assinaturaMetodo === 'PIX' ? <FaQrcode /> : <FaCreditCard />}
                 <div>
-                  <strong>Forma de faturamento</strong>
-                  <span>PIX ou Cartão via Gateway AbacatePay</span>
+                  <strong>Forma de pagamento</strong>
+                  <span>
+                    {subscription.assinaturaMetodo === 'PIX'
+                      ? 'PIX (pagamento avulso por ciclo)'
+                      : 'Cartão de crédito (recorrente)'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Ações de Assinatura */}
+            {isSubscriptionExpired && (
+              <div className="subscription-expired-alert">
+                <FaExclamationTriangle />
+                <div>
+                  <strong>Sua assinatura expirou</strong>
+                  <p>A data de expiração já passou. Inicie uma nova assinatura para manter o acesso.</p>
+                </div>
+              </div>
+            )}
+
             <div className="subscription-actions-row">
               {subscription.assinaturaStatus === 'PENDING' && subscription.assinaturaCheckoutUrl && (
-                <a 
-                  href={subscription.assinaturaCheckoutUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={subscription.assinaturaCheckoutUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn-pay-now-checkout"
                 >
                   <FaCreditCard /> Concluir Pagamento <FaExternalLinkAlt />
                 </a>
               )}
-              {subscription.assinaturaStatus === 'PAID' && (
-                <button 
-                  onClick={handleCancelarAssinatura} 
+              {subscription.assinaturaStatus === 'PAID' && !isSubscriptionExpired && (
+                <button
+                  onClick={handleCancelarAssinatura}
                   className="btn-cancel-subscription"
                   disabled={cancelling}
                 >
                   {cancelling ? <FaSpinner className="billing-spinner-small" /> : <><FaBan /> Cancelar Assinatura</>}
                 </button>
               )}
+              {canStartNewSubscription && (
+                <button
+                  onClick={() => handleSubscribeChoice(subscription.planoId)}
+                  className="btn-new-subscription"
+                  disabled={processingPlanId !== null}
+                >
+                  {processingPlanId === subscription.planoId ? (
+                    <FaSpinner className="billing-spinner-small" />
+                  ) : (
+                    <><FaArrowRight /> Iniciar Nova Assinatura</>
+                  )}
+                </button>
+              )}
             </div>
           </div>
-          
+
           <div className="current-plan-features-list">
             <h4>Recursos inclusos no plano contratado:</h4>
             {currentPlanFeatures.length > 0 ? (
@@ -250,7 +298,7 @@ const BillingPlanPage: React.FC = () => {
             <FaExclamationTriangle />
             <div>
               <h4>Nenhuma Assinatura Ativa</h4>
-              <p>Sua empresa está sem um plano ativo ou expirou. Contrate um dos planos abaixo para reativar seu acesso.</p>
+              <p>Sua empresa está sem um plano ativo. Contrate um dos planos abaixo para reativar o acesso.</p>
             </div>
           </div>
         </section>
@@ -263,7 +311,7 @@ const BillingPlanPage: React.FC = () => {
         title={confirmModal.type === 'cancelar' ? 'Cancelar Assinatura' : 'Confirmar Troca de Plano'}
         message={
           confirmModal.type === 'cancelar'
-            ? 'Tem certeza? O acesso será encerrado imediatamente. Esta ação é irreversível.'
+            ? 'Tem certeza? A assinatura será cancelada, mas o acesso permanece ativo até o fim do período pago.'
             : 'Deseja solicitar a alteração do plano? A alteração será aplicada no próximo ciclo de faturamento.'
         }
         confirmText={confirmModal.type === 'cancelar' ? 'Sim, cancelar' : 'Confirmar Troca'}
@@ -271,14 +319,47 @@ const BillingPlanPage: React.FC = () => {
         isConfirming={cancelling || processingPlanId !== null}
       />
 
-      {/* Cards de Opções de Planos */}
+      {/* Modal de seleção de forma de pagamento */}
+      {paymentModal.open && (
+        <div className="modal-overlay" onClick={() => setPaymentModal({ open: false, planId: null })}>
+          <div className="payment-method-modal" onClick={e => e.stopPropagation()}>
+            <div className="payment-method-modal-header">
+              <h2>Forma de Pagamento</h2>
+              <button
+                aria-label="Fechar"
+                className="payment-method-close"
+                onClick={() => setPaymentModal({ open: false, planId: null })}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <p className="payment-method-desc">Escolha como deseja pagar o plano selecionado.</p>
+            <div className="payment-method-options">
+              <button className="payment-method-card-btn" onClick={() => handleCheckout('CARD')}>
+                <span className="payment-method-icon"><FaCreditCard /></span>
+                <span className="payment-method-title">Cartão de Crédito</span>
+                <span className="payment-method-subtitle">Cobrança recorrente automática a cada ciclo</span>
+              </button>
+              <button className="payment-method-card-btn" onClick={() => handleCheckout('PIX')}>
+                <span className="payment-method-icon payment-method-icon-pix"><FaQrcode /></span>
+                <span className="payment-method-title">PIX</span>
+                <span className="payment-method-subtitle">Pagamento avulso via QR Code, renovação manual</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cards de Planos */}
       <section className="billing-section">
         <h3 className="section-title"><FaBoxOpen /> Alterar ou Contratar Plano</h3>
         <div className="plans-grid">
           {plans.map((plan) => {
             const isCurrent = subscription?.planoId === plan.planoId;
             const features = plan.planoDescricao ? plan.planoDescricao.split(',').map(f => f.trim()) : [];
-            
+            const canSwitch = subscription && !canStartNewSubscription;
+            const isPixSub = subscription?.assinaturaMetodo === 'PIX';
+
             return (
               <div key={plan.planoId} className={`plan-card ${isCurrent ? 'plan-card-current' : ''}`}>
                 <div className="plan-card-header">
@@ -300,22 +381,36 @@ const BillingPlanPage: React.FC = () => {
                 </ul>
 
                 <div className="plan-card-footer">
-                  {isCurrent ? (
+                  {isCurrent && !canStartNewSubscription ? (
                     <button className="btn-plan btn-plan-current" disabled>
                       Plano Atual
                     </button>
+                  ) : canSwitch ? (
+                    <button
+                      onClick={() => isPixSub
+                        ? toast.error('Para PIX, cancele a assinatura atual e contrate o novo plano.')
+                        : handleTrocarPlano(plan.planoId)
+                      }
+                      className={`btn-plan ${isPixSub ? 'btn-plan-current' : 'btn-plan-secondary'}`}
+                      disabled={processingPlanId !== null || isPixSub}
+                      title={isPixSub ? 'Troca de plano não disponível para assinaturas PIX' : undefined}
+                    >
+                      {processingPlanId === plan.planoId ? (
+                        <FaSpinner className="billing-spinner-small" />
+                      ) : (
+                        <><FaExchangeAlt /> Mudar para este Plano</>
+                      )}
+                    </button>
                   ) : (
-                    <button 
-                      onClick={() => subscription ? handleTrocarPlano(plan.planoId) : handleSubscribe(plan.planoId)}
+                    <button
+                      onClick={() => handleSubscribeChoice(plan.planoId)}
                       className="btn-plan btn-plan-primary"
                       disabled={processingPlanId !== null}
                     >
                       {processingPlanId === plan.planoId ? (
                         <FaSpinner className="billing-spinner-small" />
                       ) : (
-                        <>
-                          {subscription ? 'Mudar para este Plano' : 'Contratar Plano'} <FaArrowRight />
-                        </>
+                        <>Contratar Plano <FaArrowRight /></>
                       )}
                     </button>
                   )}

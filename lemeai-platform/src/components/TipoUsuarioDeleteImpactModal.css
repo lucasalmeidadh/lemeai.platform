@@ -1,0 +1,167 @@
+.impact-modal-content {
+  width: 100%;
+  max-width: 480px;
+}
+
+.button.danger {
+  background-color: var(--color-danger);
+  color: white;
+  border-radius: var(--btn-radius-md);
+  padding: var(--btn-pad-md);
+  font-size: var(--btn-font-md);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button.danger:hover:not(:disabled) {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+}
+
+.button.danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.impact-modal-body {
+  padding: var(--space-6);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* ─── LOADING ─────────────────────────────────────────────────── */
+.impact-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8) 0;
+  color: var(--text-secondary);
+  font-size: var(--font-base);
+}
+
+.impact-spin {
+  animation: spin 1s linear infinite;
+  font-size: var(--font-lg);
+  color: var(--petroleum-blue);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── BLOCKED STATE ───────────────────────────────────────────── */
+.impact-blocked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+}
+
+.impact-blocked-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: 1.4rem;
+  margin-bottom: var(--space-2);
+}
+
+.impact-blocked-title {
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.impact-blocked-reason {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── WARNING / IMPACT LISTS ──────────────────────────────────── */
+.impact-warning-text {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+  margin: 0 0 var(--space-4) 0;
+}
+
+.impact-warning-text svg {
+  color: var(--color-warning);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.impact-empty {
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: var(--space-4) 0;
+  margin: 0;
+}
+
+.impact-section {
+  margin-bottom: var(--space-4);
+}
+
+.impact-section h4 {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.impact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.impact-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+}
+
+.impact-list li svg {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.impact-list-name {
+  font-weight: 600;
+}
+
+.impact-list-meta {
+  color: var(--text-tertiary);
+  margin-left: auto;
+  font-size: var(--font-xs);
+}

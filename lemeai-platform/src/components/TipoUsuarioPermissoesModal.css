@@ -1,0 +1,310 @@
+/* ============================================================
+   Modal de Permissões — extensão do modal padrão (modal-overlay,
+   modal-content, modal-header, modal-footer vêm de UserFormModal.css)
+   ============================================================ */
+
+.permissoes-modal-content {
+  max-width: 720px;
+  width: 100%;
+}
+
+.permissoes-modal-body {
+  padding: var(--space-5) var(--space-6);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.permissoes-section {
+  margin-top: var(--space-6);
+}
+
+.permissoes-section-title {
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.permissoes-modal-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+/* ─── Dados do perfil (nome + rodízio de leads) ─────────────── */
+
+.tipo-usuario-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.tipo-usuario-toggle-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tipo-usuario-toggle-label span {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tipo-usuario-toggle-label small {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
+.tipo-usuario-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  color: var(--text-secondary);
+  border-radius: 10px;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
+.tipo-usuario-warning svg {
+  flex-shrink: 0;
+  color: var(--color-warning);
+  margin-top: 2px;
+}
+
+/* ─── Toggle switch (linha "rodízio de leads") ──────────────── */
+
+.toggle-switch {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--border-color);
+  border-radius: 99px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-switch input:checked ~ .toggle-track {
+  background: var(--petroleum-blue);
+  border-color: var(--petroleum-blue);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 1rem;
+  height: 1rem;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked ~ .toggle-track .toggle-thumb {
+  transform: translateX(1.25rem);
+}
+
+.toggle-switch:hover .toggle-track {
+  box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.1);
+}
+
+.toggle-switch input:disabled ~ .toggle-track {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.permissoes-counter {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color-soft);
+  padding: 4px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.permissoes-loading {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-secondary);
+  font-size: var(--font-base);
+}
+
+/* ─── Grid de permissões ──────────────────────────────────────── */
+
+.permissoes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.permissao-item {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.permissao-item:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--petroleum-blue);
+}
+
+.permissao-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.permissao-label svg {
+  color: var(--petroleum-blue);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.permissao-label strong {
+  display: block;
+  font-size: var(--font-base);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.permissao-technical-code {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  font-family: monospace;
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+.permissoes-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--space-6);
+}
+
+/* ─── Toggle switch ───────────────────────────────────────────── */
+
+.permissao-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.permissao-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.permissao-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-color);
+  transition: 0.3s;
+}
+
+.permissao-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--bg-secondary);
+  transition: 0.3s;
+}
+
+.permissao-switch input:checked + .permissao-slider {
+  background-color: var(--petroleum-blue);
+}
+
+.permissao-switch input:checked + .permissao-slider:before {
+  transform: translateX(16px);
+}
+
+.permissao-slider.round {
+  border-radius: 34px;
+}
+
+.permissao-slider.round:before {
+  border-radius: 50%;
+}
+
+/* ============================================================
+   Responsividade
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .permissoes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 768px) {
+  .permissoes-modal-content {
+    width: 95%;
+  }
+}
+
+@media (max-width: 600px) {
+  .permissoes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .permissao-item {
+    padding: var(--space-3);
+  }
+
+  .permissoes-modal-content .modal-footer {
+    flex-direction: column-reverse;
+    gap: var(--space-2);
+  }
+
+  .permissoes-modal-content .modal-footer .button {
+    width: 100%;
+  }
+}

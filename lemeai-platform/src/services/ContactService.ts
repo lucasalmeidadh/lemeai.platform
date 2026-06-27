@@ -4,6 +4,14 @@ export interface Contact {
     telefone: string;
     email: string | null;
     dataCriacao?: string;
+    segment?: string | null;
+    cep?: string | null;
+    street?: string | null;
+    number?: string | null;
+    complement?: string | null;
+    neighborhood?: string | null;
+    city?: string | null;
+    state?: string | null;
 }
 
 export interface ApiResponse<T> {
@@ -16,6 +24,14 @@ export interface CreateContactDTO {
     nome: string;
     telefone: string;
     email: string;
+    segment?: string | null;
+    cep?: string | null;
+    street?: string | null;
+    number?: string | null;
+    complement?: string | null;
+    neighborhood?: string | null;
+    city?: string | null;
+    state?: string | null;
 }
 
 export interface UpdateContactDTO {
@@ -23,6 +39,14 @@ export interface UpdateContactDTO {
     nome: string;
     telefone: string;
     email: string;
+    segment?: string | null;
+    cep?: string | null;
+    street?: string | null;
+    number?: string | null;
+    complement?: string | null;
+    neighborhood?: string | null;
+    city?: string | null;
+    state?: string | null;
 }
 
 import { apiFetch } from './api';

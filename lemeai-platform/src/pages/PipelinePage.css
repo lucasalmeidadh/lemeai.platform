@@ -17,7 +17,7 @@
 /* search / filter input */
 .pipeline-filter-input {
   padding: 0.625rem var(--space-4);
-  border-radius: 9999px;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
   font-size: var(--font-base);
   color: var(--text-primary);
@@ -268,6 +268,11 @@ select.pipeline-filter-input {
 .tag-cold { background: var(--color-neutral-bg); color: var(--color-neutral); }
 .tag-new  { background: var(--color-info-bg);    color: var(--color-info);    }
 
+/* origin badge (PlataformaEnum) sits on its own line, compact width */
+.kanban-card .badge {
+  align-self: flex-start;
+}
+
 /* card deal value */
 .card-value {
   font-size: var(--font-sm);
@@ -400,7 +405,7 @@ select.pipeline-filter-input {
 /* preset filter pill */
 .preset-btn {
   padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  border-radius: 6px;
   border: 1px solid var(--border-color);
   background-color: transparent;
   color: var(--text-secondary);
@@ -423,13 +428,36 @@ select.pipeline-filter-input {
   color: #ffffff;
 }
 
+/* create opportunity button */
+.pipeline-btn-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.125rem;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--petroleum-blue);
+  color: #ffffff;
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pipeline-btn-create:hover {
+  background-color: var(--petroleum-blue-hover);
+  transform: translateY(-1px);
+}
+
 /* main filter toggle button */
 .pipeline-btn-filters {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1.125rem;
-  border-radius: 9999px;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   color: var(--text-primary);
@@ -485,7 +513,7 @@ select.pipeline-filter-input {
   gap: 0.625rem;
   padding: 0.25rem 0.75rem 0.25rem 0.875rem;
   border: 1px solid var(--border-color);
-  border-radius: 9999px;
+  border-radius: 8px;
   background-color: var(--bg-secondary);
   height: 2.25rem;
   box-sizing: border-box;
@@ -658,7 +686,7 @@ select.pipeline-filter-input {
 
 .temp-pill-btn {
   padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  border-radius: 6px;
   border: 1px solid var(--border-color);
   background-color: transparent;
   color: var(--text-secondary);

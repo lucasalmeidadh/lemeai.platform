@@ -12,11 +12,13 @@ import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import TemperatureSelectionModal from '../components/TemperatureSelectionModal';
-import { FaMagic, FaFilter, FaSort, FaSortAmountDown, FaSortAmountUp, FaUserPlus } from 'react-icons/fa';
+import { FaMagic, FaFilter, FaSort, FaSortAmountDown, FaSortAmountUp, FaUserPlus, FaPlus } from 'react-icons/fa';
 import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
 import { CampaignService, type Campaign } from '../services/CampaignService';
 import { ConversaProdutoService } from '../services/ConversaProdutoService';
 import WinDealProductModal from '../components/WinDealProductModal';
+import CreateOpportunityModal from '../components/CreateOpportunityModal';
+import OriginBadge from '../components/OriginBadge';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -38,6 +40,8 @@ interface Deal {
     idCampanha?: number | null;
     nomeCampanha?: string;
     ownerId?: number;
+    idOrigemOportunidade?: number;
+    descricaoOrigemOportunidade?: string;
 }
 
 interface Column {
@@ -75,6 +79,7 @@ const PipelinePage = () => {
     const [selectedCampaign, setSelectedCampaign] = useState('all');
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     // States for handling mandatory temperature selection during drag
     const [isTempModalOpen, setIsTempModalOpen] = useState(false);
@@ -258,7 +263,9 @@ const PipelinePage = () => {
                     nomeCampanha: opp.nomeCampanha !== undefined ? opp.nomeCampanha : (chatDataMap[opp.idConversa]?.nomeCampanha || ''),
                     phone: opp.numeroWhatsapp,
                     details: opp.detalhesConversa,
-                    ownerId: opp.idUsuarioResponsavel
+                    ownerId: opp.idUsuarioResponsavel,
+                    idOrigemOportunidade: opp.idOrigemOportunidade,
+                    descricaoOrigemOportunidade: opp.descricaoOrigemOportunidade
                 };
 
                 // Map tag based on status and tipoLeadId
@@ -845,6 +852,15 @@ const PipelinePage = () => {
                                         </button>
                                     </div>
                                 </div>
+
+                                <button
+                                    type="button"
+                                    className="pipeline-btn-create"
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                >
+                                    <FaPlus size={11} />
+                                    <span>Criar</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -923,6 +939,7 @@ const PipelinePage = () => {
                                                                             {deal.tag === 'hot' ? 'Quente' : deal.tag === 'warm' ? 'Morno' : deal.tag === 'cold' ? 'Frio' : 'Novo'}
                                                                         </span>
                                                                     </div>
+                                                                    <OriginBadge idOrigem={deal.idOrigemOportunidade} descricao={deal.descricaoOrigemOportunidade} />
                                                                     <div className="card-value">{deal.value}</div>
                                                                     <div className="card-footer">
                                                                         <div className="card-footer-left">
@@ -1015,6 +1032,12 @@ const PipelinePage = () => {
                         isOpen={isTempModalOpen}
                         onClose={handleTempCancel}
                         onConfirm={handleTempConfirm}
+                    />
+
+                    <CreateOpportunityModal
+                        isOpen={isCreateModalOpen}
+                        onClose={() => setIsCreateModalOpen(false)}
+                        onCreated={() => fetchOpportunities(true)}
                     />
 
                     {isFiltersModalOpen && (

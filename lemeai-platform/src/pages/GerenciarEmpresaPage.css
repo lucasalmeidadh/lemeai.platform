@@ -1,0 +1,504 @@
+/* ─── GERENCIAR EMPRESA PAGE ──────────────────────────────────── */
+
+.gerenciar-empresa-page {
+  padding: var(--space-10);
+  padding-bottom: 5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── PAGE HEADER ─────────────────────────────────────────────── */
+.gerenciar-empresa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-shrink: 0;
+}
+
+.gerenciar-empresa-header h1 {
+  font-size: var(--font-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
+  line-height: 1.2;
+}
+
+.gerenciar-empresa-header-subtitle {
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* ─── TABS ────────────────────────────────────────────────────── */
+.ge-tab-nav {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--border-color-soft);
+  gap: 0.25rem;
+}
+
+.ge-tab-button {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  font-size: var(--font-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease-in-out;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+}
+
+.ge-tab-text-short { display: none; }
+.ge-tab-text-full  { display: inline; }
+
+.ge-tab-button:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ge-tab-button.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08), var(--shadow-sm);
+}
+
+.ge-tab-content {
+  flex: 1;
+  min-height: 0;
+}
+
+.ge-tab-pane {
+  animation: geTabFadeIn 0.25s ease-out;
+}
+
+@keyframes geTabFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── CARD ────────────────────────────────────────────────────── */
+.gerenciar-empresa-card {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  border: 1px solid var(--border-color-soft);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-6);
+}
+
+.gerenciar-empresa-card-header {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.dados-gerais-edit-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.gerenciar-empresa-card-header-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  background: var(--petroleum-light);
+  color: var(--petroleum-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.gerenciar-empresa-card-header-text h3 {
+  margin: 0 0 2px 0;
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gerenciar-empresa-card-header-text p {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
+.gerenciar-empresa-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10);
+  color: var(--text-tertiary);
+  font-size: var(--font-sm);
+}
+
+/* ─── DADOS GERAIS ────────────────────────────────────────────── */
+.dados-gerais-body {
+  padding: var(--space-6);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.logo-uploader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.logo-uploader-preview {
+  position: relative;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 14px;
+  border: 1.5px dashed var(--border-color);
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.2s ease;
+}
+
+.logo-uploader-preview:hover {
+  border-color: var(--petroleum-blue);
+}
+
+.logo-uploader-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.logo-uploader-placeholder-icon {
+  font-size: 1.75rem;
+  color: var(--text-tertiary);
+}
+
+.logo-uploader-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  font-size: 1rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.logo-uploader-preview:hover .logo-uploader-overlay {
+  opacity: 1;
+}
+
+.logo-uploader-hint {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.dados-gerais-fields {
+  flex: 1;
+  width: 100%;
+}
+
+.dados-gerais-fields.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.625rem var(--space-4);
+  font-size: var(--font-base);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  box-sizing: border-box;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--petroleum-blue);
+  background-color: var(--bg-secondary);
+  box-shadow: 0 0 0 3px rgba(0, 39, 94, 0.1);
+}
+
+.form-group input:disabled {
+  background-color: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  border-color: var(--border-color-soft);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.dados-gerais-actions {
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.button.primary,
+.button.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--btn-radius-md);
+  padding: var(--btn-pad-md);
+  font-size: var(--btn-font-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button.primary {
+  background-color: var(--petroleum-blue);
+  color: white;
+  border: none;
+}
+
+.button.primary:hover:not(:disabled) {
+  background-color: var(--petroleum-blue-hover);
+  transform: translateY(-1px);
+}
+
+.button.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button.secondary {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.button.secondary:hover:not(:disabled) {
+  background-color: var(--bg-tertiary);
+  border-color: var(--petroleum-blue);
+  color: var(--petroleum-blue);
+}
+
+.button.secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── SUMMARY CARDS ───────────────────────────────────────────── */
+.gerenciar-empresa-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.summary-card {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--border-color-soft);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.summary-card-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.summary-card-icon.active {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.summary-card-icon.inactive {
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral);
+}
+
+.summary-card-icon.weekend {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.summary-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-card-value {
+  font-size: var(--font-2xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.summary-card-label {
+  font-size: var(--font-sm);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* ─── WORKING DAYS CALENDAR ───────────────────────────────────── */
+.working-days-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+}
+
+.calendar-day-cell {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-1);
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calendar-day-cell input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.calendar-day-cell:hover {
+  border-color: var(--petroleum-blue);
+}
+
+.calendar-day-cell.active {
+  background: var(--petroleum-light);
+  border-color: var(--petroleum-blue);
+}
+
+.calendar-day-cell.inactive {
+  opacity: 0.7;
+}
+
+.calendar-day-abbr {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.calendar-day-cell.active .calendar-day-abbr {
+  color: var(--petroleum-blue);
+}
+
+.calendar-day-check {
+  font-size: 1rem;
+  display: flex;
+  color: var(--text-tertiary);
+}
+
+.calendar-day-cell.active .calendar-day-check {
+  color: var(--color-success);
+}
+
+.calendar-day-cell input:disabled {
+  cursor: not-allowed;
+}
+
+.calendar-day-cell:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .gerenciar-empresa-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dados-gerais-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ge-tab-text-full { display: none; }
+  .ge-tab-text-short { display: inline; }
+
+  .ge-tab-button svg {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .gerenciar-empresa-page {
+    padding: var(--space-6);
+  }
+
+  .gerenciar-empresa-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .ge-tab-button {
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-xs);
+  }
+}

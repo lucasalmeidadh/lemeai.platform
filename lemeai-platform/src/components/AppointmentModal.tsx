@@ -15,14 +15,16 @@ interface AppointmentModalProps {
     initialDate?: Date;
     contacts?: Contact[];
     editingAppointment?: any;
+    googleConectado?: boolean;
 }
 
-const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, onSave, initialDate, contacts = [], editingAppointment }) => {
+const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, onSave, initialDate, contacts = [], editingAppointment, googleConectado = false }) => {
     const [title, setTitle] = useState('');
     const [date, setDate] = useState<Date | null>(new Date());
     const [time, setTime] = useState('09:00');
     const [contatoId, setContatoId] = useState('');
     const [description, setDescription] = useState('');
+    const [sincronizarGoogle, setSincronizarGoogle] = useState(false);
 
     useEffect(() => {
         if (editingAppointment && isOpen) {
@@ -31,12 +33,14 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, on
             setTime(editingAppointment.time);
             setContatoId(editingAppointment.contatoId?.toString() || '');
             setDescription(editingAppointment.description || '');
+            setSincronizarGoogle(!!editingAppointment.sincronizadoGoogle);
         } else if (initialDate && isOpen) {
             setTitle('');
             setDate(initialDate);
             setTime('09:00');
             setContatoId('');
             setDescription('');
+            setSincronizarGoogle(false);
         }
     }, [initialDate, editingAppointment, isOpen]);
 
@@ -50,12 +54,14 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, on
             date: date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
             time,
             contatoId,
-            description
+            description,
+            sincronizarGoogle
         });
         // Reset form is handled by modal close usually, but let's clear it
         setTitle('');
         setContatoId('');
         setDescription('');
+        setSincronizarGoogle(false);
     };
 
     const contactOptions = contacts.map(c => ({
@@ -118,13 +124,27 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onClose, on
                         </div>
                         <div className="form-group">
                             <label>Descrição</label>
-                            <textarea 
-                                rows={3} 
+                            <textarea
+                                rows={3}
                                 placeholder="Observações adicionais..."
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
                             ></textarea>
                         </div>
+                        {editingAppointment?.googleEventId ? (
+                            <div className="google-sync-hint">
+                                Este compromisso está sincronizado com o Google Calendar e será atualizado automaticamente lá.
+                            </div>
+                        ) : googleConectado ? (
+                            <label className="form-checkbox">
+                                <input
+                                    type="checkbox"
+                                    checked={sincronizarGoogle}
+                                    onChange={e => setSincronizarGoogle(e.target.checked)}
+                                />
+                                Sincronizar com o Google Calendar
+                            </label>
+                        ) : null}
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn-secondary" onClick={onClose}>

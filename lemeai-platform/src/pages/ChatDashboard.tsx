@@ -1,19 +1,21 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   FaDollarSign, FaPhoneAlt, FaTrophy, FaCheckCircle, FaTimesCircle,
-  FaHourglassHalf, FaChartLine, FaDesktop, FaChartBar, FaUsers, FaQuestionCircle,
+  FaHourglassHalf, FaChartLine, FaDesktop, FaChartBar, FaUsers, FaQuestionCircle, FaUser,
 } from 'react-icons/fa';
 import AnalyticsPage from './AnalyticsPage';
 import TeamMonitoringModal, { type TeamMember } from '../components/TeamMonitoringModal';
 import SellerMonitoringModal from '../components/SellerMonitoringModal';
+import MyPerformanceTab from '../components/MyPerformanceTab';
 import MonthPicker from '../components/MonthPicker';
 import RelatorioService from '../services/RelatorioService';
 import type { PerformanceIndividual, PerformanceEquipe, ProjecaoFechamento } from '../services/RelatorioService';
 import { OpportunityService, type Opportunity } from '../services/OpportunityService';
 import EquipeService, { type Equipe } from '../services/EquipeService';
-import ConfiguracaoService from '../services/ConfiguracaoService';
-import type { DiasUteis } from '../services/ConfiguracaoService';
+import GerenciarEmpresaService from '../services/GerenciarEmpresaService';
+import type { DiasUteis } from '../services/GerenciarEmpresaService';
 import { Link } from 'react-router-dom';
+import { getUserPermissions } from '../config/permissions';
 import './ChatDashboard.css';
 
 const DEFAULT_WORKING_DAYS: DiasUteis = {
@@ -24,7 +26,12 @@ const DEFAULT_WORKING_DAYS: DiasUteis = {
 const DAY_NAMES: (keyof DiasUteis)[] = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
 const ChatDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'monitoring' | 'teams'>('analytics');
+  const userPermissions = useMemo(() => getUserPermissions(), []);
+  const isAdmin = userPermissions.includes('gestao_vendas');
+  const isVendedor = userPermissions.includes('gestao_vendas_vendedor');
+
+  const defaultTab = isAdmin ? 'analytics' : 'myperformance';
+  const [activeTab, setActiveTab] = useState<'analytics' | 'monitoring' | 'teams' | 'myperformance'>(defaultTab);
   const [workingDays, setWorkingDays] = useState<DiasUteis>(DEFAULT_WORKING_DAYS);
   const [goalsTimeframe, setGoalsTimeframe] = useState<'month' | 'week' | 'day'>('month');
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
@@ -46,6 +53,7 @@ const ChatDashboard = () => {
   const [teams, setTeams] = useState<Equipe[]>([]);
   const [selectedSeller, setSelectedSeller] = useState<PerformanceIndividual | null>(null);
   const [sellerProjecao, setSellerProjecao] = useState<ProjecaoFechamento | null>(null);
+  const [myProjecao, setMyProjecao] = useState<ProjecaoFechamento | null>(null);
 
   const workingDaysInfo = useMemo(() => {
     const d = new Date();
@@ -71,7 +79,7 @@ const ChatDashboard = () => {
   }, [workingDays]);
 
   useEffect(() => {
-    ConfiguracaoService.getDiasUteis()
+    GerenciarEmpresaService.getDiasUteis()
       .then(setWorkingDays)
       .catch(() => {/* keep default */ });
     OpportunityService.getAllOpportunities()
@@ -107,9 +115,19 @@ const ChatDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'monitoring') fetchIndividual(monitoringMonth);
+    if (activeTab === 'monitoring' || activeTab === 'myperformance') fetchIndividual(monitoringMonth);
     if (activeTab === 'teams') fetchTeams(monitoringMonth);
   }, [activeTab, monitoringMonth, fetchIndividual, fetchTeams]);
+
+  useEffect(() => {
+    if (activeTab !== 'myperformance') return;
+    const loggedUser = JSON.parse(localStorage.getItem('user') || '{}') as { id?: number };
+    if (!loggedUser.id) return;
+    setMyProjecao(null);
+    RelatorioService.getProjecaoFechamento(monitoringMonth, loggedUser.id)
+      .then(setMyProjecao)
+      .catch(() => { });
+  }, [activeTab, monitoringMonth]);
 
   const handleSellerClick = useCallback(async (agent: PerformanceIndividual) => {
     setSelectedSeller(agent);
@@ -280,33 +298,47 @@ const ChatDashboard = () => {
       </div>
 
       <div className="dashboard-tabs">
-        <button
-          className={`dashboard-tab ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          <FaChartBar /> Analytics
-        </button>
-        <button
-          className={`dashboard-tab ${activeTab === 'monitoring' ? 'active' : ''}`}
-          onClick={() => setActiveTab('monitoring')}
-        >
-          <FaDesktop /> Individual
-        </button>
-        <button
-          className={`dashboard-tab ${activeTab === 'teams' ? 'active' : ''}`}
-          onClick={() => setActiveTab('teams')}
-        >
-          <FaUsers /> Equipes
-        </button>
+        {isAdmin && (
+          <>
+            <button
+              className={`dashboard-tab ${activeTab === 'analytics' ? 'active' : ''}`}
+              onClick={() => setActiveTab('analytics')}
+            >
+              <FaChartBar /> Analytics
+            </button>
+            <button
+              className={`dashboard-tab ${activeTab === 'monitoring' ? 'active' : ''}`}
+              onClick={() => setActiveTab('monitoring')}
+            >
+              <FaDesktop /> Individual
+            </button>
+          </>
+        )}
+        {isVendedor && (
+          <button
+            className={`dashboard-tab ${activeTab === 'myperformance' ? 'active' : ''}`}
+            onClick={() => setActiveTab('myperformance')}
+          >
+            <FaUser /> Meu Desempenho
+          </button>
+        )}
+        {(isAdmin || isVendedor) && (
+          <button
+            className={`dashboard-tab ${activeTab === 'teams' ? 'active' : ''}`}
+            onClick={() => setActiveTab('teams')}
+          >
+            <FaUsers /> Equipes
+          </button>
+        )}
       </div>
 
       {/* ── ANALYTICS ──────────────────────────────────────────── */}
-      {activeTab === 'analytics' && (
+      {activeTab === 'analytics' && isAdmin && (
         <AnalyticsPage goals={[]} selectedMonth={monitoringMonth} onMonthChange={setMonitoringMonth} />
       )}
 
       {/* ── INDIVIDUAL ─────────────────────────────────────────── */}
-      {activeTab === 'monitoring' && (
+      {activeTab === 'monitoring' && isAdmin && (
         <>
           <div className="analytics-header" style={{ marginBottom: '1.5rem' }}>
             <div className="header-actions">
@@ -529,8 +561,24 @@ const ChatDashboard = () => {
         </>
       )}
 
+      {/* ── MEU DESEMPENHO ─────────────────────────────────────── */}
+      {activeTab === 'myperformance' && isVendedor && (
+        <MyPerformanceTab
+          monitoringMonth={monitoringMonth}
+          onMonthChange={setMonitoringMonth}
+          individualPerf={individualPerf}
+          isLoading={isLoadingIndividual}
+          opportunities={opportunities}
+          teams={teams}
+          projecao={myProjecao}
+          workingDaysInfo={workingDaysInfo}
+          formatCurrency={formatCurrency}
+          getProgressBarColorClass={getProgressBarColorClass}
+        />
+      )}
+
       {/* ── EQUIPES ────────────────────────────────────────────── */}
-      {activeTab === 'teams' && (
+      {activeTab === 'teams' && (isAdmin || isVendedor) && (
         <>
           <div className="analytics-header" style={{ marginBottom: '1.5rem' }}>
             <div className="header-actions">

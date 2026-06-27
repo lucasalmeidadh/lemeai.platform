@@ -1,3 +1,320 @@
+.agenda-tabs {
+    display: flex;
+    gap: var(--space-2);
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: var(--space-6);
+}
+
+.agenda-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0.625rem 1.25rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: var(--text-tertiary);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.agenda-tab:hover {
+    color: var(--text-primary);
+}
+
+.agenda-tab.active {
+    color: var(--petroleum-blue);
+    border-bottom-color: var(--petroleum-blue);
+}
+
+.connected-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-success);
+    display: inline-block;
+}
+
+.agenda-tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-5);
+}
+
+.agenda-header-actions {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+.agenda-header-actions button {
+    padding: 0.5rem 1rem !important;
+    font-size: var(--font-sm) !important;
+    height: 38px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.agenda-header-left {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+}
+
+:root {
+    --color-google-red: #ea4335;
+    --color-google-blue: #4285f4;
+    --color-google-yellow: #fbbc05;
+    --color-google-green: #34a853;
+}
+
+.google-connect-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0.5rem 1rem;
+    border-radius: var(--btn-radius-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: var(--font-sm);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+}
+
+.google-connect-button:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    border-color: var(--text-tertiary);
+}
+
+.google-connect-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.google-icon-svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.sync-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0.5rem 1rem;
+    border-radius: var(--btn-radius-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sync-button:hover:not(:disabled) {
+    background: var(--petroleum-light);
+    border-color: var(--petroleum-blue);
+    color: var(--petroleum-blue);
+}
+
+.sync-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disconnect-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 0.625rem 1rem;
+    border-radius: var(--btn-radius-md);
+    background: var(--color-danger-bg);
+    border: 1px solid var(--color-danger-border);
+    color: var(--color-danger);
+    font-weight: 600;
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.disconnect-button:hover {
+    background: var(--color-danger);
+    color: white;
+}
+
+.google-disconnected-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    text-align: center;
+    min-height: 50vh;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    padding: var(--space-10);
+}
+
+.google-disconnected-icon {
+    font-size: 3rem;
+    color: var(--petroleum-blue);
+    margin-bottom: var(--space-2);
+}
+
+.google-disconnected-state h2 {
+    font-size: var(--font-xl);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.google-disconnected-state p {
+    color: var(--text-secondary);
+    max-width: 420px;
+    margin: 0 0 var(--space-2) 0;
+}
+
+.google-event-pill {
+    background: #4285f4;
+}
+
+.google-sync-hint {
+    font-size: var(--font-sm);
+    color: var(--color-info);
+    background: var(--color-info-bg);
+    border: 1px solid var(--color-info-border);
+    border-radius: 10px;
+    padding: var(--space-3);
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.form-checkbox input {
+    width: auto;
+    accent-color: var(--petroleum-blue);
+}
+
+.email-input-row {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.email-input-row input {
+    flex: 1;
+}
+
+.email-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0 var(--space-3);
+    border-radius: 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: var(--font-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.email-add-btn:hover {
+    background: var(--petroleum-light);
+    border-color: var(--petroleum-blue);
+    color: var(--petroleum-blue);
+}
+
+.email-input-error {
+    font-size: var(--font-xs);
+    color: var(--color-danger);
+}
+
+.email-summary-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.email-summary-btn:hover {
+    background: var(--petroleum-light);
+    border-color: var(--petroleum-blue);
+    color: var(--petroleum-blue);
+}
+
+.email-list-table {
+    margin-top: var(--space-2);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.email-list-scroll {
+    max-height: 160px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.email-list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-top: 1px solid var(--border-color-soft);
+    background: var(--bg-secondary);
+}
+
+.email-list-text {
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.email-remove-btn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    cursor: pointer;
+    padding: var(--space-1);
+    display: flex;
+    align-items: center;
+}
+
 .agenda-container {
     display: flex;
     gap: 30px;
@@ -319,6 +636,10 @@
     to { opacity: 1; }
 }
 
+.email-modal-overlay {
+    z-index: 2100;
+}
+
 .modal-content {
     background: var(--bg-secondary);
     width: 100%;
@@ -332,6 +653,31 @@
 @keyframes modalSlide {
     from { transform: scale(0.9) translateY(20px); opacity: 0; }
     to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-content-lg {
+    max-width: 560px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content-lg form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+}
+
+.modal-content-lg .modal-body {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding-bottom: var(--space-6);
+}
+
+.modal-content-lg .modal-footer {
+    flex-shrink: 0;
 }
 
 .modal-header {

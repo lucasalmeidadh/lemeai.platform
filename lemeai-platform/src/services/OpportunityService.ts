@@ -28,6 +28,8 @@ export interface Opportunity {
     idCampanha?: number | null;
     nomeCampanha?: string;
     tipoLeadId?: number;
+    idOrigemOportunidade?: number;
+    descricaoOrigemOportunidade?: string;
 }
 
 export interface OpportunityResponse {
@@ -36,7 +38,36 @@ export interface OpportunityResponse {
     dados: Opportunity[];
 }
 
+export interface CreateOpportunityCampoPersonalizado {
+    campoPersonalizadoId: number;
+    valor: string | null;
+}
+
+export interface CreateOpportunityPayload {
+    contatoNovo: boolean;
+    contatoId: number | null;
+    contato: {
+        nome: string;
+        telefone?: string;
+        email?: string;
+    } | null;
+    usuarioResponsavelId: number | null;
+    tipoLeadId: number | null;
+    valor: number | null;
+    observacao: string | null;
+    camposPersonalizados?: CreateOpportunityCampoPersonalizado[] | null;
+}
+
 export const OpportunityService = {
+    createOpportunity: async (payload: CreateOpportunityPayload): Promise<{ sucesso: boolean; mensagem: string; dados: number | null }> => {
+        const response = await apiFetch(`${apiUrl}/api/OportunidadeVenda/Criar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        return response.json();
+    },
+
     getAllOpportunities: async (): Promise<Opportunity[]> => {
         try {
             const response = await apiFetch(`${apiUrl}/api/OportunidadeVenda/BuscarTodas`, {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Login.css';
 import { FaLock, FaEnvelope, FaSpinner, FaExclamationCircle } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import logoBrik from '../assets/logo.png';
 
 const PHRASES = [
@@ -23,6 +23,7 @@ const Login = () => {
 
   const [email, setEmail]         = useState<string>('');
   const [password, setPassword]   = useState<string>('');
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError]         = useState<string | null>(null);
 
@@ -34,6 +35,14 @@ const Login = () => {
   useEffect(() => {
     const previousTheme = document.documentElement.getAttribute('data-theme');
     document.documentElement.setAttribute('data-theme', 'light');
+    
+    // Load remembered email if present
+    const savedRememberMe = localStorage.getItem('rememberMe') === 'true';
+    if (savedRememberMe) {
+      setRememberMe(true);
+      setEmail(localStorage.getItem('rememberedEmail') || '');
+    }
+    
     return () => {
       if (previousTheme) document.documentElement.setAttribute('data-theme', previousTheme);
     };
@@ -94,6 +103,15 @@ const Login = () => {
       const data = await response1.json();
       localStorage.setItem('user', JSON.stringify(data));
 
+      // Handle "Remember Me"
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('rememberedEmail');
+      }
+
       navigate(window.innerWidth <= 768 ? '/pipeline' : '/monitoramento');
     } catch (err) {
       console.error(err);
@@ -130,7 +148,7 @@ const Login = () => {
             <h2>Acesse sua conta</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="login-form-stack">
+          <form onSubmit={handleSubmit} className="login-form-stack" autoComplete="off">
             {error && (
               <div className="error-alert" role="alert">
                 <FaExclamationCircle />
@@ -149,6 +167,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -166,8 +185,20 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="new-password"
                 />
               </div>
+            </div>
+
+            <div className="login-options-row stagger-3">
+              <label className="remember-me-label">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                Lembrar-me
+              </label>
             </div>
 
             <button type="submit" className="btn-submit stagger-4" disabled={isLoading}>
@@ -177,6 +208,10 @@ const Login = () => {
               }
             </button>
           </form>
+
+          <p className="login-onboarding-link stagger-5">
+            Não tem uma conta? <Link to="/cadastro">Cadastre-se grátis</Link>
+          </p>
 
           <p className="powered-by stagger-5">
             Powered by{' '}

@@ -1,0 +1,46 @@
+.google-callback-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: var(--bg-primary);
+}
+
+.google-callback-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-8) var(--space-10);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    text-align: center;
+    max-width: 360px;
+}
+
+.google-callback-icon {
+    font-size: 2.5rem;
+    color: var(--petroleum-blue);
+}
+
+.google-callback-icon.success {
+    color: var(--color-success);
+}
+
+.google-callback-icon.error {
+    color: var(--color-danger);
+}
+
+.google-callback-card p {
+    margin: 0;
+    font-size: var(--font-md);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.google-callback-hint {
+    font-size: var(--font-sm);
+    color: var(--text-tertiary);
+}

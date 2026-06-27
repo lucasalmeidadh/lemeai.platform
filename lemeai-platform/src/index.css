@@ -105,6 +105,16 @@
   --color-ai-bg:          rgba(139, 92, 246, 0.12);
   --color-ai-border:      rgba(139, 92, 246, 0.25);
 
+  /* Origem da oportunidade — Instagram (rosa) */
+  --color-instagram:        #ec4899;
+  --color-instagram-bg:     rgba(236, 72, 153, 0.12);
+  --color-instagram-border: rgba(236, 72, 153, 0.25);
+
+  /* Origem da oportunidade — Lead Ads (laranja) */
+  --color-leadads:        #f97316;
+  --color-leadads-bg:     rgba(249, 115, 22, 0.12);
+  --color-leadads-border: rgba(249, 115, 22, 0.25);
+
   /* Legacy aliases (backwards compat) */
   --success-color: var(--color-success);
   --success-bg:    var(--color-success-bg);
@@ -231,6 +241,13 @@ html {
 .badge-neutral { background: var(--color-neutral-bg); color: var(--color-neutral); }
 .badge-ai      { background: var(--color-ai-bg);      color: var(--color-ai);      }
 
+/* Origem da oportunidade — PlataformaEnum (1-6) */
+.badge-origin-whatsapp  { background: var(--color-success-bg);   color: var(--color-success);   }
+.badge-origin-instagram { background: var(--color-instagram-bg); color: var(--color-instagram); }
+.badge-origin-messenger { background: var(--color-info-bg);      color: var(--color-info);      }
+.badge-origin-leadads   { background: var(--color-leadads-bg);   color: var(--color-leadads);   }
+.badge-origin-manual    { background: var(--color-neutral-bg);   color: var(--color-neutral);   }
+
 /* badge com borda — para estados "sem classificação" */
 .badge-neutral.badge-dashed {
   background: transparent;
@@ -304,6 +321,14 @@ html {
 
 .action-icon-btn.users:hover {
   background-color: var(--petroleum-light);
+}
+
+.action-icon-btn.permissions {
+  color: var(--color-ai);
+}
+
+.action-icon-btn.permissions:hover {
+  background-color: var(--color-ai-bg);
 }
 
 /* ─── GLOBAL LAYOUT ───────────────────────────────────────────── */

@@ -175,3 +175,32 @@
   pointer-events: none;
   opacity: 0.7;
 }
+
+/* ── Password Requirements ── */
+.password-requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding: 10px 14px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.req-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.req-item.valid {
+  color: var(--color-success);
+}
+
+.req-item.invalid {
+  color: var(--text-tertiary);
+}

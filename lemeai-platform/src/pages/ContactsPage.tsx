@@ -150,6 +150,8 @@ const ContactsPage = () => {
                                     <th>Contato</th>
                                     <th>WhatsApp</th>
                                     <th>E-mail</th>
+                                    <th>Segmento</th>
+                                    <th>Cidade/UF</th>
                                     <th>Data Cadastro</th>
                                     <th style={{ textAlign: 'right', paddingRight: '25px' }}>Acões</th>
                                 </tr>
@@ -179,6 +181,16 @@ const ContactsPage = () => {
                                                         {contact.email}
                                                     </>
                                                 ) : '-'}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="contact-data-cell">
+                                                {contact.segment || '-'}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="contact-data-cell">
+                                                {contact.city && contact.state ? `${contact.city}/${contact.state}` : contact.city || contact.state || '-'}
                                             </div>
                                         </td>
                                         <td>

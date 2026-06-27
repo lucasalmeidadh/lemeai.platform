@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, type FC } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useGlobalNotification } from '../contexts/GlobalNotificationContext';
+import { getUserPermissions, hasPermission } from '../config/permissions';
 import {
     FaTachometerAlt,
     FaStream,
     FaAddressBook,
     FaComments,
-    FaCog,
     FaUsersCog,
     FaUsers,
     FaBox,
@@ -21,8 +21,11 @@ import {
     FaRobot,
     FaBuilding,
     FaChevronRight,
-    FaCalendarCheck,
-    FaFileAlt
+    FaUserCog,
+    FaFileAlt,
+    FaListAlt,
+    FaIdBadge,
+    FaCogs
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -36,14 +39,15 @@ interface SidebarProps {
 const Sidebar: FC<SidebarProps> = () => {
     const location = useLocation();
     const { unreadCount, clearUnreadCount } = useGlobalNotification();
-    
+
     // Accordion States
     const [isMarketingOpen, setIsMarketingOpen] = useState(false);
     const [isReportsOpen, setIsReportsOpen] = useState(false);
-    const [isGestaoOpen, setIsGestaoOpen] = useState(false);
+    const [isGestaoUsuariosOpen, setIsGestaoUsuariosOpen] = useState(false);
+    const [isAdministracaoOpen, setIsAdministracaoOpen] = useState(false);
     const [isChatbotOpen, setIsChatbotOpen] = useState(false);
     const [isEmpresaOpen, setIsEmpresaOpen] = useState(false);
-    
+
     const settingsRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -55,7 +59,8 @@ const Sidebar: FC<SidebarProps> = () => {
     useEffect(() => {
         setIsMarketingOpen(false);
         setIsReportsOpen(false);
-        setIsGestaoOpen(false);
+        setIsGestaoUsuariosOpen(false);
+        setIsAdministracaoOpen(false);
         setIsChatbotOpen(false);
         setIsEmpresaOpen(false);
     }, [location.pathname]);
@@ -65,7 +70,8 @@ const Sidebar: FC<SidebarProps> = () => {
             if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
                 setIsMarketingOpen(false);
                 setIsReportsOpen(false);
-                setIsGestaoOpen(false);
+                setIsGestaoUsuariosOpen(false);
+                setIsAdministracaoOpen(false);
                 setIsChatbotOpen(false);
                 setIsEmpresaOpen(false);
             }
@@ -76,27 +82,44 @@ const Sidebar: FC<SidebarProps> = () => {
         };
     }, []);
 
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const isAdmin = user?.permissoes?.includes('gbcode_admin_sistema') || false;
+    const permissions = getUserPermissions();
+    const can = (perm: string) => {
+        if (perm === 'gestao_campos_personalizados') {
+            return hasPermission(permissions, ['gestao_campos_personalizados', 'gestão_campos_personalizados']);
+        }
+        return hasPermission(permissions, [perm]);
+    };
+
+    let userEmpresaId: number | null = null;
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        userEmpresaId = user?.empresaId || null;
+    } catch (e) {
+        // ignore
+    }
+    const isEmpresa4Or8 = userEmpresaId === 4 || userEmpresaId === 8;
 
     // Active Checks
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
     const isReportsActive = location.pathname.startsWith('/relatorios');
-    const isGestaoActive = ['/users', '/equipes', '/metas'].includes(location.pathname);
-    const isChatbotActive = ['/chat-rules', '/products', '/connections'].includes(location.pathname);
-    const isEmpresaActive = ['/dias-uteis', '/empresas', '/gerenciar-planos'].includes(location.pathname);
+    const isGestaoUsuariosActive = ['/users', '/equipes', '/tipos-usuario'].includes(location.pathname);
+    const isAdministracaoActive = ['/metas', '/campos-personalizados'].includes(location.pathname);
+    const isChatbotActive = ['/chat-rules', '/products'].includes(location.pathname);
+    const isEmpresaActive = ['/gerenciar-empresa', '/empresas', '/gerenciar-planos', '/connections'].includes(location.pathname);
 
     // Toggles
-    const toggleMarketing = () => { setIsMarketingOpen(!isMarketingOpen); setIsReportsOpen(false); setIsGestaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
-    const toggleReports = () => { setIsReportsOpen(!isReportsOpen); setIsMarketingOpen(false); setIsGestaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
-    const toggleGestao = () => { setIsGestaoOpen(!isGestaoOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
-    const toggleChatbot = () => { setIsChatbotOpen(!isChatbotOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoOpen(false); setIsEmpresaOpen(false); };
-    const toggleEmpresa = () => { setIsEmpresaOpen(!isEmpresaOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoOpen(false); setIsChatbotOpen(false); };
-    
+    const toggleMarketing = () => { setIsMarketingOpen(!isMarketingOpen); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
+    const toggleReports = () => { setIsReportsOpen(!isReportsOpen); setIsMarketingOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
+    const toggleGestaoUsuarios = () => { setIsGestaoUsuariosOpen(!isGestaoUsuariosOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
+    const toggleAdministracao = () => { setIsAdministracaoOpen(!isAdministracaoOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
+    const toggleChatbot = () => { setIsChatbotOpen(!isChatbotOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsEmpresaOpen(false); };
+    const toggleEmpresa = () => { setIsEmpresaOpen(!isEmpresaOpen); setIsMarketingOpen(false); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); };
+
     const closeSettings = () => {
         setIsMarketingOpen(false);
         setIsReportsOpen(false);
-        setIsGestaoOpen(false);
+        setIsGestaoUsuariosOpen(false);
+        setIsAdministracaoOpen(false);
         setIsChatbotOpen(false);
         setIsEmpresaOpen(false);
     };
@@ -113,188 +136,269 @@ const Sidebar: FC<SidebarProps> = () => {
                     <span>Primeiros passos</span>
                 </Link>
 
-                <div className="sidebar-group">
-                    <div className="sidebar-group-title">Gestão</div>
-                    <Link to="/monitoramento" className={`sidebar-link ${location.pathname === '/monitoramento' ? 'active' : ''}`}>
-                        <FaUserFriends />
-                        <span>Gestão de vendas</span>
-                    </Link>
-                    <Link to="/dashboard" className={`sidebar-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
-                        <FaTachometerAlt />
-                        <span>Painel Operacional</span>
-                    </Link>
-                </div>
-
-                <div className="sidebar-group">
-                    <div className="sidebar-group-title">Trabalho</div>
-                    <Link to="/agenda" className={`sidebar-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
-                        <FaCalendarAlt />
-                        <span>Agenda</span>
-                    </Link>
-                    <Link id="sidebar-chat" to="/chat" className={`sidebar-link ${location.pathname === '/chat' ? 'active' : ''}`}>
-                        <FaComments />
-                        <span>Chat</span>
-                        {unreadCount > 0 && <span className="sidebar-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                    </Link>
-                    <Link id="sidebar-pipeline" to="/pipeline" className={`sidebar-link ${location.pathname === '/pipeline' ? 'active' : ''}`}>
-                        <FaStream />
-                        <span>Fluxo de Vendas</span>
-                    </Link>
-                    <Link id="sidebar-contacts" to="/contacts" className={`sidebar-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
-                        <FaAddressBook />
-                        <span>Contatos</span>
-                    </Link>
-                </div>
-
-                <div className="sidebar-group">
-                    <div className="sidebar-group-title">Expansão</div>
-                    <div className="sidebar-item-wrapper">
-                        <button
-                            id="sidebar-marketing"
-                            className={`sidebar-btn ${isMarketingActive || isMarketingOpen ? 'active' : ''} ${isMarketingOpen ? 'open' : ''}`}
-                            onClick={toggleMarketing}
-                        >
-                            <FaBullhorn />
-                            <span>Marketing</span>
-                            <FaChevronRight className="chevron-icon" />
-                        </button>
-                        <div className={`sidebar-accordion ${isMarketingOpen ? 'open' : ''}`}>
-                            <div className="sidebar-accordion-content">
-                                <Link to="/campanhas" className={`sidebar-sub-link ${location.pathname === '/campanhas' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaPaperPlane />
-                                    <span>Disparador</span>
-                                </Link>
-                                <Link to="/campaign-templates" className={`sidebar-sub-link ${location.pathname === '/campaign-templates' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaBullhorn />
-                                    <span>Templates</span>
-                                </Link>
-                            </div>
-                        </div>
+                {(can('gestao_vendas') || can('gestao_vendas_vendedor') || can('painel_operacional')) && (
+                    <div className="sidebar-group">
+                        <div className="sidebar-group-title">Gestão</div>
+                        {(can('gestao_vendas') || can('gestao_vendas_vendedor')) && (
+                            <Link to="/monitoramento" className={`sidebar-link ${location.pathname === '/monitoramento' ? 'active' : ''}`}>
+                                <FaUserFriends />
+                                <span>Gestão de vendas</span>
+                            </Link>
+                        )}
+                        {can('painel_operacional') && (
+                            <Link to="/dashboard" className={`sidebar-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
+                                <FaTachometerAlt />
+                                <span>Painel Operacional</span>
+                            </Link>
+                        )}
                     </div>
-                </div>
+                )}
 
-                <div className="sidebar-group">
-                    <div className="sidebar-group-title">Analytics</div>
-                    <div className="sidebar-item-wrapper">
-                        <button
-                            id="sidebar-reports"
-                            className={`sidebar-btn ${isReportsActive || isReportsOpen ? 'active' : ''} ${isReportsOpen ? 'open' : ''}`}
-                            onClick={toggleReports}
-                        >
-                            <FaFileAlt />
-                            <span>Relatórios</span>
-                            <FaChevronRight className="chevron-icon" />
-                        </button>
-                        <div className={`sidebar-accordion ${isReportsOpen ? 'open' : ''}`}>
-                            <div className="sidebar-accordion-content">
-                                <Link to="/relatorios/vendas" className={`sidebar-sub-link ${location.pathname === '/relatorios/vendas' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaFileAlt />
-                                    <span>Vendas</span>
-                                </Link>
-                                <Link to="/relatorios/campanhas" className={`sidebar-sub-link ${location.pathname === '/relatorios/campanhas' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaFileAlt />
-                                    <span>Campanhas</span>
-                                </Link>
-                            </div>
-                        </div>
+                {(can('agenda') || can('chat') || can('fluxo_vendas') || can('contatos')) && (
+                    <div className="sidebar-group">
+                        <div className="sidebar-group-title">Trabalho</div>
+                        {can('agenda') && (
+                            <Link to="/agenda" className={`sidebar-link ${location.pathname === '/agenda' ? 'active' : ''}`}>
+                                <FaCalendarAlt />
+                                <span>Agenda</span>
+                            </Link>
+                        )}
+                        {can('chat') && (
+                            <Link id="sidebar-chat" to="/chat" className={`sidebar-link ${location.pathname === '/chat' ? 'active' : ''}`}>
+                                <FaComments />
+                                <span>Chat</span>
+                                {unreadCount > 0 && <span className="sidebar-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                            </Link>
+                        )}
+                        {can('fluxo_vendas') && (
+                            <Link id="sidebar-pipeline" to="/pipeline" className={`sidebar-link ${location.pathname === '/pipeline' ? 'active' : ''}`}>
+                                <FaStream />
+                                <span>Fluxo de Vendas</span>
+                            </Link>
+                        )}
+                        {can('contatos') && (
+                            <Link id="sidebar-contacts" to="/contacts" className={`sidebar-link ${location.pathname === '/contacts' ? 'active' : ''}`}>
+                                <FaAddressBook />
+                                <span>Contatos</span>
+                            </Link>
+                        )}
                     </div>
-                </div>
+                )}
 
-                <div className="sidebar-group">
-                    <div className="sidebar-group-title">Administração</div>
-                    
-                    {/* Gestão */}
-                    <div className="sidebar-item-wrapper">
-                        <button
-                            id="sidebar-gestao-admin"
-                            className={`sidebar-btn ${isGestaoActive || isGestaoOpen ? 'active' : ''} ${isGestaoOpen ? 'open' : ''}`}
-                            onClick={toggleGestao}
-                        >
-                            <FaUsersCog />
-                            <span>Gestão</span>
-                            <FaChevronRight className="chevron-icon" />
-                        </button>
-                        <div className={`sidebar-accordion ${isGestaoOpen ? 'open' : ''}`}>
-                            <div className="sidebar-accordion-content">
-                                <Link id="sidebar-users" to="/users" className={`sidebar-sub-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaUsers />
-                                    <span>Usuários</span>
-                                </Link>
-                                <Link to="/equipes" className={`sidebar-sub-link ${location.pathname === '/equipes' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaUsers />
-                                    <span>Equipes</span>
-                                </Link>
-                                <Link to="/metas" className={`sidebar-sub-link ${location.pathname === '/metas' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaBullseye />
-                                    <span>Metas</span>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Chatbot */}
-                    <div className="sidebar-item-wrapper">
-                        <button
-                            id="sidebar-chatbot-admin"
-                            className={`sidebar-btn ${isChatbotActive || isChatbotOpen ? 'active' : ''} ${isChatbotOpen ? 'open' : ''}`}
-                            onClick={toggleChatbot}
-                        >
-                            <FaRobot />
-                            <span>Chatbot</span>
-                            <FaChevronRight className="chevron-icon" />
-                        </button>
-                        <div className={`sidebar-accordion ${isChatbotOpen ? 'open' : ''}`}>
-                            <div className="sidebar-accordion-content">
-                                <Link to="/chat-rules" className={`sidebar-sub-link ${location.pathname === '/chat-rules' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaComments />
-                                    <span>Regras do Chat</span>
-                                </Link>
-                                <Link to="/products" className={`sidebar-sub-link ${location.pathname === '/products' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaBox />
-                                    <span>Produtos</span>
-                                </Link>
-                                <Link to="/connections" className={`sidebar-sub-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaPlug />
-                                    <span>Conexões</span>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Empresa */}
-                    <div className="sidebar-item-wrapper">
-                        <button
-                            id="sidebar-empresa-admin"
-                            className={`sidebar-btn ${isEmpresaActive || isEmpresaOpen ? 'active' : ''} ${isEmpresaOpen ? 'open' : ''}`}
-                            onClick={toggleEmpresa}
-                        >
-                            <FaBuilding />
-                            <span>Empresa</span>
-                            <FaChevronRight className="chevron-icon" />
-                        </button>
-                        <div className={`sidebar-accordion ${isEmpresaOpen ? 'open' : ''}`}>
-                            <div className="sidebar-accordion-content">
-                                <Link to="/dias-uteis" className={`sidebar-sub-link ${location.pathname === '/dias-uteis' ? 'active' : ''}`} onClick={closeSettings}>
-                                    <FaCalendarCheck />
-                                    <span>Dias de func.</span>
-                                </Link>
-                                {isAdmin && (
-                                    <>
-                                        <Link to="/empresas" className={`sidebar-sub-link ${location.pathname === '/empresas' ? 'active' : ''}`} onClick={closeSettings}>
-                                            <FaBuilding />
-                                            <span>Empresas</span>
+                {(can('marketing_disparador') || can('marketing_templates')) && (
+                    <div className="sidebar-group">
+                        <div className="sidebar-group-title">Expansão</div>
+                        <div className="sidebar-item-wrapper">
+                            <button
+                                id="sidebar-marketing"
+                                className={`sidebar-btn ${isMarketingActive || isMarketingOpen ? 'active' : ''} ${isMarketingOpen ? 'open' : ''}`}
+                                onClick={toggleMarketing}
+                            >
+                                <FaBullhorn />
+                                <span>Marketing</span>
+                                <FaChevronRight className="chevron-icon" />
+                            </button>
+                            <div className={`sidebar-accordion ${isMarketingOpen ? 'open' : ''}`}>
+                                <div className="sidebar-accordion-content">
+                                    {can('marketing_disparador') && (
+                                        <Link to="/campanhas" className={`sidebar-sub-link ${location.pathname === '/campanhas' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <FaPaperPlane />
+                                            <span>Disparador</span>
                                         </Link>
-                                        <Link to="/gerenciar-planos" className={`sidebar-sub-link ${location.pathname === '/gerenciar-planos' ? 'active' : ''}`} onClick={closeSettings}>
-                                            <FaCreditCard />
-                                            <span>Gerenciar Planos</span>
+                                    )}
+                                    {can('marketing_templates') && (
+                                        <Link to="/campaign-templates" className={`sidebar-sub-link ${location.pathname === '/campaign-templates' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <FaBullhorn />
+                                            <span>Templates</span>
                                         </Link>
-                                    </>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
+                )}
 
-                </div>
+                {(can('relatorio_vendas') || can('relatorio_campanhas')) && (
+                    <div className="sidebar-group">
+                        <div className="sidebar-group-title">Analytics</div>
+                        <div className="sidebar-item-wrapper">
+                            <button
+                                id="sidebar-reports"
+                                className={`sidebar-btn ${isReportsActive || isReportsOpen ? 'active' : ''} ${isReportsOpen ? 'open' : ''}`}
+                                onClick={toggleReports}
+                            >
+                                <FaFileAlt />
+                                <span>Relatórios</span>
+                                <FaChevronRight className="chevron-icon" />
+                            </button>
+                            <div className={`sidebar-accordion ${isReportsOpen ? 'open' : ''}`}>
+                                <div className="sidebar-accordion-content">
+                                    {can('relatorio_vendas') && (
+                                        <Link to="/relatorios/vendas" className={`sidebar-sub-link ${location.pathname === '/relatorios/vendas' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <FaFileAlt />
+                                            <span>Vendas</span>
+                                        </Link>
+                                    )}
+                                    {can('relatorio_campanhas') && (
+                                        <Link to="/relatorios/campanhas" className={`sidebar-sub-link ${location.pathname === '/relatorios/campanhas' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <FaFileAlt />
+                                            <span>Campanhas</span>
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {(can('gestao_usuarios') || can('gestao_equipes') || can('gestao_metas') || can('gestao_campos_personalizados') || can('gestao_tipos_usuario') || can('regras_chatbot') || can('gestao_produtos') || can('gestao_conexoes') || can('dias_funcionamento') || can('gestao_empresas') || (can('gerenciar_planos') && !isEmpresa4Or8)) && (
+                    <div className="sidebar-group">
+                        <div className="sidebar-group-title">Administração</div>
+
+                        {/* Gestão de usuários */}
+                        {(can('gestao_usuarios') || can('gestao_equipes') || can('gestao_tipos_usuario')) && (
+                            <div className="sidebar-item-wrapper">
+                                <button
+                                    id="sidebar-gestao-usuarios-admin"
+                                    className={`sidebar-btn ${isGestaoUsuariosActive || isGestaoUsuariosOpen ? 'active' : ''} ${isGestaoUsuariosOpen ? 'open' : ''}`}
+                                    onClick={toggleGestaoUsuarios}
+                                >
+                                    <FaUsersCog />
+                                    <span>Gestão de usuários</span>
+                                    <FaChevronRight className="chevron-icon" />
+                                </button>
+                                <div className={`sidebar-accordion ${isGestaoUsuariosOpen ? 'open' : ''}`}>
+                                    <div className="sidebar-accordion-content">
+                                        {can('gestao_usuarios') && (
+                                            <Link id="sidebar-users" to="/users" className={`sidebar-sub-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaUsers />
+                                                <span>Usuários</span>
+                                            </Link>
+                                        )}
+                                        {can('gestao_tipos_usuario') && (
+                                            <Link to="/tipos-usuario" className={`sidebar-sub-link ${location.pathname === '/tipos-usuario' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaIdBadge />
+                                                <span>Perfis</span>
+                                            </Link>
+                                        )}
+                                        {can('gestao_equipes') && (
+                                            <Link to="/equipes" className={`sidebar-sub-link ${location.pathname === '/equipes' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaUsers />
+                                                <span>Equipes</span>
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Administração */}
+                        {(can('gestao_metas') || can('gestao_campos_personalizados')) && (
+                            <div className="sidebar-item-wrapper">
+                                <button
+                                    id="sidebar-administracao-admin"
+                                    className={`sidebar-btn ${isAdministracaoActive || isAdministracaoOpen ? 'active' : ''} ${isAdministracaoOpen ? 'open' : ''}`}
+                                    onClick={toggleAdministracao}
+                                >
+                                    <FaCogs />
+                                    <span>Administração</span>
+                                    <FaChevronRight className="chevron-icon" />
+                                </button>
+                                <div className={`sidebar-accordion ${isAdministracaoOpen ? 'open' : ''}`}>
+                                    <div className="sidebar-accordion-content">
+                                        {can('gestao_metas') && (
+                                            <Link to="/metas" className={`sidebar-sub-link ${location.pathname === '/metas' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaBullseye />
+                                                <span>Metas</span>
+                                            </Link>
+                                        )}
+                                        {can('gestao_campos_personalizados') && (
+                                            <Link to="/campos-personalizados" className={`sidebar-sub-link ${location.pathname === '/campos-personalizados' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaListAlt />
+                                                <span>Campos Personalizados</span>
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Chatbot */}
+                        {(can('regras_chatbot') || can('gestao_produtos')) && (
+                            <div className="sidebar-item-wrapper">
+                                <button
+                                    id="sidebar-chatbot-admin"
+                                    className={`sidebar-btn ${isChatbotActive || isChatbotOpen ? 'active' : ''} ${isChatbotOpen ? 'open' : ''}`}
+                                    onClick={toggleChatbot}
+                                >
+                                    <FaRobot />
+                                    <span>Chatbot</span>
+                                    <FaChevronRight className="chevron-icon" />
+                                </button>
+                                <div className={`sidebar-accordion ${isChatbotOpen ? 'open' : ''}`}>
+                                    <div className="sidebar-accordion-content">
+                                        {can('regras_chatbot') && (
+                                            <Link to="/chat-rules" className={`sidebar-sub-link ${location.pathname === '/chat-rules' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaComments />
+                                                <span>Regras do Chat</span>
+                                            </Link>
+                                        )}
+                                        {can('gestao_produtos') && (
+                                            <Link to="/products" className={`sidebar-sub-link ${location.pathname === '/products' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaBox />
+                                                <span>Produtos</span>
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Empresa */}
+                        {(can('dias_funcionamento') || can('gestao_empresas') || (can('gerenciar_planos') && !isEmpresa4Or8) || can('gestao_conexoes')) && (
+                            <div className="sidebar-item-wrapper">
+                                <button
+                                    id="sidebar-empresa-admin"
+                                    className={`sidebar-btn ${isEmpresaActive || isEmpresaOpen ? 'active' : ''} ${isEmpresaOpen ? 'open' : ''}`}
+                                    onClick={toggleEmpresa}
+                                >
+                                    <FaBuilding />
+                                    <span>Empresa</span>
+                                    <FaChevronRight className="chevron-icon" />
+                                </button>
+                                <div className={`sidebar-accordion ${isEmpresaOpen ? 'open' : ''}`}>
+                                    <div className="sidebar-accordion-content">
+                                        {can('dias_funcionamento') && (
+                                            <Link to="/gerenciar-empresa" className={`sidebar-sub-link ${location.pathname === '/gerenciar-empresa' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaUserCog />
+                                                <span>Gerenciar Empresa</span>
+                                            </Link>
+                                        )}
+                                        {can('gestao_empresas') && (
+                                            <Link to="/empresas" className={`sidebar-sub-link ${location.pathname === '/empresas' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaBuilding />
+                                                <span>Empresas</span>
+                                            </Link>
+                                        )}
+                                        {can('gestao_conexoes') && (
+                                            <Link to="/connections" className={`sidebar-sub-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaPlug />
+                                                <span>Conexões</span>
+                                            </Link>
+                                        )}
+                                        {can('gerenciar_planos') && !isEmpresa4Or8 && (
+                                            <Link to="/gerenciar-planos" className={`sidebar-sub-link ${location.pathname === '/gerenciar-planos' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaCreditCard />
+                                                <span>Gerenciar Planos</span>
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+                )}
             </nav>
         </aside>
     );
