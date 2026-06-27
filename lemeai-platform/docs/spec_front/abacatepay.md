@@ -19,12 +19,9 @@ Authorization: Bearer <jwt-token>
 | `POST` | `/api/assinatura/CriarCheckoutPix` | JWT | Gera checkout PIX avulso (período controlado internamente) |
 | `PATCH` | `/api/assinatura/TrocarPlano` | JWT | Troca plano no próximo ciclo (apenas CARD) |
 | `DELETE` | `/api/assinatura/Cancelar` | JWT | Cancela assinatura (acesso mantido até expirar) |
-| `GET` | `/api/plano/BuscarTodos` | JWT (GBCodeAdmin) | Lista todos os planos |
-| `GET` | `/api/plano/BuscarPorId/{id}` | JWT (GBCodeAdmin) | Busca plano por ID |
-| `POST` | `/api/plano/Criar` | JWT (GBCodeAdmin) | Cria plano e registra produtos na AbacatePay |
-| `PUT` | `/api/plano/Atualizar` | JWT (GBCodeAdmin) | Atualiza dados do plano (apenas local) |
-| `DELETE` | `/api/plano/Remover/{id}` | JWT (GBCodeAdmin) | Remove plano e deleta produtos da AbacatePay |
 | `POST` | `/api/webhook/abacatepay` | Sem JWT (secret via query) | Recebe eventos da AbacatePay |
+
+> Endpoints de gerenciamento de plano (`/api/plano/*`, incluindo limites de usuário/conexão e plano de teste) estão documentados em [planos.md](planos.md).
 
 ---
 
@@ -32,6 +29,7 @@ Authorization: Bearer <jwt-token>
 
 | Status | Descrição |
 |--------|-----------|
+| `TRIAL` | Trial ativo — criado automaticamente no onboarding, vinculado ao plano de teste |
 | `PENDING` | Checkout criado, aguardando pagamento |
 | `PAID` | Ativa e paga |
 | `CANCELLED` | Cancelada (acesso até `assinaturaExpiraEm`) |
@@ -57,7 +55,7 @@ Authorization: Bearer <jwt-token>
 
 ### GET /api/assinatura/PlanosDisponiveis
 
-Lista os planos ativos disponíveis para contratação.
+Lista os planos ativos disponíveis para contratação. **O plano de teste (`planoIsTrial: true`) nunca aparece aqui** — ele só é atribuído automaticamente no onboarding.
 
 ```http
 GET /api/assinatura/PlanosDisponiveis
@@ -77,6 +75,10 @@ Authorization: Bearer <token>
       "planoPreco": 197.00,
       "planoCiclo": "MONTHLY",
       "planoAtivo": true,
+      "planoLimiteUsuario": 3,
+      "planoLimiteConexao": 1,
+      "planoIntegradoAbacatePay": true,
+      "planoIsTrial": false,
       "abacateProductId": "prod_abc123",
       "abacateStatus": "ACTIVE",
       "planoCreatedat": "2025-01-10T12:00:00Z"
@@ -84,6 +86,8 @@ Authorization: Bearer <token>
   ]
 }
 ```
+
+> Detalhes completos dos campos de limite de plano (`planoLimiteUsuario`/`planoLimiteConexao`) e do plano de teste em [planos.md](planos.md).
 
 ---
 
@@ -169,11 +173,23 @@ Redirecionar o cliente para `assinaturaCheckoutUrl` para inserção dos dados do
 { "sucesso": false, "mensagem": "Plano ainda não sincronizado com a AbacatePay.", "dados": null }
 ```
 
+**Resposta 400 — plano de teste**
+```json
+{ "sucesso": false, "mensagem": "O plano de teste não pode ser contratado diretamente.", "dados": null }
+```
+
+**Resposta 400 — empresa acima do limite do plano de destino**
+```json
+{ "sucesso": false, "mensagem": "Não é possível mudar para este plano: a empresa possui 5 usuários, mas o plano \"Starter\" permite no máximo 3. Remova o excedente antes de trocar de plano.", "dados": null }
+```
+
+> Detalhes sobre limites de usuário/conexão por plano em [planos.md](planos.md).
+
 ---
 
 ### POST /api/assinatura/CriarCheckoutPix
 
-Gera um QR Code PIX avulso. A AbacatePay **não** renova automaticamente — o LemeIA controla o período de acesso com base no ciclo do plano. O status muda para `PAID` após o webhook `checkout.completed`.
+Gera um checkout PIX via `POST /v2/checkouts/create` na AbacatePay. A AbacatePay **não** renova automaticamente — o LemeIA controla o período de acesso com base no ciclo do plano. O status muda para `PAID` após o webhook `checkout.completed`.
 
 ```http
 POST /api/assinatura/CriarCheckoutPix
@@ -215,6 +231,10 @@ Redirecionar o cliente para `assinaturaCheckoutUrl` para visualizar e pagar o QR
 
 > Planos criados antes da implementação do suporte PIX não possuem produto avulso e retornam esse erro.
 
+**Resposta 400 — plano de teste / limite de plano**
+
+Mesmos formatos de erro do `CriarCheckout` (bloqueio de plano de teste e validação de limites).
+
 ---
 
 ### PATCH /api/assinatura/TrocarPlano
@@ -250,6 +270,10 @@ Content-Type: application/json
 }
 ```
 
+**Resposta 400 — plano de teste / limite de plano**
+
+Mesmos formatos de erro do `CriarCheckout` (bloqueio de plano de teste e validação de limites — ver [planos.md](planos.md)).
+
 ---
 
 ### DELETE /api/assinatura/Cancelar
@@ -275,143 +299,6 @@ Authorization: Bearer <token>
 **Resposta 400 — sem assinatura**
 ```json
 { "sucesso": false, "mensagem": "Nenhuma assinatura ativa encontrada.", "dados": null }
-```
-
----
-
-## Plano (Admin)
-
-> Requer policy `GBCodeAdminPolicy`.
-
----
-
-### GET /api/plano/BuscarTodos
-
-Lista todos os planos, incluindo inativos.
-
-```http
-GET /api/plano/BuscarTodos
-Authorization: Bearer <token>
-```
-
-**Resposta 200**
-```json
-{
-  "sucesso": true,
-  "mensagem": "Planos encontrados.",
-  "dados": [
-    {
-      "planoId": 1,
-      "planoNome": "Starter",
-      "planoDescricao": "Até 3 usuários",
-      "planoPreco": 197.00,
-      "planoCiclo": "MONTHLY",
-      "planoAtivo": true,
-      "abacateProductId": "prod_abc123",
-      "abacateStatus": "ACTIVE",
-      "planoCreatedat": "2025-01-10T12:00:00Z"
-    }
-  ]
-}
-```
-
----
-
-### GET /api/plano/BuscarPorId/{id}
-
-```http
-GET /api/plano/BuscarPorId/1
-Authorization: Bearer <token>
-```
-
-**Resposta 200** — mesmo shape de um item de `BuscarTodos`.
-
-**Resposta 400**
-```json
-{ "sucesso": false, "mensagem": "Plano não encontrado.", "dados": null }
-```
-
----
-
-### POST /api/plano/Criar
-
-Cria o plano no banco e registra **dois produtos** na AbacatePay: um com ciclo (para checkout CARD) e um sem ciclo (para checkout PIX avulso).
-
-```http
-POST /api/plano/Criar
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-```json
-{
-  "nome": "Starter",
-  "descricao": "Até 3 usuários, 1 conexão WhatsApp",
-  "preco": 197.00,
-  "ciclo": "MONTHLY"
-}
-```
-
-**Resposta 200**
-```json
-{
-  "sucesso": true,
-  "mensagem": "Plano criado com sucesso.",
-  "dados": {
-    "planoId": 1,
-    "planoNome": "Starter",
-    "planoDescricao": "Até 3 usuários, 1 conexão WhatsApp",
-    "planoPreco": 197.00,
-    "planoCiclo": "MONTHLY",
-    "planoAtivo": true,
-    "abacateProductId": "prod_abc123",
-    "abacateStatus": "ACTIVE",
-    "planoCreatedat": "2025-06-16T10:00:00Z"
-  }
-}
-```
-
-> Se a AbacatePay não estiver configurada (`ApiKey` ausente), o plano é salvo com `abacateProductId: null`. Checkouts falharão até sincronização manual.
-
----
-
-### PUT /api/plano/Atualizar
-
-Atualiza nome, descrição, preço e status ativo. Atualização **apenas local** — não reflete na AbacatePay. Alterações de preço só valem para novas assinaturas.
-
-```http
-PUT /api/plano/Atualizar
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-```json
-{
-  "planoId": 1,
-  "nome": "Starter Plus",
-  "descricao": "Até 5 usuários",
-  "preco": 247.00,
-  "ativo": true
-}
-```
-
-**Resposta 200**
-```json
-{ "sucesso": true, "mensagem": "Plano atualizado com sucesso.", "dados": null }
-```
-
----
-
-### DELETE /api/plano/Remover/{id}
-
-Soft delete do plano e exclusão de ambos os produtos na AbacatePay (produto CARD e produto PIX avulso).
-
-```http
-DELETE /api/plano/Remover/1
-Authorization: Bearer <token>
-```
-
-**Resposta 200**
-```json
-{ "sucesso": true, "mensagem": "Plano removido com sucesso.", "dados": null }
 ```
 
 ---

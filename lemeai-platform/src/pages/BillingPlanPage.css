@@ -114,6 +114,12 @@
   border: 1px solid var(--color-danger-border);
 }
 
+.sub-badge-trial {
+  background-color: var(--color-ai-bg);
+  color: var(--color-ai);
+  border: 1px solid var(--color-ai-border);
+}
+
 .current-plan-price {
   font-weight: 600;
   color: var(--text-primary);

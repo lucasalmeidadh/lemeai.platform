@@ -41,6 +41,16 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
     const isEmpresa4Or8 = user?.empresaId === 4 || user?.empresaId === 8;
     const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
+    const empresaEmTrial = user?.empresaEmTrial === true;
+    const trialDiasRestantes = (() => {
+        if (!empresaEmTrial || !user?.dataExpiracaoPlano) return null;
+        const expira = new Date(user.dataExpiracaoPlano);
+        expira.setHours(0, 0, 0, 0);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        return Math.ceil((expira.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    })();
+
     useEffect(() => {
         const handlePhotoUpdate = (e: Event) => {
             const detail = (e as CustomEvent<{ photoUrl: string | null }>).detail;
@@ -294,6 +304,17 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                         <FaBuilding className="topbar-company-fallback-icon" />
                         {companyName && <span className="topbar-company-fallback-name">{companyName}</span>}
                     </div>
+                )}
+
+                {empresaEmTrial && (
+                    <Link to="/plano" className="topbar-trial-badge" title="Ver planos disponíveis">
+                        <FaCreditCard />
+                        <span>
+                            Plano Gratuito - {trialDiasRestantes !== null && trialDiasRestantes >= 0
+                                ? `Expira em ${trialDiasRestantes} dia${trialDiasRestantes === 1 ? '' : 's'}`
+                                : 'Expirado'}
+                        </span>
+                    </Link>
                 )}
             </div>
 

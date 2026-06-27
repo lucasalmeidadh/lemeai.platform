@@ -7,10 +7,14 @@ export interface PlanoBackend {
   planoNome: string;
   planoDescricao: string;
   planoPreco: number;
-  planoCiclo: 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'ANNUALLY';
+  planoCiclo: 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'ANNUALLY' | 'TRIAL';
   planoAtivo: boolean;
+  planoLimiteUsuario: number | null;
+  planoLimiteConexao: number | null;
+  planoIntegradoAbacatePay: boolean;
+  planoIsTrial: boolean;
   abacateProductId: string | null;
-  abacateStatus: string;
+  abacateStatus: string | null;
   planoCreatedat: string;
 }
 
@@ -18,13 +22,15 @@ export interface AssinaturaBackend {
   assinaturaId: number;
   planoId: number;
   abacateSubscriptionId: string;
-  assinaturaStatus: 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
-  assinaturaCiclo: 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'ANNUALLY';
+  assinaturaStatus: 'TRIAL' | 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED' | 'FAILED';
+  assinaturaCiclo: 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'ANNUALLY' | 'Gratuito';
   assinaturaValor: number;
-  assinaturaMetodo: 'CARD' | 'PIX';
+  assinaturaMetodo: 'CARD' | 'PIX' | 'TRIAL' | string;
   assinaturaCheckoutUrl: string | null;
   assinaturaInicioEm: string | null;
   assinaturaExpiraEm: string | null;
+  nomePlano: string;
+  descricaoPlano: string | null;
 }
 
 export interface ApiResponse<T> {
@@ -54,23 +60,46 @@ export const billingService = {
     return response.json();
   },
 
-  criarPlano: async (data: { nome: string; descricao: string; preco: number; ciclo: string }): Promise<ApiResponse<PlanoBackend>> => {
+  criarPlano: async (data: {
+    nome: string;
+    descricao: string;
+    preco: number;
+    ciclo: string;
+    limiteUsuario?: number | null;
+    limiteConexao?: number | null;
+    integradoAbacatePay?: boolean;
+    ehPlanoTeste?: boolean;
+  }): Promise<ApiResponse<PlanoBackend>> => {
     const response = await apiFetch(`${API_URL}/api/plano/Criar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Erro ao criar plano');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.mensagem || 'Erro ao criar plano');
+    }
     return response.json();
   },
 
-  atualizarPlano: async (data: { planoId: number; nome: string; descricao: string; preco: number; ativo: boolean }): Promise<ApiResponse<any>> => {
+  atualizarPlano: async (data: {
+    planoId: number;
+    nome: string;
+    descricao: string;
+    preco: number;
+    ativo: boolean;
+    limiteUsuario?: number | null;
+    limiteConexao?: number | null;
+  }): Promise<ApiResponse<any>> => {
     const response = await apiFetch(`${API_URL}/api/plano/Atualizar`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Erro ao atualizar plano');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.mensagem || 'Erro ao atualizar plano');
+    }
     return response.json();
   },
 
@@ -78,7 +107,10 @@ export const billingService = {
     const response = await apiFetch(`${API_URL}/api/plano/Remover/${id}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Erro ao remover plano');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.mensagem || 'Erro ao remover plano');
+    }
     return response.json();
   },
 

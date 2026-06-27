@@ -3,6 +3,8 @@ import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import UserProfileModal from './UserProfileModal';
+import SubscriptionExpiredModal from './SubscriptionExpiredModal';
+import { ASSINATURA_VENCIDA_EVENT } from '../services/api';
 import { GlobalNotificationProvider } from '../contexts/GlobalNotificationContext';
 import {
     FaChartPie,
@@ -27,13 +29,26 @@ const MainLayout = () => {
     const { setSteps } = useOnboarding();
 
     let userEmpresaId: number | null = null;
+    let assinaturaVencida = false;
+    let dataExpiracaoPlano: string | null = null;
     try {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         userEmpresaId = user?.empresaId || null;
+        assinaturaVencida = user?.assinaturaVencida === true;
+        dataExpiracaoPlano = user?.dataExpiracaoPlano ?? null;
     } catch (e) {
         // ignore
     }
     const isEmpresa4Or8 = userEmpresaId === 4 || userEmpresaId === 8;
+
+    const [isSubscriptionExpiredOpen, setIsSubscriptionExpiredOpen] = useState(assinaturaVencida);
+
+    // Abre a modal sempre que uma ação de criar/editar for bloqueada por assinatura vencida
+    useEffect(() => {
+        const handleAssinaturaVencidaBloqueio = () => setIsSubscriptionExpiredOpen(true);
+        window.addEventListener(ASSINATURA_VENCIDA_EVENT, handleAssinaturaVencidaBloqueio);
+        return () => window.removeEventListener(ASSINATURA_VENCIDA_EVENT, handleAssinaturaVencidaBloqueio);
+    }, []);
 
     // Close mobile menu on route change
     useEffect(() => {
@@ -155,6 +170,11 @@ const MainLayout = () => {
                     <UserProfileModal
                         isOpen={isProfileOpen}
                         onClose={() => setIsProfileOpen(false)}
+                    />
+                    <SubscriptionExpiredModal
+                        isOpen={isSubscriptionExpiredOpen}
+                        onClose={() => setIsSubscriptionExpiredOpen(false)}
+                        expirationDate={dataExpiracaoPlano}
                     />
                     <main className="main-content" style={{ padding: 0 }}>
                         <Outlet />

@@ -11,7 +11,8 @@ import {
   FaExclamationTriangle,
   FaQrcode,
   FaTimes,
-  FaExchangeAlt
+  FaExchangeAlt,
+  FaGift
 } from 'react-icons/fa';
 import { billingService } from '../services/billingService';
 import type { PlanoBackend, AssinaturaBackend } from '../services/billingService';
@@ -151,6 +152,8 @@ const BillingPlanPage: React.FC = () => {
 
   const getSubscriptionStatusBadge = (status: string) => {
     switch (status) {
+      case 'TRIAL':
+        return <span className="sub-badge sub-badge-trial">Período de Teste</span>;
       case 'PAID':
         return <span className="sub-badge sub-badge-active">Ativa (Paga)</span>;
       case 'PENDING':
@@ -166,9 +169,14 @@ const BillingPlanPage: React.FC = () => {
     }
   };
 
+  const isTrialSubscription = subscription?.assinaturaStatus === 'TRIAL';
+  // O plano de teste é ocultado de PlanosDisponiveis, então o nome/descrição
+  // vêm sempre de BuscarAssinatura, não da lista de planos contratáveis.
   const currentPlan = plans.find(p => p.planoId === subscription?.planoId);
-  const currentPlanFeatures = currentPlan?.planoDescricao
-    ? currentPlan.planoDescricao.split(',').map(f => f.trim())
+  const currentPlanName = subscription?.nomePlano || currentPlan?.planoNome || 'Plano Desconhecido';
+  const currentPlanDescricao = subscription?.descricaoPlano || currentPlan?.planoDescricao || '';
+  const currentPlanFeatures = currentPlanDescricao
+    ? currentPlanDescricao.split(',').map(f => f.trim())
     : [];
 
   const isSubscriptionCancelled = subscription?.assinaturaStatus === 'CANCELLED';
@@ -201,11 +209,13 @@ const BillingPlanPage: React.FC = () => {
           <div className="current-plan-info">
             <div className="current-plan-main">
               <span className="current-plan-label">ASSINATURA ATUAL</span>
-              <h2>{currentPlan ? currentPlan.planoNome : 'Plano Desconhecido'}</h2>
+              <h2>{currentPlanName}</h2>
               <div className="status-row">
                 {getSubscriptionStatusBadge(subscription.assinaturaStatus)}
                 <span className="current-plan-price">
-                  R$ {subscription.assinaturaValor.toFixed(2)}/{getCicloLabel(subscription.assinaturaCiclo)}
+                  {isTrialSubscription
+                    ? 'Gratuito'
+                    : `R$ ${subscription.assinaturaValor.toFixed(2)}/${getCicloLabel(subscription.assinaturaCiclo)}`}
                 </span>
               </div>
             </div>
@@ -215,19 +225,27 @@ const BillingPlanPage: React.FC = () => {
                 <div className="detail-item">
                   <FaRegCalendarAlt />
                   <div>
-                    <strong>Próxima renovação / expiração</strong>
+                    <strong>{isTrialSubscription ? 'Fim do período de teste' : 'Próxima renovação / expiração'}</strong>
                     <span>{new Date(subscription.assinaturaExpiraEm).toLocaleDateString('pt-BR')}</span>
                   </div>
                 </div>
               )}
               <div className="detail-item">
-                {subscription.assinaturaMetodo === 'PIX' ? <FaQrcode /> : <FaCreditCard />}
+                {subscription.assinaturaMetodo === 'PIX' ? (
+                  <FaQrcode />
+                ) : subscription.assinaturaMetodo === 'CARD' ? (
+                  <FaCreditCard />
+                ) : (
+                  <FaGift />
+                )}
                 <div>
                   <strong>Forma de pagamento</strong>
                   <span>
                     {subscription.assinaturaMetodo === 'PIX'
                       ? 'PIX (pagamento avulso por ciclo)'
-                      : 'Cartão de crédito (recorrente)'}
+                      : subscription.assinaturaMetodo === 'CARD'
+                      ? 'Cartão de crédito (recorrente)'
+                      : subscription.assinaturaMetodo}
                   </span>
                 </div>
               </div>
@@ -288,7 +306,7 @@ const BillingPlanPage: React.FC = () => {
                 ))}
               </ul>
             ) : (
-              <p className="no-features-text">{currentPlan?.planoDescricao || 'Consulte os termos do seu plano.'}</p>
+              <p className="no-features-text">{currentPlanDescricao || 'Consulte os termos do seu plano.'}</p>
             )}
           </div>
         </section>
@@ -357,7 +375,10 @@ const BillingPlanPage: React.FC = () => {
           {plans.map((plan) => {
             const isCurrent = subscription?.planoId === plan.planoId;
             const features = plan.planoDescricao ? plan.planoDescricao.split(',').map(f => f.trim()) : [];
-            const canSwitch = subscription && !canStartNewSubscription;
+            // Assinaturas de teste não têm recorrência real na AbacatePay, então
+            // a contratação de um plano pago passa pelo fluxo de checkout normal,
+            // não pela troca de plano (TrocarPlano).
+            const canSwitch = subscription && !canStartNewSubscription && !isTrialSubscription;
             const isPixSub = subscription?.assinaturaMetodo === 'PIX';
 
             return (
