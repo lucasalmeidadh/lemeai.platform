@@ -368,7 +368,6 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
             <div className="topbar-right">
                 <div className="topbar-nav-items">
-                    {/* 
                     <Link 
                         to="/help" 
                         className={`topbar-item ${location.pathname === '/help' ? 'active' : ''}`} 
@@ -380,7 +379,6 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     </Link>
                     
                     <div className="topbar-divider"></div>
-                    */}
                     
                     <div className="topbar-notificacoes-container" ref={notificacoesRef}>
                         <button 

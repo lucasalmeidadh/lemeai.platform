@@ -25,7 +25,8 @@ import {
     FaFileAlt,
     FaListAlt,
     FaIdBadge,
-    FaCogs
+    FaCogs,
+    FaQuestionCircle
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -318,6 +319,10 @@ const Sidebar: FC<SidebarProps> = () => {
                                                 <span>Campos Personalizados</span>
                                             </Link>
                                         )}
+                                        <Link to="/admin/help" className={`sidebar-sub-link ${location.pathname === '/admin/help' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <FaQuestionCircle />
+                                            <span>Ajuda (Admin)</span>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
