@@ -106,7 +106,7 @@ const Sidebar: FC<SidebarProps> = () => {
     const isGestaoUsuariosActive = ['/users', '/equipes', '/tipos-usuario'].includes(location.pathname);
     const isAdministracaoActive = ['/metas', '/campos-personalizados'].includes(location.pathname);
     const isChatbotActive = ['/chat-rules', '/products'].includes(location.pathname);
-    const isEmpresaActive = ['/gerenciar-empresa', '/empresas', '/gerenciar-planos', '/connections'].includes(location.pathname);
+    const isEmpresaActive = ['/gerenciar-empresa', '/empresas', '/gerenciar-planos', '/connections', '/admin/help'].includes(location.pathname);
 
     // Toggles
     const toggleMarketing = () => { setIsMarketingOpen(!isMarketingOpen); setIsReportsOpen(false); setIsGestaoUsuariosOpen(false); setIsAdministracaoOpen(false); setIsChatbotOpen(false); setIsEmpresaOpen(false); };
@@ -319,10 +319,6 @@ const Sidebar: FC<SidebarProps> = () => {
                                                 <span>Campos Personalizados</span>
                                             </Link>
                                         )}
-                                        <Link to="/admin/help" className={`sidebar-sub-link ${location.pathname === '/admin/help' ? 'active' : ''}`} onClick={closeSettings}>
-                                            <FaQuestionCircle />
-                                            <span>Ajuda (Admin)</span>
-                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -360,7 +356,7 @@ const Sidebar: FC<SidebarProps> = () => {
                         )}
 
                         {/* Empresa */}
-                        {(can('dias_funcionamento') || can('gestao_empresas') || (can('gerenciar_planos') && !isEmpresa4Or8) || can('gestao_conexoes')) && (
+                        {(can('dias_funcionamento') || can('gestao_empresas') || (can('gerenciar_planos') && !isEmpresa4Or8) || can('gestao_conexoes') || can('gbcode_admin_sistema')) && (
                             <div className="sidebar-item-wrapper">
                                 <button
                                     id="sidebar-empresa-admin"
@@ -395,6 +391,12 @@ const Sidebar: FC<SidebarProps> = () => {
                                             <Link to="/gerenciar-planos" className={`sidebar-sub-link ${location.pathname === '/gerenciar-planos' ? 'active' : ''}`} onClick={closeSettings}>
                                                 <FaCreditCard />
                                                 <span>Gerenciar Planos</span>
+                                            </Link>
+                                        )}
+                                        {can('gbcode_admin_sistema') && (
+                                            <Link to="/admin/help" className={`sidebar-sub-link ${location.pathname === '/admin/help' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaQuestionCircle />
+                                                <span>Central de Ajuda</span>
                                             </Link>
                                         )}
                                     </div>

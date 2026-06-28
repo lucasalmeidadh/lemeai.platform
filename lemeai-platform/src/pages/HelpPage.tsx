@@ -2,36 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaPlay, FaQuestionCircle, FaSearch, FaBook, FaRocket, FaStream, FaBullhorn, FaRobot, FaFolderOpen } from 'react-icons/fa';
 import { HelpService } from '../services/HelpService';
-import type { HelpCategory, HelpArticle } from '../types/Help';
+import type { HelpCategory, HelpArticle, HelpVideo } from '../types/Help';
 import './HelpPage.css';
-
-interface VideoTutorial {
-    id: string;
-    title: string;
-    description: string;
-    thumbnail: string;
-    youtubeUrl: string;
-    duration: string;
-}
-
-const videoTutorials: VideoTutorial[] = [
-    {
-        id: '1',
-        title: 'Introdução ao LemeAI',
-        description: 'Conheça os primeiros passos para configurar sua conta e começar a utilizar a plataforma.',
-        thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-        youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        duration: '05:20'
-    },
-    {
-        id: '2',
-        title: 'Gerenciando seu Fluxo de Vendas',
-        description: 'Aprenda a organizar seus leads e oportunidades no pipeline de forma eficiente.',
-        thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-        youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        duration: '08:45'
-    }
-];
 
 const iconMap: Record<string, React.ReactNode> = {
     'FaRocket': <FaRocket />,
@@ -46,6 +18,7 @@ const HelpPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [categories, setCategories] = useState<HelpCategory[]>([]);
     const [articles, setArticles] = useState<HelpArticle[]>([]);
+    const [videos, setVideos] = useState<HelpVideo[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -68,12 +41,14 @@ const HelpPage: React.FC = () => {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            const [cats, arts] = await Promise.all([
+            const [cats, arts, vids] = await Promise.all([
                 HelpService.getCategories(),
-                HelpService.getArticles()
+                HelpService.getArticles(),
+                HelpService.getVideos(true)
             ]);
             setCategories(cats);
             setArticles(arts);
+            setVideos(vids);
         } catch (error) {
             console.error("Erro ao carregar dados de ajuda:", error);
         } finally {
@@ -167,27 +142,27 @@ const HelpPage: React.FC = () => {
                     )}
                 </section>
 
-                {/* Vídeos (Fallback) */}
-                {!searchTerm && !selectedCategory && (
+                {/* Vídeos */}
+                {videos.length > 0 && !searchTerm && !selectedCategory && (
                     <section className="help-videos-section">
                         <h2>Tutoriais em Vídeo</h2>
                         <div className="video-grid">
-                            {videoTutorials.map((video) => (
-                                <div 
-                                    key={video.id} 
+                            {videos.map((video) => (
+                                <div
+                                    key={video.id}
                                     className="video-card"
                                     onClick={() => handleVideoClick(video.youtubeUrl)}
                                 >
                                     <div className="video-thumbnail">
-                                        <img src={video.thumbnail} alt={video.title} />
+                                        <img src={video.thumbnailUrl} alt={video.titulo} />
                                         <div className="play-button-overlay">
                                             <FaPlay />
                                         </div>
-                                        <span className="video-duration">{video.duration}</span>
+                                        {video.duracao && <span className="video-duration">{video.duracao}</span>}
                                     </div>
                                     <div className="video-info">
-                                        <h3>{video.title}</h3>
-                                        <p>{video.description}</p>
+                                        <h3>{video.titulo}</h3>
+                                        {video.descricao && <p>{video.descricao}</p>}
                                     </div>
                                 </div>
                             ))}
