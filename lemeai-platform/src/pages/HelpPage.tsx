@@ -143,7 +143,7 @@ const HelpPage: React.FC = () => {
                 </section>
 
                 {/* Vídeos */}
-                {videos.length > 0 && !searchTerm && !selectedCategory && (
+                {videos.length > 0 && !searchTerm && (
                     <section className="help-videos-section">
                         <h2>Tutoriais em Vídeo</h2>
                         <div className="video-grid">
