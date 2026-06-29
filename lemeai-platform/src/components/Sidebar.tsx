@@ -407,6 +407,30 @@ const Sidebar: FC<SidebarProps> = () => {
                     </div>
                 )}
             </nav>
+
+            <div className="sidebar-footer">
+                <Link
+                    to="/help"
+                    className={`sidebar-footer-link ${location.pathname === '/help' ? 'active' : ''}`}
+                    title="Ajuda"
+                >
+                    <FaQuestionCircle />
+                    <span>Ajuda</span>
+                </Link>
+                {!isEmpresa4Or8 && (
+                    <>
+                        <div className="sidebar-footer-divider" />
+                        <Link
+                            to="/plano"
+                            className={`sidebar-footer-link ${location.pathname === '/plano' ? 'active' : ''}`}
+                            title="Meu Plano"
+                        >
+                            <FaCreditCard />
+                            <span>Meu Plano</span>
+                        </Link>
+                    </>
+                )}
+            </div>
         </aside>
     );
 };
