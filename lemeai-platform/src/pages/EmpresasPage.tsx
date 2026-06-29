@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { FaPlus, FaUsers, FaEdit, FaBan } from 'react-icons/fa';
+import { FaPlus, FaUsers, FaEdit, FaBan, FaUserShield } from 'react-icons/fa';
 import { EmpresaService } from '../services/EmpresaService';
 import type { Empresa, CriarEmpresaDTO, AtualizarEmpresaDTO } from '../services/EmpresaService';
 import EmpresaFormModal from '../components/EmpresaFormModal';
 import EmpresaUsuariosModal from '../components/EmpresaUsuariosModal';
+import AssumirControleModal from '../components/AssumirControleModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import Pagination from '../components/Pagination';
+import { getUserPermissions } from '../config/permissions';
 import './EmpresasPage.css';
 
 const formatDate = (iso: string) => {
@@ -20,6 +23,8 @@ const EmpresasPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
 
     const [isEmpresaFormOpen, setIsEmpresaFormOpen] = useState(false);
     const [empresaToEdit, setEmpresaToEdit] = useState<Empresa | null>(null);
@@ -29,6 +34,9 @@ const EmpresasPage = () => {
     const [isDeactivating, setIsDeactivating] = useState(false);
 
     const [empresaForUsers, setEmpresaForUsers] = useState<Empresa | null>(null);
+
+    const [empresaToAssume, setEmpresaToAssume] = useState<Empresa | null>(null);
+    const isAdminSistema = getUserPermissions().includes('gbcode_admin_sistema');
 
     const fetchEmpresas = useCallback(async () => {
         setIsLoading(true);
@@ -50,6 +58,10 @@ const EmpresasPage = () => {
     useEffect(() => {
         fetchEmpresas();
     }, [fetchEmpresas]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
 
     const handleOpenForm = (empresa: Empresa | null = null) => {
         setEmpresaToEdit(empresa);
@@ -105,6 +117,12 @@ const EmpresasPage = () => {
         );
     });
 
+    const totalPages = Math.ceil(filteredEmpresas.length / itemsPerPage);
+    const paginatedEmpresas = filteredEmpresas.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     const renderContent = () => {
         if (isLoading) {
             return (
@@ -133,8 +151,8 @@ const EmpresasPage = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredEmpresas.length > 0 ? (
-                            filteredEmpresas.map(empresa => (
+                        {paginatedEmpresas.length > 0 ? (
+                            paginatedEmpresas.map(empresa => (
                                 <tr key={empresa.id}>
                                     <td>{empresa.nome}</td>
                                     <td>{empresa.cnpj}</td>
@@ -152,6 +170,11 @@ const EmpresasPage = () => {
                                             <button className="action-icon-btn users" onClick={() => setEmpresaForUsers(empresa)} title="Usuários">
                                                 <FaUsers size={14} />
                                             </button>
+                                            {isAdminSistema && empresa.ativo !== false && (
+                                                <button className="action-icon-btn assume" onClick={() => setEmpresaToAssume(empresa)} title="Assumir Controle">
+                                                    <FaUserShield size={14} />
+                                                </button>
+                                            )}
                                             {empresa.ativo !== false && (
                                                 <button className="action-icon-btn delete" onClick={() => setEmpresaToDeactivate(empresa)} title="Desativar">
                                                     <FaBan size={14} />
@@ -199,6 +222,13 @@ const EmpresasPage = () => {
                     empresa={empresaForUsers}
                 />
             )}
+            {empresaToAssume && (
+                <AssumirControleModal
+                    isOpen={empresaToAssume !== null}
+                    onClose={() => setEmpresaToAssume(null)}
+                    empresa={empresaToAssume}
+                />
+            )}
 
             <div className="page-container">
                 <div className="page-header">
@@ -219,6 +249,15 @@ const EmpresasPage = () => {
                         />
                     </div>
                     {renderContent()}
+                    {!isLoading && !error && (
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                            totalItems={filteredEmpresas.length}
+                            itemsPerPage={itemsPerPage}
+                        />
+                    )}
                 </div>
             </div>
         </>

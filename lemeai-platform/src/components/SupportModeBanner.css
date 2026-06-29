@@ -1,0 +1,51 @@
+.support-mode-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-6);
+    background-color: var(--color-warning);
+    color: #1a1a1a;
+    font-size: var(--font-sm);
+    font-weight: 600;
+    flex-shrink: 0;
+    animation: fadeIn 0.3s ease;
+}
+
+.support-mode-banner-icon {
+    font-size: var(--font-md);
+    flex-shrink: 0;
+}
+
+.support-mode-banner-text {
+    flex: 1;
+}
+
+.support-mode-banner-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: var(--btn-radius-sm);
+    background-color: rgba(0, 0, 0, 0.12);
+    color: #1a1a1a;
+    font-size: var(--font-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.support-mode-banner-button:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.support-mode-banner-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .support-mode-banner {
+        flex-wrap: wrap;
+    }
+}

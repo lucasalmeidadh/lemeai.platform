@@ -13,7 +13,6 @@
     background-color: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    /* Matches standard inputs */
     color: var(--text-primary);
     font-size: 0.9rem;
     font-weight: 500;
@@ -58,13 +57,13 @@
     top: calc(100% + 8px);
     left: 0;
     width: 100%;
-    background-color: var(--surface-color);
+    background-color: var(--bg-secondary);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
     overflow: hidden;
     animation: dropdownIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     transform-origin: top;

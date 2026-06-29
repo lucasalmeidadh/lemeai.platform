@@ -1,0 +1,119 @@
+.subscription-expired-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+    animation: fadeIn 0.3s ease;
+}
+
+.subscription-expired-content {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.4s ease;
+    overflow: hidden;
+}
+
+.subscription-expired-header {
+    padding: var(--space-5) var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.subscription-expired-header-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+    font-size: var(--font-lg);
+}
+
+.subscription-expired-header h2 {
+    margin: 0;
+    font-size: var(--font-xl);
+    color: var(--text-primary);
+    flex-grow: 1;
+}
+
+.subscription-expired-close-button {
+    background: transparent;
+    border: none;
+    font-size: var(--font-md);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.subscription-expired-close-button:hover {
+    color: var(--text-primary);
+}
+
+.subscription-expired-body {
+    padding: var(--space-6);
+    font-size: var(--font-base);
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.subscription-expired-body p {
+    margin: 0 0 var(--space-3) 0;
+}
+
+.subscription-expired-body p:last-child {
+    margin-bottom: 0;
+}
+
+.subscription-expired-footer {
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+.subscription-expired-btn {
+    border-radius: var(--btn-radius-md);
+    padding: var(--btn-pad-md);
+    font-size: var(--btn-font-md);
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.subscription-expired-btn.secondary {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+.subscription-expired-btn.secondary:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.subscription-expired-btn.primary {
+    background-color: var(--petroleum-blue);
+    color: white;
+}
+
+.subscription-expired-btn.primary:hover {
+    background-color: var(--petroleum-blue-hover);
+    transform: translateY(-1px);
+}

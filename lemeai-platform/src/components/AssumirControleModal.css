@@ -1,0 +1,125 @@
+.assumir-controle-modal {
+    background-color: var(--bg-secondary);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.4s ease;
+    overflow: hidden;
+}
+
+.assumir-controle-header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+    font-size: var(--font-lg);
+    flex-shrink: 0;
+}
+
+.assumir-controle-modal .modal-header h2 {
+    font-size: var(--font-lg);
+    flex: 1;
+}
+
+.assumir-controle-body {
+    padding: var(--space-6);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.assumir-controle-warning {
+    margin: 0 0 var(--space-4) 0;
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    line-height: 1.5;
+}
+
+.assumir-controle-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-8) 0;
+    color: var(--text-secondary);
+}
+
+.assumir-controle-empty {
+    text-align: center;
+    padding: var(--space-6) 0;
+    color: var(--text-tertiary);
+    font-size: var(--font-base);
+}
+
+.assumir-controle-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.assumir-controle-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.assumir-controle-option:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.assumir-controle-option.selected {
+    border-color: var(--petroleum-blue);
+    background-color: var(--petroleum-light);
+}
+
+.assumir-controle-option input[type='radio'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--petroleum-blue);
+    flex-shrink: 0;
+}
+
+.assumir-controle-option-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.assumir-controle-option-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--font-base);
+}
+
+.assumir-controle-option-email {
+    color: var(--text-tertiary);
+    font-size: var(--font-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.assumir-controle-footer {
+    padding: var(--space-5) var(--space-6);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}

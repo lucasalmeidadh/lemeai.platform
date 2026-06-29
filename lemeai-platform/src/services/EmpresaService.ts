@@ -56,6 +56,28 @@ export interface AtualizarUsuarioEmpresaDTO {
     ativo: boolean;
 }
 
+export interface AdministradorAtivo {
+    userId: number;
+    userName: string;
+    userEmail: string;
+    userBranchid: number;
+    branchName: string;
+    userTypeuserid: number;
+    userDeleted: boolean;
+    photoUrl: string | null;
+}
+
+export interface AssumirControleDTO {
+    empresaId: number;
+    usuarioId: number;
+}
+
+export interface AssumirControleResult {
+    empresaId: number;
+    usuarioId: number;
+    nomeUsuario: string;
+}
+
 export const EmpresaService = {
     buscarTodas: async (): Promise<ApiResponse<Empresa[]>> => {
         const response = await apiFetch(`${BASE}/BuscarTodasEmpresas`);
@@ -116,5 +138,23 @@ export const EmpresaService = {
         });
         if (!response.ok) throw new Error('Erro ao atualizar usuário da empresa');
         return response.json();
+    },
+
+    buscarAdministradoresAtivos: async (empresaId: number): Promise<ApiResponse<AdministradorAtivo[]>> => {
+        const response = await apiFetch(`${BASE}/BuscarAdministradoresAtivos/${empresaId}`);
+        const result = await response.json();
+        if (!response.ok && response.status !== 400) throw new Error(result?.mensagem || 'Erro ao buscar administradores da empresa');
+        return result;
+    },
+
+    assumirControle: async (data: AssumirControleDTO): Promise<ApiResponse<AssumirControleResult>> => {
+        const response = await apiFetch(`${BASE}/AssumirControleEmpresa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result?.mensagem || 'Erro ao assumir controle da empresa');
+        return result;
     },
 };

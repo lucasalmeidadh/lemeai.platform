@@ -6,7 +6,6 @@ import {
     FaUser,
     FaSignOutAlt,
     FaBars,
-    FaQuestionCircle,
     FaMoon,
     FaSun,
     FaCreditCard,
@@ -40,6 +39,16 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
     const companyName = user?.empresaDescricao || '';
     const isEmpresa4Or8 = user?.empresaId === 4 || user?.empresaId === 8;
     const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
+
+    const empresaEmTrial = user?.empresaEmTrial === true;
+    const trialDiasRestantes = (() => {
+        if (!empresaEmTrial || !user?.dataExpiracaoPlano) return null;
+        const expira = new Date(user.dataExpiracaoPlano);
+        expira.setHours(0, 0, 0, 0);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        return Math.ceil((expira.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    })();
 
     useEffect(() => {
         const handlePhotoUpdate = (e: Event) => {
@@ -295,6 +304,17 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                         {companyName && <span className="topbar-company-fallback-name">{companyName}</span>}
                     </div>
                 )}
+
+                {empresaEmTrial && (
+                    <Link to="/plano" className="topbar-trial-badge" title="Ver planos disponíveis">
+                        <FaCreditCard />
+                        <span>
+                            Plano Gratuito - {trialDiasRestantes !== null && trialDiasRestantes >= 0
+                                ? `Expira em ${trialDiasRestantes} dia${trialDiasRestantes === 1 ? '' : 's'}`
+                                : 'Expirado'}
+                        </span>
+                    </Link>
+                )}
             </div>
 
             {/* Campo de Pesquisa de Deals */}
@@ -368,20 +388,6 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
             <div className="topbar-right">
                 <div className="topbar-nav-items">
-                    {/* 
-                    <Link 
-                        to="/help" 
-                        className={`topbar-item ${location.pathname === '/help' ? 'active' : ''}`} 
-                        title="Ajuda"
-                        style={{ textDecoration: 'none' }}
-                    >
-                        <FaQuestionCircle />
-                        <span>Ajuda</span>
-                    </Link>
-                    
-                    <div className="topbar-divider"></div>
-                    */}
-                    
                     <div className="topbar-notificacoes-container" ref={notificacoesRef}>
                         <button 
                             className={`topbar-item ${isNotificacoesOpen ? 'active' : ''}`} 
@@ -548,21 +554,6 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     */}
 
                     <div className="topbar-divider"></div>
-
-                    {!isEmpresa4Or8 && (
-                        <>
-                            <Link
-                                id="topbar-billing"
-                                to="/plano"
-                                className={`topbar-item ${location.pathname === '/plano' ? 'active' : ''}`}
-                                style={{ textDecoration: 'none' }}
-                            >
-                                <FaCreditCard />
-                                <span>Meu Plano</span>
-                            </Link>
-                            <div className="topbar-divider"></div>
-                        </>
-                    )}
 
                     <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
                         {photoUrl ? (

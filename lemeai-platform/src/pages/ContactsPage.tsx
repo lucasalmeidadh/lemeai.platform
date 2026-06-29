@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import './ContactsPage.css';
-import { FaPlus, FaWhatsapp, FaTrash, FaEdit, FaEnvelope, FaRegAddressBook, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaPlus, FaWhatsapp, FaTrash, FaEdit, FaEnvelope } from 'react-icons/fa';
+import '../components/Skeleton.css';
 import { ContactService, type Contact, type CreateContactDTO, type UpdateContactDTO } from '../services/ContactService';
 import ContactModal from '../components/ContactModal';
 import Pagination from '../components/Pagination';
@@ -120,7 +121,7 @@ const ContactsPage = () => {
             </div>
 
             <div className="dashboard-card">
-                <div className="contacts-filters-container">
+                <div className="filters-container">
                     <input
                         type="text"
                         placeholder="Buscar por nome, telefone ou e-mail..."
@@ -130,20 +131,33 @@ const ContactsPage = () => {
                     />
                 </div>
 
-                <div className="table-container">
-                    {isLoading ? (
-                        <div style={{ padding: '0 20px 20px' }}>
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <div key={i} className="contact-skeleton-row">
-                                    <div className="skeleton-avatar-box"></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '200px' }}></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '150px' }}></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '150px' }}></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '100px' }}></div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : paginatedContacts.length > 0 ? (
+                {isLoading ? (
+                    <div className="table-container">
+                        <table className="management-table">
+                            <thead>
+                                <tr>
+                                    {['Contato', 'WhatsApp', 'E-mail', 'Segmento', 'Cidade/UF', 'Data Cadastro', 'Ações'].map((head, i) => (
+                                        <th key={i}>{head}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[1, 2, 3, 4, 5].map((row) => (
+                                    <tr key={row}>
+                                        <td><div className="skeleton skeleton-text"></div></td>
+                                        <td><div className="skeleton skeleton-text" style={{ width: '120px' }}></div></td>
+                                        <td><div className="skeleton skeleton-text" style={{ width: '150px' }}></div></td>
+                                        <td><div className="skeleton skeleton-text" style={{ width: '100px' }}></div></td>
+                                        <td><div className="skeleton skeleton-text" style={{ width: '100px' }}></div></td>
+                                        <td><div className="skeleton skeleton-text" style={{ width: '80px' }}></div></td>
+                                        <td><div className="skeleton" style={{ width: '60px', height: '30px', borderRadius: '4px' }}></div></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="table-container">
                         <table className="management-table">
                             <thead>
                                 <tr>
@@ -153,72 +167,60 @@ const ContactsPage = () => {
                                     <th>Segmento</th>
                                     <th>Cidade/UF</th>
                                     <th>Data Cadastro</th>
-                                    <th style={{ textAlign: 'right', paddingRight: '25px' }}>Acões</th>
+                                    <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedContacts.map(contact => (
-                                    <tr key={contact.contatoId}>
-                                        <td>
-                                            <div className="contact-name-cell">
-                                                <div className="contact-avatar">
-                                                    {contact.nome.charAt(0).toUpperCase()}
+                                {paginatedContacts.length > 0 ? (
+                                    paginatedContacts.map(contact => (
+                                        <tr key={contact.contatoId}>
+                                            <td>{contact.nome}</td>
+                                            <td>
+                                                <div className="contact-data-cell">
+                                                    <FaWhatsapp color="#005f73" style={{ opacity: 0.7 }} />
+                                                    {contact.telefone}
                                                 </div>
-                                                <span className="contact-name-text">{contact.nome}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="contact-data-cell">
-                                                <FaWhatsapp color="#005f73" style={{ opacity: 0.7 }} />
-                                                {contact.telefone}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="contact-data-cell">
-                                                {contact.email ? (
-                                                    <>
-                                                        <FaEnvelope color="#005f73" style={{ opacity: 0.7 }} />
-                                                        {contact.email}
-                                                    </>
-                                                ) : '-'}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="contact-data-cell">
-                                                {contact.segment || '-'}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="contact-data-cell">
-                                                {contact.city && contact.state ? `${contact.city}/${contact.state}` : contact.city || contact.state || '-'}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span style={{ color: 'var(--text-secondary)', fontSize: '13.5px' }}>
-                                                {contact.dataCriacao ? new Date(contact.dataCriacao).toLocaleDateString() : '-'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
-                                                <button className="action-icon-btn edit" onClick={() => handleEditContact(contact)} title="Editar">
-                                                    <FaEdit size={14} />
-                                                </button>
-                                                <button className="action-icon-btn delete" onClick={() => handleDeleteContact(contact.contatoId)} title="Excluir">
-                                                    <FaTrash size={14} />
-                                                </button>
-                                            </div>
+                                            </td>
+                                            <td>
+                                                <div className="contact-data-cell">
+                                                    {contact.email ? (
+                                                        <>
+                                                            <FaEnvelope color="#005f73" style={{ opacity: 0.7 }} />
+                                                            {contact.email}
+                                                        </>
+                                                    ) : '-'}
+                                                </div>
+                                            </td>
+                                            <td>{contact.segment || '-'}</td>
+                                            <td>{contact.city && contact.state ? `${contact.city}/${contact.state}` : contact.city || contact.state || '-'}</td>
+                                            <td>
+                                                <span style={{ color: 'var(--text-secondary)', fontSize: '13.5px' }}>
+                                                    {contact.dataCriacao ? new Date(contact.dataCriacao).toLocaleDateString() : '-'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
+                                                    <button className="action-icon-btn edit" onClick={() => handleEditContact(contact)} title="Editar">
+                                                        <FaEdit size={14} />
+                                                    </button>
+                                                    <button className="action-icon-btn delete" onClick={() => handleDeleteContact(contact.contatoId)} title="Excluir">
+                                                        <FaTrash size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>
+                                            Nenhum contato encontrado.
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
-                    ) : (
-                        <div className="contacts-empty-state">
-                            <FaRegAddressBook className="contacts-empty-icon" />
-                            <span className="contacts-empty-text">Nenhum contato encontrado.</span>
-                        </div>
-                    )}
-                </div>
+                    </div>
+                )}
 
                 <Pagination 
                     currentPage={currentPage}

@@ -7,7 +7,9 @@ import {
   FaTimes,
   FaCheckCircle,
   FaTimesCircle,
-  FaInfoCircle
+  FaInfoCircle,
+  FaInfinity,
+  FaFlask
 } from 'react-icons/fa';
 import { billingService } from '../services/billingService';
 import type { PlanoBackend } from '../services/billingService';
@@ -29,6 +31,10 @@ const PlanManagementPage: React.FC = () => {
   const [preco, setPreco] = useState<number>(0);
   const [ciclo, setCiclo] = useState<string>('MONTHLY');
   const [ativo, setAtivo] = useState<boolean>(true);
+  const [limiteUsuario, setLimiteUsuario] = useState<string>('');
+  const [limiteConexao, setLimiteConexao] = useState<string>('');
+  const [integradoAbacatePay, setIntegradoAbacatePay] = useState<boolean>(true);
+  const [ehPlanoTeste, setEhPlanoTeste] = useState<boolean>(false);
 
   useEffect(() => {
     loadPlans();
@@ -57,6 +63,10 @@ const PlanManagementPage: React.FC = () => {
     setPreco(0);
     setCiclo('MONTHLY');
     setAtivo(true);
+    setLimiteUsuario('');
+    setLimiteConexao('');
+    setIntegradoAbacatePay(true);
+    setEhPlanoTeste(false);
     setIsModalOpen(true);
   };
 
@@ -67,15 +77,23 @@ const PlanManagementPage: React.FC = () => {
     setPreco(plan.planoPreco);
     setCiclo(plan.planoCiclo);
     setAtivo(plan.planoAtivo);
+    setLimiteUsuario(plan.planoLimiteUsuario != null ? String(plan.planoLimiteUsuario) : '');
+    setLimiteConexao(plan.planoLimiteConexao != null ? String(plan.planoLimiteConexao) : '');
+    setIntegradoAbacatePay(plan.planoIntegradoAbacatePay);
+    setEhPlanoTeste(plan.planoIsTrial);
     setIsModalOpen(true);
   };
 
   const handleSavePlan = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nome || !descricao || preco <= 0) {
+    const precoObrigatorioPositivo = !editingPlan ? !ehPlanoTeste : true;
+    if (!nome || !descricao || preco < 0 || (precoObrigatorioPositivo && preco <= 0)) {
       toast.error('Preencha todos os campos obrigatórios corretamente.');
       return;
     }
+
+    const limiteUsuarioValue = limiteUsuario.trim() === '' ? null : parseInt(limiteUsuario, 10);
+    const limiteConexaoValue = limiteConexao.trim() === '' ? null : parseInt(limiteConexao, 10);
 
     setSubmitting(true);
     try {
@@ -85,7 +103,9 @@ const PlanManagementPage: React.FC = () => {
           nome,
           descricao,
           preco,
-          ativo
+          ativo,
+          limiteUsuario: limiteUsuarioValue,
+          limiteConexao: limiteConexaoValue
         });
         if (res.sucesso) {
           toast.success('Plano atualizado com sucesso!');
@@ -95,7 +115,16 @@ const PlanManagementPage: React.FC = () => {
           toast.error(res.mensagem || 'Erro ao atualizar plano.');
         }
       } else {
-        const res = await billingService.criarPlano({ nome, descricao, preco, ciclo });
+        const res = await billingService.criarPlano({
+          nome,
+          descricao,
+          preco,
+          ciclo,
+          limiteUsuario: limiteUsuarioValue,
+          limiteConexao: limiteConexaoValue,
+          integradoAbacatePay,
+          ehPlanoTeste
+        });
         if (res.sucesso) {
           toast.success('Plano criado com sucesso!');
           setIsModalOpen(false);
@@ -139,8 +168,20 @@ const PlanManagementPage: React.FC = () => {
       case 'QUARTERLY': return 'Trimestral';
       case 'SEMIANNUALLY': return 'Semestral';
       case 'ANNUALLY': return 'Anual';
+      case 'TRIAL': return 'Teste';
       default: return ciclo;
     }
+  };
+
+  const formatLimite = (valor: number | null) => {
+    if (valor == null) {
+      return (
+        <span className="plan-limite-unlimited" title="Sem limite">
+          <FaInfinity />
+        </span>
+      );
+    }
+    return valor;
   };
 
   return (
@@ -180,6 +221,8 @@ const PlanManagementPage: React.FC = () => {
                   <th>Descrição</th>
                   <th>Preço</th>
                   <th>Ciclo</th>
+                  <th>Limite Usuários</th>
+                  <th>Limite Conexões</th>
                   <th>Status</th>
                   <th>ID AbacatePay</th>
                   <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
@@ -190,6 +233,11 @@ const PlanManagementPage: React.FC = () => {
                   <tr key={plan.planoId}>
                     <td>
                       <span className="contact-name-text" style={{ fontWeight: '700' }}>{plan.planoNome}</span>
+                      {plan.planoIsTrial && (
+                        <span className="badge badge-ai plan-trial-badge" title="Plano de Teste">
+                          <FaFlask /> Teste
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span style={{ color: 'var(--text-secondary)', fontSize: '13.5px' }}>{plan.planoDescricao}</span>
@@ -202,6 +250,8 @@ const PlanManagementPage: React.FC = () => {
                         {getCicloLabel(plan.planoCiclo)}
                       </span>
                     </td>
+                    <td>{formatLimite(plan.planoLimiteUsuario)}</td>
+                    <td>{formatLimite(plan.planoLimiteConexao)}</td>
                     <td>
                       {plan.planoAtivo ? (
                         <span className="status-badge status-ativo" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -217,7 +267,9 @@ const PlanManagementPage: React.FC = () => {
                       {plan.abacateProductId ? (
                         <code className="plan-abacate-id">{plan.abacateProductId}</code>
                       ) : (
-                        <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', fontSize: '13px' }}>Não Sincronizado</span>
+                        <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', fontSize: '13px' }}>
+                          {plan.planoIntegradoAbacatePay ? 'Não Sincronizado' : 'Não Integrado'}
+                        </span>
                       )}
                     </td>
                     <td>
@@ -287,15 +339,15 @@ const PlanManagementPage: React.FC = () => {
 
                 <div className="plan-form-grid">
                   <div className="form-group">
-                    <label htmlFor="plan-preco">Preço (R$) *</label>
+                    <label htmlFor="plan-preco">Preço (R$) {!editingPlan && ehPlanoTeste ? '' : '*'}</label>
                     <input
                       id="plan-preco"
                       type="number"
                       step="0.01"
                       placeholder="0.00"
                       value={preco || ''}
-                      onChange={(e) => setPreco(parseFloat(e.target.value))}
-                      required
+                      onChange={(e) => setPreco(parseFloat(e.target.value) || 0)}
+                      required={editingPlan ? true : !ehPlanoTeste}
                     />
                   </div>
 
@@ -313,6 +365,7 @@ const PlanManagementPage: React.FC = () => {
                         <option value="QUARTERLY">Trimestral</option>
                         <option value="SEMIANNUALLY">Semestral</option>
                         <option value="ANNUALLY">Anual</option>
+                        <option value="TRIAL">Teste</option>
                       </select>
                     </div>
                   ) : (
@@ -328,6 +381,86 @@ const PlanManagementPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+
+                <div className="plan-form-grid">
+                  <div className="form-group">
+                    <label htmlFor="plan-limite-usuario">Limite de Usuários</label>
+                    <input
+                      id="plan-limite-usuario"
+                      type="number"
+                      min={1}
+                      step="1"
+                      placeholder="Deixe vazio para sem limite"
+                      value={limiteUsuario}
+                      onChange={(e) => setLimiteUsuario(e.target.value)}
+                    />
+                    <span className="plan-textarea-hint">Quantidade máxima de usuários ativos. Vazio = sem limite.</span>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="plan-limite-conexao">Limite de Conexões</label>
+                    <input
+                      id="plan-limite-conexao"
+                      type="number"
+                      min={1}
+                      step="1"
+                      placeholder="Deixe vazio para sem limite"
+                      value={limiteConexao}
+                      onChange={(e) => setLimiteConexao(e.target.value)}
+                    />
+                    <span className="plan-textarea-hint">Máximo por plataforma de conexão. Vazio = sem limite.</span>
+                  </div>
+                </div>
+
+                {!editingPlan ? (
+                  <div className="plan-form-grid">
+                    <div className="form-group">
+                      <label className="plan-ativo-toggle">
+                        <input
+                          type="checkbox"
+                          checked={integradoAbacatePay}
+                          onChange={(e) => setIntegradoAbacatePay(e.target.checked)}
+                        />
+                        Integrar com a AbacatePay
+                      </label>
+                      <span className="plan-textarea-hint">Desmarque para planos sem cobrança (ex: plano de teste).</span>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="plan-ativo-toggle">
+                        <input
+                          type="checkbox"
+                          checked={ehPlanoTeste}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setEhPlanoTeste(checked);
+                            if (checked) {
+                              setIntegradoAbacatePay(false);
+                              setPreco(0);
+                            }
+                          }}
+                        />
+                        Definir como Plano de Teste (Trial)
+                      </label>
+                      <span className="plan-textarea-hint">Só pode existir um plano de teste no sistema.</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="plan-form-grid">
+                    <div className="form-group">
+                      <span className="plan-readonly-label">Integrado com AbacatePay</span>
+                      <span className={`status-badge ${editingPlan.planoIntegradoAbacatePay ? 'status-ativo' : 'status-inativo'}`}>
+                        {editingPlan.planoIntegradoAbacatePay ? 'Sim' : 'Não'}
+                      </span>
+                    </div>
+                    <div className="form-group">
+                      <span className="plan-readonly-label">Plano de Teste</span>
+                      <span className={`status-badge ${editingPlan.planoIsTrial ? 'status-ativo' : 'status-inativo'}`}>
+                        {editingPlan.planoIsTrial ? 'Sim' : 'Não'}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="plan-form-footer">

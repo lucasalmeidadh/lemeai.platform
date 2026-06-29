@@ -1,0 +1,141 @@
+.help-editor-container .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.help-editor-container .title-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.help-editor-container .back-button {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.help-editor-container .back-button:hover {
+    background: var(--bg-tertiary);
+    color: var(--petroleum-blue);
+}
+
+.help-editor-container .header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.help-editor-container .cancel-btn-header {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.help-editor-container .cancel-btn-header:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.help-editor-container .save-button {
+    background-color: var(--petroleum-blue);
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+}
+
+.help-editor-container .save-button:hover {
+    opacity: 0.9;
+}
+
+.help-editor-container .save-button:disabled,
+.help-editor-container .cancel-btn-header:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.help-editor-content {
+    background-color: var(--bg-secondary);
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.help-editor-content .form-group {
+    margin-bottom: 20px;
+}
+
+.help-editor-content .row {
+    display: flex;
+    gap: 20px;
+}
+
+.help-editor-content .col-md-6 {
+    flex: 1;
+}
+
+.help-editor-content label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.help-editor-content .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.help-editor-content .form-control:focus {
+    outline: none;
+    border-color: var(--petroleum-blue);
+}
+
+.help-editor-content .editor-group .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.help-editor-content .insert-image-btn {
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.help-editor-content .insert-image-btn:hover {
+    background-color: var(--border-color);
+}

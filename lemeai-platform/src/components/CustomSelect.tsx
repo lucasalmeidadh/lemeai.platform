@@ -63,20 +63,26 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ options, value, onChange, p
 
             {isOpen && (
                 <div className="custom-select-dropdown">
-                    {options.map((option) => (
-                        <div
-                            key={option.value}
-                            className={`custom-select-option ${option.value === value ? 'selected' : ''} ${option.disabled ? 'disabled' : ''}`}
-                            onClick={() => { if (!option.disabled) handleSelect(option.value); }}
-                            style={{ 
-                                opacity: option.disabled ? 0.5 : 1, 
-                                cursor: option.disabled ? 'not-allowed' : 'pointer',
-                                backgroundColor: option.disabled ? '#f1f5f9' : undefined
-                            }}
-                        >
-                            {option.label}
+                    {options.length === 0 ? (
+                        <div className="custom-select-option" style={{ opacity: 0.7, cursor: 'default' }}>
+                            Nenhuma opção disponível
                         </div>
-                    ))}
+                    ) : (
+                        options.map((option) => (
+                            <div
+                                key={option.value}
+                                className={`custom-select-option ${option.value === value ? 'selected' : ''} ${option.disabled ? 'disabled' : ''}`}
+                                onClick={() => { if (!option.disabled) handleSelect(option.value); }}
+                                style={{ 
+                                    opacity: option.disabled ? 0.5 : 1, 
+                                    cursor: option.disabled ? 'not-allowed' : 'pointer',
+                                    backgroundColor: option.disabled ? '#f1f5f9' : undefined
+                                }}
+                            >
+                                {option.label}
+                            </div>
+                        ))
+                    )}
                 </div>
             )}
         </div>

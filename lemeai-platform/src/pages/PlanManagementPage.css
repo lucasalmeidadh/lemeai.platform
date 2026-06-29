@@ -1,3 +1,58 @@
+/* Modal Criar/Editar — classes não existiam em nenhum outro CSS do projeto,
+   o que deixava o overlay e o conteúdo sem estilo (fundo transparente). */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.contact-modal-content {
+  background-color: var(--bg-secondary);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.4s ease;
+}
+
+.contact-modal-header {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-secondary);
+}
+
+.contact-modal-header h2 {
+  margin: 0;
+  font-size: var(--font-xl);
+  color: var(--text-primary);
+}
+
+.contact-close-button {
+  background: none;
+  border: none;
+  font-size: var(--font-lg);
+  cursor: pointer;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.contact-close-button:hover {
+  opacity: 1;
+}
+
 .plan-management-subtitle {
   margin: var(--space-1) 0 0 0;
   color: var(--text-secondary);
@@ -77,6 +132,28 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--space-4);
+}
+
+.plan-limite-unlimited {
+  color: var(--text-tertiary);
+  font-size: var(--font-sm);
+}
+
+.plan-trial-badge {
+  margin-left: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-xs);
+  vertical-align: middle;
+}
+
+.plan-readonly-label {
+  display: block;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
 }
 
 .plan-abacate-id {

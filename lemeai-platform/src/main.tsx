@@ -18,6 +18,9 @@ import NotFoundPage from './pages/NotFoundPage.tsx';
 import AgendaPage from './pages/AgendaPage.tsx';
 import ChatDashboard from './pages/ChatDashboard.tsx';
 import HelpPage from './pages/HelpPage.tsx';
+import HelpArticlePage from './pages/HelpArticlePage.tsx';
+import HelpManagerPage from './pages/HelpManagerPage.tsx';
+import HelpArticleEditorPage from './pages/HelpArticleEditorPage.tsx';
 import OnboardingStepsPage from './pages/OnboardingStepsPage.tsx';
 import CampaignTemplatesPage from './pages/CampaignTemplatesPage.tsx';
 import CampaignPage from './pages/CampaignPage.tsx';
@@ -52,6 +55,10 @@ const router = createBrowserRouter([
           { path: "primeiros-passos", element: <OnboardingStepsPage /> },
           { path: "plano", element: <BillingPlanPage /> },
           { path: "help", element: <HelpPage /> },
+          { path: "help/article/:id", element: <HelpArticlePage /> },
+          { path: "admin/help", element: <HelpManagerPage /> },
+          { path: "admin/help/new", element: <HelpArticleEditorPage /> },
+          { path: "admin/help/edit/:id", element: <HelpArticleEditorPage /> },
           { path: "novidades", element: <NovidadesPage /> },
           { path: "chat", element: <PermissionGuard><ChatPage /></PermissionGuard> },
           { path: "dashboard", element: <PermissionGuard><Dashboard /></PermissionGuard> },
