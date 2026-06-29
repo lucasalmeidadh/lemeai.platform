@@ -36,6 +36,7 @@ import {
 } from '../services/MetaTemplateService';
 import WhatsAppConnectionGuard from '../components/WhatsAppConnectionGuard';
 import './CampaignTemplatesPage.css';
+import '../components/Skeleton.css';
 
 type TemplateStatus = MetaTemplate['status'];
 type TemplateCategoria = 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
@@ -1019,11 +1020,7 @@ const CampaignTemplatesPage = () => {
         <WhatsAppConnectionGuard>
         <div className="page-container">
             <div className="page-header">
-                <div className="ct-header-left">
-                    <div>
-                        <h1>Templates de Campanha</h1>
-                    </div>
-                </div>
+                <h1>Templates de Campanha</h1>
                 <div className="ct-header-actions">
                     <button
                         className="ct-btn-sync"
@@ -1034,120 +1031,110 @@ const CampaignTemplatesPage = () => {
                         <FaSync className={isSyncing ? 'ct-spin' : ''} />
                         {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
                     </button>
-                    <button className="ct-btn-primary" onClick={() => setIsCreateModalOpen(true)}>
+                    <button className="add-button" onClick={() => setIsCreateModalOpen(true)}>
                         <FaPlus /> Novo template
                     </button>
                 </div>
             </div>
 
             <div className="dashboard-card">
-                <div className="contacts-filters-container">
+                <div className="filters-container">
                     <input
                         type="text"
-                        className="filter-input ct-search"
+                        className="filter-input"
                         placeholder="Buscar por nome..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <CustomSelect
-                        options={[
-                            { value: 'TODOS', label: 'Todos os status' },
-                            ...Object.entries(STATUS_LABEL).map(([v, l]) => ({ value: v, label: l }))
-                        ]}
-                        value={filterStatus}
-                        onChange={(v) => setFilterStatus(v as TemplateStatus | 'TODOS')}
-                    />
-                    <CustomSelect
-                        options={[
-                            { value: 'TODAS', label: 'Todas as categorias' },
-                            ...Object.entries(CATEGORIA_LABEL).map(([v, l]) => ({ value: v, label: l }))
-                        ]}
-                        value={filterCategoria}
-                        onChange={(v) => setFilterCategoria(v as TemplateCategoria | 'TODAS')}
-                    />
+                    <div className="select-filters">
+                        <CustomSelect
+                            options={[
+                                { value: 'TODOS', label: 'Todos os status' },
+                                ...Object.entries(STATUS_LABEL).map(([v, l]) => ({ value: v, label: l }))
+                            ]}
+                            value={filterStatus}
+                            onChange={(v) => setFilterStatus(v as TemplateStatus | 'TODOS')}
+                        />
+                        <CustomSelect
+                            options={[
+                                { value: 'TODAS', label: 'Todas as categorias' },
+                                ...Object.entries(CATEGORIA_LABEL).map(([v, l]) => ({ value: v, label: l }))
+                            ]}
+                            value={filterCategoria}
+                            onChange={(v) => setFilterCategoria(v as TemplateCategoria | 'TODAS')}
+                        />
+                    </div>
                 </div>
 
-                <div className="table-container">
-                    {isLoading ? (
-                        <div style={{ padding: '0 20px 20px' }}>
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <div key={i} className="contact-skeleton-row">
-                                    <div className="skeleton-avatar-box"></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '200px' }}></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '150px' }}></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '150px' }}></div>
-                                    <div className="skeleton-text-box" style={{ maxWidth: '100px' }}></div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : filtered.length === 0 ? (
-                        <div className="ct-empty" style={{ padding: '40px 20px' }}>
-                            <FaBullhorn className="ct-empty-icon" />
-                            <h3>{templates.length === 0 ? 'Nenhum template encontrado' : 'Nenhum template corresponde ao filtro'}</h3>
-                            <p style={{ margin: '8px 0 16px' }}>
-                                {templates.length === 0
-                                    ? 'Clique em "Sincronizar" para buscar templates existentes ou crie um novo.'
-                                    : 'Tente ajustar os filtros de busca.'}
-                            </p>
-                            {templates.length === 0 && (
-                                <button className="ct-btn-primary" onClick={() => setIsCreateModalOpen(true)} style={{ margin: '0 auto' }}>
-                                    <FaPlus /> Criar primeiro template
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <>
-                            <table className="management-table">
-                                <thead>
-                                    <tr>
-                                        <th>Template</th>
-                                        <th>Status</th>
-                                        <th>Categoria</th>
-                                        <th>Qualidade</th>
-                                        <th>Idioma</th>
-                                        <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
+                {isLoading ? (
+                    <div className="table-container">
+                        <table className="management-table">
+                            <thead>
+                                <tr>
+                                    {['Template', 'Status', 'Categoria', 'Qualidade', 'Idioma', 'Ações'].map((head, i) => (
+                                        <th key={i}>{head}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {[1, 2, 3, 4, 5].map((row) => (
+                                    <tr key={row}>
+                                        <td><div className="skeleton skeleton-text"></div></td>
+                                        <td><div className="skeleton skeleton-text" style={{ width: '80px' }}></div></td>
+                                        <td><div className="skeleton skeleton-text" style={{ width: '100px' }}></div></td>
+                                        <td><div className="skeleton" style={{ width: '60px', height: '24px', borderRadius: '12px' }}></div></td>
+                                        <td><div className="skeleton skeleton-text" style={{ width: '40px' }}></div></td>
+                                        <td><div className="skeleton" style={{ width: '60px', height: '30px', borderRadius: '4px' }}></div></td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {filtered.map((t) => {
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="table-container">
+                        <table className="management-table">
+                            <thead>
+                                <tr>
+                                    <th>Template</th>
+                                    <th>Status</th>
+                                    <th>Categoria</th>
+                                    <th>Qualidade</th>
+                                    <th>Idioma</th>
+                                    <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filtered.length > 0 ? (
+                                    filtered.map((t) => {
                                         const podeEditar = t.status === 'APPROVED' || t.status === 'REJECTED';
                                         return (
                                         <tr key={t.metaTemplateId}>
-                                            <td>
-                                                <div className="contact-name-cell">
-                                                    <div className="contact-avatar">
-                                                        {t.nome.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <span className="contact-name-text">{t.nome}</span>
-                                                        {t.status === 'REJECTED' && t.motivoRejeicao && (
-                                                            <span className="ct-motivo-rejeicao" title={t.motivoRejeicao}>
-                                                                Motivo: {t.motivoRejeicao}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
+                                            <td>{t.nome}</td>
                                             <td>
                                                 <StatusBadge status={t.status} />
+                                                {t.status === 'REJECTED' && t.motivoRejeicao && (
+                                                    <span className="ct-motivo-rejeicao" title={t.motivoRejeicao}>
+                                                        Motivo: {t.motivoRejeicao}
+                                                    </span>
+                                                )}
                                             </td>
                                             <td>
                                                 <CategoriaBadge categoria={t.categoria} />
                                             </td>
                                             <td>
                                                 {t.qualidade ? (
-                                                    <span className={`ct-qualidade-badge ct-q-${t.qualidade.toLowerCase()}`}>
+                                                    <span className={`status-badge ct-q-${t.qualidade.toLowerCase()}`}>
                                                         {t.qualidade === 'HIGH' ? 'Alta' : t.qualidade === 'MEDIUM' ? 'Média' : 'Baixa'}
                                                     </span>
                                                 ) : (
-                                                    <span className="ct-qualidade-vazia">—</span>
+                                                    <span style={{ color: 'var(--text-tertiary)' }}>—</span>
                                                 )}
                                             </td>
                                             <td>
                                                 <span className="ct-idioma-badge">{t.idioma}</span>
                                             </td>
                                             <td>
-                                                <div className="actions-cell" style={{ justifyContent: 'flex-end', paddingRight: '10px' }}>
+                                                <div className="actions-cell" style={{ justifyContent: 'flex-end' }}>
                                                     <button
                                                         className={`action-icon-btn edit ${!podeEditar ? 'ct-btn-disabled' : ''}`}
                                                         onClick={() => podeEditar && handleEditRequest(t)}
@@ -1167,15 +1154,20 @@ const CampaignTemplatesPage = () => {
                                             </td>
                                         </tr>
                                         );
-                                    })}
-                                </tbody>
-                            </table>
-                            <div className="ct-list-count" style={{ padding: '16px 20px 0', borderTop: '1px solid var(--border-color-soft)', marginTop: '8px' }}>
-                                {filtered.length} template{filtered.length !== 1 ? 's' : ''}
-                            </div>
-                        </>
-                    )}
-                </div>
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>
+                                            {templates.length === 0
+                                                ? 'Nenhum template encontrado. Clique em "Sincronizar" para buscar templates existentes ou crie um novo.'
+                                                : 'Nenhum template corresponde aos filtros aplicados.'}
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
             {isCreateModalOpen && (
