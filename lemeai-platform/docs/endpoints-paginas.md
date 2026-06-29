@@ -502,3 +502,34 @@ Este documento apresenta o mapeamento completo e robusto de todas as APIs do bac
 *   **Onde é utilizado**:
     *   [DealDetailsPage.tsx](file:///c:/git/lemeai.platform/lemeai-platform/src/pages/DealDetailsPage.tsx) (Botão de excluir/deletar conversa).
 
+---
+
+## 16. Central de Ajuda e Tutoriais (`HelpService`)
+
+### `GET /api/Help/Categorias`
+*   **Finalidade**: Retorna as categorias disponíveis de artigos/tutoriais.
+*   **Onde é utilizado**:
+    *   [HelpPage.tsx](file:///c:/git/lemeai.platform/lemeai-platform/src/pages/HelpPage.tsx) (Listagem de categorias).
+    *   [HelpManagerPage.tsx](file:///c:/git/lemeai.platform/lemeai-platform/src/pages/HelpManagerPage.tsx) (Seleção de categoria no modal).
+
+### `GET /api/Help/Artigos`
+*   **Finalidade**: Retorna todos os artigos da base de conhecimento, com filtros opcionais de texto e categoria.
+*   **Onde é utilizado**:
+    *   [HelpPage.tsx](file:///c:/git/lemeai.platform/lemeai-platform/src/pages/HelpPage.tsx) (Listagem e busca de tutoriais).
+    *   [HelpManagerPage.tsx](file:///c:/git/lemeai.platform/lemeai-platform/src/pages/HelpManagerPage.tsx) (Tabela de administração).
+
+### `GET /api/Help/Artigos/{id}`
+*   **Finalidade**: Retorna o conteúdo completo (texto/HTML) de um artigo de ajuda específico.
+*   **Onde é utilizado**:
+    *   [HelpArticlePage.tsx](file:///c:/git/lemeai.platform/lemeai-platform/src/pages/HelpArticlePage.tsx) (Leitura do tutorial completo).
+
+### `POST /api/Help/Artigos` / `PUT /api/Help/Artigos/{id}` / `DELETE /api/Help/Artigos/{id}`
+*   **Finalidade**: CRUD administrativo de artigos e tutoriais.
+*   **Onde é utilizado**:
+    *   [HelpManagerPage.tsx](file:///c:/git/lemeai.platform/lemeai-platform/src/pages/HelpManagerPage.tsx) (Criação, edição e remoção).
+
+### `POST /api/Help/UploadImagem`
+*   **Finalidade**: Faz upload de imagens inseridas no corpo de um artigo através de `FormData`.
+*   **Onde é utilizado**:
+    *   [HelpManagerPage.tsx](file:///c:/git/lemeai.platform/lemeai-platform/src/pages/HelpManagerPage.tsx) (Botão "Inserir Imagem" no editor).
+

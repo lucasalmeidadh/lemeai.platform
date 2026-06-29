@@ -6,7 +6,6 @@ import {
     FaUser,
     FaSignOutAlt,
     FaBars,
-    FaQuestionCircle,
     FaMoon,
     FaSun,
     FaCreditCard,
@@ -389,20 +388,6 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
             <div className="topbar-right">
                 <div className="topbar-nav-items">
-                    {/* 
-                    <Link 
-                        to="/help" 
-                        className={`topbar-item ${location.pathname === '/help' ? 'active' : ''}`} 
-                        title="Ajuda"
-                        style={{ textDecoration: 'none' }}
-                    >
-                        <FaQuestionCircle />
-                        <span>Ajuda</span>
-                    </Link>
-                    
-                    <div className="topbar-divider"></div>
-                    */}
-                    
                     <div className="topbar-notificacoes-container" ref={notificacoesRef}>
                         <button 
                             className={`topbar-item ${isNotificacoesOpen ? 'active' : ''}`} 
@@ -569,21 +554,6 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                     */}
 
                     <div className="topbar-divider"></div>
-
-                    {!isEmpresa4Or8 && (
-                        <>
-                            <Link
-                                id="topbar-billing"
-                                to="/plano"
-                                className={`topbar-item ${location.pathname === '/plano' ? 'active' : ''}`}
-                                style={{ textDecoration: 'none' }}
-                            >
-                                <FaCreditCard />
-                                <span>Meu Plano</span>
-                            </Link>
-                            <div className="topbar-divider"></div>
-                        </>
-                    )}
 
                     <button id="topbar-user-profile" className="topbar-item" onClick={onViewProfile}>
                         {photoUrl ? (

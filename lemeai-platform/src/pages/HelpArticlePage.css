@@ -1,0 +1,116 @@
+.help-article-page {
+    background-color: var(--bg-primary);
+    min-height: 100%;
+    padding: 2rem;
+}
+
+.help-article-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 3rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.help-article-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+}
+
+.help-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--petroleum-blue);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    transition: opacity 0.2s;
+}
+
+.help-back-btn:hover {
+    opacity: 0.8;
+}
+
+.help-article-header h1 {
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    line-height: 1.2;
+}
+
+.help-article-meta {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.help-article-content {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.help-article-content h2 {
+    font-size: 1.75rem;
+    margin: 2rem 0 1rem;
+    color: var(--text-primary);
+}
+
+.help-article-content h3 {
+    font-size: 1.35rem;
+    margin: 1.5rem 0 1rem;
+    color: var(--text-primary);
+}
+
+.help-article-content p {
+    margin-bottom: 1.25rem;
+}
+
+.help-article-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 2rem 0;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.help-article-content ul, .help-article-content ol {
+    margin-bottom: 1.25rem;
+    padding-left: 1.5rem;
+}
+
+.help-article-content li {
+    margin-bottom: 0.5rem;
+}
+
+.help-article-content a {
+    color: var(--petroleum-blue);
+    text-decoration: underline;
+}
+
+.help-article-loading, .help-article-error {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+    .help-article-page {
+        padding: 1rem;
+    }
+    .help-article-container {
+        padding: 1.5rem;
+    }
+    .help-article-header h1 {
+        font-size: 1.75rem;
+    }
+}

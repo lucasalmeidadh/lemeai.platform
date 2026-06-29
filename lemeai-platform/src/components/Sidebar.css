@@ -8,8 +8,7 @@
   box-sizing: border-box;
   flex-shrink: 0;
   z-index: 100;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -47,6 +46,17 @@
   padding: 0 0.75rem;
   box-sizing: border-box;
   flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--white) 20%, transparent);
+  border-radius: 2px;
 }
 
 /* GROUPS */
@@ -205,6 +215,56 @@
   transform: rotate(90deg) !important;
 }
 
+/* ─── SIDEBAR FOOTER ─────────────────────────────────────────── */
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0.75rem 0.75rem;
+  border-top: none;
+  flex-shrink: 0;
+}
+
+.sidebar-footer-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--white);
+  opacity: 0.6;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sidebar-footer-link:hover {
+  opacity: 1;
+  background-color: color-mix(in srgb, var(--white) 8%, transparent);
+}
+
+.sidebar-footer-link.active {
+  opacity: 1;
+  color: var(--cyan-accent);
+}
+
+.sidebar-footer-link svg {
+  font-size: var(--font-md);
+  flex-shrink: 0;
+}
+
+.sidebar-footer-divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: color-mix(in srgb, var(--white) 15%, transparent);
+  flex-shrink: 0;
+}
+
 /* ─── RESPONSIVE BEHAVIOR ────────────────────────────────────── */
 
 /* Tablet & Smaller Laptops: COLLAPSED MODE (Icon Only) */
@@ -293,6 +353,24 @@
 
   .sidebar-sub-link svg {
     margin-right: 0.5rem;
+  }
+
+  .sidebar-footer {
+    flex-direction: row;
+    justify-content: center;
+    padding: 0.75rem 0;
+  }
+
+  .sidebar-footer-link {
+    padding: 0.5rem;
+  }
+
+  .sidebar-footer-link span {
+    display: none;
+  }
+
+  .sidebar-footer-divider {
+    height: 1rem;
   }
 }
 
