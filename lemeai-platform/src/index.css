@@ -331,6 +331,14 @@ html {
   background-color: var(--color-ai-bg);
 }
 
+.action-icon-btn.assume {
+  color: var(--color-warning);
+}
+
+.action-icon-btn.assume:hover {
+  background-color: var(--color-warning-bg);
+}
+
 /* ─── GLOBAL LAYOUT ───────────────────────────────────────────── */
 .page-container {
   padding: var(--space-10);

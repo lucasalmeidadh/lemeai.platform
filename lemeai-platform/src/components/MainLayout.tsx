@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import UserProfileModal from './UserProfileModal';
 import SubscriptionExpiredModal from './SubscriptionExpiredModal';
+import SupportModeBanner from './SupportModeBanner';
 import { ASSINATURA_VENCIDA_EVENT } from '../services/api';
 import { GlobalNotificationProvider } from '../contexts/GlobalNotificationContext';
 import {
@@ -162,7 +163,8 @@ const MainLayout = () => {
                 </div>
 
                 <div className="dashboard-layout">
-                    <Topbar 
+                    <SupportModeBanner />
+                    <Topbar
                         onToggleMobileMenu={toggleMobileMenu}
                         onViewProfile={handleViewProfile}
                         onLogout={handleLogout}
