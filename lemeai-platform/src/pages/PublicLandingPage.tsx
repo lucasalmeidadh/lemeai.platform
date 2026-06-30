@@ -193,7 +193,7 @@ const PublicLandingPage = () => {
           )}
           <h1 className="company-name">{config.branchName}</h1>
           <p className="company-tagline">
-            Cadastre-se rapidamente para fazer parte da nossa base de clientes!
+            Cadastre-se rapidamente e garanta descontos exclusivos!
           </p>
         </div>
 

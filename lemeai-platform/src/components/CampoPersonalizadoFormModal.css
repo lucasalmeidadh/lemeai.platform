@@ -1,17 +1,21 @@
 .checkbox-row {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
   cursor: pointer;
   font-weight: 600;
   color: var(--text-secondary);
+  width: max-content;
 }
 
 .checkbox-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 16px !important;
+  height: 16px !important;
   accent-color: var(--petroleum-blue);
   cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .opcoes-input-row {

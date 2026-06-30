@@ -52,7 +52,7 @@ const LandingPagePreview: React.FC<LandingPagePreviewProps> = React.memo(functio
               )}
               <div className="lp-preview-company-name">{branchName}</div>
               <div className="lp-preview-tagline">
-                Cadastre-se rapidamente para fazer parte da nossa base de clientes!
+                Cadastre-se rapidamente e garanta descontos exclusivos!
               </div>
             </div>
 
