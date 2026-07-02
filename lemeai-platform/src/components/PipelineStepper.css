@@ -1,0 +1,107 @@
+.pipeline-stepper-container {
+  display: flex;
+  width: 100%;
+  margin-bottom: 1.25rem;
+  background: transparent;
+}
+
+.pipeline-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%);
+  margin-left: -8px; 
+  transition: all 0.2s ease;
+}
+
+.pipeline-step:first-child {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+  margin-left: 0;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.pipeline-step:last-child {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 12px 50%);
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+/* When it's terminal, it overrides last-child */
+.pipeline-step.terminal {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 12px 50%);
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+/* Fix for only child if ever happens */
+.pipeline-step:first-child:last-child {
+  clip-path: none;
+  border-radius: 6px;
+  margin-left: 0;
+}
+
+/* Status Colors */
+.pipeline-step.completed {
+  background-color: var(--petroleum-blue);
+}
+.pipeline-step.completed .step-label {
+  color: #ffffff !important;
+}
+
+.pipeline-step.active {
+  background-color: var(--color-info); /* standard blue instead of neon cyan */
+  font-weight: 600;
+}
+.pipeline-step.active .step-label {
+  color: #ffffff !important;
+}
+
+.pipeline-step.upcoming {
+  background-color: var(--bg-tertiary);
+}
+.pipeline-step.upcoming .step-label {
+  color: var(--text-secondary) !important;
+}
+
+/* Terminal states */
+.pipeline-step.completed.won {
+  background-color: var(--color-success);
+}
+.pipeline-step.completed.won .step-label {
+  color: #ffffff !important;
+}
+
+.pipeline-step.active.won.terminal {
+  background-color: var(--color-success);
+}
+.pipeline-step.active.won.terminal .step-label {
+  color: #ffffff !important;
+}
+
+.pipeline-step.active.lost.terminal {
+  background-color: var(--color-danger);
+}
+.pipeline-step.active.lost.terminal .step-label {
+  color: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+  .pipeline-step {
+    font-size: 0.75rem;
+    padding: 0 0.25rem;
+  }
+  .pipeline-step .step-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    color: inherit;
+  }
+}

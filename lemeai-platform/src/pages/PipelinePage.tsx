@@ -6,7 +6,7 @@ import PipelineSkeleton from '../components/PipelineSkeleton';
 import CustomSelect from '../components/CustomSelect';
 import toast from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
-import DealDetailsModal from '../components/DealDetailsModal';
+import DealDetailsPage from './DealDetailsPage';
 import { OpportunityService, type Opportunity, type DetalheConversa } from '../services/OpportunityService';
 import { ChatService } from '../services/ChatService';
 import SummaryModal from '../components/SummaryModal';
@@ -931,7 +931,7 @@ const PipelinePage = () => {
                                                                     {...provided.dragHandleProps}
                                                                     className={`kanban-card ${snapshot.isDragging ? 'is-dragging' : ''}`}
                                                                     style={{ ...provided.draggableProps.style }}
-                                                                    onClick={() => window.open(`/pipeline/deal/${deal.id}`, '_blank')}
+                                                                    onClick={() => setSelectedDeal(deal)}
                                                                 >
                                                                     <div className="card-top-row">
                                                                         <div className="card-title">{deal.title}</div>
@@ -994,10 +994,12 @@ const PipelinePage = () => {
                     )}
 
                     {selectedDeal && (
-                        <DealDetailsModal
-                            deal={selectedDeal}
-                            onClose={() => setSelectedDeal(null)}
-                            onUpdate={handleDealUpdate}
+                        <DealDetailsPage
+                            dealId={selectedDeal.id.toString()}
+                            onClose={() => { 
+                                setSelectedDeal(null); 
+                                fetchOpportunities(true); 
+                            }}
                         />
                     )}
 

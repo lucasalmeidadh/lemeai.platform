@@ -33,6 +33,7 @@ import '../components/DateRangeFilter.css';
 import '../components/Skeleton.css';
 import CustomSelect from '../components/CustomSelect';
 import { getUserPermissions, hasPermission } from '../config/permissions';
+import PipelineStepper from '../components/PipelineStepper';
 import './DealDetailsPage.css';
 
 type DealProduct = ConversaProduto;
@@ -122,9 +123,43 @@ interface ApiMessage {
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const DealDetailsPage = () => {
-  const { id } = useParams<{ id: string }>();
+const DrawerWrapper: React.FC<{ isDrawer: boolean, onClose?: () => void, children: React.ReactNode }> = ({ isDrawer, onClose, children }) => {
+  if (!isDrawer) return <>{children}</>;
+  return (
+    <div className="deal-modal-overlay" onClick={onClose} style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1000,
+        display: 'flex', justifyContent: 'flex-end', alignItems: 'stretch'
+    }}>
+      <div className="deal-modal-content" onClick={e => e.stopPropagation()} style={{
+          width: '90vw', maxWidth: '1600px', height: '100vh',
+          backgroundColor: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column',
+          overflow: 'hidden', animation: 'slideInRight 0.3s ease-out'
+      }}>
+        {onClose && (
+          <button onClick={onClose} style={{
+              position: 'absolute', top: '15px', right: '20px', background: 'transparent',
+              border: 'none', fontSize: '24px', cursor: 'pointer', zIndex: 10, color: 'var(--text-primary)'
+          }}>
+            <FaTimes />
+          </button>
+        )}
+        {children}
+      </div>
+    </div>
+  );
+};
+
+interface DealDetailsPageProps {
+  dealId?: string;
+  onClose?: () => void;
+}
+
+const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, onClose }) => {
+  const { id: paramId } = useParams<{ id: string }>();
+  const id = propDealId || paramId;
   const navigate = useNavigate();
+  const isDrawer = !!propDealId;
 
   const permissions = getUserPermissions();
   const canManageCustomFields = hasPermission(permissions, ['gestao_campos_personalizados', 'gestão_campos_personalizados']);
@@ -675,7 +710,11 @@ const DealDetailsPage = () => {
       }
       toast.success('Conversa excluída com sucesso!');
       setIsDeleteConfirmOpen(false);
-      navigate('/pipeline');
+      if (isDrawer && onClose) {
+        onClose();
+      } else {
+        navigate('/pipeline');
+      }
     } catch (error: any) {
       toast.error(`Erro: ${error.message}`);
     } finally {
@@ -1192,8 +1231,9 @@ const DealDetailsPage = () => {
 
   if (isLoadingDeal) {
     return (
-      <div className="page-container deal-details-page">
-        {/* Header Skeleton */}
+      <DrawerWrapper isDrawer={isDrawer} onClose={onClose}>
+        <div className={`page-container deal-details-page ${isDrawer ? 'drawer-mode' : ''}`} style={isDrawer ? { margin: 0, height: '100%', borderRadius: 0 } : undefined}>
+          {/* Header Skeleton */}
         <div className="details-page-header">
           <div className="skeleton" style={{ width: '180px', height: '30px', borderRadius: 'var(--btn-radius-md)' }}></div>
           <div className="skeleton" style={{ width: '150px', height: '30px', borderRadius: 'var(--btn-radius-md)' }}></div>
@@ -1248,6 +1288,7 @@ const DealDetailsPage = () => {
           </main>
         </div>
       </div>
+      </DrawerWrapper>
     );
   }
 
@@ -1261,8 +1302,8 @@ const DealDetailsPage = () => {
     !obs.content || (!obs.content.startsWith('Resumo gerado pelo sistema') && !obs.content.includes('Resumo gerado pelo sistema'))
   );
 
-  return (
-    <div className="page-container deal-details-page">
+  const pageContent = (
+    <div className={`page-container deal-details-page ${isDrawer ? 'drawer-mode' : ''}`} style={isDrawer ? { margin: 0, height: '100%', borderRadius: 0 } : undefined}>
       <ConfirmationModal
         isOpen={isDeleteConfirmOpen}
         onClose={() => setIsDeleteConfirmOpen(false)}
@@ -1282,9 +1323,11 @@ const DealDetailsPage = () => {
       <div className="details-page-layout">
         {/* Sidebar */}
         <aside className="details-sidebar-panel">
-          <button className="sidebar-back-btn" onClick={() => navigate('/pipeline')}>
-            <FaArrowLeft /> Voltar ao Pipeline
-          </button>
+          {!isDrawer && (
+            <button className="sidebar-back-btn" onClick={() => navigate('/pipeline')}>
+              <FaArrowLeft /> Voltar ao Pipeline
+            </button>
+          )}
 
           <div className="sidebar-deal-header">
             <h2>{deal.title}</h2>
@@ -1474,6 +1517,8 @@ const DealDetailsPage = () => {
 
         {/* Content Tabs */}
         <main className="details-main-area">
+          <PipelineStepper currentStatusId={statusId} />
+          
           <div className="details-tab-nav">
             <button className={`tab-button ${activeTab === 'customFields' ? 'active' : ''}`} onClick={() => setActiveTab('customFields')}>
               <span className="tab-text-full">Dados Gerais</span>
@@ -2177,6 +2222,8 @@ const DealDetailsPage = () => {
       )}
     </div>
   );
+
+  return <DrawerWrapper isDrawer={isDrawer} onClose={onClose}>{pageContent}</DrawerWrapper>;
 };
 
 export default DealDetailsPage;

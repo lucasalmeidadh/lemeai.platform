@@ -1624,3 +1624,13 @@
   box-shadow: 0 6px 16px rgba(6, 57, 76, 0.25);
 }
 
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
