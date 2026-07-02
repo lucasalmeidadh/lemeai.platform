@@ -210,9 +210,12 @@ const ChatPage = () => {
 
   const mapApiStatus = (statusMensagem?: string): Message['status'] => {
     switch (statusMensagem) {
-      case 'entregue': return 'delivered';
-      case 'lida':     return 'read';
-      case 'enviada':  return 'sent';
+      case 'entregue':
+      case 'delivered': return 'delivered';
+      case 'lida':
+      case 'read':     return 'read';
+      case 'enviada':
+      case 'sent':  return 'sent';
       default:         return 'sent';
     }
   };

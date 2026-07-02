@@ -119,6 +119,7 @@ interface ApiMessage {
   tipoMensagem?: 'text' | 'image' | 'audio' | 'file' | 'document';
   urlMidia?: string;
   caminhoArquivo?: string;
+  statusMensagem?: string;
 }
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -421,6 +422,18 @@ const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, o
       }
       const result = await response.json();
       if (result.sucesso && Array.isArray(result.dados.mensagens)) {
+        const mapApiStatus = (statusMensagem?: string): Message['status'] => {
+          switch (statusMensagem) {
+            case 'entregue':
+            case 'delivered': return 'delivered';
+            case 'lida':
+            case 'read': return 'read';
+            case 'enviada':
+            case 'sent': return 'sent';
+            default: return 'sent';
+          }
+        };
+
         const grouped = result.dados.mensagens.reduce((acc: { [date: string]: Message[] }, msg: ApiMessage) => {
           const date = new Date(msg.dataEnvio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
           const formattedMessage: Message = {
@@ -428,7 +441,7 @@ const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, o
             text: msg.mensagem,
             sender: msg.origemMensagem === 0 ? 'other' : (msg.origemMensagem === 1 ? 'me' : 'ia'),
             time: new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: 'sent',
+            status: mapApiStatus(msg.statusMensagem),
             type: msg.tipoMensagem || 'text',
             mediaUrl: msg.urlMidia || msg.caminhoArquivo
           };

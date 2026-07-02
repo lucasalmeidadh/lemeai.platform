@@ -23,12 +23,16 @@ Retorna todas as conversas atribuídas ao usuário autenticado.
   "dados": [
     {
       "idConversa": 10,
-      "nomeContato": "Carlos Souza",
-      "telefoneContato": "5511999990000",
+      "nomeCliente": "Carlos Souza",
+      "numeroWhatsapp": "5511999990000",
       "ultimaMensagem": "Olá, tudo bem?",
       "dataUltimaMensagem": "2026-05-02T14:30:00",
-      "statusId": 1,
-      "tipoLeadId": 2
+      "totalNaoLidas": 2,
+      "tipoLeadId": 2,
+      "tipoLeadNome": "Morno",
+      "campanha": true,
+      "idCampanha": 3,
+      "nomeCampanha": "Promoção Maio"
     }
   ]
 }
@@ -53,21 +57,31 @@ Retorna todas as mensagens de uma conversa. Respeita a role do usuário para con
   "dados": [
     {
       "idMensagem": 101,
-      "conteudo": "Olá, tudo bem?",
-      "remetente": "contato",
+      "mensagem": "Olá, tudo bem?",
+      "origemMensagem": 0,
       "dataEnvio": "2026-05-02T14:30:00",
-      "tipoMidia": null
+      "tipoMensagem": "texto",
+      "caminhoArquivo": null,
+      "reacao": null,
+      "statusMensagem": "lida"
     },
     {
       "idMensagem": 102,
-      "conteudo": "Tudo ótimo! Como posso ajudar?",
-      "remetente": "usuario",
+      "mensagem": "Tudo ótimo! Como posso ajudar?",
+      "origemMensagem": 1,
       "dataEnvio": "2026-05-02T14:31:00",
-      "tipoMidia": null
+      "tipoMensagem": "texto",
+      "caminhoArquivo": null,
+      "reacao": "curtir",
+      "statusMensagem": "enviada"
     }
   ]
 }
 ```
+
+> **origemMensagem**: `0` = Cliente · `1` = Vendedor · `2` = IA  
+> **statusMensagem**: `"enviada"` · `"entregue"` · `"lida"`  
+> **tipoMensagem**: `"texto"` · `"imagem"` · `"audio"` · `"video"` · `"documento"`
 
 ---
 
