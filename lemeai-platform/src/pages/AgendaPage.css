@@ -427,7 +427,8 @@
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: minmax(80px, auto);
+    grid-template-rows: repeat(6, 1fr);
+    flex: 1;
 }
 
 .calendar-day {
