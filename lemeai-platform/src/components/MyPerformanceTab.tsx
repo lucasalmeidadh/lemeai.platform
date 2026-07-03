@@ -597,7 +597,7 @@ const MyPerformanceTab: React.FC<MyPerformanceTabProps> = ({
         <div style={{ width: '100%', height: 260 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={funnelStages} layout="vertical" margin={{ top: 4, right: 130, left: 10, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartColors.grid} />
+              <CartesianGrid vertical={false} horizontal={false} />
               <XAxis type="number" hide />
               <YAxis
                 dataKey="name"
@@ -605,13 +605,16 @@ const MyPerformanceTab: React.FC<MyPerformanceTabProps> = ({
                 width={145}
                 stroke={chartColors.text}
                 fontSize={12}
+                axisLine={false}
+                tickLine={false}
               />
               <Tooltip
                 formatter={(value: number) => [formatCurrency(value), 'Volume']}
-                contentStyle={{ backgroundColor: chartColors.tooltipBg, border: `1px solid ${chartColors.tooltipBorder}`, borderRadius: '8px', color: theme === 'dark' ? '#fff' : '#000' }}
+                contentStyle={{ backgroundColor: chartColors.tooltipBg, border: 'none', borderRadius: '8px', color: theme === 'dark' ? '#fff' : '#000', boxShadow: 'none' }}
                 itemStyle={{ color: theme === 'dark' ? '#fff' : '#000' }}
+                cursor={{ fill: 'transparent' }}
               />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="value" radius={[8, 8, 8, 8]} barSize={24}>
                 {funnelStages.map((entry, index) => {
                   let fill = 'var(--petroleum-blue)';
                   if (entry.name === 'Ganho') fill = '#4ade80';

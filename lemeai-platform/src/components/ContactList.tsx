@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './ContactList.css';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaWhatsapp, FaExclamationTriangle } from 'react-icons/fa';
 import type { Contact } from '../data/mockData';
+import { useNavigate } from 'react-router-dom';
 
 interface CurrentUser {
   nome: string;
@@ -12,9 +13,11 @@ interface ContactListProps {
   activeContactId: number;
   onSelectContact: (id: number) => void;
   currentUser: CurrentUser | null;
+  whatsappStatus: 'checking' | 'connected' | 'disconnected' | 'no-instance' | null;
 }
 
-const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, onSelectContact, currentUser }) => {
+const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, onSelectContact, currentUser, whatsappStatus }) => {
+  const navigate = useNavigate();
   const [isSellerOnline, setSellerOnline] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
   const [photoUrl, setPhotoUrl] = useState<string | null>(() => {
@@ -54,8 +57,14 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
     <div className="contact-list">
       <div className="contact-list-header">
         <div className="header-top-row">
-          <h2>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
             Chat
+            {whatsappStatus === 'connected' && (
+              <FaWhatsapp size={16} style={{ color: 'var(--color-success)' }} title="WhatsApp Conectado" />
+            )}
+            {(whatsappStatus === 'disconnected' || whatsappStatus === 'no-instance') && (
+              <FaWhatsapp size={16} style={{ color: 'var(--text-tertiary)' }} title="WhatsApp Desconectado" />
+            )}
             {totalUnread > 0 && (
               <span className="new-badge">
                 {totalUnread} Nova{totalUnread > 1 ? 's' : ''}
@@ -82,6 +91,12 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, activeContactId, on
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        {(whatsappStatus === 'disconnected' || whatsappStatus === 'no-instance') && (
+          <div className="whatsapp-disconnected-alert" onClick={() => navigate('/connections')}>
+            <FaExclamationTriangle size={12} />
+            <span>WhatsApp desconectado. <strong>Conectar agora</strong></span>
+          </div>
+        )}
       </div>
 
       <div className="filter-tabs">

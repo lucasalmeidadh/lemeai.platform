@@ -20,7 +20,7 @@ import ThemeToggle from './ThemeToggle';
 import OnboardingModal from './Onboarding/OnboardingModal';
 import OnboardingTooltip from './Onboarding/OnboardingTooltip';
 import { useOnboarding } from '../contexts/OnboardingContext';
-
+// import { NvoipDialer } from './NvoipDialer';
 const MainLayout = () => {
     // Mobile menu state
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -105,7 +105,9 @@ const MainLayout = () => {
     return (
         <GlobalNotificationProvider>
             <div className="app-layout">
-                <Sidebar
+                <SupportModeBanner />
+                <Topbar
+                    onToggleMobileMenu={toggleMobileMenu}
                     onViewProfile={handleViewProfile}
                     onLogout={handleLogout}
                 />
@@ -162,10 +164,8 @@ const MainLayout = () => {
                     </nav>
                 </div>
 
-                <div className="dashboard-layout">
-                    <SupportModeBanner />
-                    <Topbar
-                        onToggleMobileMenu={toggleMobileMenu}
+                <div className="main-body">
+                    <Sidebar
                         onViewProfile={handleViewProfile}
                         onLogout={handleLogout}
                     />
@@ -186,6 +186,8 @@ const MainLayout = () => {
                 {/* Onboarding Components */}
                 <OnboardingModal />
                 <OnboardingTooltip />
+
+                {/* <NvoipDialer /> */}
             </div>
         </GlobalNotificationProvider>
     );

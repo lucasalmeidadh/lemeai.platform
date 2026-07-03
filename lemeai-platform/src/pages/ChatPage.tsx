@@ -611,6 +611,7 @@ const ChatPage = () => {
               activeContactId={selectedContactId || 0}
               onSelectContact={handleSelectContact}
               currentUser={currentUser}
+              whatsappStatus={whatsappStatus}
             />
           </div>
         )
@@ -625,6 +626,7 @@ const ChatPage = () => {
           activeContactId={selectedContactId || 0}
           onSelectContact={handleSelectContact}
           currentUser={currentUser}
+          whatsappStatus={whatsappStatus}
         />
         {selectedContact ? (
           <>
@@ -662,30 +664,8 @@ const ChatPage = () => {
     );
   };
 
-  const showBanner = whatsappStatus && whatsappStatus !== 'checking';
-
   return (
-    <div className="chat-page-container" style={{ height: '100%', display: 'flex', flexDirection: 'column', '--whatsapp-banner-height': showBanner ? '36px' : '0px' } as React.CSSProperties}>
-      {/* WhatsApp Status Banner */}
-      {showBanner && (
-        <div className={`whatsapp-status-bar ${whatsappStatus === 'connected' ? 'status-connected' : 'status-disconnected'}`}>
-          <div className="whatsapp-status-bar-content">
-            <FaWhatsapp size={14} />
-            <span>
-              {whatsappStatus === 'connected' && 'WhatsApp conectado'}
-              {whatsappStatus === 'disconnected' && 'WhatsApp desconectado'}
-              {whatsappStatus === 'no-instance' && 'WhatsApp não configurado'}
-            </span>
-            {whatsappStatus === 'connected' && <span className="whatsapp-status-dot connected" />}
-            {isWhatsappDisabled && (
-              <button className="whatsapp-connect-btn" onClick={() => navigate('/connections')}>
-                <FaPlug size={11} /> Conectar
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
+    <div className="chat-page-container" style={{ height: '100%', display: 'flex', flexDirection: 'column' } as React.CSSProperties}>
       {renderContent()}
 
       {/* Modal: WhatsApp não configurado */}

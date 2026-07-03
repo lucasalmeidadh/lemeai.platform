@@ -48,13 +48,9 @@
   padding: 24px 32px;
   border-radius: 20px;
   box-sizing: border-box;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-  transition: box-shadow 0.3s ease;
 }
 
 .dashboard-card:hover {
-  box-shadow: var(--shadow-md);
 }
 
 

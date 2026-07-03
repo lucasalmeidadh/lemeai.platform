@@ -184,9 +184,10 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
 
     const tooltipStyle = {
         backgroundColor: chartColors.tooltipBg,
-        border: `1px solid ${chartColors.tooltipBorder}`,
+        border: 'none',
         borderRadius: '8px',
         color: theme === 'dark' ? '#fff' : '#000',
+        boxShadow: 'none',
     };
     const itemStyle = { color: theme === 'dark' ? '#fff' : '#000' };
 
@@ -337,11 +338,11 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
                     <div className="chart-wrapper">
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={funnelData} layout="vertical" margin={{ top: 10, right: 120, left: 10, bottom: 10 }}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartColors.grid} />
+                                <CartesianGrid vertical={false} horizontal={false} />
                                 <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={140} stroke={chartColors.text} fontSize={12} />
-                                <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} />
-                                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                <YAxis dataKey="name" type="category" width={140} stroke={chartColors.text} fontSize={12} axisLine={false} tickLine={false} />
+                                <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} cursor={{ fill: 'transparent' }} />
+                                <Bar dataKey="value" radius={[8, 8, 8, 8]} barSize={24}>
                                     {funnelData.map((entry, index) => {
                                         let cellColor = 'var(--petroleum-blue)';
                                         if (entry.name === 'Ganho') {
@@ -471,11 +472,11 @@ const AnalyticsPage = ({ selectedMonth: propSelectedMonth, onMonthChange: propOn
                                             <stop offset="95%" stopColor="var(--petroleum-blue)" stopOpacity={0}   />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
-                                    <XAxis dataKey="month" stroke={chartColors.text} fontSize={12} />
-                                    <YAxis stroke={chartColors.text} fontSize={12} tickFormatter={val => `R$ ${(val as number) / 1000}k`} />
-                                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} />
-                                    <Area type="monotone" dataKey="value" stroke="var(--petroleum-blue)" fillOpacity={1} fill="url(#colorValue)" />
+                                    <CartesianGrid vertical={false} horizontal={false} />
+                                    <XAxis dataKey="month" stroke={chartColors.text} fontSize={12} axisLine={false} tickLine={false} />
+                                    <YAxis stroke={chartColors.text} fontSize={12} axisLine={false} tickLine={false} tickFormatter={val => `R$ ${(val as number) / 1000}k`} />
+                                    <Tooltip formatter={(value: number) => formatCurrency(value)} contentStyle={tooltipStyle} itemStyle={itemStyle} cursor={false} />
+                                    <Area type="monotone" dataKey="value" stroke="var(--petroleum-blue)" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>

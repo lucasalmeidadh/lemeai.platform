@@ -61,6 +61,7 @@ const AgendaPage: React.FC = () => {
     const [isConnecting, setIsConnecting] = useState(false);
     const [contacts, setContacts] = useState<ApiContact[]>([]);
     const [googleConectado, setGoogleConectado] = useState<boolean | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const popupRef = useRef<Window | null>(null);
 
     const checkGoogleConnection = useCallback(async () => {
@@ -281,44 +282,47 @@ const AgendaPage: React.FC = () => {
 
     const renderHeader = () => {
         return (
-            <div className="agenda-tab-header">
-                <div className="agenda-header-left">
-                    {isLoading && <FaSpinner className="spin" style={{ color: 'var(--petroleum-blue)' }} />}
-                </div>
-                <div className="agenda-header-actions">
-                    {googleConectado ? (
-                        <button className="disconnect-button" onClick={handleDisconnect} disabled={isLoading}>
-                            <FaUnlink /> Desconectar Google
-                        </button>
-                    ) : (
-                        <button className="google-connect-button" onClick={handleConnect} disabled={isConnecting || googleConectado === null}>
-                            {isConnecting ? (
-                                <FaSpinner className="spin" />
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="google-icon-svg">
-                                    <path fill="var(--color-google-red)" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                                    <path fill="var(--color-google-blue)" d="M46.5 24c0-1.61-.15-3.16-.42-4.69H24v8.87h12.66c-.55 2.92-2.19 5.4-4.67 7.07l7.26 5.63C43.5 35.8 46.5 30.43 46.5 24z"/>
-                                    <path fill="var(--color-google-yellow)" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"/>
-                                    <path fill="var(--color-google-green)" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.26-5.63c-2.03 1.37-4.63 2.19-8.63 2.19-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                                </svg>
-                            )}
-                            Conectar Google
-                        </button>
-                    )}
-                    {googleConectado && (
-                        <button
-                            className="sync-button"
-                            onClick={handleSincronizar}
-                            disabled={isSyncing}
-                            title="Reconciliar com o Google Calendar"
-                        >
-                            <FaSyncAlt className={isSyncing ? 'spin' : ''} /> Sincronizar
-                        </button>
-                    )}
-                    <button className="add-button" onClick={() => { setEditingAppointment(null); setIsModalOpen(true); }}>
-                        <FaCalendarPlus /> Novo Agendamento
+            <div className="agenda-header-actions">
+                {isLoading && <FaSpinner className="spin" style={{ color: 'var(--petroleum-blue)' }} />}
+                {googleConectado ? (
+                    <button className="disconnect-button" onClick={handleDisconnect} disabled={isLoading}>
+                        <FaUnlink /> Desconectar Google
                     </button>
-                </div>
+                ) : (
+                    <button className="google-connect-button" onClick={handleConnect} disabled={isConnecting || googleConectado === null}>
+                        {isConnecting ? (
+                            <FaSpinner className="spin" />
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="google-icon-svg">
+                                <path fill="var(--color-google-red)" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                <path fill="var(--color-google-blue)" d="M46.5 24c0-1.61-.15-3.16-.42-4.69H24v8.87h12.66c-.55 2.92-2.19 5.4-4.67 7.07l7.26 5.63C43.5 35.8 46.5 30.43 46.5 24z"/>
+                                <path fill="var(--color-google-yellow)" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"/>
+                                <path fill="var(--color-google-green)" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.26-5.63c-2.03 1.37-4.63 2.19-8.63 2.19-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                            </svg>
+                        )}
+                        Conectar Google Agenda
+                    </button>
+                )}
+                {googleConectado && (
+                    <button
+                        className="sync-button"
+                        onClick={handleSincronizar}
+                        disabled={isSyncing}
+                        title="Reconciliar com o Google Calendar"
+                    >
+                        <FaSyncAlt className={isSyncing ? 'spin' : ''} /> Sincronizar
+                    </button>
+                )}
+                <button
+                    className="google-connect-button"
+                    onClick={() => setIsSidebarOpen(true)}
+                    title="Ver eventos do dia e próximos eventos"
+                >
+                    <FaClock /> Eventos
+                </button>
+                <button className="add-button" onClick={() => { setEditingAppointment(null); setIsModalOpen(true); }}>
+                    <FaCalendarPlus /> Novo Agendamento
+                </button>
             </div>
         );
     };
@@ -412,7 +416,14 @@ const AgendaPage: React.FC = () => {
         const selectedDateAppointments = appointments.filter(app => isSameDay(app.date, selectedDate));
 
         return (
-            <div className="agenda-sidebar">
+            <>
+                <div className={`agenda-sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)} />
+                <div className={`agenda-sidebar-drawer ${isSidebarOpen ? 'open' : ''}`}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h2 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>Eventos</h2>
+                        <button onClick={() => setIsSidebarOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>&times;</button>
+                    </div>
+                    <div className="agenda-sidebar">
                 <div className="sidebar-card">
                     <h3 className="card-title">
                         <FaCalendarAlt /> {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
@@ -480,17 +491,18 @@ const AgendaPage: React.FC = () => {
                         }
                     </div>
                 </div>
-            </div>
+                    </div>
+                </div>
+            </>
         );
     };
 
     return (
         <div className="page-container">
-            <div className="page-header">
+            <div className="page-header agenda-header-main">
                 <h1>Agenda</h1>
+                {renderHeader()}
             </div>
-
-            {renderHeader()}
 
             <div className="agenda-container">
                 <div className="agenda-main">

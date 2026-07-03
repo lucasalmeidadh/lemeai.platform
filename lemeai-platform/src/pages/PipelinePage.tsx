@@ -422,7 +422,7 @@ const PipelinePage = () => {
             newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
             setColumns(newColumns);
         } else {
-            const needsTemperature = (destCol.statusId === 4 || destCol.statusId === 5) && 
+            const needsTemperature = (destCol.statusId === 4 || destCol.statusId === 5) &&
                 (!removed.tipoLeadId || removed.tipoLeadId === 0);
 
             if (destCol.statusId === 3 && removed.tipoLeadId !== 1) {
@@ -701,7 +701,7 @@ const PipelinePage = () => {
         const filtered = col.deals.filter(deal => {
             const matchesSearch = deal.title.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesOwner = selectedOwner === 'all' || deal.owner === selectedOwner;
-            
+
             let matchesTemperature = true;
             if (selectedTemperatures.length > 0) {
                 matchesTemperature = selectedTemperatures.includes(deal.tipoLeadId?.toString() || '');
@@ -764,12 +764,18 @@ const PipelinePage = () => {
             ) : (
                 <>
                     <div className="page-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px', paddingTop: isMobile ? '10px' : '0' }}>
-                        <div style={{ display: 'flex', justifyContent: isMobile ? 'center' : 'space-between', width: '100%', alignItems: 'center' }}>
-                            <h1 style={{ textAlign: isMobile ? 'center' : 'left', width: '100%', lineHeight: 1.4, paddingBottom: isMobile ? '5px' : '0' }}>Oportunidade de Vendas</h1>
-                            {!isMobile && (
-                                <div className="pipeline-actions">
-                                </div>
-                            )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                            <h1 style={{ textAlign: isMobile ? 'center' : 'left', lineHeight: 1.4, paddingBottom: isMobile ? '5px' : '0', margin: 0 }}>Oportunidade de Vendas</h1>
+                            <div className="pipeline-actions">
+                                <button
+                                    type="button"
+                                    className="pipeline-btn-create"
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                >
+                                    <FaPlus size={11} />
+                                    <span>Nova Oportunidade</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="pipeline-filters-container">
@@ -853,14 +859,6 @@ const PipelinePage = () => {
                                     </div>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    className="pipeline-btn-create"
-                                    onClick={() => setIsCreateModalOpen(true)}
-                                >
-                                    <FaPlus size={11} />
-                                    <span>Criar</span>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -896,15 +894,15 @@ const PipelinePage = () => {
                                                             columnSortOrders[column.id] === 'desc'
                                                                 ? 'Mais recentes primeiro — clique para mais antigos'
                                                                 : columnSortOrders[column.id] === 'asc'
-                                                                ? 'Mais antigos primeiro — clique para remover ordenação'
-                                                                : 'Ordenar por data de criação'
+                                                                    ? 'Mais antigos primeiro — clique para remover ordenação'
+                                                                    : 'Ordenar por data de criação'
                                                         }
                                                     >
                                                         {columnSortOrders[column.id] === 'desc'
                                                             ? <FaSortAmountDown size={14} />
                                                             : columnSortOrders[column.id] === 'asc'
-                                                            ? <FaSortAmountUp size={14} />
-                                                            : <FaSort size={14} />}
+                                                                ? <FaSortAmountUp size={14} />
+                                                                : <FaSort size={14} />}
                                                     </button>
                                                     <span className="column-count">{column.deals.length}</span>
                                                 </div>
@@ -996,9 +994,9 @@ const PipelinePage = () => {
                     {selectedDeal && (
                         <DealDetailsPage
                             dealId={selectedDeal.id.toString()}
-                            onClose={() => { 
-                                setSelectedDeal(null); 
-                                fetchOpportunities(true); 
+                            onClose={() => {
+                                setSelectedDeal(null);
+                                fetchOpportunities(true);
                             }}
                         />
                     )}

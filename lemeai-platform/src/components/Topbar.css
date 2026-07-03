@@ -1,29 +1,32 @@
 .topbar {
   height: 4rem;
-  background-color: var(--surface-color);
+  background-color: #f7fafc;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 1.5rem 0 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
   transition: all 0.3s ease;
 }
 
 [data-theme='dark'] .topbar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: none;
+  background-color: #08080a;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1.25rem;
-  flex: 1;
+  width: 16rem;
+  flex-shrink: 0;
 }
 
 /* page subtitle shown in topbar */
@@ -226,7 +229,6 @@
 .topbar-right {
   display: flex;
   align-items: center;
-  flex: 1;
   justify-content: flex-end;
 }
 
@@ -340,7 +342,13 @@
     background-color: var(--bg-tertiary);
   }
 
-  .topbar-brand {
+  .topbar-left {
+    width: auto;
+    justify-content: flex-start;
+    padding-left: 1.5rem;
+  }
+
+  .topbar-logo-link {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -351,7 +359,7 @@
 @media (max-height: 850px), (max-width: 1300px) {
   .topbar {
     height: 50px !important;
-    padding: 0 16px !important;
+    padding: 0 16px 0 0 !important;
   }
   .topbar-item, .topbar .theme-toggle-btn {
     padding: 6px 10px !important;
@@ -381,44 +389,34 @@
   }
 }
 
-.topbar-company-logo {
-  height: 2rem;
-  max-width: 8rem;
-  object-fit: contain;
-  border-radius: 6px;
-}
-
-.topbar-company-fallback {
+.topbar-logo-link {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: center;
+  text-decoration: none;
+}
+
+.topbar-system-logo {
+  height: 2.75rem;
   max-width: 12rem;
+  object-fit: contain;
+  transition: transform 0.2s ease;
 }
 
-.topbar-company-fallback-icon {
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
-  padding: 0.5rem;
-  border-radius: 6px;
-  background: var(--petroleum-light);
-  color: var(--petroleum-blue);
-  box-sizing: border-box;
+.topbar-system-logo.dark-logo {
+  display: none;
 }
 
-.topbar-company-fallback-name {
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+[data-theme='dark'] .topbar-system-logo.light-logo {
+  display: none;
 }
 
-@media (max-width: 1000px) {
-  .topbar-company-fallback-name {
-    display: none;
-  }
+[data-theme='dark'] .topbar-system-logo.dark-logo {
+  display: inline-block;
+}
+
+.topbar-system-logo:hover {
+  transform: scale(1.02);
 }
 
 /* ─── NOVIDADES POPOVER ────────────────────────────────────────── */
@@ -759,13 +757,10 @@
 .topbar-search-container {
   position: relative;
   margin: 0 auto;
-  width: 280px;
+  width: 400px;
+  max-width: 100%;
   transition: all 0.3s ease;
   z-index: 10;
-}
-
-.topbar-search-container:focus-within {
-  width: 340px;
 }
 
 .topbar-search-input-wrapper {
