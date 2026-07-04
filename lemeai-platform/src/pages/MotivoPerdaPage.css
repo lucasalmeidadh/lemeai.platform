@@ -1,0 +1,142 @@
+/* .motivo-perda-page padding and .page-header styles handled by global index.css */
+
+.motivo-perda-page .dashboard-card {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.motivo-perda-page .table-container {
+    padding: 20px;
+}
+
+.motivo-perda-page .management-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.motivo-perda-page .management-table th,
+.motivo-perda-page .management-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.motivo-perda-page .management-table th {
+    background-color: var(--bg-primary);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.motivo-perda-page .management-table tr:hover {
+    background-color: var(--bg-primary);
+}
+
+.motivo-perda-page .actions-cell {
+    display: flex;
+    gap: 10px;
+}
+
+/* Modal Styles — scoped to .motivo-perda-page to avoid global collisions */
+.motivo-perda-page .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.motivo-perda-page .modal-content {
+    background: var(--bg-secondary);
+    padding: 0;
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-md);
+    flex-shrink: 0;
+}
+
+.motivo-perda-page .modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.motivo-perda-page .modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-primary);
+}
+
+.motivo-perda-page .close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-primary);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.motivo-perda-page .close-button:hover {
+    opacity: 1;
+}
+
+.motivo-perda-page .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.motivo-perda-page .form-group {
+    margin-bottom: 15px;
+}
+
+.motivo-perda-page .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.motivo-perda-page .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.motivo-perda-page .form-group input:focus {
+    border-color: var(--petroleum-blue);
+    outline: none;
+}
+
+.motivo-perda-page .modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}

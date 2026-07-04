@@ -17,6 +17,7 @@ import MobilePipelineAccordion from '../components/MobilePipelineAccordion';
 import { CampaignService, type Campaign } from '../services/CampaignService';
 import { ConversaProdutoService } from '../services/ConversaProdutoService';
 import WinDealProductModal from '../components/WinDealProductModal';
+import LossReasonModal from '../components/LossReasonModal';
 import CreateOpportunityModal from '../components/CreateOpportunityModal';
 import OriginBadge from '../components/OriginBadge';
 
@@ -92,6 +93,9 @@ const PipelinePage = () => {
     // States for win-deal product modal (fired when closing a deal without product)
     const [isWinProductModalOpen, setIsWinProductModalOpen] = useState(false);
     const [pendingWonDeal, setPendingWonDeal] = useState<Deal | null>(null);
+
+    // States for mandatory loss reason selection during drag (status 6 - Venda Perdida)
+    const [isLossReasonModalOpen, setIsLossReasonModalOpen] = useState(false);
 
     const handleTemperatureClick = (temp: string) => {
         setSelectedTemperatures(prev =>
@@ -319,12 +323,23 @@ const PipelinePage = () => {
         return () => clearInterval(interval);
     }, [fetchOpportunities]);
 
-    const updateDealStatus = async (dealId: number, newStatusId: number, value?: number): Promise<{ success: boolean; message?: string }> => {
+    const updateDealStatus = async (
+        dealId: number,
+        newStatusId: number,
+        value?: number,
+        motivoPerdaId?: number,
+        motivoPerdaDetalhe?: string
+    ): Promise<{ success: boolean; message?: string }> => {
         try {
+            const body: Record<string, unknown> = { idStatus: newStatusId, valor: value || 0 };
+            if (motivoPerdaId) {
+                body.motivoPerdaId = motivoPerdaId;
+                body.motivoPerdaDetalhe = motivoPerdaDetalhe || null;
+            }
             const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${dealId}/AtualizarStatus`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idStatus: newStatusId, valor: value || 0 }),
+                body: JSON.stringify(body),
             });
             const result = await response.json();
             if (!response.ok || !result.sucesso) {
@@ -470,6 +485,21 @@ const PipelinePage = () => {
                 setPendingDragSourceIndex(source.index);
                 setPendingDragDestIndex(destination.index);
                 setIsTempModalOpen(true);
+            } else if (destCol.statusId === 6) {
+                // Optimistically move card so it stays in the new column while modal is open
+                removed.statusId = destCol.statusId;
+                destDeals.splice(destination.index, 0, removed);
+                newColumns[sourceColIndex] = { ...sourceCol, deals: sourceDeals };
+                newColumns[destColIndex] = { ...destCol, deals: destDeals };
+                setColumns(newColumns);
+
+                // Set pending state and open mandatory loss reason modal
+                setPendingDragDeal(removed);
+                setPendingDragDestCol(destCol);
+                setPendingDragSourceCol(sourceCol);
+                setPendingDragSourceIndex(source.index);
+                setPendingDragDestIndex(destination.index);
+                setIsLossReasonModalOpen(true);
             } else {
                 removed.statusId = destCol.statusId;
                 destDeals.splice(destination.index, 0, removed);
@@ -604,6 +634,64 @@ const PipelinePage = () => {
         });
 
         // Clean up pending states
+        setPendingDragDeal(null);
+        setPendingDragDestCol(null);
+        setPendingDragSourceCol(null);
+    };
+
+    const handleLossReasonConfirm = async (motivoPerdaId: number, motivoPerdaDetalhe: string) => {
+        if (!pendingDragDeal || !pendingDragDestCol) return;
+
+        const dealId = pendingDragDeal.id;
+        const dealToUpdate = pendingDragDeal;
+        const newStatusId = pendingDragDestCol.statusId;
+
+        const toastId = toast.loading('Registrando venda perdida...');
+        const result = await updateDealStatus(dealId, newStatusId, dealToUpdate.rawValue, motivoPerdaId, motivoPerdaDetalhe);
+        if (result.success) {
+            toast.success('Venda marcada como perdida.', { id: toastId });
+        } else {
+            toast.error(result.message || 'Erro ao registrar motivo da perda.', { id: toastId });
+        }
+
+        setIsLossReasonModalOpen(false);
+        setPendingDragDeal(null);
+        setPendingDragDestCol(null);
+        setPendingDragSourceCol(null);
+        fetchOpportunities(true);
+    };
+
+    const handleLossReasonCancel = () => {
+        if (!pendingDragDeal || !pendingDragSourceCol || !pendingDragDestCol) {
+            setIsLossReasonModalOpen(false);
+            return;
+        }
+
+        setIsLossReasonModalOpen(false);
+
+        // Revert optimistic update — move the card back to its original column
+        setColumns(prevColumns => {
+            const updated = [...prevColumns];
+            const sourceColIdx = updated.findIndex(c => c.id === pendingDragSourceCol.id);
+            const destColIdx = updated.findIndex(c => c.id === pendingDragDestCol.id);
+
+            if (sourceColIdx !== -1 && destColIdx !== -1) {
+                const sDeals = [...updated[sourceColIdx].deals];
+                const dDeals = [...updated[destColIdx].deals];
+
+                const dealIdx = dDeals.findIndex(d => d.id === pendingDragDeal.id);
+                if (dealIdx !== -1) {
+                    const [deal] = dDeals.splice(dealIdx, 1);
+                    deal.statusId = pendingDragSourceCol.statusId;
+                    sDeals.splice(pendingDragSourceIndex, 0, deal);
+
+                    updated[sourceColIdx] = { ...updated[sourceColIdx], deals: sDeals };
+                    updated[destColIdx] = { ...updated[destColIdx], deals: dDeals };
+                }
+            }
+            return updated;
+        });
+
         setPendingDragDeal(null);
         setPendingDragDestCol(null);
         setPendingDragSourceCol(null);
@@ -1034,6 +1122,13 @@ const PipelinePage = () => {
                         isOpen={isTempModalOpen}
                         onClose={handleTempCancel}
                         onConfirm={handleTempConfirm}
+                    />
+
+                    <LossReasonModal
+                        isOpen={isLossReasonModalOpen}
+                        dealTitle={pendingDragDeal?.title ?? ''}
+                        onConfirm={handleLossReasonConfirm}
+                        onCancel={handleLossReasonCancel}
                     />
 
                     <CreateOpportunityModal
