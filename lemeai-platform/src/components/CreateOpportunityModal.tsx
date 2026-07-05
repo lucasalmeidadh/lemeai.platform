@@ -66,6 +66,34 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
         setValor(formatCurrency(rawValue));
     };
 
+    const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let v = e.target.value.replace(/\D/g, '');
+        let formatted = v;
+
+        if (v.length <= 11) {
+            if (v.length > 2) {
+                formatted = `(${v.slice(0, 2)}) ${v.slice(2)}`;
+            }
+            if (v.length > 6) {
+                if (v.length === 11) {
+                    formatted = `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`;
+                } else {
+                    formatted = `(${v.slice(0, 2)}) ${v.slice(2, 6)}-${v.slice(6)}`;
+                }
+            }
+        } else {
+            if (v.length > 13) v = v.slice(0, 13);
+            
+            if (v.length <= 12) {
+                formatted = `+${v.slice(0, 2)} (${v.slice(2, 4)}) ${v.slice(4, 8)}-${v.slice(8)}`;
+            } else {
+                formatted = `+${v.slice(0, 2)} (${v.slice(2, 4)}) ${v.slice(4, 9)}-${v.slice(9)}`;
+            }
+        }
+
+        setTelefone(formatted);
+    };
+
     const [camposPersonalizados, setCamposPersonalizados] = useState<CampoPersonalizado[]>([]);
     const [valoresCampos, setValoresCampos] = useState<Record<number, string>>({});
     const [isLoadingCampos, setIsLoadingCampos] = useState(false);
@@ -150,7 +178,7 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
             contato: tipoCadastro === 'novo'
                 ? {
                       nome: nomeContato.trim(),
-                      telefone: telefone.trim() || undefined,
+                      telefone: telefone.replace(/\D/g, '') || undefined,
                       email: email.trim() || undefined,
                   }
                 : null,
@@ -346,8 +374,8 @@ const CreateOpportunityModal = ({ isOpen, onClose, onCreated }: CreateOpportunit
                                                     type="text"
                                                     className="com-input"
                                                     value={telefone}
-                                                    onChange={e => setTelefone(e.target.value)}
-                                                    placeholder="5511999990000"
+                                                    onChange={handleTelefoneChange}
+                                                    placeholder="+55 (11) 99999-0000"
                                                     disabled={isSaving}
                                                 />
                                             </div>

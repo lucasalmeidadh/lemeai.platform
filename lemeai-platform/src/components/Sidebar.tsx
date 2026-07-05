@@ -5,33 +5,32 @@ import { getUserPermissions, hasPermission } from '../config/permissions';
 import {
     FaTachometerAlt,
     FaStream,
-    FaAddressBook,
-    FaComments,
+    FaRegAddressBook as FaAddressBook,
+    FaRegComments as FaComments,
     FaUsersCog,
     FaUsers,
     FaBox,
-    FaCalendarAlt,
+    FaRegCalendarAlt as FaCalendarAlt,
     FaRocket,
     FaPlug,
     FaBullhorn,
-    FaPaperPlane,
-    FaCreditCard,
+    FaRegPaperPlane as FaPaperPlane,
+    FaRegCreditCard as FaCreditCard,
     FaUserFriends,
     FaBullseye,
     FaRobot,
-    FaBuilding,
+    FaRegBuilding as FaBuilding,
     FaChevronRight,
     FaUserCog,
-    FaFileAlt,
-    FaListAlt,
-    FaIdBadge,
+    FaRegFileAlt as FaFileAlt,
+    FaRegListAlt as FaListAlt,
+    FaRegIdBadge as FaIdBadge,
     FaCogs,
-    FaQuestionCircle,
+    FaRegQuestionCircle as FaQuestionCircle,
     FaBan
 } from 'react-icons/fa';
 import './Sidebar.css';
 
-import logoCrm from '../assets/logocrm.png';
 
 interface SidebarProps {
     onViewProfile: () => void;
@@ -59,12 +58,12 @@ const Sidebar: FC<SidebarProps> = () => {
     }, [location.pathname, clearUnreadCount]);
 
     useEffect(() => {
-        setIsMarketingOpen(false);
-        setIsReportsOpen(false);
-        setIsGestaoUsuariosOpen(false);
-        setIsAdministracaoOpen(false);
-        setIsChatbotOpen(false);
-        setIsEmpresaOpen(false);
+        setIsMarketingOpen(['/campanhas', '/campaign-templates'].includes(location.pathname));
+        setIsReportsOpen(location.pathname.startsWith('/relatorios'));
+        setIsGestaoUsuariosOpen(['/users', '/equipes', '/tipos-usuario'].includes(location.pathname));
+        setIsAdministracaoOpen(['/metas', '/campos-personalizados'].includes(location.pathname));
+        setIsChatbotOpen(['/chat-rules', '/products'].includes(location.pathname));
+        setIsEmpresaOpen(['/gerenciar-empresa', '/empresas', '/gerenciar-planos', '/connections', '/admin/help'].includes(location.pathname));
     }, [location.pathname]);
 
     useEffect(() => {
@@ -128,9 +127,6 @@ const Sidebar: FC<SidebarProps> = () => {
 
     return (
         <aside className="sidebar" ref={settingsRef}>
-            <div className="sidebar-logo">
-                <img src={logoCrm} alt="Brik CRM" />
-            </div>
 
             <nav className="sidebar-nav">
                 <Link to="/primeiros-passos" className={`sidebar-link ${location.pathname === '/primeiros-passos' ? 'active' : ''}`} style={{ marginBottom: '1rem' }}>
@@ -203,13 +199,13 @@ const Sidebar: FC<SidebarProps> = () => {
                             <div className={`sidebar-accordion ${isMarketingOpen ? 'open' : ''}`}>
                                 <div className="sidebar-accordion-content">
                                     {can('marketing_disparador') && (
-                                        <Link to="/campanhas" className={`sidebar-sub-link ${location.pathname === '/campanhas' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <Link to="/campanhas" className={`sidebar-sub-link ${location.pathname === '/campanhas' ? 'active' : ''}`}>
                                             <FaPaperPlane />
                                             <span>Disparador</span>
                                         </Link>
                                     )}
                                     {can('marketing_templates') && (
-                                        <Link to="/campaign-templates" className={`sidebar-sub-link ${location.pathname === '/campaign-templates' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <Link to="/campaign-templates" className={`sidebar-sub-link ${location.pathname === '/campaign-templates' ? 'active' : ''}`}>
                                             <FaBullhorn />
                                             <span>Templates</span>
                                         </Link>
@@ -236,13 +232,13 @@ const Sidebar: FC<SidebarProps> = () => {
                             <div className={`sidebar-accordion ${isReportsOpen ? 'open' : ''}`}>
                                 <div className="sidebar-accordion-content">
                                     {can('relatorio_vendas') && (
-                                        <Link to="/relatorios/vendas" className={`sidebar-sub-link ${location.pathname === '/relatorios/vendas' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <Link to="/relatorios/vendas" className={`sidebar-sub-link ${location.pathname === '/relatorios/vendas' ? 'active' : ''}`}>
                                             <FaFileAlt />
                                             <span>Vendas</span>
                                         </Link>
                                     )}
                                     {can('relatorio_campanhas') && (
-                                        <Link to="/relatorios/campanhas" className={`sidebar-sub-link ${location.pathname === '/relatorios/campanhas' ? 'active' : ''}`} onClick={closeSettings}>
+                                        <Link to="/relatorios/campanhas" className={`sidebar-sub-link ${location.pathname === '/relatorios/campanhas' ? 'active' : ''}`}>
                                             <FaFileAlt />
                                             <span>Campanhas</span>
                                         </Link>
@@ -272,19 +268,19 @@ const Sidebar: FC<SidebarProps> = () => {
                                 <div className={`sidebar-accordion ${isGestaoUsuariosOpen ? 'open' : ''}`}>
                                     <div className="sidebar-accordion-content">
                                         {can('gestao_usuarios') && (
-                                            <Link id="sidebar-users" to="/users" className={`sidebar-sub-link ${location.pathname === '/users' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link id="sidebar-users" to="/users" className={`sidebar-sub-link ${location.pathname === '/users' ? 'active' : ''}`}>
                                                 <FaUsers />
                                                 <span>Usuários</span>
                                             </Link>
                                         )}
                                         {can('gestao_tipos_usuario') && (
-                                            <Link to="/tipos-usuario" className={`sidebar-sub-link ${location.pathname === '/tipos-usuario' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/tipos-usuario" className={`sidebar-sub-link ${location.pathname === '/tipos-usuario' ? 'active' : ''}`}>
                                                 <FaIdBadge />
                                                 <span>Perfis</span>
                                             </Link>
                                         )}
                                         {can('gestao_equipes') && (
-                                            <Link to="/equipes" className={`sidebar-sub-link ${location.pathname === '/equipes' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/equipes" className={`sidebar-sub-link ${location.pathname === '/equipes' ? 'active' : ''}`}>
                                                 <FaUsers />
                                                 <span>Equipes</span>
                                             </Link>
@@ -309,13 +305,13 @@ const Sidebar: FC<SidebarProps> = () => {
                                 <div className={`sidebar-accordion ${isAdministracaoOpen ? 'open' : ''}`}>
                                     <div className="sidebar-accordion-content">
                                         {can('gestao_metas') && (
-                                            <Link to="/metas" className={`sidebar-sub-link ${location.pathname === '/metas' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/metas" className={`sidebar-sub-link ${location.pathname === '/metas' ? 'active' : ''}`}>
                                                 <FaBullseye />
                                                 <span>Metas</span>
                                             </Link>
                                         )}
                                         {can('gestao_campos_personalizados') && (
-                                            <Link to="/campos-personalizados" className={`sidebar-sub-link ${location.pathname === '/campos-personalizados' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/campos-personalizados" className={`sidebar-sub-link ${location.pathname === '/campos-personalizados' ? 'active' : ''}`}>
                                                 <FaListAlt />
                                                 <span>Campos Personalizados</span>
                                             </Link>
@@ -346,13 +342,13 @@ const Sidebar: FC<SidebarProps> = () => {
                                 <div className={`sidebar-accordion ${isChatbotOpen ? 'open' : ''}`}>
                                     <div className="sidebar-accordion-content">
                                         {can('regras_chatbot') && (
-                                            <Link to="/chat-rules" className={`sidebar-sub-link ${location.pathname === '/chat-rules' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/chat-rules" className={`sidebar-sub-link ${location.pathname === '/chat-rules' ? 'active' : ''}`}>
                                                 <FaComments />
                                                 <span>Regras do Chat</span>
                                             </Link>
                                         )}
                                         {can('gestao_produtos') && (
-                                            <Link to="/products" className={`sidebar-sub-link ${location.pathname === '/products' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/products" className={`sidebar-sub-link ${location.pathname === '/products' ? 'active' : ''}`}>
                                                 <FaBox />
                                                 <span>Produtos</span>
                                             </Link>
@@ -377,31 +373,31 @@ const Sidebar: FC<SidebarProps> = () => {
                                 <div className={`sidebar-accordion ${isEmpresaOpen ? 'open' : ''}`}>
                                     <div className="sidebar-accordion-content">
                                         {can('dias_funcionamento') && (
-                                            <Link to="/gerenciar-empresa" className={`sidebar-sub-link ${location.pathname === '/gerenciar-empresa' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/gerenciar-empresa" className={`sidebar-sub-link ${location.pathname === '/gerenciar-empresa' ? 'active' : ''}`}>
                                                 <FaUserCog />
                                                 <span>Gerenciar Empresa</span>
                                             </Link>
                                         )}
                                         {can('gestao_empresas') && (
-                                            <Link to="/empresas" className={`sidebar-sub-link ${location.pathname === '/empresas' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/empresas" className={`sidebar-sub-link ${location.pathname === '/empresas' ? 'active' : ''}`}>
                                                 <FaBuilding />
                                                 <span>Empresas</span>
                                             </Link>
                                         )}
                                         {can('gestao_conexoes') && (
-                                            <Link to="/connections" className={`sidebar-sub-link ${location.pathname === '/connections' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/connections" className={`sidebar-sub-link ${location.pathname === '/connections' ? 'active' : ''}`}>
                                                 <FaPlug />
                                                 <span>Conexões</span>
                                             </Link>
                                         )}
                                         {can('gerenciar_planos') && !isEmpresa4Or8 && (
-                                            <Link to="/gerenciar-planos" className={`sidebar-sub-link ${location.pathname === '/gerenciar-planos' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/gerenciar-planos" className={`sidebar-sub-link ${location.pathname === '/gerenciar-planos' ? 'active' : ''}`}>
                                                 <FaCreditCard />
                                                 <span>Gerenciar Planos</span>
                                             </Link>
                                         )}
                                         {can('gbcode_admin_sistema') && (
-                                            <Link to="/admin/help" className={`sidebar-sub-link ${location.pathname === '/admin/help' ? 'active' : ''}`} onClick={closeSettings}>
+                                            <Link to="/admin/help" className={`sidebar-sub-link ${location.pathname === '/admin/help' ? 'active' : ''}`}>
                                                 <FaQuestionCircle />
                                                 <span>Central de Ajuda</span>
                                             </Link>

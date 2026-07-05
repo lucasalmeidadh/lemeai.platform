@@ -38,13 +38,6 @@
     display: inline-block;
 }
 
-.agenda-tab-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-5);
-}
-
 .agenda-header-actions {
     display: flex;
     gap: var(--space-3);
@@ -317,7 +310,6 @@
 
 .agenda-container {
     display: flex;
-    gap: 30px;
     height: auto;
     min-height: calc(100vh - 220px);
     padding-bottom: 50px;
@@ -373,7 +365,8 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);
-    min-width: 180px;
+    min-width: 140px;
+    text-align: center;
 }
 
 .nav-btn {
@@ -442,7 +435,7 @@
     border-right: 1px solid var(--border-color-soft);
     border-bottom: 1px solid var(--border-color-soft);
     padding: 10px;
-    min-height: 100px;
+    min-height: 80px;
     cursor: pointer;
     transition: background 0.2s;
     display: flex;
@@ -496,7 +489,7 @@
     flex-direction: column;
     gap: 4px;
     overflow-y: auto;
-    max-height: 80px;
+    max-height: 48px;
 }
 
 .event-dot {
@@ -518,12 +511,50 @@
     text-overflow: ellipsis;
 }
 
-/* Sidebar */
+/* Sidebar (now inside drawer) */
 .agenda-sidebar {
-    width: 320px;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+.agenda-sidebar-drawer {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 360px;
+    height: 100vh;
+    background: var(--bg-primary);
+    box-shadow: -4px 0 25px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.agenda-sidebar-drawer.open {
+    right: 0;
+}
+
+.agenda-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.agenda-sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: all;
 }
 
 .sidebar-card {
@@ -780,5 +811,10 @@
     
     .calendar-grid {
         min-height: 400px;
+    }
+
+    .agenda-sidebar-drawer {
+        width: 100%;
+        right: -100%;
     }
 }

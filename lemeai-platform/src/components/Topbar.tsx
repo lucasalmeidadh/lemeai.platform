@@ -25,6 +25,8 @@ import { AgendaService, type AgendaEvent } from '../services/AgendaService';
 import { TarefaService, type Tarefa } from '../services/TarefaService';
 import { ContactService } from '../services/ContactService';
 import './Topbar.css';
+import logoCrm from '../assets/logo_novo.png';
+import logoCrmDark from '../assets/logo_novo_dark.png';
 
 interface TopbarProps {
     onToggleMobileMenu: () => void;
@@ -35,8 +37,6 @@ interface TopbarProps {
 const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }) => {
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const companyLogoUrl = user?.logoEmpresa || '';
-    const companyName = user?.empresaDescricao || '';
     const isEmpresa4Or8 = user?.empresaId === 4 || user?.empresaId === 8;
     const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
@@ -111,14 +111,14 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
         const filtered = allDeals.filter(opp => {
             const contact = contactsDetailsMap[opp.idContato];
-            
+
             const matchName = opp.nomeContato?.toLowerCase().includes(term);
             const matchWhatsapp = opp.numeroWhatsapp?.toLowerCase().includes(term);
             const matchEmail = contact?.email?.toLowerCase().includes(term);
-            
+
             const cleanWhatsapp = opp.numeroWhatsapp?.replace(/\D/g, '') || '';
             const cleanContactPhone = contact?.telefone?.replace(/\D/g, '') || '';
-            
+
             const matchPhone = !!(cleanTerm && (cleanWhatsapp.includes(cleanTerm) || cleanContactPhone.includes(cleanTerm)));
 
             return matchName || matchWhatsapp || matchEmail || matchPhone;
@@ -289,32 +289,17 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
     useEffect(() => {
         setIsNotificacoesOpen(false);
     }, [location.pathname]);
-    
+
     return (
         <header className="topbar">
             <div className="topbar-left">
                 <button className="topbar-menu-btn mobile-only" onClick={onToggleMobileMenu} title="Menu">
                     <FaBars />
                 </button>
-                {companyLogoUrl ? (
-                    <img src={companyLogoUrl} alt="Logo da empresa" className="topbar-company-logo" />
-                ) : (
-                    <div className="topbar-company-fallback">
-                        <FaBuilding className="topbar-company-fallback-icon" />
-                        {companyName && <span className="topbar-company-fallback-name">{companyName}</span>}
-                    </div>
-                )}
-
-                {empresaEmTrial && (
-                    <Link to="/plano" className="topbar-trial-badge" title="Ver planos disponíveis">
-                        <FaCreditCard />
-                        <span>
-                            Plano Gratuito - {trialDiasRestantes !== null && trialDiasRestantes >= 0
-                                ? `Expira em ${trialDiasRestantes} dia${trialDiasRestantes === 1 ? '' : 's'}`
-                                : 'Expirado'}
-                        </span>
-                    </Link>
-                )}
+                <Link to="/dashboard" className="topbar-logo-link">
+                    <img src={logoCrm} alt="Brik CRM" className="topbar-system-logo light-logo" />
+                    <img src={logoCrmDark} alt="Brik CRM" className="topbar-system-logo dark-logo" />
+                </Link>
             </div>
 
             {/* Campo de Pesquisa de Deals */}
@@ -322,7 +307,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                 <div className="topbar-search-input-wrapper">
                     <input
                         type="text"
-                        placeholder="Buscar negócios (nome, email, tel)..."
+                        placeholder="Buscar oportunidades"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onFocus={handleSearchFocus}
@@ -388,9 +373,19 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
 
             <div className="topbar-right">
                 <div className="topbar-nav-items">
+                    {empresaEmTrial && (
+                        <Link to="/plano" className="topbar-trial-badge" title="Ver planos disponíveis">
+                            <FaCreditCard />
+                            <span>
+                                Plano Gratuito - {trialDiasRestantes !== null && trialDiasRestantes >= 0
+                                    ? `Expira em ${trialDiasRestantes} dia${trialDiasRestantes === 1 ? '' : 's'}`
+                                    : 'Expirado'}
+                            </span>
+                        </Link>
+                    )}
                     <div className="topbar-notificacoes-container" ref={notificacoesRef}>
-                        <button 
-                            className={`topbar-item ${isNotificacoesOpen ? 'active' : ''}`} 
+                        <button
+                            className={`topbar-item ${isNotificacoesOpen ? 'active' : ''}`}
                             title="Notificações"
                             onClick={handleOpenNotificacoes}
                             style={{ position: 'relative' }}
@@ -426,7 +421,7 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                                                 ) : (
                                                     <div className="notif-list">
                                                         {leadsHoje.map(lead => (
-                                                            <Link 
+                                                            <Link
                                                                 key={lead.idConversa}
                                                                 to={`/pipeline/deal/${lead.idConversa}`}
                                                                 className="notif-item lead-item"
@@ -459,12 +454,12 @@ const Topbar: FC<TopbarProps> = ({ onToggleMobileMenu, onViewProfile, onLogout }
                                                 ) : (
                                                     <div className="notif-list">
                                                         {tarefasHoje.map(task => {
-                                                            const linkTarget = task.type === 'deal' && task.conversaId 
-                                                                ? `/pipeline/deal/${task.conversaId}` 
+                                                            const linkTarget = task.type === 'deal' && task.conversaId
+                                                                ? `/pipeline/deal/${task.conversaId}`
                                                                 : '/agenda';
                                                             return (
-                                                                <Link 
-                                                                    key={task.id} 
+                                                                <Link
+                                                                    key={task.id}
                                                                     to={linkTarget}
                                                                     className="notif-item task-item"
                                                                 >

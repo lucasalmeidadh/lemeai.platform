@@ -55,7 +55,6 @@
 
 .my-perf-goal-kpi-card {
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color-soft);
   border-radius: 0.75rem;
   padding: 1rem 1.25rem;
   display: flex;
@@ -97,7 +96,6 @@
 
 .activity-kpi-card {
   background: var(--bg-primary);
-  border: 1px solid var(--border-color-soft);
   border-radius: 0.75rem;
   padding: 1rem 1.125rem;
   display: flex;
@@ -219,27 +217,22 @@
 .conversion-inline-badge--up {
   background: var(--color-success-bg);
   color: var(--color-success);
-  border: 1px solid var(--color-success-border);
 }
 
 .conversion-inline-badge--down {
   background: var(--color-danger-bg);
   color: var(--color-danger);
-  border: 1px solid var(--color-danger-border);
 }
 
 /* ── Bloco de última atividade ───────────────────────────────── */
 .last-activity-content {
   background: var(--bg-tertiary);
-  border: 1px solid var(--border-color-soft);
   border-radius: 0.625rem;
   padding: 0.875rem 1rem;
   font-size: var(--font-base);
-  transition: border-color 0.2s;
 }
 
 .last-activity-content.last-activity--stale {
-  border-color: rgba(239, 68, 68, 0.3);
   background: rgba(239, 68, 68, 0.04);
 }
 
@@ -278,7 +271,6 @@
   display: flex;
   align-items: center;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color-soft);
   border-radius: 0.625rem;
   padding: 1rem 1.25rem;
   gap: 0;

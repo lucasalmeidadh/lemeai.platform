@@ -56,10 +56,8 @@
   align-items: center;
   gap: var(--space-4);
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
   border-radius: 0.875rem;
   padding: 1.125rem 1.5rem;
-  box-shadow: var(--shadow-sm);
 }
 
 .compact-kpi-icon {

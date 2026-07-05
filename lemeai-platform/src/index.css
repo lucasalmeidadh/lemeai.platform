@@ -184,20 +184,19 @@ html {
 
 .app-layout {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   height: 100vh;
   width: 100%;
   overflow: hidden;
 }
 
-.dashboard-layout {
+.main-body {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   flex: 1;
-  flex-grow: 1;
-  height: 100vh;
   overflow: hidden;
   min-width: 0;
+  background-color: var(--bg-primary);
 }
 
 .main-content {
@@ -358,6 +357,8 @@ html {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.875rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
