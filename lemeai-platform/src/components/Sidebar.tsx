@@ -26,7 +26,8 @@ import {
     FaRegListAlt as FaListAlt,
     FaRegIdBadge as FaIdBadge,
     FaCogs,
-    FaRegQuestionCircle as FaQuestionCircle
+    FaRegQuestionCircle as FaQuestionCircle,
+    FaBan
 } from 'react-icons/fa';
 import './Sidebar.css';
 
@@ -103,7 +104,7 @@ const Sidebar: FC<SidebarProps> = () => {
     const isMarketingActive = ['/campanhas', '/campaign-templates'].includes(location.pathname);
     const isReportsActive = location.pathname.startsWith('/relatorios');
     const isGestaoUsuariosActive = ['/users', '/equipes', '/tipos-usuario'].includes(location.pathname);
-    const isAdministracaoActive = ['/metas', '/campos-personalizados'].includes(location.pathname);
+    const isAdministracaoActive = ['/metas', '/campos-personalizados', '/motivos-perda'].includes(location.pathname);
     const isChatbotActive = ['/chat-rules', '/products'].includes(location.pathname);
     const isEmpresaActive = ['/gerenciar-empresa', '/empresas', '/gerenciar-planos', '/connections', '/admin/help'].includes(location.pathname);
 
@@ -248,7 +249,7 @@ const Sidebar: FC<SidebarProps> = () => {
                     </div>
                 )}
 
-                {(can('gestao_usuarios') || can('gestao_equipes') || can('gestao_metas') || can('gestao_campos_personalizados') || can('gestao_tipos_usuario') || can('regras_chatbot') || can('gestao_produtos') || can('gestao_conexoes') || can('dias_funcionamento') || can('gestao_empresas') || (can('gerenciar_planos') && !isEmpresa4Or8)) && (
+                {(can('gestao_usuarios') || can('gestao_equipes') || can('gestao_metas') || can('gestao_campos_personalizados') || can('gestao_motivo_perda') || can('gestao_tipos_usuario') || can('regras_chatbot') || can('gestao_produtos') || can('gestao_conexoes') || can('dias_funcionamento') || can('gestao_empresas') || (can('gerenciar_planos') && !isEmpresa4Or8)) && (
                     <div className="sidebar-group">
                         <div className="sidebar-group-title">Administração</div>
 
@@ -290,7 +291,7 @@ const Sidebar: FC<SidebarProps> = () => {
                         )}
 
                         {/* Administração */}
-                        {(can('gestao_metas') || can('gestao_campos_personalizados')) && (
+                        {(can('gestao_metas') || can('gestao_campos_personalizados') || can('gestao_motivo_perda')) && (
                             <div className="sidebar-item-wrapper">
                                 <button
                                     id="sidebar-administracao-admin"
@@ -313,6 +314,12 @@ const Sidebar: FC<SidebarProps> = () => {
                                             <Link to="/campos-personalizados" className={`sidebar-sub-link ${location.pathname === '/campos-personalizados' ? 'active' : ''}`}>
                                                 <FaListAlt />
                                                 <span>Campos Personalizados</span>
+                                            </Link>
+                                        )}
+                                        {can('gestao_motivo_perda') && (
+                                            <Link to="/motivos-perda" className={`sidebar-sub-link ${location.pathname === '/motivos-perda' ? 'active' : ''}`} onClick={closeSettings}>
+                                                <FaBan />
+                                                <span>Motivo de Perda</span>
                                             </Link>
                                         )}
                                     </div>

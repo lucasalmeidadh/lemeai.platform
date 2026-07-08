@@ -5,7 +5,7 @@ import {
   FaArrowLeft, FaPhone, FaEnvelope, FaPlus, FaPaperclip, FaTrash,
   FaImage, FaMusic, FaVideo, FaFilePdf, FaCalendarAlt, FaComments, FaEdit,
   FaMagic, FaTasks, FaTimes,
-  FaBullhorn, FaStickyNote, FaBoxes, FaUserPlus, FaListAlt, FaSave
+  FaBullhorn, FaStickyNote, FaBoxes, FaUserPlus, FaListAlt, FaSave, FaExclamationTriangle
 } from 'react-icons/fa';
 import { ProductService, type Product } from '../services/ProductService';
 import { ConversaProdutoService, type ConversaProduto } from '../services/ConversaProdutoService';
@@ -17,7 +17,8 @@ import ConversationSkeleton from '../components/ConversationSkeleton';
 import MessageInput from '../components/MessageInput';
 import { type Message } from '../data/mockData';
 import toast from 'react-hot-toast';
-import { OpportunityService, type DetalheConversa } from '../services/OpportunityService';
+import { OpportunityService, type DetalheConversa, type MotivoPerdaHistorico } from '../services/OpportunityService';
+import { MotivoPerdaService, type MotivoPerda } from '../services/MotivoPerdaService';
 import { ContactService } from '../services/ContactService';
 import { AttachmentService } from '../services/AttachmentService';
 import { AgendaService } from '../services/AgendaService';
@@ -171,7 +172,7 @@ const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, o
   const [chatError, setChatError] = useState<string | null>(null);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [messagesByDate, setMessagesByDate] = useState<{ [date: string]: Message[] }>({});
-  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda' | 'products' | 'customFields'>('customFields');
+  const [activeTab, setActiveTab] = useState<'notes' | 'chat' | 'attachments' | 'agenda' | 'products' | 'customFields' | 'lossReason'>('customFields');
 
   const [dealProducts, setDealProducts] = useState<DealProduct[]>([]);
   const [isLoadingDealProducts, setIsLoadingDealProducts] = useState(false);
@@ -269,6 +270,13 @@ const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, o
   const [isLoadingCustomFields, setIsLoadingCustomFields] = useState(false);
   const [isSavingCustomFields, setIsSavingCustomFields] = useState(false);
   const [isEditingCustomFields, setIsEditingCustomFields] = useState(false);
+
+  const [lossReasonHistory, setLossReasonHistory] = useState<MotivoPerdaHistorico[]>([]);
+  const [isLoadingLossReason, setIsLoadingLossReason] = useState(false);
+  const [motivosPerdaCatalog, setMotivosPerdaCatalog] = useState<MotivoPerda[]>([]);
+  const [selectedMotivoPerdaId, setSelectedMotivoPerdaId] = useState<string>('');
+  const [motivoPerdaDetalheInput, setMotivoPerdaDetalheInput] = useState('');
+  const [isSavingLossReason, setIsSavingLossReason] = useState(false);
 
   // Load Current User
   useEffect(() => {
@@ -542,6 +550,56 @@ const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, o
       setIsLoadingCustomFields(false);
     }
   }, [deal]);
+
+  // Loss Reason fetcher
+  const fetchLossReasonData = useCallback(async () => {
+    if (!deal) return;
+    setIsLoadingLossReason(true);
+    try {
+      const [history, catalogRes] = await Promise.all([
+        OpportunityService.getMotivosPerdaHistorico(deal.id),
+        MotivoPerdaService.getAll(),
+      ]);
+      setLossReasonHistory(history);
+      if (catalogRes.sucesso) setMotivosPerdaCatalog(catalogRes.dados ?? []);
+    } catch (err) {
+      console.error('Erro ao buscar motivo de perda:', err);
+    } finally {
+      setIsLoadingLossReason(false);
+    }
+  }, [deal]);
+
+  const handleConfirmLossReasonInline = async () => {
+    if (!deal || !selectedMotivoPerdaId) return;
+    setIsSavingLossReason(true);
+    const toastId = toast.loading('Registrando motivo da perda...');
+    try {
+      const response = await apiFetch(`${apiUrl}/api/Chat/Conversas/${deal.id}/AtualizarStatus`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idStatus: 6,
+          valor: deal.rawValue || 0,
+          motivoPerdaId: Number(selectedMotivoPerdaId),
+          motivoPerdaDetalhe: motivoPerdaDetalheInput.trim() || null,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.sucesso) {
+        throw new Error(result.mensagem || 'Falha ao registrar motivo da perda.');
+      }
+      toast.success('Venda marcada como perdida.', { id: toastId });
+      setStatusId(6);
+      setSelectedMotivoPerdaId('');
+      setMotivoPerdaDetalheInput('');
+      await fetchDealInfo(true);
+      await fetchLossReasonData();
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao registrar motivo da perda.', { id: toastId });
+    } finally {
+      setIsSavingLossReason(false);
+    }
+  };
 
   const handleCustomFieldChange = (campoPersonalizadoId: number, value: string) => {
     setCustomFieldValues(prev => ({ ...prev, [campoPersonalizadoId]: value }));
@@ -1011,7 +1069,8 @@ const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, o
     else if (activeTab === 'attachments') fetchAttachments();
     else if (activeTab === 'agenda') fetchAppointments();
     else if (activeTab === 'customFields') fetchCustomFields();
-  }, [activeTab, deal, fetchMessages, fetchAttachments, fetchAppointments, fetchCustomFields]);
+    else if (activeTab === 'lossReason') fetchLossReasonData();
+  }, [activeTab, deal, fetchMessages, fetchAttachments, fetchAppointments, fetchCustomFields, fetchLossReasonData]);
 
   const handleGenerateSummary = async () => {
     if (!deal) return;
@@ -1563,6 +1622,11 @@ const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, o
               <span className="tab-text-short">Produtos</span>
               <FaBoxes />
             </button>
+            <button className={`tab-button ${activeTab === 'lossReason' ? 'active' : ''}`} onClick={() => setActiveTab('lossReason')}>
+              <span className="tab-text-full">Motivo da Perda</span>
+              <span className="tab-text-short">Perda</span>
+              <FaExclamationTriangle />
+            </button>
           </div>
 
           <div className="details-tab-content">
@@ -2010,6 +2074,104 @@ const DealDetailsPage: React.FC<DealDetailsPageProps> = ({ dealId: propDealId, o
                       >
                         Criar Campo Personalizado
                       </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Loss Reason Tab */}
+            {activeTab === 'lossReason' && (
+              <div className="tab-pane loss-reason-pane">
+                <div className="pane-header">
+                  <h3>Motivo da Perda</h3>
+                </div>
+
+                {isLoadingLossReason ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {[1, 2].map(i => (
+                      <div key={i} className="skeleton" style={{ width: '100%', height: '60px', borderRadius: '0.75rem' }}></div>
+                    ))}
+                  </div>
+                ) : statusId === 6 ? (
+                  lossReasonHistory.length > 0 ? (
+                    <div className="loss-reason-history-list">
+                      {lossReasonHistory.map((item, idx) => (
+                        <div className="loss-reason-history-item" key={`${item.idMotivoPerda}-${item.dataMotivo}-${idx}`}>
+                          <div className="loss-reason-history-header">
+                            <span className="loss-reason-badge">{item.descricaoMotivo}</span>
+                            <span className="loss-reason-date">{new Date(item.dataMotivo).toLocaleString('pt-BR')}</span>
+                          </div>
+                          {item.detalhesMotivo && (
+                            <p className="loss-reason-detail-text">{item.detalhesMotivo}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-pane-container">
+                      <FaExclamationTriangle className="empty-pane-icon" />
+                      <p className="empty-pane-title">Nenhum motivo de perda registrado</p>
+                      <p className="empty-pane-subtitle">Esta oportunidade está marcada como perdida, mas não há histórico de motivo disponível.</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="loss-reason-form-panel">
+                    <p className="empty-pane-subtitle" style={{ marginBottom: 'var(--space-4)' }}>
+                      Preencher o motivo abaixo marcará automaticamente esta oportunidade como Venda Perdida.
+                    </p>
+
+                    <div className="form-group-val">
+                      <label>Motivo da Perda</label>
+                      <CustomSelect
+                        value={selectedMotivoPerdaId}
+                        onChange={setSelectedMotivoPerdaId}
+                        disabled={isSavingLossReason}
+                        placeholder="Selecione um motivo..."
+                        options={motivosPerdaCatalog.map(m => ({ value: m.motivoPerdaId.toString(), label: m.descricao }))}
+                      />
+                    </div>
+
+                    <div className="form-group-val" style={{ marginTop: 'var(--space-4)' }}>
+                      <label>Detalhe (opcional)</label>
+                      <textarea
+                        className="form-textarea"
+                        value={motivoPerdaDetalheInput}
+                        onChange={e => setMotivoPerdaDetalheInput(e.target.value)}
+                        placeholder="Ex: Cliente achou caro comparado ao concorrente X"
+                        rows={3}
+                        disabled={isSavingLossReason}
+                      />
+                    </div>
+
+                    <div className="form-actions-row" style={{ marginTop: 'var(--space-4)' }}>
+                      <button
+                        className="btn-save"
+                        onClick={handleConfirmLossReasonInline}
+                        disabled={!selectedMotivoPerdaId || isSavingLossReason}
+                      >
+                        {isSavingLossReason ? 'Registrando...' : 'Marcar como Perdida'}
+                      </button>
+                    </div>
+
+                    {lossReasonHistory.length > 0 && (
+                      <>
+                        <div className="sidebar-divider" style={{ margin: '1.5rem 0' }} />
+                        <h4 style={{ marginBottom: 'var(--space-3)', color: 'var(--text-primary)' }}>Histórico de perdas anteriores</h4>
+                        <div className="loss-reason-history-list">
+                          {lossReasonHistory.map((item, idx) => (
+                            <div className="loss-reason-history-item" key={`${item.idMotivoPerda}-${item.dataMotivo}-${idx}`}>
+                              <div className="loss-reason-history-header">
+                                <span className="loss-reason-badge">{item.descricaoMotivo}</span>
+                                <span className="loss-reason-date">{new Date(item.dataMotivo).toLocaleString('pt-BR')}</span>
+                              </div>
+                              {item.detalhesMotivo && (
+                                <p className="loss-reason-detail-text">{item.detalhesMotivo}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 )}

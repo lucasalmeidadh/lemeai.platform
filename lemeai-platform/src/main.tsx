@@ -36,6 +36,7 @@ import NovidadesPage from './pages/NovidadesPage.tsx';
 import ReportsPage from './pages/ReportsPage.tsx';
 import CampaignReportsPage from './pages/CampaignReportsPage.tsx';
 import CamposPersonalizadosPage from './pages/CamposPersonalizadosPage.tsx';
+import MotivoPerdaPage from './pages/MotivoPerdaPage.tsx';
 import GoogleCalendarCallbackPage from './pages/GoogleCalendarCallbackPage.tsx';
 import PublicLandingPage from './pages/PublicLandingPage.tsx';
 
@@ -82,6 +83,7 @@ const router = createBrowserRouter([
           { path: "gerenciar-empresa", element: <PermissionGuard><GerenciarEmpresaPage /></PermissionGuard> },
           { path: "gerenciar-planos", element: <PermissionGuard><PlanManagementPage /></PermissionGuard> },
           { path: "campos-personalizados", element: <PermissionGuard><CamposPersonalizadosPage /></PermissionGuard> },
+          { path: "motivos-perda", element: <PermissionGuard><MotivoPerdaPage /></PermissionGuard> },
         ]
       },
       { path: "*", element: <NotFoundPage /> }

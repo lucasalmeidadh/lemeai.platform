@@ -38,6 +38,14 @@ export interface OpportunityResponse {
     dados: Opportunity[];
 }
 
+export interface MotivoPerdaHistorico {
+    idMotivoPerda: number;
+    idConversa: number;
+    descricaoMotivo: string;
+    detalhesMotivo: string;
+    dataMotivo: string;
+}
+
 export interface CreateOpportunityCampoPersonalizado {
     campoPersonalizadoId: number;
     valor: string | null;
@@ -116,6 +124,30 @@ export const OpportunityService = {
         } catch (error: any) {
             console.error('Erro ao adicionar detalhes:', error);
             return { sucesso: false, mensagem: error.message };
+        }
+    },
+
+    getMotivosPerdaHistorico: async (idConversa: number): Promise<MotivoPerdaHistorico[]> => {
+        try {
+            const response = await apiFetch(`${apiUrl}/api/OportunidadeVenda/MotivosPerda/${idConversa}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 400) return [];
+                throw new Error('Erro ao buscar histórico de motivos de perda');
+            }
+
+            const data = await response.json();
+            if (data.sucesso && Array.isArray(data.dados)) {
+                return data.dados;
+            }
+            return [];
+        } catch (error) {
+            console.error('Erro ao buscar histórico de motivo de perda:', error);
+            return [];
         }
     }
 };

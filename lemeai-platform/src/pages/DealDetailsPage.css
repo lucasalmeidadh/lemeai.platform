@@ -379,6 +379,58 @@
   margin-bottom: 0.5rem;
 }
 
+.loss-reason-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.loss-reason-history-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--color-danger-border);
+  border-left: 3px solid var(--color-danger);
+  border-radius: 0.75rem;
+  padding: var(--space-4);
+}
+
+.loss-reason-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: 0.5rem;
+}
+
+.loss-reason-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 0.75rem;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-weight: 600;
+  font-size: var(--font-sm);
+}
+
+.loss-reason-date {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.loss-reason-detail-text {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-base);
+}
+
+.loss-reason-form-panel {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
 /* note body text */
 .note-card-body {
   margin: 0;
