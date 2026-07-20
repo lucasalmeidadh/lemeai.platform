@@ -19,6 +19,7 @@ import {
     FaClipboardList,
     FaEye,
     FaMapMarkerAlt,
+    FaQuestionCircle,
 } from 'react-icons/fa';
 import {
     CampaignService,
@@ -140,6 +141,9 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
 
     const [nome, setNome] = useState(campaign?.campanhaNome ?? '');
     const [agendadaEm] = useState(campaign?.campanhaAgendadaEm ? campaign.campanhaAgendadaEm.substring(0, 16) : '');
+    const [redirecionarRespostaParaIA, setRedirecionarRespostaParaIA] = useState(
+        campaign ? campaign.campanhaRedirecionarRespostaParaIA : true
+    );
 
     // Passo 2: Público
     const [publicoTipo, setPublicoTipo] = useState<'BASE' | 'MANUAL' | 'COLA'>('BASE');
@@ -303,7 +307,7 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                 }
                 if (destRes?.sucesso && destRes.dados) {
                     const loaded: FinalContact[] = (destRes.dados as Destinatario[]).map((d: Destinatario) => ({
-                        nome: d.numero || d.bsuid || `Destinatário ${d.destinatarioId}`,
+                        nome: d.numero || d.bsuid || `Cliente ${d.destinatarioId}`,
                         telefone: d.numero || d.bsuid || '',
                         destinatarioId: d.destinatarioId,
                     }));
@@ -471,7 +475,8 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                     templateNome: selectedTemplateName,
                     templateIdioma: selectedTemplateIdioma,
                     categoria: selectedTemplateCategoria,
-                    agendadaEm: finalAgendadaEm
+                    agendadaEm: finalAgendadaEm,
+                    redirecionarRespostaParaIA: redirecionarRespostaParaIA
                 });
                 if (!res.sucesso || !res.dados) {
                     toast.error(res.mensagem || 'Erro ao salvar rascunho.');
@@ -486,7 +491,8 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                     templateIdioma: selectedTemplateIdioma,
                     categoria: selectedTemplateCategoria,
                     status: 'Rascunho',
-                    agendadaEm: finalAgendadaEm
+                    agendadaEm: finalAgendadaEm,
+                    redirecionarRespostaParaIA: redirecionarRespostaParaIA
                 });
                 if (!res.sucesso) {
                     toast.error(res.mensagem || 'Erro ao atualizar rascunho.');
@@ -551,7 +557,8 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                     templateNome: selectedTemplateName,
                     templateIdioma: selectedTemplateIdioma,
                     categoria: selectedTemplateCategoria,
-                    agendadaEm: finalAgendadaEm
+                    agendadaEm: finalAgendadaEm,
+                    redirecionarRespostaParaIA: redirecionarRespostaParaIA
                 });
                 if (!createRes.sucesso || !createRes.dados) {
                     toast.error(createRes.mensagem || 'Erro ao registrar a campanha.');
@@ -567,7 +574,8 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                     templateIdioma: selectedTemplateIdioma,
                     categoria: selectedTemplateCategoria,
                     status: 'Rascunho',
-                    agendadaEm: finalAgendadaEm
+                    agendadaEm: finalAgendadaEm,
+                    redirecionarRespostaParaIA: redirecionarRespostaParaIA
                 });
                 if (!updateRes.sucesso) {
                     toast.error(updateRes.mensagem || 'Erro ao atualizar a campanha.');
@@ -589,7 +597,7 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                     variaveis: varMappings.map(m => resolveVar(c, m))
                 })));
                 if (!addRes.sucesso) {
-                    toast.error(addRes.mensagem || 'Erro ao adicionar destinatários.');
+                    toast.error(addRes.mensagem || 'Erro ao adicionar clientes.');
                     return;
                 }
             }
@@ -654,7 +662,8 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                         templateIdioma: selectedTemplateIdioma,
                         categoria: selectedTemplateCategoria,
                         status: 'Rascunho',
-                        agendadaEm: finalAgendadaEm
+                        agendadaEm: finalAgendadaEm,
+                        redirecionarRespostaParaIA: redirecionarRespostaParaIA
                     });
                     toast.error('Todos os envios falharam. A campanha retornou para o status de Rascunho.');
                 } else {
@@ -711,7 +720,7 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                     </div>
                 )}
 
-                <div className="camp-modal-body" style={{ minHeight: '500px' }}>
+                <div className="camp-modal-body">
                     {result ? (
                         /* Resultados do Envio */
                         <div className="camp-dispatch-result" style={{ textAlign: 'center', padding: '40px 20px' }}>
@@ -748,7 +757,7 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                                 required
                                             />
                                         </div>
-                                        {/* 
+                                        {/*
                                         <div className="camp-form-group camp-span-2">
                                             <label>Data de agendamento (Informativo)</label>
                                             <input
@@ -759,6 +768,24 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                             <span className="camp-hint">Nota: Atualmente os disparos são processados imediatamente após a confirmação.</span>
                                         </div>
                                         */}
+                                        <div className="camp-form-group camp-span-2">
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <label className="camp-checkbox-label">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={redirecionarRespostaParaIA}
+                                                        onChange={(e) => setRedirecionarRespostaParaIA(e.target.checked)}
+                                                    />
+                                                    Direcionar resposta para IA
+                                                </label>
+                                                <span className="info-tooltip-container">
+                                                    <FaQuestionCircle className="info-tooltip-trigger" />
+                                                    <span className="info-tooltip-text">
+                                                        Quando o cliente responder a esta campanha, o Agente de IA será acionado automaticamente e irá conversar com ele por você.
+                                                    </span>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -1279,7 +1306,7 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                             </div>
 
                                             <div style={{ background: '#f8f9fa', padding: '14px', borderRadius: '10px' }}>
-                                                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Destinatários</span>
+                                                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Clientes</span>
                                                 <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--petroleum-blue)' }}>
                                                     {finalContacts.length} contato{finalContacts.length !== 1 ? 's' : ''}
                                                 </span>
@@ -1312,6 +1339,20 @@ function CampaignWizardModal({ campaign, onClose, onSaved }: CampaignWizardModal
                                                     <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '4px' }}>Lat: {locationLatitude} / Long: {locationLongitude}</span>
                                                 </div>
                                             )}
+
+                                            <div style={{ background: 'var(--color-ai-bg, rgba(139, 92, 246, 0.12))', padding: '14px', borderRadius: '10px', border: '1px solid var(--color-ai-border, rgba(139, 92, 246, 0.25))' }}>
+                                                <span style={{ display: 'block', fontSize: '11px', color: 'var(--color-ai, #8b5cf6)', textTransform: 'uppercase', fontWeight: 'bold' }}>Resposta do Cliente</span>
+                                                <span style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginTop: '4px' }}>
+                                                    {redirecionarRespostaParaIA
+                                                        ? 'O Agente de IA irá responder automaticamente'
+                                                        : 'A resposta não será direcionada para a IA'}
+                                                </span>
+                                                <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                                    {redirecionarRespostaParaIA
+                                                        ? 'Quando um cliente responder, o Agente de IA assumirá a conversa por você.'
+                                                        : 'As respostas ficarão disponíveis para atendimento manual na Conversa.'}
+                                                </span>
+                                            </div>
 
                                             <div style={{ background: '#fef3c7', padding: '14px', borderRadius: '10px', border: '1px solid #fde68a' }}>
                                                 <span style={{ display: 'block', fontSize: '11px', color: '#b45309', textTransform: 'uppercase', fontWeight: 'bold' }}>Custo Estimado (R$ 0,31 / envio)</span>

@@ -201,6 +201,245 @@
     box-shadow: 0 0 0 3px rgba(0, 95, 115, 0.1);
 }
 
+.premium-input,
+.premium-select {
+    width: 100%;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    font-family: inherit;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 13.5px;
+}
+
+.premium-input:focus,
+.premium-select:focus {
+    outline: none;
+    border-color: var(--petroleum-blue);
+    background-color: var(--bg-secondary);
+    box-shadow: 0 0 0 3px rgba(0, 95, 115, 0.1);
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.field-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+}
+
+.field-optional {
+    font-weight: 400;
+    color: var(--text-tertiary);
+}
+
+.char-counter {
+    display: block;
+    text-align: right;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+}
+
+.info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--petroleum-light);
+    border: 1px dashed var(--petroleum-blue);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.info-banner svg {
+    color: var(--petroleum-blue);
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.label-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.label-with-icon label {
+    margin-bottom: 0;
+}
+
+.info-icon-wrapper {
+    position: relative;
+    display: inline-flex;
+}
+
+.info-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0;
+    font-size: 13px;
+    transition: color 0.2s ease;
+}
+
+.info-icon-btn:hover {
+    color: var(--petroleum-blue);
+}
+
+.info-tooltip-popover {
+    position: absolute;
+    top: 22px;
+    left: 0;
+    z-index: 20;
+    width: 220px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    box-shadow: var(--shadow-lg);
+    animation: dropdownIn 0.2s ease;
+}
+
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.agent-tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ─── TABS ───────────────────────────────────────────────────── */
+
+.agent-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 14px;
+    flex-shrink: 0;
+}
+
+.agent-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    margin-bottom: -1px;
+}
+
+.agent-tab:hover:not(:disabled) {
+    color: var(--petroleum-blue);
+    background: var(--petroleum-light);
+}
+
+.agent-tab.active {
+    color: var(--petroleum-blue);
+    border-bottom-color: var(--petroleum-blue);
+}
+
+.agent-tab:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.agent-tab-disabled-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    color: var(--color-warning);
+    border-radius: 8px;
+    font-size: 12.5px;
+    flex-shrink: 0;
+}
+
+/* ─── FAQ LIST ───────────────────────────────────────────────── */
+
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.faq-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color-soft);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faq-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+.faq-item-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.faq-item-question {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--text-primary);
+}
+
+.faq-item-answer {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
+
 /* ─── LAYOUT ─────────────────────────────────────────────────── */
 
 .config-full-layout {
@@ -764,11 +1003,16 @@
     font-size: 0.65rem;
     font-weight: 500;
     color: var(--text-tertiary);
+    white-space: nowrap;
     transition: color 0.2s ease;
 }
 
 .bot-toggle-wrapper.active .bot-toggle-status {
     color: var(--color-success);
+}
+
+.bot-toggle-wrapper:not(.active):not(.loading) .bot-toggle-status {
+    color: var(--color-warning);
 }
 
 .bot-toggle-track {

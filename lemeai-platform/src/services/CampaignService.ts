@@ -10,6 +10,7 @@ export interface Campaign {
     campanhaCategoria: CampanhaCategoria;
     campanhaStatus: CampanhaStatus;
     campanhaAgendadaEm: string | null;
+    campanhaRedirecionarRespostaParaIA: boolean;
     campanhaCreatedat: string;
     campanhaUpdatedat: string;
 }
@@ -29,6 +30,7 @@ export interface CreateCampaignDTO {
     templateIdioma: string;
     categoria: CampanhaCategoria;
     agendadaEm?: string;
+    redirecionarRespostaParaIA: boolean;
 }
 
 export interface UpdateCampaignDTO {
@@ -39,6 +41,7 @@ export interface UpdateCampaignDTO {
     categoria: CampanhaCategoria;
     status: CampanhaStatus;
     agendadaEm?: string;
+    redirecionarRespostaParaIA: boolean;
 }
 
 export interface Destinatario {

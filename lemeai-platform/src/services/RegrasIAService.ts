@@ -4,6 +4,13 @@ export interface IARule {
     ordem?: number;
 }
 
+export interface IAFaq {
+    id: number;
+    pergunta: string;
+    resposta: string;
+    ordem?: number;
+}
+
 export interface ApiResponse<T> {
     sucesso: boolean;
     mensagem: string;
@@ -21,13 +28,67 @@ export interface UpdateIARuleDTO {
     ordem?: number;
 }
 
+export interface CreateIAFaqDTO {
+    pergunta: string;
+    resposta: string;
+    ordem?: number;
+}
+
+export interface UpdateIAFaqDTO {
+    id: number;
+    pergunta: string;
+    resposta: string;
+    ordem?: number;
+}
+
+// TomVozEnum — tooltip reproduz literalmente o texto de PromptBuilderService.DescreverTomVoz
+export const TOM_VOZ_OPTIONS = [
+    { value: 1, label: 'Profissional', tooltip: 'Tom de voz: profissional e formal.' },
+    { value: 2, label: 'Descontraído', tooltip: 'Tom de voz: descontraído e casual.' },
+    { value: 3, label: 'Focado em Conversão', tooltip: 'Tom de voz: focado em conversão, direto e persuasivo.' },
+    { value: 4, label: 'Empático', tooltip: 'Tom de voz: empático e acolhedor.' },
+] as const;
+
+// ObjetivoPrincipalEnum — tooltip reproduz literalmente o texto de PromptBuilderService.DescreverObjetivoPrincipal
+export const OBJETIVO_PRINCIPAL_OPTIONS = [
+    { value: 1, label: 'Qualificar leads', tooltip: 'Objetivo principal: qualificar leads antes de encaminhar para um vendedor.' },
+    { value: 2, label: 'Suporte técnico', tooltip: 'Objetivo principal: prestar suporte técnico aos clientes.' },
+    { value: 3, label: 'Vender produtos', tooltip: 'Objetivo principal: vender produtos/serviços diretamente na conversa.' },
+    { value: 4, label: 'Tirar dúvidas', tooltip: 'Objetivo principal: tirar dúvidas gerais sobre a empresa.' },
+] as const;
+
 export interface ConfigAgente {
     id: number;
-    nome: string;
-    descricaoCabecalho: string;
-    descricaoRodape: string;
+    nomeAgente: string;
+    tomVoz: number;
+    objetivoPrincipal: number;
+    sobreEmpresa: string;
+    instrucoesAdicionais: string | null;
+    condicoesTransbordo: string;
     botAtivo: boolean;
     regras: IARule[];
+    faqs: IAFaq[];
+}
+
+export interface CreateConfigAgenteDTO {
+    nomeAgente: string;
+    tomVoz: number;
+    objetivoPrincipal: number;
+    sobreEmpresa: string;
+    instrucoesAdicionais: string | null;
+    condicoesTransbordo: string;
+    regras?: CreateIARuleDTO[];
+    faqs?: CreateIAFaqDTO[];
+}
+
+export interface UpdateConfigAgenteDTO {
+    id: number;
+    nomeAgente: string;
+    tomVoz: number;
+    objetivoPrincipal: number;
+    sobreEmpresa: string;
+    instrucoesAdicionais: string | null;
+    condicoesTransbordo: string;
 }
 
 import { apiFetch } from './api';
@@ -35,19 +96,6 @@ import { apiFetch } from './api';
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 export const RegrasIAService = {
-    getAll: async (): Promise<ApiResponse<IARule[]>> => {
-        const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarTodos`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        if (!response.ok) {
-            throw new Error('Erro ao buscar regras');
-        }
-        return response.json();
-    },
-
     getById: async (id: number): Promise<ApiResponse<IARule>> => {
         const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarRegraPorId/${id}`, {
             method: 'GET',
@@ -102,7 +150,61 @@ export const RegrasIAService = {
         return response.json();
     },
 
-    getConfigAgente: async (): Promise<ApiResponse<ConfigAgente>> => {
+    getFaqById: async (id: number): Promise<ApiResponse<IAFaq>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarFaqPorId/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao buscar FAQ');
+        }
+        return response.json();
+    },
+
+    createFaq: async (faq: CreateIAFaqDTO): Promise<ApiResponse<IAFaq>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/CriarFaq`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(faq),
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao criar FAQ');
+        }
+        return response.json();
+    },
+
+    updateFaq: async (faq: UpdateIAFaqDTO): Promise<ApiResponse<IAFaq>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/AtualizarFaq/${faq.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(faq),
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao atualizar FAQ');
+        }
+        return response.json();
+    },
+
+    deleteFaq: async (id: number): Promise<ApiResponse<any>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/ExcluirFaq/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Erro ao excluir FAQ');
+        }
+        return response.json();
+    },
+
+    getConfigAgente: async (): Promise<ApiResponse<ConfigAgente | null>> => {
         const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarConfigAgente`, {
             method: 'GET',
             headers: {
@@ -115,7 +217,7 @@ export const RegrasIAService = {
         return response.json();
     },
 
-    createConfigAgente: async (config: Omit<ConfigAgente, 'id'>): Promise<ApiResponse<ConfigAgente>> => {
+    createConfigAgente: async (config: CreateConfigAgenteDTO): Promise<ApiResponse<null>> => {
         const response = await apiFetch(`${API_URL}/api/RegrasIA/CriarConfigAgente`, {
             method: 'POST',
             headers: {
@@ -129,15 +231,13 @@ export const RegrasIAService = {
         return response.json();
     },
 
-    updateConfigAgente: async (id: number, config: Partial<ConfigAgente>): Promise<ApiResponse<ConfigAgente>> => {
-        const { regras, ...dadosParaEnviar } = config;
-
+    updateConfigAgente: async (config: UpdateConfigAgenteDTO): Promise<ApiResponse<null>> => {
         const response = await apiFetch(`${API_URL}/api/RegrasIA/AtualizarConfigAgente`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ id, ...dadosParaEnviar }),
+            body: JSON.stringify(config),
         });
 
         if (!response.ok) {
