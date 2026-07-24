@@ -136,7 +136,7 @@ const ContactsPage = () => {
                         <table className="management-table">
                             <thead>
                                 <tr>
-                                    {['Contato', 'WhatsApp', 'E-mail', 'Segmento', 'Cidade/UF', 'Data Cadastro', 'Ações'].map((head, i) => (
+                                    {['Contato', 'WhatsApp', 'E-mail', 'Origem', 'Cidade/UF', 'Data Cadastro', 'Ações'].map((head, i) => (
                                         <th key={i}>{head}</th>
                                     ))}
                                 </tr>
@@ -164,7 +164,7 @@ const ContactsPage = () => {
                                     <th>Contato</th>
                                     <th>WhatsApp</th>
                                     <th>E-mail</th>
-                                    <th>Segmento</th>
+                                    <th>Origem</th>
                                     <th>Cidade/UF</th>
                                     <th>Data Cadastro</th>
                                     <th style={{ textAlign: 'right', paddingRight: '25px' }}>Ações</th>

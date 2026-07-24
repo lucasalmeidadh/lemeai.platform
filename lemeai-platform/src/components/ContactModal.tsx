@@ -237,7 +237,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSave, co
                                     </div>
 
                                     <div className="form-group full-width">
-                                        <label htmlFor="segment">Segmento</label>
+                                        <label htmlFor="segment">Origem</label>
                                         <input type="text" id="segment" name="segment" value={formData.segment || ''} onChange={handleChange} placeholder="Ex: Varejo" />
                                     </div>
 
