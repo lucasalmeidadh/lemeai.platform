@@ -3,7 +3,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding-right: 0 !important;
+  padding-right: 10!important;
   width: 100%;
   min-width: 0;
 }
@@ -433,7 +433,7 @@ select.pipeline-filter-input {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.5rem 1.125rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   border: none;
   background-color: var(--petroleum-blue);
