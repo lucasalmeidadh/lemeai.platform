@@ -18,6 +18,7 @@ export interface ApiResponse<T> {
 }
 
 export interface CreateIARuleDTO {
+    agentConfigId: number;
     descricaoRegra: string;
     ordem?: number;
 }
@@ -29,6 +30,7 @@ export interface UpdateIARuleDTO {
 }
 
 export interface CreateIAFaqDTO {
+    agentConfigId: number;
     pergunta: string;
     resposta: string;
     ordem?: number;
@@ -66,8 +68,17 @@ export interface ConfigAgente {
     instrucoesAdicionais: string | null;
     condicoesTransbordo: string;
     botAtivo: boolean;
+    isDefault: boolean;
     regras: IARule[];
     faqs: IAFaq[];
+}
+
+export interface AgenteListItem {
+    id: number;
+    nomeAgente: string;
+    isDefault: boolean;
+    botAtivo: boolean;
+    conexoesVinculadas?: number;
 }
 
 export interface CreateConfigAgenteDTO {
@@ -103,10 +114,11 @@ export const RegrasIAService = {
                 'Content-Type': 'application/json',
             },
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao buscar regra');
         }
-        return response.json();
+        return data;
     },
 
     create: async (rule: CreateIARuleDTO): Promise<ApiResponse<IARule>> => {
@@ -117,10 +129,11 @@ export const RegrasIAService = {
             },
             body: JSON.stringify(rule),
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao criar regra');
         }
-        return response.json();
+        return data;
     },
 
     update: async (rule: UpdateIARuleDTO): Promise<ApiResponse<IARule>> => {
@@ -131,10 +144,11 @@ export const RegrasIAService = {
             },
             body: JSON.stringify(rule),
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao atualizar regra');
         }
-        return response.json();
+        return data;
     },
 
     delete: async (id: number): Promise<ApiResponse<any>> => {
@@ -144,10 +158,11 @@ export const RegrasIAService = {
                 'Content-Type': 'application/json',
             },
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao excluir regra');
         }
-        return response.json();
+        return data;
     },
 
     getFaqById: async (id: number): Promise<ApiResponse<IAFaq>> => {
@@ -157,10 +172,11 @@ export const RegrasIAService = {
                 'Content-Type': 'application/json',
             },
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao buscar FAQ');
         }
-        return response.json();
+        return data;
     },
 
     createFaq: async (faq: CreateIAFaqDTO): Promise<ApiResponse<IAFaq>> => {
@@ -171,10 +187,11 @@ export const RegrasIAService = {
             },
             body: JSON.stringify(faq),
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao criar FAQ');
         }
-        return response.json();
+        return data;
     },
 
     updateFaq: async (faq: UpdateIAFaqDTO): Promise<ApiResponse<IAFaq>> => {
@@ -185,10 +202,11 @@ export const RegrasIAService = {
             },
             body: JSON.stringify(faq),
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao atualizar FAQ');
         }
-        return response.json();
+        return data;
     },
 
     deleteFaq: async (id: number): Promise<ApiResponse<any>> => {
@@ -198,26 +216,56 @@ export const RegrasIAService = {
                 'Content-Type': 'application/json',
             },
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao excluir FAQ');
         }
-        return response.json();
+        return data;
     },
 
-    getConfigAgente: async (): Promise<ApiResponse<ConfigAgente | null>> => {
-        const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarConfigAgente`, {
+    getAgentes: async (): Promise<ApiResponse<AgenteListItem[]>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarAgentes`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
         });
-        if (!response.ok) {
-            throw new Error('Erro ao buscar configuração do agente');
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
+            throw new Error('Erro ao buscar agentes de IA');
         }
-        return response.json();
+        return data;
     },
 
-    createConfigAgente: async (config: CreateConfigAgenteDTO): Promise<ApiResponse<null>> => {
+    getAgentePorId: async (id: number): Promise<ApiResponse<ConfigAgente>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/BuscarAgentePorId/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
+            throw new Error('Erro ao buscar agente de IA');
+        }
+        return data;
+    },
+
+    setAgentePadrao: async (id: number): Promise<ApiResponse<null>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/DefinirAgentePadrao/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
+            throw new Error('Erro ao definir agente padrão');
+        }
+        return data;
+    },
+
+    createConfigAgente: async (config: CreateConfigAgenteDTO): Promise<ApiResponse<ConfigAgente>> => {
         const response = await apiFetch(`${API_URL}/api/RegrasIA/CriarConfigAgente`, {
             method: 'POST',
             headers: {
@@ -225,10 +273,11 @@ export const RegrasIAService = {
             },
             body: JSON.stringify(config),
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao criar configuração do agente');
         }
-        return response.json();
+        return data;
     },
 
     updateConfigAgente: async (config: UpdateConfigAgenteDTO): Promise<ApiResponse<null>> => {
@@ -239,12 +288,11 @@ export const RegrasIAService = {
             },
             body: JSON.stringify(config),
         });
-
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao atualizar configuração do agente');
         }
-
-        return response.json();
+        return data;
     },
 
     deleteConfigAgente: async (id: number): Promise<ApiResponse<any>> => {
@@ -254,23 +302,25 @@ export const RegrasIAService = {
                 'Content-Type': 'application/json',
             },
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao excluir configuração do agente');
         }
-        return response.json();
+        return data;
     },
 
-    toggleBot: async (botAtivo: boolean): Promise<ApiResponse<null>> => {
-        const response = await apiFetch(`${API_URL}/api/RegrasIA/AlternarBot`, {
+    toggleBot: async (agentConfigId: number, botAtivo: boolean): Promise<ApiResponse<null>> => {
+        const response = await apiFetch(`${API_URL}/api/RegrasIA/AlternarBot/${agentConfigId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ botAtivo }),
         });
-        if (!response.ok) {
+        const data = await response.json();
+        if (!response.ok && !data.mensagem) {
             throw new Error('Erro ao alterar estado do bot');
         }
-        return response.json();
+        return data;
     },
 };

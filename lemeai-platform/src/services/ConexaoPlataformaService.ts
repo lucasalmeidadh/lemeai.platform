@@ -16,6 +16,18 @@ export interface ConexaoPlataforma {
     conexaoUpdatedat: string;
     usuarioAtribuidoId: number | null;
     usuarioAtribuidoNome: string | null;
+    agenteIaId: number | null;
+    agenteIaNome: string | null;
+    usandoAgentePadrao: boolean;
+}
+
+export interface AtualizarConexaoDTO {
+    conexaoPlataformaId: number;
+    nome: string;
+    token?: string | null;
+    tokenExpiracao?: string | null;
+    configuracaoJson?: string | null;
+    status: number;
 }
 
 export interface ApiResponse<T> {
@@ -67,6 +79,33 @@ export const ConexaoPlataformaService = {
     removerComPermissao: async (id: number): Promise<ApiResponse<null>> => {
         const response = await apiFetch(`${API_URL}/api/ConexaoPlataforma/RemoverComPermissao/${id}`, {
             method: 'DELETE',
+        });
+        return response.json();
+    },
+
+    atualizar: async (dto: AtualizarConexaoDTO): Promise<ApiResponse<null>> => {
+        const response = await apiFetch(`${API_URL}/api/ConexaoPlataforma/Atualizar`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dto),
+        });
+        return response.json();
+    },
+
+    atribuirUsuario: async (conexaoId: number, userId: number | null): Promise<ApiResponse<null>> => {
+        const response = await apiFetch(`${API_URL}/api/ConexaoPlataforma/${conexaoId}/atribuir-usuario`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId }),
+        });
+        return response.json();
+    },
+
+    atribuirAgenteIa: async (conexaoId: number, agentConfigId: number | null): Promise<ApiResponse<null>> => {
+        const response = await apiFetch(`${API_URL}/api/ConexaoPlataforma/${conexaoId}/atribuir-agente-ia`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agentConfigId }),
         });
         return response.json();
     },

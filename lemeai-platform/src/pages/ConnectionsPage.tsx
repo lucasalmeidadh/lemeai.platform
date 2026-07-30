@@ -15,6 +15,9 @@ import {
     FaUsers,
     FaUser,
     FaPlug,
+    FaCog,
+    FaTimes,
+    FaRobot,
 } from 'react-icons/fa';
 import { MetaService, type MetaConfig } from '../services/MetaService';
 import {
@@ -22,9 +25,29 @@ import {
     type ConexaoPlataforma,
     getPlatformLabel,
     PlataformaEnum,
+    StatusConexaoEnum,
 } from '../services/ConexaoPlataformaService';
+import { RegrasIAService, type AgenteListItem } from '../services/RegrasIAService';
+import { apiFetch } from '../services/api';
+import CustomSelect from '../components/CustomSelect';
 // import { InstagramService } from '../services/InstagramService'; // Instagram comentado — aguardando liberação
 import './ConnectionsPage.css';
+
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+interface CompanyUser {
+    id: number;
+    name: string;
+}
+
+const STATUS_OPTIONS = [
+    { value: String(StatusConexaoEnum.Ativa), label: 'Ativa' },
+    { value: String(StatusConexaoEnum.Inativa), label: 'Inativa' },
+    { value: String(StatusConexaoEnum.Expirada), label: 'Expirada' },
+];
+
+const SEM_USUARIO = '__sem_usuario__';
+const AGENTE_PADRAO = '__agente_padrao__';
 
 type ActiveTab = 'connections' | 'whatsapp'; // 'instagram' comentado — aguardando liberação
 
@@ -96,6 +119,16 @@ const ConnectionsPage = () => {
     const [togglingMulti, setTogglingMulti] = useState(false);
     const [removingId, setRemovingId] = useState<number | null>(null);
     const [openPrereq, setOpenPrereq] = useState<number | null>(null);
+
+    const [editingConexao, setEditingConexao] = useState<ConexaoPlataforma | null>(null);
+    const [editNome, setEditNome] = useState('');
+    const [editStatus, setEditStatus] = useState<string>(String(StatusConexaoEnum.Ativa));
+    const [editUsuarioId, setEditUsuarioId] = useState<string>(SEM_USUARIO);
+    const [editAgenteId, setEditAgenteId] = useState<string>(AGENTE_PADRAO);
+    const [savingEdit, setSavingEdit] = useState(false);
+    const [companyUsers, setCompanyUsers] = useState<CompanyUser[]>([]);
+    const [agentesDisponiveis, setAgentesDisponiveis] = useState<AgenteListItem[]>([]);
+    const [loadingEditData, setLoadingEditData] = useState(false);
 
     const metaDataRef = useRef<{ code?: string; phoneNumberId?: string; wabaId?: string }>({});
 
@@ -212,6 +245,87 @@ const ConnectionsPage = () => {
             toast.error('Erro ao remover conexão.');
         } finally {
             setRemovingId(null);
+        }
+    };
+
+    const handleOpenEditModal = useCallback(async (conexao: ConexaoPlataforma) => {
+        setEditingConexao(conexao);
+        setEditNome(conexao.nome);
+        setEditStatus(String(conexao.status));
+        setEditUsuarioId(conexao.usuarioAtribuidoId ? String(conexao.usuarioAtribuidoId) : SEM_USUARIO);
+        setEditAgenteId(conexao.usandoAgentePadrao ? AGENTE_PADRAO : String(conexao.agenteIaId ?? AGENTE_PADRAO));
+
+        setLoadingEditData(true);
+        try {
+            const requests: Promise<any>[] = [RegrasIAService.getAgentes()];
+            if (isAdmin && multiEnabled) {
+                requests.push(apiFetch(`${API_URL}/api/Usuario/BuscarTodos`).then(r => r.json()));
+            }
+            const [agentesRes, usersRes] = await Promise.all(requests);
+            if (agentesRes?.sucesso) setAgentesDisponiveis(agentesRes.dados || []);
+            if (usersRes?.sucesso && Array.isArray(usersRes.dados)) {
+                setCompanyUsers(usersRes.dados.map((u: any) => ({ id: u.userId, name: u.userName })));
+            }
+        } catch {
+            /* noop — modal ainda funciona só com nome/status */
+        } finally {
+            setLoadingEditData(false);
+        }
+    }, [isAdmin, multiEnabled]);
+
+    const handleCloseEditModal = () => {
+        if (savingEdit) return;
+        setEditingConexao(null);
+    };
+
+    const handleSalvarEdicao = async () => {
+        if (!editingConexao) return;
+        if (!editNome.trim()) {
+            toast.error('Informe um nome para a conexão.');
+            return;
+        }
+
+        setSavingEdit(true);
+        try {
+            const res = await ConexaoPlataformaService.atualizar({
+                conexaoPlataformaId: editingConexao.conexaoPlataformaId,
+                nome: editNome.trim(),
+                status: Number(editStatus),
+            });
+            if (!res.sucesso) {
+                toast.error(res.mensagem || 'Erro ao atualizar conexão.');
+                return;
+            }
+
+            const novoUsuarioId = editUsuarioId === SEM_USUARIO ? null : Number(editUsuarioId);
+            if (novoUsuarioId !== editingConexao.usuarioAtribuidoId) {
+                const userRes = await ConexaoPlataformaService.atribuirUsuario(editingConexao.conexaoPlataformaId, novoUsuarioId);
+                if (!userRes.sucesso) {
+                    toast.error(userRes.mensagem || 'Erro ao atribuir usuário à conexão.');
+                    return;
+                }
+            }
+
+            const usaAgentePadraoAntes = editingConexao.usandoAgentePadrao;
+            const usaAgentePadraoAgora = editAgenteId === AGENTE_PADRAO;
+            if (usaAgentePadraoAgora !== usaAgentePadraoAntes) {
+                const agenteRes = await ConexaoPlataformaService.atribuirAgenteIa(
+                    editingConexao.conexaoPlataformaId,
+                    usaAgentePadraoAgora ? null : Number(editAgenteId)
+                );
+                if (!agenteRes.sucesso) {
+                    toast.error(agenteRes.mensagem || 'Erro ao atribuir agente de IA à conexão.');
+                    return;
+                }
+            }
+
+            toast.success('Conexão atualizada com sucesso.');
+            setEditingConexao(null);
+            await loadConexoes();
+        } catch {
+            toast.error('Erro ao atualizar conexão.');
+        } finally {
+            setSavingEdit(false);
         }
     };
 
@@ -361,7 +475,19 @@ const ConnectionsPage = () => {
                             <span>{conexao.usuarioAtribuidoNome}</span>
                         </div>
                     )}
+                    <div className="conn-card-user conn-card-agent">
+                        <FaRobot />
+                        <span>{conexao.usandoAgentePadrao ? 'Agente padrão da empresa' : (conexao.agenteIaNome || 'Agente específico')}</span>
+                    </div>
                 </div>
+                <button
+                    className="conn-card-edit"
+                    aria-label="Editar conexão"
+                    onClick={() => handleOpenEditModal(conexao)}
+                    disabled={isRemoving}
+                >
+                    <FaCog />
+                </button>
                 {/* Botão de desconexão desabilitado — aguardando implementação dos endpoints no backend */}
                 {/* <button
                     className="conn-card-remove"
@@ -608,6 +734,82 @@ const ConnectionsPage = () => {
             {activeTab === 'whatsapp' && renderTabWhatsapp()}
             {/* Instagram comentado — integração ainda não liberada */}
             {/* {activeTab === 'instagram' && renderTabInstagram()} */}
+
+            {editingConexao && (
+                <div className="modal-overlay" onClick={handleCloseEditModal}>
+                    <div className="modal-content conn-edit-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Editar conexão</h2>
+                            <button className="close-modal-button" onClick={handleCloseEditModal} disabled={savingEdit} aria-label="Fechar">
+                                <FaTimes />
+                            </button>
+                        </div>
+                        <div className="modal-body conn-edit-body">
+                            <div className="form-group">
+                                <label htmlFor="conn-edit-nome">Nome</label>
+                                <input
+                                    id="conn-edit-nome"
+                                    type="text"
+                                    value={editNome}
+                                    onChange={e => setEditNome(e.target.value)}
+                                    disabled={savingEdit}
+                                    maxLength={255}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Status</label>
+                                <CustomSelect
+                                    options={STATUS_OPTIONS}
+                                    value={editStatus}
+                                    onChange={setEditStatus}
+                                    disabled={savingEdit}
+                                />
+                            </div>
+
+                            {isAdmin && multiEnabled && (
+                                <div className="form-group">
+                                    <label>Usuário responsável</label>
+                                    <CustomSelect
+                                        options={[
+                                            { value: SEM_USUARIO, label: 'Compartilhado (sem usuário)' },
+                                            ...companyUsers.map(u => ({ value: String(u.id), label: u.name })),
+                                        ]}
+                                        value={editUsuarioId}
+                                        onChange={setEditUsuarioId}
+                                        disabled={savingEdit || loadingEditData}
+                                    />
+                                    <span className="conn-edit-hint">Deixe "Compartilhado" para que toda a equipe atenda por essa conexão.</span>
+                                </div>
+                            )}
+
+                            <div className="form-group">
+                                <label>Agente de IA</label>
+                                <CustomSelect
+                                    options={[
+                                        { value: AGENTE_PADRAO, label: 'Agente padrão da empresa' },
+                                        ...agentesDisponiveis
+                                            .filter(a => !a.isDefault)
+                                            .map(a => ({ value: String(a.id), label: a.nomeAgente })),
+                                    ]}
+                                    value={editAgenteId}
+                                    onChange={setEditAgenteId}
+                                    disabled={savingEdit || loadingEditData}
+                                />
+                                <span className="conn-edit-hint">Define qual agente de IA responde por esta conexão.</span>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="button secondary" onClick={handleCloseEditModal} disabled={savingEdit}>
+                                Cancelar
+                            </button>
+                            <button type="button" className="button primary" onClick={handleSalvarEdicao} disabled={savingEdit}>
+                                {savingEdit ? 'Salvando...' : 'Salvar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

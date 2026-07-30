@@ -3,11 +3,12 @@ import toast from 'react-hot-toast';
 import {
     FaPlus, FaEdit, FaTrash, FaSave, FaChevronLeft, FaChevronRight, FaRobot,
     FaUserAstronaut, FaBook, FaQuestionCircle, FaShieldAlt, FaInfoCircle, FaBoxOpen, FaLightbulb,
+    FaArrowUp, FaArrowDown, FaArrowLeft, FaStar, FaPlug,
 } from 'react-icons/fa';
 import './SystemPromptsPage.css';
 import {
     RegrasIAService, TOM_VOZ_OPTIONS, OBJETIVO_PRINCIPAL_OPTIONS,
-    type IARule, type IAFaq, type ConfigAgente,
+    type IARule, type IAFaq, type ConfigAgente, type AgenteListItem,
 } from '../services/RegrasIAService';
 import SystemPromptsSkeleton from '../components/SystemPromptsSkeleton';
 import { TestAgentChat } from '../components/TestAgentChat';
@@ -17,6 +18,7 @@ const MAX_TEXT_LENGTH = 2000;
 const ITEMS_PER_PAGE = 5;
 
 type TabId = 'identidade' | 'conhecimento' | 'faq' | 'regras';
+type ViewMode = 'list' | 'editor';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: 'identidade', label: 'Identidade', icon: <FaUserAstronaut /> },
@@ -61,14 +63,23 @@ const SystemPromptsPage = () => {
     const [chatOpen, setChatOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<TabId>('identidade');
 
-    const [configId, setConfigId] = useState<number | null>(null);
+    // --- Área 0: lista de agentes ---
+    const [view, setView] = useState<ViewMode>('list');
+    const [isLoadingList, setIsLoadingList] = useState(true);
+    const [agentesList, setAgentesList] = useState<AgenteListItem[]>([]);
+    const [togglingListId, setTogglingListId] = useState<number | null>(null);
+
+    // --- Editor de um agente aberto ---
+    const [agentId, setAgentId] = useState<number | null>(null);
+    const [isAgentDefault, setIsAgentDefault] = useState(false);
+    const [isSettingDefault, setIsSettingDefault] = useState(false);
     const [form, setForm] = useState(emptyConfig);
     const [rules, setRules] = useState<IARule[]>([]);
     const [faqs, setFaqs] = useState<IAFaq[]>([]);
     const [botAtivo, setBotAtivo] = useState(false);
     const [isTogglingBot, setIsTogglingBot] = useState(false);
 
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingAgent, setIsLoadingAgent] = useState(false);
     const [isSavingConfig, setIsSavingConfig] = useState(false);
     const [openTooltip, setOpenTooltip] = useState<'tomVoz' | 'objetivo' | null>(null);
     const instrucoesRef = useRef<HTMLTextAreaElement>(null);
@@ -86,6 +97,8 @@ const SystemPromptsPage = () => {
     const [faqPergunta, setFaqPergunta] = useState('');
     const [faqResposta, setFaqResposta] = useState('');
     const [isSavingFaq, setIsSavingFaq] = useState(false);
+
+    const [isReordering, setIsReordering] = useState(false);
 
     const [confirmModal, setConfirmModal] = useState<{
         isOpen: boolean;
@@ -108,7 +121,7 @@ const SystemPromptsPage = () => {
     };
 
     useEffect(() => {
-        loadConfig();
+        loadAgentesList();
     }, []);
 
     useEffect(() => {
@@ -121,8 +134,23 @@ const SystemPromptsPage = () => {
         if (totalPages > 0 && faqsPage > totalPages) setFaqsPage(totalPages);
     }, [faqs.length, faqsPage]);
 
+    const loadAgentesList = async () => {
+        setIsLoadingList(true);
+        try {
+            const response = await RegrasIAService.getAgentes();
+            if (response.sucesso) {
+                setAgentesList(response.dados || []);
+            }
+        } catch (error) {
+            console.error('Erro ao buscar agentes de IA', error);
+        } finally {
+            setIsLoadingList(false);
+        }
+    };
+
     const applyConfigData = (data: ConfigAgente) => {
-        setConfigId(data.id);
+        setAgentId(data.id);
+        setIsAgentDefault(data.isDefault ?? false);
         setForm({
             nomeAgente: data.nomeAgente || '',
             tomVoz: data.tomVoz ?? (TOM_VOZ_OPTIONS[0].value as number),
@@ -136,32 +164,76 @@ const SystemPromptsPage = () => {
         setBotAtivo(data.botAtivo ?? false);
     };
 
-    const loadConfig = async () => {
-        setIsLoading(true);
+    const resetEditorState = () => {
+        setAgentId(null);
+        setIsAgentDefault(false);
+        setForm(emptyConfig);
+        setRules([]);
+        setFaqs([]);
+        setBotAtivo(false);
+        setActiveTab('identidade');
+        setRulesPage(1);
+        setFaqsPage(1);
+    };
+
+    const handleOpenNewAgent = () => {
+        resetEditorState();
+        setView('editor');
+    };
+
+    const handleOpenAgent = async (id: number) => {
+        setView('editor');
+        setIsLoadingAgent(true);
         try {
-            const response = await RegrasIAService.getConfigAgente();
+            const response = await RegrasIAService.getAgentePorId(id);
             if (response.sucesso && response.dados) {
                 applyConfigData(response.dados);
             } else {
-                setConfigId(null);
+                toast.error(response.mensagem || 'Erro ao carregar agente.');
+                setView('list');
             }
         } catch (error) {
-            console.error('Erro ao buscar configuração do agente', error);
-            setConfigId(null);
+            console.error('Erro ao buscar agente de IA', error);
+            toast.error('Erro ao comunicar com o servidor.');
+            setView('list');
         } finally {
-            setIsLoading(false);
+            setIsLoadingAgent(false);
+        }
+    };
+
+    const handleBackToList = () => {
+        setView('list');
+        resetEditorState();
+        loadAgentesList();
+    };
+
+    const handleToggleBotInList = async (agente: AgenteListItem) => {
+        const novoEstado = !agente.botAtivo;
+        setTogglingListId(agente.id);
+        try {
+            const response = await RegrasIAService.toggleBot(agente.id, novoEstado);
+            if (response.sucesso) {
+                setAgentesList(prev => prev.map(a => a.id === agente.id ? { ...a, botAtivo: novoEstado } : a));
+                toast.success(novoEstado ? 'Agente ativado!' : 'Agente desativado.');
+            } else {
+                toast.error(response.mensagem || 'Erro ao alterar estado do bot.');
+            }
+        } catch {
+            toast.error('Erro ao comunicar com o servidor.');
+        } finally {
+            setTogglingListId(null);
         }
     };
 
     const handleToggleBot = async () => {
-        if (!configId) {
-            toast.error('Salve a configuração do agente antes de ativar o bot.');
+        if (!agentId) {
+            toast.error('Salve o agente antes de ativá-lo.');
             return;
         }
         const novoEstado = !botAtivo;
         setIsTogglingBot(true);
         try {
-            const response = await RegrasIAService.toggleBot(novoEstado);
+            const response = await RegrasIAService.toggleBot(agentId, novoEstado);
             if (response.sucesso) {
                 setBotAtivo(novoEstado);
                 toast.success(novoEstado ? 'Agente de IA ativado!' : 'Agente de IA desativado.');
@@ -175,8 +247,30 @@ const SystemPromptsPage = () => {
         }
     };
 
+    const handleSetDefault = async () => {
+        if (!agentId || isAgentDefault) return;
+        setIsSettingDefault(true);
+        try {
+            const response = await RegrasIAService.setAgentePadrao(agentId);
+            if (response.sucesso) {
+                setIsAgentDefault(true);
+                toast.success('Agente definido como padrão da empresa.');
+            } else {
+                toast.error(response.mensagem || 'Erro ao definir agente padrão.');
+            }
+        } catch {
+            toast.error('Erro ao comunicar com o servidor.');
+        } finally {
+            setIsSettingDefault(false);
+        }
+    };
+
     const handleCancel = () => {
-        loadConfig();
+        if (agentId) {
+            handleOpenAgent(agentId);
+        } else {
+            resetEditorState();
+        }
         toast('Alterações descartadas.');
     };
 
@@ -196,17 +290,22 @@ const SystemPromptsPage = () => {
 
         setIsSavingConfig(true);
         try {
-            let response;
-            if (configId) {
-                response = await RegrasIAService.updateConfigAgente({ id: configId, ...form });
+            if (agentId) {
+                const response = await RegrasIAService.updateConfigAgente({ id: agentId, ...form });
+                if (response.sucesso) {
+                    toast.success('Configuração salva com sucesso!');
+                    handleOpenAgent(agentId);
+                } else {
+                    toast.error(response.mensagem || 'Erro ao salvar configuração.');
+                }
             } else {
-                response = await RegrasIAService.createConfigAgente(form);
-            }
-            if (response.sucesso) {
-                toast.success('Configuração salva com sucesso!');
-                loadConfig();
-            } else {
-                toast.error(response.mensagem || 'Erro ao salvar configuração.');
+                const response = await RegrasIAService.createConfigAgente(form);
+                if (response.sucesso && response.dados) {
+                    toast.success('Agente criado com sucesso!');
+                    applyConfigData(response.dados);
+                } else {
+                    toast.error(response.mensagem || 'Erro ao criar agente.');
+                }
             }
         } catch (error) {
             console.error(error);
@@ -240,6 +339,10 @@ const SystemPromptsPage = () => {
             toast.error('O texto da regra não pode estar vazio.');
             return;
         }
+        if (!agentId) {
+            toast.error('Salve o agente antes de adicionar regras.');
+            return;
+        }
         setIsSavingRule(true);
         try {
             if (currentRule) {
@@ -252,11 +355,12 @@ const SystemPromptsPage = () => {
                     toast.error(response.mensagem || 'Erro ao atualizar regra.');
                 } else {
                     toast.success('Regra atualizada com sucesso!');
-                    await loadConfig();
+                    await handleOpenAgent(agentId);
                     handleCloseRuleModal();
                 }
             } else {
                 const response = await RegrasIAService.create({
+                    agentConfigId: agentId,
                     descricaoRegra: ruleText,
                     ordem: rules.length + 1,
                 });
@@ -264,7 +368,7 @@ const SystemPromptsPage = () => {
                     toast.error(response.mensagem || 'Erro ao criar regra.');
                 } else {
                     toast.success('Regra criada com sucesso!');
-                    await loadConfig();
+                    await handleOpenAgent(agentId);
                     handleCloseRuleModal();
                     setRulesPage(Math.ceil((rules.length + 1) / ITEMS_PER_PAGE));
                 }
@@ -278,6 +382,7 @@ const SystemPromptsPage = () => {
     };
 
     const handleDeleteRule = (id: number) => {
+        if (!agentId) return;
         openConfirmModal('Excluir Regra', 'Tem certeza que deseja excluir esta regra?', async () => {
             try {
                 const response = await RegrasIAService.delete(id);
@@ -285,7 +390,7 @@ const SystemPromptsPage = () => {
                     toast.error(response.mensagem || 'Erro ao excluir regra.');
                 } else {
                     toast.success('Regra excluída com sucesso!');
-                    await loadConfig();
+                    await handleOpenAgent(agentId);
                 }
             } catch (error) {
                 console.error(error);
@@ -322,6 +427,10 @@ const SystemPromptsPage = () => {
             toast.error('Pergunta e resposta são obrigatórias.');
             return;
         }
+        if (!agentId) {
+            toast.error('Salve o agente antes de adicionar perguntas.');
+            return;
+        }
         setIsSavingFaq(true);
         try {
             if (currentFaq) {
@@ -335,11 +444,12 @@ const SystemPromptsPage = () => {
                     toast.error(response.mensagem || 'Erro ao atualizar FAQ.');
                 } else {
                     toast.success('FAQ atualizada com sucesso!');
-                    await loadConfig();
+                    await handleOpenAgent(agentId);
                     handleCloseFaqModal();
                 }
             } else {
                 const response = await RegrasIAService.createFaq({
+                    agentConfigId: agentId,
                     pergunta: faqPergunta,
                     resposta: faqResposta,
                     ordem: faqs.length + 1,
@@ -348,7 +458,7 @@ const SystemPromptsPage = () => {
                     toast.error(response.mensagem || 'Erro ao criar FAQ.');
                 } else {
                     toast.success('FAQ criada com sucesso!');
-                    await loadConfig();
+                    await handleOpenAgent(agentId);
                     handleCloseFaqModal();
                     setFaqsPage(Math.ceil((faqs.length + 1) / ITEMS_PER_PAGE));
                 }
@@ -362,6 +472,7 @@ const SystemPromptsPage = () => {
     };
 
     const handleDeleteFaq = (id: number) => {
+        if (!agentId) return;
         openConfirmModal('Excluir FAQ', 'Tem certeza que deseja excluir esta pergunta?', async () => {
             try {
                 const response = await RegrasIAService.deleteFaq(id);
@@ -369,7 +480,7 @@ const SystemPromptsPage = () => {
                     toast.error(response.mensagem || 'Erro ao excluir FAQ.');
                 } else {
                     toast.success('FAQ excluída com sucesso!');
-                    await loadConfig();
+                    await handleOpenAgent(agentId);
                 }
             } catch (error) {
                 console.error(error);
@@ -408,47 +519,185 @@ const SystemPromptsPage = () => {
         setRuleText(text);
     };
 
-    const totalRulesPages = Math.ceil(rules.length / ITEMS_PER_PAGE);
-    const paginatedRules = rules.slice((rulesPage - 1) * ITEMS_PER_PAGE, rulesPage * ITEMS_PER_PAGE);
+    const sortedRules = [...rules].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+    const sortedFaqs = [...faqs].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
 
-    const totalFaqsPages = Math.ceil(faqs.length / ITEMS_PER_PAGE);
-    const paginatedFaqs = faqs.slice((faqsPage - 1) * ITEMS_PER_PAGE, faqsPage * ITEMS_PER_PAGE);
+    const handleMoveRule = async (index: number, direction: 'up' | 'down') => {
+        if (!agentId) return;
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= sortedRules.length) return;
 
-    const listsDisabled = !configId;
+        const current = sortedRules[index];
+        const target = sortedRules[targetIndex];
+        const currentOrdem = current.ordem ?? index + 1;
+        const targetOrdem = target.ordem ?? targetIndex + 1;
 
-    return (
-        <div className="page-container page-system-prompts">
+        setIsReordering(true);
+        try {
+            await Promise.all([
+                RegrasIAService.update({ id: current.id, descricaoRegra: current.descricaoRegra, ordem: targetOrdem }),
+                RegrasIAService.update({ id: target.id, descricaoRegra: target.descricaoRegra, ordem: currentOrdem }),
+            ]);
+            await handleOpenAgent(agentId);
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao reordenar regra.');
+        } finally {
+            setIsReordering(false);
+        }
+    };
+
+    const handleMoveFaq = async (index: number, direction: 'up' | 'down') => {
+        if (!agentId) return;
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= sortedFaqs.length) return;
+
+        const current = sortedFaqs[index];
+        const target = sortedFaqs[targetIndex];
+        const currentOrdem = current.ordem ?? index + 1;
+        const targetOrdem = target.ordem ?? targetIndex + 1;
+
+        setIsReordering(true);
+        try {
+            await Promise.all([
+                RegrasIAService.updateFaq({ id: current.id, pergunta: current.pergunta, resposta: current.resposta, ordem: targetOrdem }),
+                RegrasIAService.updateFaq({ id: target.id, pergunta: target.pergunta, resposta: target.resposta, ordem: currentOrdem }),
+            ]);
+            await handleOpenAgent(agentId);
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao reordenar FAQ.');
+        } finally {
+            setIsReordering(false);
+        }
+    };
+
+    const totalRulesPages = Math.ceil(sortedRules.length / ITEMS_PER_PAGE);
+    const paginatedRules = sortedRules.slice((rulesPage - 1) * ITEMS_PER_PAGE, rulesPage * ITEMS_PER_PAGE);
+
+    const totalFaqsPages = Math.ceil(sortedFaqs.length / ITEMS_PER_PAGE);
+    const paginatedFaqs = sortedFaqs.slice((faqsPage - 1) * ITEMS_PER_PAGE, faqsPage * ITEMS_PER_PAGE);
+
+    const listsDisabled = !agentId;
+
+    // --- Renderização: Lista de agentes (área 0) ---
+
+    const renderAgentesList = () => (
+        <div className="agent-list-wrapper">
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h1>Configuração do Agente de IA</h1>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Configure identidade, conhecimento, FAQ e regras da inteligência artificial.</p>
+                    <h1>Agentes de IA</h1>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Gerencie os agentes de IA da sua empresa e escolha o padrão.</p>
+                </div>
+                <button className="primary-button wizard-nav-btn wizard-nav-btn-main" onClick={handleOpenNewAgent}>
+                    <FaPlus /> Novo Agente
+                </button>
+            </div>
+
+            {isLoadingList ? (
+                <SystemPromptsSkeleton />
+            ) : agentesList.length === 0 ? (
+                <div className="rules-empty-state agent-list-empty">
+                    <div className="rules-empty-icon"><FaRobot /></div>
+                    <div>Nenhum agente de IA cadastrado ainda.</div>
+                    <button className="primary-button wizard-nav-btn wizard-nav-btn-main" onClick={handleOpenNewAgent}>
+                        <FaPlus /> Criar primeiro agente
+                    </button>
+                </div>
+            ) : (
+                <div className="agent-list-grid">
+                    {agentesList.map(agente => (
+                        <div key={agente.id} className="agent-list-card" onClick={() => handleOpenAgent(agente.id)}>
+                            <div className="agent-list-card-icon"><FaRobot /></div>
+                            <div className="agent-list-card-info">
+                                <div className="agent-list-card-name-row">
+                                    <span className="agent-list-card-name">{agente.nomeAgente}</span>
+                                    {agente.isDefault && (
+                                        <span className="badge badge-ai agent-default-badge"><FaStar /> Padrão</span>
+                                    )}
+                                </div>
+                                {typeof agente.conexoesVinculadas === 'number' && (
+                                    <span className="agent-list-card-connections">
+                                        <FaPlug /> {agente.conexoesVinculadas} conexão(ões) vinculada(s)
+                                    </span>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                className={`bot-toggle-wrapper agent-list-toggle ${agente.botAtivo ? 'active' : ''} ${togglingListId === agente.id ? 'loading' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); handleToggleBotInList(agente); }}
+                                disabled={togglingListId === agente.id}
+                                aria-label={agente.botAtivo ? 'Desativar agente' : 'Ativar agente'}
+                                title={agente.botAtivo ? 'Agente respondendo automaticamente' : 'Agente pausado'}
+                            >
+                                <div className="bot-toggle-track">
+                                    <div className="bot-toggle-thumb" />
+                                </div>
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
+    // --- Renderização: Editor de um agente aberto ---
+
+    const renderEditor = () => (
+        <>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="agent-editor-title">
+                    <button className="secondary-button wizard-nav-btn agent-back-btn" onClick={handleBackToList}>
+                        <FaArrowLeft /> Voltar
+                    </button>
+                    <div>
+                        <h1>{agentId ? (form.nomeAgente || 'Editar Agente') : 'Novo Agente'}</h1>
+                        <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Configure identidade, conhecimento, FAQ e regras deste agente.</p>
+                    </div>
                 </div>
 
-                <button
-                    className={`bot-toggle-wrapper ${botAtivo ? 'active' : ''} ${isTogglingBot ? 'loading' : ''}`}
-                    onClick={handleToggleBot}
-                    disabled={isTogglingBot}
-                    aria-label={botAtivo ? 'Desativar bot de IA' : 'Ativar bot de IA'}
-                    title={botAtivo
-                        ? 'A IA está respondendo automaticamente às novas mensagens. Clique para pausar.'
-                        : 'A IA está pausada: novas mensagens não recebem resposta automática.'}
-                >
-                    <FaRobot className="bot-toggle-icon" />
-                    <div className="bot-toggle-info">
-                        <span className="bot-toggle-label">Agente de IA</span>
-                        <span className="bot-toggle-status">
-                            {isTogglingBot ? 'Aguarde...' : botAtivo ? 'Respondendo mensagens' : 'Pausada — sem resposta automática'}
-                        </span>
-                    </div>
-                    <div className="bot-toggle-track">
-                        <div className="bot-toggle-thumb" />
-                    </div>
-                </button>
+                <div className="agent-editor-header-actions">
+                    {agentId && !isAgentDefault && (
+                        <button
+                            className="secondary-button wizard-nav-btn"
+                            onClick={handleSetDefault}
+                            disabled={isSettingDefault}
+                        >
+                            <FaStar /> {isSettingDefault ? 'Definindo...' : 'Definir como padrão'}
+                        </button>
+                    )}
+                    {agentId && isAgentDefault && (
+                        <span className="badge badge-ai agent-default-badge"><FaStar /> Padrão da empresa</span>
+                    )}
+
+                    <button
+                        className={`bot-toggle-wrapper ${botAtivo ? 'active' : ''} ${isTogglingBot ? 'loading' : ''}`}
+                        onClick={handleToggleBot}
+                        disabled={isTogglingBot || !agentId}
+                        aria-label={botAtivo ? 'Desativar bot de IA' : 'Ativar bot de IA'}
+                        title={!agentId
+                            ? 'Salve o agente para poder ativá-lo.'
+                            : botAtivo
+                                ? 'A IA está respondendo automaticamente às novas mensagens. Clique para pausar.'
+                                : 'A IA está pausada: novas mensagens não recebem resposta automática.'}
+                    >
+                        <FaRobot className="bot-toggle-icon" />
+                        <div className="bot-toggle-info">
+                            <span className="bot-toggle-label">Agente de IA</span>
+                            <span className="bot-toggle-status">
+                                {isTogglingBot ? 'Aguarde...' : botAtivo ? 'Respondendo mensagens' : 'Pausada — sem resposta automática'}
+                            </span>
+                        </div>
+                        <div className="bot-toggle-track">
+                            <div className="bot-toggle-thumb" />
+                        </div>
+                    </button>
+                </div>
             </div>
 
             <div className="config-full-layout">
                 <div className="config-side">
-                    {isLoading ? (
+                    {isLoadingAgent ? (
                         <SystemPromptsSkeleton />
                     ) : (
                         <div className="config-hamburger-layout">
@@ -461,7 +710,7 @@ const SystemPromptsPage = () => {
                                             className={`agent-tab ${activeTab === tab.id ? 'active' : ''}`}
                                             onClick={() => setActiveTab(tab.id)}
                                             disabled={disabled}
-                                            title={disabled ? 'Salve a configuração do agente primeiro' : undefined}
+                                            title={disabled ? 'Salve o agente primeiro' : undefined}
                                         >
                                             {tab.icon} {tab.label}
                                         </button>
@@ -471,7 +720,7 @@ const SystemPromptsPage = () => {
 
                             {listsDisabled && (activeTab === 'faq' || activeTab === 'regras') && (
                                 <div className="agent-tab-disabled-hint">
-                                    <FaInfoCircle /> Salve a configuração do agente na aba Identidade primeiro para habilitar {activeTab === 'faq' ? 'a FAQ' : 'as Regras'}.
+                                    <FaInfoCircle /> Salve o agente na aba Identidade primeiro para habilitar {activeTab === 'faq' ? 'a FAQ' : 'as Regras'}.
                                 </div>
                             )}
 
@@ -629,22 +878,41 @@ const SystemPromptsPage = () => {
                                         <div className="table-container">
                                             {paginatedFaqs.length > 0 ? (
                                                 <div className="faq-list">
-                                                    {paginatedFaqs.map(faq => (
-                                                        <div key={faq.id} className="faq-item">
-                                                            <div className="faq-item-content">
-                                                                <p className="faq-item-question"><strong>P:</strong> {faq.pergunta}</p>
-                                                                <p className="faq-item-answer"><strong>R:</strong> {faq.resposta}</p>
+                                                    {paginatedFaqs.map((faq, index) => {
+                                                        const globalIndex = (faqsPage - 1) * ITEMS_PER_PAGE + index;
+                                                        return (
+                                                            <div key={faq.id} className="faq-item">
+                                                                <div className="faq-item-content">
+                                                                    <p className="faq-item-question"><strong>P:</strong> {faq.pergunta}</p>
+                                                                    <p className="faq-item-answer"><strong>R:</strong> {faq.resposta}</p>
+                                                                </div>
+                                                                <div className="actions-cell">
+                                                                    <button
+                                                                        className="action-icon-btn"
+                                                                        onClick={() => handleMoveFaq(globalIndex, 'up')}
+                                                                        disabled={isReordering || globalIndex === 0}
+                                                                        aria-label="Mover pergunta para cima"
+                                                                    >
+                                                                        <FaArrowUp size={12} />
+                                                                    </button>
+                                                                    <button
+                                                                        className="action-icon-btn"
+                                                                        onClick={() => handleMoveFaq(globalIndex, 'down')}
+                                                                        disabled={isReordering || globalIndex === sortedFaqs.length - 1}
+                                                                        aria-label="Mover pergunta para baixo"
+                                                                    >
+                                                                        <FaArrowDown size={12} />
+                                                                    </button>
+                                                                    <button className="action-icon-btn edit" onClick={() => handleOpenFaqModal(faq)} aria-label="Editar pergunta">
+                                                                        <FaEdit size={14} />
+                                                                    </button>
+                                                                    <button className="action-icon-btn delete" onClick={() => handleDeleteFaq(faq.id)} aria-label="Excluir pergunta">
+                                                                        <FaTrash size={14} />
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                            <div className="actions-cell">
-                                                                <button className="action-icon-btn edit" onClick={() => handleOpenFaqModal(faq)}>
-                                                                    <FaEdit size={14} />
-                                                                </button>
-                                                                <button className="action-icon-btn delete" onClick={() => handleDeleteFaq(faq.id)}>
-                                                                    <FaTrash size={14} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             ) : (
                                                 <div className="rules-empty-state">
@@ -709,7 +977,7 @@ const SystemPromptsPage = () => {
                                                     <tr>
                                                         <th style={{ width: '60px' }}>Ordem</th>
                                                         <th>Descrição</th>
-                                                        <th style={{ width: '80px' }}>Ações</th>
+                                                        <th style={{ width: '140px' }}>Ações</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -724,10 +992,26 @@ const SystemPromptsPage = () => {
                                                                     <td className="rule-description-cell">{rule.descricaoRegra}</td>
                                                                     <td>
                                                                         <div className="actions-cell">
-                                                                            <button className="action-icon-btn edit" onClick={() => handleOpenRuleModal(rule)}>
+                                                                            <button
+                                                                                className="action-icon-btn"
+                                                                                onClick={() => handleMoveRule(globalIndex, 'up')}
+                                                                                disabled={isReordering || globalIndex === 0}
+                                                                                aria-label="Mover regra para cima"
+                                                                            >
+                                                                                <FaArrowUp size={12} />
+                                                                            </button>
+                                                                            <button
+                                                                                className="action-icon-btn"
+                                                                                onClick={() => handleMoveRule(globalIndex, 'down')}
+                                                                                disabled={isReordering || globalIndex === sortedRules.length - 1}
+                                                                                aria-label="Mover regra para baixo"
+                                                                            >
+                                                                                <FaArrowDown size={12} />
+                                                                            </button>
+                                                                            <button className="action-icon-btn edit" onClick={() => handleOpenRuleModal(rule)} aria-label="Editar regra">
                                                                                 <FaEdit size={14} />
                                                                             </button>
-                                                                            <button className="action-icon-btn delete" onClick={() => handleDeleteRule(rule.id)}>
+                                                                            <button className="action-icon-btn delete" onClick={() => handleDeleteRule(rule.id)} aria-label="Excluir regra">
                                                                                 <FaTrash size={14} />
                                                                             </button>
                                                                         </div>
@@ -776,6 +1060,12 @@ const SystemPromptsPage = () => {
                     )}
                 </div>
             </div>
+        </>
+    );
+
+    return (
+        <div className="page-container page-system-prompts">
+            {view === 'list' ? renderAgentesList() : renderEditor()}
 
             <button
                 className={`chat-fab ${chatOpen ? 'active' : ''}`}

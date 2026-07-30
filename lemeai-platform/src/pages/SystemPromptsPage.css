@@ -947,6 +947,131 @@
     color: var(--text-secondary);
 }
 
+/* ─── AGENT LIST (área 0) ────────────────────────────────────── */
+
+.agent-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.agent-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.agent-list-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.agent-list-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--petroleum-blue);
+}
+
+.agent-list-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--color-ai-bg);
+    color: var(--color-ai);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.agent-list-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.agent-list-card-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.agent-list-card-name {
+    font-size: var(--font-base);
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.agent-list-card-connections {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+}
+
+.agent-default-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.agent-list-toggle {
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    flex-shrink: 0;
+}
+
+.agent-list-toggle:hover:not(:disabled) {
+    transform: none;
+    box-shadow: none;
+}
+
+.agent-list-empty {
+    gap: 14px;
+}
+
+/* ─── AGENT EDITOR HEADER ────────────────────────────────────── */
+
+.agent-editor-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.agent-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.agent-editor-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
 /* ─── BOT TOGGLE ─────────────────────────────────────────────── */
 
 .bot-toggle-wrapper {
