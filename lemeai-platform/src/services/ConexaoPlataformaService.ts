@@ -24,9 +24,6 @@ export interface ConexaoPlataforma {
 export interface AtualizarConexaoDTO {
     conexaoPlataformaId: number;
     nome: string;
-    token?: string | null;
-    tokenExpiracao?: string | null;
-    configuracaoJson?: string | null;
     status: number;
 }
 
